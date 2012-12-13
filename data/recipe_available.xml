@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+	<AF_recipe>
+	<recipe name="SynapticVesicle" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/SynapticVesicle/SynapticVesicle_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/SynapticVesicle
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/SynapticVesicle/results/SynapticVesiclefillResult.apr
+	</resultfile>
+	</recipe>
+	<recipe name="SynapticVesicle" version="1.1">
+	<setupfile>
+	autoFillRecipeScripts/SynapticVesicle/SynapticVesicle_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/SynapticVesicle
+	</wrkdir>
+	<resultfile>
+	http://mgldev.scripps.edu/projects/AF/datas/SynapticVesicle/results/SynapticVesiclePACKResult.apr
+	</resultfile>
+	</recipe>
+	<recipe name="BloodSerum" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/BloodSerum/BloodSerum_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/BloodSerum
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/BloodSerum/results/BloodSerumfillResult.apr
+	</resultfile>
+	</recipe>
+	<recipe name="BloodSerum" version="1.1">
+	<setupfile>
+	autoFillRecipeScripts/BloodSerum/BloodSerum_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/BloodSerum
+	</wrkdir>
+	<resultfile>
+	http://mgldev.scripps.edu/projects/AF/datas/BloodSerum/results/BloodSerumfillResult.apr
+	</resultfile>
+	</recipe>	
+	<recipe name="Test_CylindersSpheres2D" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/2DcylinderSphereFill/2DCylindersSpheres_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/2DcylinderSphereFill
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/2DcylinderSphereFill/results/CylSpherefillResult.apr.txt
+	</resultfile>
+	</recipe>
+	<recipe name="Test_Cubes2D" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/2DCubeFill/2DCubes_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/2DCubeFill
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/2DCubeFill/results/2DCubesResult.afr.txt
+	</resultfile>
+	</recipe>
+	<recipe name="HIV" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/HIV/figureHiv3.5mesh2.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/HIV
+	</wrkdir>
+	<resultfile>
+	http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_0.apr
+	</resultfile>
+	</recipe>
+	<recipe name="HIV" version="1.1">
+	<setupfile>
+	autoFillRecipeScripts/HIV/HIV_recipe_setup_1_1.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/HIV
+	</wrkdir>
+	<resultfile>
+	http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_1.apr
+	</resultfile>
+	</recipe>
+	<recipe name="GenericCytoplasm" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/GenericCytoplasm/GenericCytoplasm_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/GenericCytoplasm
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/GenericCytoplasm/results/GenericCytoplasmfillResult.apr
+	</resultfile>
+	</recipe>
+	<recipe name="GenericCytoplasm" version="1.1">
+	<setupfile>
+	autoFillRecipeScripts/GenericCytoplasm/GenericCytoplasm_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/GenericCytoplasm
+	</wrkdir>
+	<resultfile>
+	http://mgldev.scripps.edu/projects/AF/datas/GenericCytoplasm/results/GenericCytoplasmPACKResult.apr
+	</resultfile>
+	</recipe>	
+	<recipe name="GeometricCellScape" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/GeometricCellScape/GeometricCellScape_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/GeometricCellScape
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/GeometricCellScape/results/GeometricCellScapefillResult.apr.txt
+	</resultfile>
+	</recipe>
+	<recipe name="Test_Spheres2Dgradients" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/2DsphereFill/2DSpheresGradients_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/2DsphereFill
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/2DsphereFill/results/2DSpheresGradientsResult.apr.txt
+	</resultfile>
+	</recipe>
+	<recipe name="Test_Spheres2Ddebug" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/2DsphereFill/2DSpheres_setup_recipeDebug.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/2DsphereFill
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/2DsphereFill/results/SpherefillDebugResult.apr.txt
+	</resultfile>
+	</recipe>
+	<recipe name="Test_Spheres2D" version="1.0">
+	<setupfile>
+	autoFillRecipeScripts/2DsphereFill/2DSpheres_setup_recipe.py
+	</setupfile>
+	<wrkdir>
+	autoFillRecipeScripts/2DsphereFill
+	</wrkdir>
+	<resultfile>
+	autoFillRecipeScripts/2DsphereFill/results/2DSpheresResult.apr.txt
+	</resultfile>
+	</recipe>
+	</AF_recipe>
