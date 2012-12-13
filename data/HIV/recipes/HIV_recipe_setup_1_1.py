@@ -102,11 +102,11 @@ if AutoFill.helper.host == 'c4d':
  #mesfile?
 #wrkdir could be html ?
 #replace the workingdir by the url
-
-httpwrkDir = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/"
-sphDir = httpwrkDir+"HIVsph/"
-meshDir = httpwrkDir+"HIV_IngredientGeoms/"
-wrkDirOrga = sphDir
+httpwrkDir = "http://autofill.googlecode.com/svn/data/HIV/"
+#httpwrkDir = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/"
+sphDir = httpwrkDir+"spheres/"
+meshDir = httpwrkDir+"geoms/"
+wrkDirOrga = meshDir
 
 #if modelFormat = "dae":
 #    meshDir = meshDir+"fbxIngredients/"
@@ -489,7 +489,7 @@ for n in name :
         o1 = Organelle(n,None, None, None,
                filename=f,object_name = "HIV_Nucleocapside",
 #               object_filename = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/HIV_OrganelleGeoms/HIV_1_1_NucleocapsidHostMesh.c4d")
-                object_filename = "http://mgldev.scripps.edu/projects/AF/datas/HIV/geoms/HIV_1_1_NucleocapsidHostMesh."+hext)
+                object_filename = meshDir+"HIV_1_1_NucleocapsidHostMesh."+hext)
     else :
         o1 = Organelle(n,None, None, None,
                filename=f)
