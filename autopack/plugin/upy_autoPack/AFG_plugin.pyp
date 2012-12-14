@@ -12,7 +12,7 @@ Created on Fri Jul 20 23:53:00 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFG_plugin.pyp" is part of autoPACK, cellPACK, and AutoFill.
+# This file "AFG_plugin.pyp" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ Created on Fri Jul 20 23:53:00 2012
 #
 ###############################################################################
 
-Name: 'AutoFill/AutoCell GUI'
+Name: 'autopack/AutoCell GUI'
 @author: Ludovic Autin
 """
 
@@ -89,11 +89,11 @@ plugdirname = os.path.split(plugdir)[-1]
 import c4d
 #prefpath=c4d.storage.GeGetC4DPath(1)
 #os.chdir(prefpath)
-#os.chdir(".."+os.sep+"plugins"+os.sep+"AutoFill")
+#os.chdir(".."+os.sep+"plugins"+os.sep+"autopack")
 #plugdir = os.path.abspath(os.curdir)
 
 sys.path.insert(0,plugdir)
-#this gave access to all the module inside AutoFill folder.
+#this gave access to all the module inside autopack folder.
 #what if I change the name ?
 #upy UIadaptor stuff
 import upy
@@ -101,10 +101,10 @@ upy.setUIClass() #set the class
 #get the pluginClass
 plugTypeClass,opType = upy.getPluginClass(plug="command")#= operator in blender
 
-from AutoFill import AFGui
+from autopack import AFGui
 
 class af_Dialog(plugTypeClass):
-    plugin_name =  "AutoFill"
+    plugin_name =  "autopack"
     plugin_id = PLUGIN_ID
     plugin_tooltip = ""
     hasGui = True
@@ -121,8 +121,8 @@ class af_Dialog(plugTypeClass):
         #self.hasGui = True
         self.gui.display()
         
-af_plugin = af_Dialog(name="AutoFill",pluginId=PLUGIN_ID,
-                              tooltip="This is AutoFill",
+af_plugin = af_Dialog(name="autopack",pluginId=PLUGIN_ID,
+                              tooltip="This is autopack",
                               hasGui=True,plugin_dir = plugdirname)
 af_plugin.setIcon(image_name="autoCell.tif")
 
