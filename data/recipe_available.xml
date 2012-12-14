@@ -20,6 +20,11 @@
         <wrkdir>autoFillRecipeScripts/BloodSerum</wrkdir>
         <resultfile>http://mgldev.scripps.edu/projects/AF/datas/BloodSerum/results/BloodSerumfillResult.apr</resultfile>
     </recipe>
+    <recipe name="BloodSerum" version="1.2">
+        <setupfile>http://autofill.googlecode.com/svn/data/BloodSerum/recipe/BloodSerum_setup_recipe.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/BloodSerum</wrkdir>
+        <resultfile>http://autofill.googlecode.com/svn/data/BloodSerum/results/BloodSerumfillResult.apr</resultfile>
+    </recipe>
     <recipe name="Test_CylindersSpheres2D" version="1.0">
         <setupfile>autoFillRecipeScripts/2DcylinderSphereFill/2DCylindersSpheres_setup_recipe.py</setupfile>
         <wrkdir>autoFillRecipeScripts/2DcylinderSphereFill</wrkdir>
