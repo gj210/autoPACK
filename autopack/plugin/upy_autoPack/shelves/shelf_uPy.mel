@@ -1,0 +1,60 @@
+global proc shelf_uPy () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "import maya\nmaya.cmds.ePMV()\nepmv = maya.mv['epmv']\nself = epmv.mv\n" 
+        -enableBackground 0
+        -align "center" 
+        -label "ePMV" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "ePMV" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "/Library/MGLTools/1.5.6.up/MGLToolsPckgs/ePMV/images/pmv.tif" 
+        -image1 "/Library/MGLTools/1.5.6.up/MGLToolsPckgs/ePMV/images/pmv.tif" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "import maya\nmaya.cmds.ePMV()\nepmv = maya.mv['epmv']\nself = epmv.mv\n" 
+        -sourceType "python" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "import maya\nmaya.cmds.AutoFill()\n" 
+        -enableBackground 0
+        -align "center" 
+        -label "AutoFill" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "AutoFill" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "autoCell.tif" 
+        -image1 "autoCell.tif" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "import maya\nmaya.cmds.AutoFill()\n" 
+        -sourceType "python" 
+        -commandRepeatable 1
+    ;
+
+} 
