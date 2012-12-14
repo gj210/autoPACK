@@ -15,7 +15,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "HistoVol.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "HistoVol.py" is part of autoPACK, cellPACK, and autopack.
 #    
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -55,9 +55,9 @@ import bisect
 import numpy, pickle, weakref
 
 print ('AF import')
-from AutoFill.Organelle import OrganelleList
-from AutoFill.Recipe import Recipe
-from AutoFill.ray import vlen, vdiff, vcross
+from autopack.Organelle import OrganelleList
+from autopack.Recipe import Recipe
+from autopack.ray import vlen, vdiff, vcross
 #from mglutil.math.rotax import rotVectToVect
 import math
 import sys
@@ -72,12 +72,12 @@ import sys
 #    blist = list
 #from ctypes import *
 
-#from AutoFill.cGrid import c_grid
+#from autopack.cGrid import c_grid
 from operator import itemgetter, attrgetter
 
-import AutoFill
+import autopack
 try :
-    helper = AutoFill.helper
+    helper = autopack.helper
 except :
     helper = None
 print ("helper is "+str(helper))
@@ -109,7 +109,7 @@ except :
     panda3d = None
     print ("Failed to get Panda")
 
-LISTPLACEMETHOD = AutoFill.LISTPLACEMETHOD
+LISTPLACEMETHOD = autopack.LISTPLACEMETHOD
     
 def linearDecayProb():
     """ return a number from 0 (higest probability) to 1 (lowest probability)
@@ -920,8 +920,8 @@ class Environment(OrganelleList):
         pass
 
     def makeIngredient(self,**kw):
-        from AutoFill.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
-        from AutoFill.Ingredient import MultiCylindersIngr, GrowIngrediant
+        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
+        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
         ingr = None
 
         if kw["Type"]=="SingleSphere":
@@ -948,7 +948,7 @@ class Environment(OrganelleList):
         
     def load_XML(self,setupfile):
         self.setupfile = setupfile
-        from AutoFill import Ingredient as ingr
+        from autopack import Ingredient as ingr
         from xml.dom.minidom import parse
         self.xmldoc = parse(setupfile) # parse an XML file by name
         root = self.xmldoc.documentElement
@@ -1006,7 +1006,7 @@ class Environment(OrganelleList):
                 rCyto.addIngredient(ingre) 
             self.setExteriorRecipe(rCyto)
         onodes = root.getElementsByTagName("organelle")
-        from AutoFill.Organelle import Organelle
+        from autopack.Organelle import Organelle
         for onode in onodes:
             name = str(onode.getAttribute("name"))
             geom = str(onode.getAttribute("geom"))
@@ -1016,7 +1016,7 @@ class Environment(OrganelleList):
                 name =   filename.split("/")[-1]
                 fileName, fileExtension = os.path.splitext(name)
                 if fileExtension == "" :
-                    fileExtension = AutoFill.helper.hext
+                    fileExtension = autopack.helper.hext
                     if fileExtension == "" :
                         filename = filename+fileExtension
                     else :
@@ -1077,7 +1077,7 @@ class Environment(OrganelleList):
             return
         if attrname == "color" :
             if type(value) != list and type(value) != tuple :
-                if AutoFill.helper is not None : 
+                if autopack.helper is not None : 
                     value=helper.getMaterialProperty(value,["color"])[0]
                 else :
                     value = [1.,0.,0.]
@@ -1101,7 +1101,7 @@ class Environment(OrganelleList):
         from xml.dom.minidom import getDOMImplementation
         impl = getDOMImplementation()
         #what about afviewer
-        self.xmldoc = impl.createDocument(None, "AutoFillSetup", None)
+        self.xmldoc = impl.createDocument(None, "autopackSetup", None)
         root = self.xmldoc.documentElement
         root.setAttribute("name",str(self.name))
         options=self.xmldoc.createElement("options")

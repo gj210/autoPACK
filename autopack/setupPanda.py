@@ -8,6 +8,7 @@ import sys
 try :
     import panda3d
 except :    
+    #this if for Mac- wha about window
     p="/Developer/Panda3D/lib"
     sys.path.append(p)
     import panda3d

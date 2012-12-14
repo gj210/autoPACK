@@ -13,7 +13,7 @@ Created on Fri Jul 20 23:53:00 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFGui.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "AFGui.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -73,8 +73,8 @@ import upy
 uiadaptor = upy.getUIClass()
 
 
-import AutoFill
-AFwrkDir1 = AutoFill.__path__[0]
+import autopack
+AFwrkDir1 = autopack.__path__[0]
 
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -87,16 +87,16 @@ geturl=None
 global OS
 OS = os
 
-from AutoFill.ingr_ui import SphereTreeUI
-from AutoFill.Recipe import Recipe
-from AutoFill.autofill_viewer import AFViewer
+from autopack.ingr_ui import SphereTreeUI
+from autopack.Recipe import Recipe
+from autopack.autofill_viewer import AFViewer
 
 #need a global Dictionary
 #recipename : {"setupfile":"","resultfile":,}
 
 #import here othergui
 #import HIV gui ? specfic or generic AF gui for setup ?
-#from AutoFill.af_script_ui_AFLightSpecific import AFScriptUI require helper load ?
+#from autopack.af_script_ui_AFLightSpecific import AFScriptUI require helper load ?
 class SubdialogGradient(uiadaptor):
     def CreateLayout(self):
         self._createLayout()
@@ -142,7 +142,7 @@ class SubdialogGradient(uiadaptor):
             self.initWidgetEdit()
             self.setupLayoutEdit()
         elif self.mode == "Add":
-            from AutoFill.HistoVol import Gradient
+            from autopack.HistoVol import Gradient
             self.histoVol.gradients[self.gname] = self.gradient = Gradient(self.gname)
             if self.parent is not None: 
                 self.parent.addItemToPMenu(self.parent.Widget["options"]["gradients"],str(self.gname))
@@ -423,7 +423,7 @@ class SubdialogCustomFiller(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
+            from autopack.autofill_viewer import AFViewer
             self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
@@ -431,7 +431,7 @@ class SubdialogCustomFiller(uiadaptor):
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.HistoVol import Environment
             self.histo = self.histoVol = Environment()
             self.histo.name = self.recipe
             self.afviewer.SetHistoVol(self.histo,20.,display=False)
@@ -600,7 +600,7 @@ class SubdialogFiller(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
+            from autopack.autofill_viewer import AFViewer
             self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
@@ -608,7 +608,7 @@ class SubdialogFiller(uiadaptor):
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.HistoVol import Environment
             self.histo = self.histoVol = Environment()        
         self.parent = None
         if "parent" in kw :
@@ -620,8 +620,8 @@ class SubdialogFiller(uiadaptor):
         self.ingredients_ui = {}
         self.gradients_ui={}
         self.cleared = False
-        self.gridresultfile = None #AutoFill.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
-        self.setupfile= self.histoVol.setupfile#AutoFill.RECIPES[self.recipe]["setupfile"]
+        self.gridresultfile = None #autopack.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+        self.setupfile= self.histoVol.setupfile#autopack.RECIPES[self.recipe]["setupfile"]
         #define the widget here too
         #getingrname longest
         W=self.histoVol.longestIngrdientName()*5
@@ -758,7 +758,7 @@ class SubdialogFiller(uiadaptor):
                                      
                                      
         self.LABELS["RandomSeed"] = self._addElemt(label="Random seed =",width=50, height=5)  
-        self.LABELS["WelcomeVersionNumber"] = self._addElemt(label="Welcome to autoPACK v"+AutoFill.__version__,width=100, height=5)  
+        self.LABELS["WelcomeVersionNumber"] = self._addElemt(label="Welcome to autoPACK v"+autopack.__version__,width=100, height=5)  
 
         self.seedId = self._addElemt(name='seed',width=30,height=10,
                                               action=None,type="inputFloat",icon=None,
@@ -1333,7 +1333,7 @@ class SubdialogFiller(uiadaptor):
                         found = True
                         break
                 if not found :
-                    from AutoFill.Organelle import Organelle
+                    from autopack.Organelle import Organelle
                     o = Organelle(cname,vertices, faces, vnormals,ref_obj=cname)
                     self.histoVol.addOrganelle(o)
 #            else :
@@ -1399,15 +1399,15 @@ class SubdialogFiller(uiadaptor):
     def fillGrid_cb(self,seed,bname,fbox_name,pFill,pIngr,fbuild,doPts=False,
 				doSphere=False):
 #        if self.gridresultfile == None :
-#            if self.recipe in AutoFill.RECIPES:
-#                self.gridresultfile = AutoFill.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+#            if self.recipe in autopack.RECIPES:
+#                self.gridresultfile = autopack.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
 #            else : 
 #                self.gridresultfile = self.histoVol.gridresultfile
-#            print (self.recipe,AutoFill.RECIPES[self.recipe]["wrkdir"])
+#            print (self.recipe,autopack.RECIPES[self.recipe]["wrkdir"])
 #            print (self.gridresultfile)
 #        print "grid"
-        if self.recipe in AutoFill.RECIPES and self.recipe_version in AutoFill.RECIPES[self.recipe]:
-            self.gridresultfile = AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+        if self.recipe in autopack.RECIPES and self.recipe_version in autopack.RECIPES[self.recipe]:
+            self.gridresultfile = autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
         else :
             self.gridresultfile =  self.grid_filename#or grid_filename?
  
@@ -1517,7 +1517,7 @@ class SubdialogFiller(uiadaptor):
         self.setupfile=filename
         
     def save(self,*args):
-        filename= AutoFill.RECIPES[self.recipe]["setupfile"]
+        filename= autopack.RECIPES[self.recipe]["setupfile"]
         if filename.find(".py") != -1 :
             self.saveDialog(label="choose a xml file",callback=self.savexml)
             return
@@ -1530,24 +1530,24 @@ class SubdialogFiller(uiadaptor):
         n,v = name.split(" ")
         name = n
         version = v
-        if name not in AutoFill.USER_RECIPES:
-            AutoFill.USER_RECIPES[name]={}
-            if version not in AutoFill.USER_RECIPES[name] :
-                AutoFill.USER_RECIPES[name][version]={}
-        AutoFill.USER_RECIPES[name][version]["setupfile"]=self.setupfile
-        AutoFill.USER_RECIPES[name][version]["resultfile"]=self.getVal(self.Widget["options"]["resultfile"])
-        AutoFill.USER_RECIPES[name][version]["wrkdir"]=os.path.abspath(self.getVal(self.Widget["options"]["resultfile"]))
-        AutoFill.saveRecipeAvailable(AutoFill.USER_RECIPES,AutoFill.recipe_user_pref_file)
-#        relem=AutoFill.XML.createElement("recipe")
+        if name not in autopack.USER_RECIPES:
+            autopack.USER_RECIPES[name]={}
+            if version not in autopack.USER_RECIPES[name] :
+                autopack.USER_RECIPES[name][version]={}
+        autopack.USER_RECIPES[name][version]["setupfile"]=self.setupfile
+        autopack.USER_RECIPES[name][version]["resultfile"]=self.getVal(self.Widget["options"]["resultfile"])
+        autopack.USER_RECIPES[name][version]["wrkdir"]=os.path.abspath(self.getVal(self.Widget["options"]["resultfile"]))
+        autopack.saveRecipeAvailable(autopack.USER_RECIPES,autopack.recipe_user_pref_file)
+#        relem=autopack.XML.createElement("recipe")
 #        relem.setAttribute("name",name)
-#        AutoFill.XML.documentElement.appendChild(relem)
+#        autopack.XML.documentElement.appendChild(relem)
 #        for l in ["setupfile","resultfile","wrkdir"]:
-#            node = AutoFill.XML.createElement(l)
-#            data = AutoFill.XML.createTextNode(AutoFill.RECIPES[name][version][l])
+#            node = autopack.XML.createElement(l)
+#            data = autopack.XML.createTextNode(autopack.RECIPES[name][version][l])
 #            node.appendChild(data)
 #            relem.appendChild(node)
-#        f = open(AutoFill.recipe_user_pref_file,"w")        
-#        AutoFill.XML.writexml(f, indent="\t", addindent="", newl="\n")
+#        f = open(autopack.recipe_user_pref_file,"w")        
+#        autopack.XML.writexml(f, indent="\t", addindent="", newl="\n")
 #        f.close()
         #update the pent menu, so no need to restart
         self.parent.addItemToPMenu(self.parent.WidgetViewer["menuscene"],name)
@@ -1587,7 +1587,7 @@ class SubdialogViewer(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
+            from autopack.autofill_viewer import AFViewer
             self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
@@ -1595,7 +1595,7 @@ class SubdialogViewer(uiadaptor):
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.HistoVol import Environment
             self.histo = self.histoVol = Environment()        
         self.guimode = "Advanced"
         if "guimode" in kw :
@@ -1667,7 +1667,7 @@ class SubdialogViewer(uiadaptor):
         if len(self.histoVol.ingr_result):# is not None :
             self.ingredients =self.histoVol.ingr_result
             return
-        fname = AutoFill.RECIPES[self.recipe][self.recipe_version]["resultfile"]
+        fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
         print ("loadResult ",fname) 
         if fname.find("http") != -1 or fname.find("ftp") != -1:
             #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
@@ -1703,8 +1703,8 @@ class SubdialogViewer(uiadaptor):
         buildGrid=None
         gridFileOut=None
         #the gridfile in ? shoud it be in the histoVol from the xml
-        if self.recipe in AutoFill.RECIPES:
-            gridFileIn=AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+        if self.recipe in autopack.RECIPES:
+            gridFileIn=autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
         else :
             gridFileIn = self.grid_filename#or grid_filename?
 #        1 ("gridFileIn check ",gridFileIn)
@@ -2193,7 +2193,7 @@ class AFGui(uiadaptor):
              #  "https://sites.google.com/site/autofill21/documentation/autofill-api",
     ]
     def setup(self,id=None,rep="",host=""):
-        self.title = "autoPACK"#+" "+AutoFill.__version__#+self.mol.name
+        self.title = "autoPACK"#+" "+autopack.__version__#+self.mol.name
         #witdh=350
         self.h=130
         self.w=200
@@ -2204,9 +2204,9 @@ class AFGui(uiadaptor):
         self.id = id
         #define the widget here too
         self.helper = upy.getHelperClass()()
-        AutoFill.helper = self.helper
+        autopack.helper = self.helper
         self.histoVol={}
-        self.recipe_available = AutoFill.RECIPES
+        self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
         self.initWidget()
         self.setupLayout()
@@ -2227,7 +2227,7 @@ class AFGui(uiadaptor):
             if "afviewer" in kw :
                 self.histoVol[name].afviewer = kw["afviewer"]
             else :
-                from AutoFill.autofill_viewer import AFViewer
+                from autopack.autofill_viewer import AFViewer
                 self.histoVol[name].afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
         else :
             self.histoVol[name] = None
@@ -2252,7 +2252,7 @@ class AFGui(uiadaptor):
                           ]
                           }
         self.LABELGMODE  = self._addElemt(label="GUI mode",width=100, height=5)
-        self.LABELSV = self._addElemt(label="Welcome to autoPACK v"+AutoFill.__version__,width=100, height=5)
+        self.LABELSV = self._addElemt(label="Welcome to autoPACK v"+autopack.__version__,width=100, height=5)
         self.list_gmode = ["Simple","Intermediate","Advanced","Debug"]
         self.gmode = self._addElemt(name="guimode",
                                     value=self.list_gmode,
@@ -2261,7 +2261,7 @@ class AFGui(uiadaptor):
                                     type="pullMenu",)
         self.forceRecipeAvailable = self._addElemt(name="Check for latest recipe at startup (take effect after restart)",width=150,height=10,
                                               action=self.toggleCheckLatestRecipe,type="checkbox",icon=None,
-                                              variable=self.addVariable("int",0),value=AutoFill.checkAtstartup)
+                                              variable=self.addVariable("int",0),value=autopack.checkAtstartup)
                 
         
         self.initWidgetViewer()
@@ -2390,14 +2390,14 @@ class AFGui(uiadaptor):
         self._layout.append([self.LABELSV])
 
     def toggleCheckLatestRecipe_cb(self,toggle):
-        f = open(AutoFill.afdir+os.sep+"__init__.py","r")
+        f = open(autopack.afdir+os.sep+"__init__.py","r")
         text = f.read()
         f.close()
         text = text.replace("checkAtstartup = False","checkAtstartup = "+str(toggle))
-        f = open(AutoFill.afdir+os.sep+"__init__.py","w")        
+        f = open(autopack.afdir+os.sep+"__init__.py","w")        
         f.write(text)        
         f.close()
-        AutoFill.checkAtstartup = toggle
+        autopack.checkAtstartup = toggle
 
     def toggleCheckLatestRecipe(self,*args):
         toggle = self.getVal(self.forceRecipeAvailable)
@@ -2492,7 +2492,7 @@ class AFGui(uiadaptor):
         
     def update_AF(self,backup=False):
         import zipfile
-        p = AutoFill.__path__[0]+os.sep       
+        p = autopack.__path__[0]+os.sep       
         print "update_AF",AFwrkDir1
         URI="http://mgldev.scripps.edu/projects/ePMV/updates/autofill.zip"
         os.chdir(p)
@@ -2505,11 +2505,11 @@ class AFGui(uiadaptor):
             #geturl(URI, tmpFileName)
         zfile = zipfile.ZipFile(tmpFileName)    
 #        TF=tarfile.TarFile(tmpFileName)
-        dirname1=AFwrkDir1#+os.sep+".."+os.sep+"AutoFill"
+        dirname1=AFwrkDir1#+os.sep+".."+os.sep+"autopack"
         import shutil
         if backup :
             #rename AF to AFv
-            dirname2=dirname1+AutoFill.__version__
+            dirname2=dirname1+autopack.__version__
 #            print(dirname1,dirname2)
             if os.path.exists(dirname2):
                 shutil.rmtree(dirname2,True)
@@ -2537,7 +2537,7 @@ class AFGui(uiadaptor):
 #        self.epmv.inst.PMVv = Support.version.__version__
 #        self.epmv.inst.upyv = upy.__version__
         self.upyv = upyv = upy.__version__
-        self.afv = afv = AutoFill.__version__
+        self.afv = afv = autopack.__version__
         doit=self.checkForUpdate(upyv,afv)
         if True in doit :
             #need some display?
@@ -2568,9 +2568,9 @@ class AFGui(uiadaptor):
 
     def drawAbout(self,*args):
         self.upyv = upyv = upy.__version__
-        self.afv = afv = AutoFill.__version__        
+        self.afv = afv = autopack.__version__        
         doit=self.checkForUpdate(upyv,afv)
-        self.__about__="v"+AutoFill.__version__ +" of autoPACK is installed.\nv"+self.newAFv+" is available under Help/Check for Updates.\n\n"
+        self.__about__="v"+autopack.__version__ +" of autoPACK is installed.\nv"+self.newAFv+" is available under Help/Check for Updates.\n\n"
         self.__about__+="v"+upy.__version__+" of uPy is installed.\nv"+self.newuPyv+" is available under Help/Check for Updates.\n"
         self.__about__+="""
         
@@ -2647,7 +2647,7 @@ Copyright: Graham Johnson ©2010
             return True
 
     def loadxml(self, filename):
-        from AutoFill.HistoVol import Environment
+        from autopack.HistoVol import Environment
         fileName, fileExtension = os.path.splitext(filename)
         n=os.path.basename(fileName)
         self.histoVol[n] = Environment(name=n)
@@ -2689,7 +2689,7 @@ Copyright: Graham Johnson ©2010
         dlg.toggleHistoVolDisplay(None)        
               
     def drawSubsetViewer(self,*args):
-        AutoFill.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
+        autopack.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
         #should drawhe dialog for the seleced recipe
         recipe = self.getVal(self.WidgetViewer["menuscene"]) 
         version = self.getVal(self.WidgetViewer["recipeversion"])
@@ -2727,7 +2727,7 @@ Copyright: Graham Johnson ©2010
         
     
     def drawSubsetFiller(self,*args):
-        AutoFill.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
+        autopack.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
         #should drawhe dialog for the seleced recipe
         recipe = self.getVal(self.WidgetFiller["menuscene"]) 
         version = self.getVal(self.WidgetFiller["recipeversion"])
@@ -2767,4 +2767,4 @@ if __name__ == '__main__':
     mygui = AFGui(title="AFGui",master=master)
     mygui.setup()
     mygui.display()    
-#execfile("/Users/ludo/DEV/autofill_svn_test/autofill/trunk/AutoFillClean/AFGui.py")
+#execfile("/Users/ludo/DEV/autofill_svn_test/autofill/trunk/autopackClean/AFGui.py")

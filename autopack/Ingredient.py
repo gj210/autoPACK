@@ -19,7 +19,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Ingredient.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "Ingredient.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -59,11 +59,11 @@ from .ray import vlen, vdiff, vcross
 import sys
 
 
-import AutoFill
-AFDIR = AutoFill.__path__[0]#working dir ?
+import autopack
+AFDIR = autopack.__path__[0]#working dir ?
 
 try :
-    helper = AutoFill.helper
+    helper = autopack.helper
 except :
     helper = None
 print ("helper in Ingredient is "+str(helper))
@@ -87,7 +87,7 @@ KWDS = {   "molarity":{"type":"float"},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
                         "cutoff_boundary":{"name":"cutoff_boundary","value":1.0,"default":1.0,"min":0.,"max":50.,"type":"float","description":"cutoff_boundary"},
                         "cutoff_surface":{"name":"cutoff_surface","value":5.0,"default":5.0,"min":0.,"max":50.,"type":"float","description":"cutoff_surface"},
-                        "placeType":{"name":"placeType","value":"jitter","values":AutoFill.LISTPLACEMETHOD,"min":0.,"max":0.,
+                        "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "packingMode":{"type":"string"},                     
                         "useLength":{"type":"float"},
@@ -260,7 +260,7 @@ def getSpheres(sphereFile):
                        # of spheres in next level covererd by this sphere
     # ...
     # int: number of spheres in second level
-    helper = AutoFill.helper
+    helper = autopack.helper
     reporthook = None
     if helper is not None:        
         reporthook=helper.reporthook
@@ -269,7 +269,7 @@ def getSpheres(sphereFile):
         name = sphereFile.split("/")[-1]
         tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+"sphereTree"+os.sep+name
         #check if exist first
-        if not os.path.isfile(tmpFileName) or AutoFill.forceFetch :
+        if not os.path.isfile(tmpFileName) or autopack.forceFetch :
             try :
                 import urllib.request as urllib
             except :
@@ -774,7 +774,7 @@ class Ingredient(Agent):
                         "rotAxis":{"name":"rotAxis","value":[0.,0.,0.],"default":[0.,0.,0.],"min":0,"max":1,"type":"vector","description":"rotAxis"},
                         "cutoff_boundary":{"name":"cutoff_boundary","value":1.0,"default":1.0,"min":0.,"max":50.,"type":"float","description":"cutoff_boundary"},
                         "cutoff_surface":{"name":"cutoff_surface","value":5.0,"default":5.0,"min":0.,"max":50.,"type":"float","description":"cutoff_surface"},
-                        "placeType":{"name":"placeType","value":"jitter","values":AutoFill.LISTPLACEMETHOD,"min":0.,"max":0.,
+                        "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
                                'randomPartner', 'gradient'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
@@ -800,7 +800,7 @@ class Ingredient(Agent):
                         "rotRange":{"name":"rotRange","value":6.2831,"default":6.2831,"min":0,"max":12,"type":"float","description":"rotRange"},
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
                                'randomPartner', 'gradient'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
-                        "placeType":{"name":"placeType","value":"jitter","values":AutoFill.LISTPLACEMETHOD,"min":0.,"max":0.,
+                        "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "gradient":{"name":"gradient","value":"","values":[],"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"gradient name to use if histo.use_gradient"},
@@ -848,7 +848,7 @@ class Ingredient(Agent):
         """
         #depending the extension of the filename, can be eitherdejaVu file, fbx or wavefront
         #no extension is DejaVu
-        helper = AutoFill.helper
+        helper = autopack.helper
         reporthook = None
         if helper is not None:        
             reporthook=helper.reporthook
@@ -875,12 +875,12 @@ class Ingredient(Agent):
                 tmpFileName2 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolvert"
 #                print("#check if exist first1",tmpFileName1)
                 #check if exist first
-                if not os.path.isfile(tmpFileName1) or AutoFill.forceFetch:
+                if not os.path.isfile(tmpFileName1) or autopack.forceFetch:
                     try :
                         urllib.urlretrieve(filename+".indpolface", tmpFileName1,reporthook=reporthook)
                     except :
                         print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                if not os.path.isfile(tmpFileName2) or AutoFill.forceFetch:
+                if not os.path.isfile(tmpFileName2) or autopack.forceFetch:
                     try :
                         urllib.urlretrieve(filename+".indpolvert", tmpFileName2,reporthook=reporthook)
                     except :
@@ -888,14 +888,14 @@ class Ingredient(Agent):
             else :
                 tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
 #                print("#check if exist first",tmpFileName,os.path.isfile(tmpFileName))
-                if not os.path.isfile(tmpFileName) or AutoFill.forceFetch:
+                if not os.path.isfile(tmpFileName) or autopack.forceFetch:
 #                    print("urlretrieve and fetch")
                     urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)#hook_cb ->progress bar TODO
             filename = tmpFileName 
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
         if fileExtension == ".fbx" :
-#            print ("read fbx withHelper",filename,helper,AutoFill.helper)
+#            print ("read fbx withHelper",filename,helper,autopack.helper)
             #use the host helper if any to read
             if helper is not None:#neeed the helper
                 print "read "+filename
@@ -915,15 +915,15 @@ class Ingredient(Agent):
                     helper.rotateObj(geom,[0.,-math.pi/2.0,0.0])
 #                    oldv = self.principalVector[:]
 #                    self.principalVector = [oldv[2],oldv[1],oldv[0]]
-                p=helper.getObject("AutoFillHider")
+                p=helper.getObject("autopackHider")
                 if p is None:
-                    p = helper.newEmpty("AutoFillHider")
+                    p = helper.newEmpty("autopackHider")
                     helper.toggleDisplay(p,False)
                 helper.reParent(geom,p)
                 return geom
             return None
         elif fileExtension == ".dae":
-#            print ("read dae withHelper",filename,helper,AutoFill.helper)
+#            print ("read dae withHelper",filename,helper,autopack.helper)
             #use the host helper if any to read
             if helper is not None:#neeed the helper
                 helper.read(filename)
@@ -939,9 +939,9 @@ class Ingredient(Agent):
                     #swicth the axe?
 #                    oldv = self.principalVector[:]
 #                    self.principalVector = [oldv[2],oldv[1],oldv[0]]
-                p=helper.getObject("AutoFillHider")
+                p=helper.getObject("autopackHider")
                 if p is None:
-                    p = helper.newEmpty("AutoFillHider")
+                    p = helper.newEmpty("autopackHider")
                     helper.toggleDisplay(p,False)
                 helper.reParent(geom,p)            
                 return geom
@@ -953,9 +953,9 @@ class Ingredient(Agent):
                 helper.read(filename)
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
-                p=helper.getObject("AutoFillHider")
+                p=helper.getObject("autopackHider")
                 if p is None:
-                    p = helper.newEmpty("AutoFillHider")
+                    p = helper.newEmpty("autopackHider")
                     helper.toggleDisplay(p,False)
                 helper.reParent(geom,p)            
                 return geom
@@ -4130,20 +4130,20 @@ class ActinIngrediant(GrowIngrediant):
         self.uLength = r
         self.length = 2*r
 
-#import AutoFill
-#from AutoFill.Recipe import Recipe
+#import autopack
+#from autopack.Recipe import Recipe
 import os
 #from DejaVu  import colors
 class IngredientDictionary:
     """
     list all available ingrediant, and permit to add user ingrediant
-    the listing is based on a scanning of the AutoFill package directory
+    the listing is based on a scanning of the autopack package directory
     under recipe/membrane and recipe/cyto
     """
     def __init__(self):
         """Set up from the default directory"""
         #get the directory and scan all the name
-        self.rdir = AutoFill.__path__[0]+'/recipes/'
+        self.rdir = autopack.__path__[0]+'/recipes/'
         self.update()
         self.knownIngr = {}
         self.knownIngr['membrane'] = {

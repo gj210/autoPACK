@@ -12,7 +12,7 @@ Created on Saturday September 1 1:50:00 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "fillBoxPseudoCode.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "fillBoxPseudoCode.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ Name: -
 SMALL_NUM = 0.00000001 #anything that avoids division overflow
 from math import fabs
 import numpy
-import AutoFill
-helper = AutoFill.helper
+import autopack
+helper = autopack.helper
 
 ## intersect_RayTriangle(): intersect a ray with a 3D triangle
 ##    Input:  a ray R, and a triangle T

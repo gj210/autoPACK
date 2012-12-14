@@ -10,7 +10,7 @@ import c4d
 
 
 def main():
-    f="/Users/ludo/DEV/Autofill_svn_test/autofill/trunk/AutoFillClean/cache/test.afr"
+    f="/Users/ludo/DEV/Autofill_svn_test/autofill/trunk/AutoFillClean/cache/test.afr"#path t result file
     afui = c4d.af.values()[0]
     h = afui.histoVol.values()[0]
     afui.helper.doc = doc

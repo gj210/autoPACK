@@ -9,9 +9,9 @@ sys.path.append("/Users/ludo/DEV/Autofill_svn_test/autofill/trunk")
 sys.path.append("/Users/ludo/DEV/MGLTOOLS/mgl32/MGLToolsPckgs/")
 sys.path.append("/Users/ludo/DEV/MGLTOOLS/mgl32/MGLToolsPckgs/PIL")
 import numpy
-from AutoFill.Organelle import Organelle
+from autopack.Organelle import Organelle
 o1 = Organelle("vesicle_Mesh",None, None, None,
-               filename="/Users/ludo/DEV/Autofill_svn_test/autofill/trunk/AutoFill/cache_organelles/vesicle")
+               filename="/Users/ludo/DEV/Autofill_svn_test/autofill/trunk/autopack/cache_organelles/vesicle")
 print "ok o1"
 inner, surface = o1.getSurfaceInnerPointsSDF(o1.bb,20.0)
 #print inner

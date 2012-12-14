@@ -32,7 +32,7 @@ Created on Mon Jul 12 15:04:18 2010
 ###############################################################################
 @author: Ludovic Autin
 
-Viewer/helper of AutoFill result.
+Viewer/helper of autopack result.
 """
 import os
 import math
@@ -63,7 +63,7 @@ from upy.colors import red, aliceblue, antiquewhite, aqua, \
      blue, cyan, mediumslateblue, steelblue, darkcyan, \
      limegreen, darkorchid, tomato, khaki, gold, magenta, green
 
-from AutoFill.Ingredient import GrowIngrediant,ActinIngrediant
+from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 
 class AFViewer:
 
@@ -160,7 +160,7 @@ class AFViewer:
         """
         Define the current histo volume.
         
-        @type  histo: AutoFill.HistoVol
+        @type  histo: autopack.HistoVol
         @param histo: the current histo-volume
         @type  pad: float
         @param pad: the pading value to extend the histo volume bounding box
@@ -200,7 +200,7 @@ class AFViewer:
         """
         Create a empty master/parent geometry for a ingredient
         
-        @type  ingr: AutoFill.Ingredient
+        @type  ingr: autopack.Ingredient
         @param ingr: the ingredient 
         @type  parent: hostObject
         @param parent: specifiy a parent to insert under
@@ -305,7 +305,7 @@ class AFViewer:
         """
         Create and display geometry for an organelle.
         
-        @type  orga: AutoFill.Organelle
+        @type  orga: autopack.Organelle
         @param orga: the organelle 
         """    
 
@@ -544,7 +544,7 @@ class AFViewer:
         """
         Use this function to display grid pointCloud for an organelle
 
-        @type  orga: AutoFill.Organelle
+        @type  orga: autopack.Organelle
         @param orga: the organelle 
         """            
         vGridPointHider = self.vi.getObject(orga.name+"GridPointHider") #g
@@ -1423,7 +1423,7 @@ class AFViewer:
                 child0 = self.helper.getMasterInstance(child0)
                 ingtype = self.helper.getType(child0)
             if ingtype == self.helper.SPHERE :
-                from AutoFill.Ingredient import MultiSphereIngr
+                from autopack.Ingredient import MultiSphereIngr
                 positions=[]
                 radius = []
                 for io in child :
@@ -1439,7 +1439,7 @@ class AFViewer:
                     meshObject=obj)
 #                print("spheres ",positions)
             if ingtype == self.helper.CYLINDER :
-                from AutoFill.Ingredient import MultiCylindersIngr
+                from autopack.Ingredient import MultiCylindersIngr
                 positions=[]
                 positions2=[]
                 radius = []
@@ -1461,7 +1461,7 @@ class AFViewer:
                     principalVector=axis)
 #                print (name, [radius],[positions],[positions2]) 
             if ingtype == self.helper.CUBE :
-                from AutoFill.Ingredient import SingleCubeIngr
+                from autopack.Ingredient import SingleCubeIngr
                 #need to create a SphereIngredient
                 s = self.helper.getPropertyObject(child0,key=["scale"])[0]
                 if self.helper.getType(child0) == self.helper.INSTANCE :
@@ -1471,7 +1471,7 @@ class AFViewer:
                                   positions=[[[0,0,0],[0,0,0],[0,0,0],]],
                                     meshObject=obj,)
         if self.helper.getType(obj) == self.helper.SPHERE :
-            from AutoFill.Ingredient import SingleSphereIngr
+            from autopack.Ingredient import SingleSphereIngr
             #need to create a SphereIngredient
             ingr = SingleSphereIngr( 1.0, 
                     name=name,
@@ -1480,7 +1480,7 @@ class AFViewer:
                     meshObject = ingrobj)
             #compartiment ?
         elif self.helper.getType(obj) == self.helper.CYLINDER :
-            from AutoFill.Ingredient import MultiCylindersIngr
+            from autopack.Ingredient import MultiCylindersIngr
             #need to create a SphereIngredient
             r,h,axis = res = self.helper.getPropertyObject(obj,key=["radius","length","axis"])
             ingr = MultiCylindersIngr(1.0, name=name, 
@@ -1495,7 +1495,7 @@ class AFViewer:
                 principalVector=axis,#should come from the object
                 )
         elif self.helper.getType(obj) == self.helper.CUBE :
-            from AutoFill.Ingredient import SingleCubeIngr
+            from autopack.Ingredient import SingleCubeIngr
             #need to create a SphereIngredient
             size = self.helper.getPropertyObject(obj,key=["length"])[0]
             ingr = SingleCubeIngr( 1.0,  [self.helper.ToVec(size),],name=name,
@@ -1513,7 +1513,7 @@ class AFViewer:
         return ingr
     
     def addOrganelleFromGeom(self,name, obj, **kw):
-        from AutoFill.Organelle import Organelle
+        from autopack.Organelle import Organelle
         o1 = None
         if self.helper.getType(obj) == self.helper.EMPTY: #Organelle master parent?
             childs = self.helper.getChilds(obj)
@@ -1809,7 +1809,7 @@ class AFViewer:
         list(map(PS.SetAge,ids,ages))#should avoid map
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
         
         rd = doc.GetActiveRenderData().GetData()
         bmp = c4d.bitmaps.BaseBitmap()
@@ -1841,7 +1841,7 @@ class AFViewer:
 #        map(PS.SetAge,ids,ages)
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
         
 #        rd = doc.GetActiveRenderData().GetData()
 #        bmp = c4d.bitmaps.BaseBitmap()

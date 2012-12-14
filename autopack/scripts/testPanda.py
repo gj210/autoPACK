@@ -9,11 +9,11 @@ import sys
 sys.path.append(".")
 sys.path.append("/Users/ludo/DEV/MGLTOOLS/mgl32/MGLToolsPckgs/")
 from bhtree import bhtreelib
-import AutoFillClean    
-from AutoFillClean.pandautil import PandaUtil
+import autopack    
+from autopack.pandautil import PandaUtil
 pud = PandaUtil()
-from AutoFillClean.HistoVol import Grid  
-from AutoFillClean.ray import vlen, vdiff, vcross
+from autopack.HistoVol import Grid  
+from autopack.ray import vlen, vdiff, vcross
 
 def tetrahedron(radius):
     """

@@ -12,7 +12,7 @@ Created on Wed Apr  6 10:21:38 2011
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "Organelle.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -303,10 +303,10 @@ class SphereTreeUI(uiadaptor):
         #get name
         name = "default"
         initialFile = name+'_%d.sph'%len(self.keptRadii)
-        self.saveDialog(label='AutoFill Sph files',callback=self.saveSphereModel)
+        self.saveDialog(label='autopack Sph files',callback=self.saveSphereModel)
 #        file = tkFileDialog.asksaveasfilename(
 #            parent = master,
-#            filetypes=[ ('AutoFill Sph files', '*.sph'),('All files', '*') ],
+#            filetypes=[ ('autopack Sph files', '*.sph'),('All files', '*') ],
 #            initialdir='.',
 #            initialfile=initialFile,
 #            title='save sphere file')
@@ -498,7 +498,7 @@ class SphereTreeUI(uiadaptor):
             self.object_target = self.helper.getCurrentSelection()[0]
         mesh = self.object_target
         #canwe usethe ogranelle mesh system from autofill
-        from AutoFill.Organelle import Organelle
+        from autopack.Organelle import Organelle
         faces,vertices,vnormals,fn = self.helper.DecomposeMesh(mesh,
                                     edit=False,copy=False,tri=True,transform=True,fn=True)
         o1 = Organelle(self.helper.getName(mesh),vertices, faces, vnormals,fnormals=fn)
@@ -538,4 +538,4 @@ class SphereTreeUI(uiadaptor):
 #    #call it
 #    mygui.display()
 
-#execfile('/Library/MGLTools/1.5.6.up/MGLToolsPckgs/AutoFill/scripts/clusterGUIp.py')
+#execfile('/Library/MGLTools/1.5.6.up/MGLToolsPckgs/autopack/scripts/clusterGUIp.py')

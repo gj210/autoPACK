@@ -16,7 +16,7 @@
 #
 # Class restructuring and organization: Michel Sanner
 #
-# This file "Recipe.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "Recipe.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

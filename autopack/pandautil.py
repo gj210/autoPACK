@@ -13,7 +13,7 @@ Created on Tue Aug 28 20:47:45 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFGui.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "AFGui.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ Name: 'pandautil'
 import sys
 import numpy
 try :
-    import AutoFill
-    helper = AutoFill.helper
+    import autopack
+    helper = autopack.helper
 except :
     helper= None
 try :

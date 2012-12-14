@@ -15,7 +15,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "Organelle.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -68,18 +68,18 @@ from math import sqrt,ceil
 import os
 #from .Ingredient import Ingredient
 from .Recipe import Recipe
-print "import AutoFill"
-import AutoFill
-AFDIR = AutoFill.__path__[0]
+print "import autopack"
+import autopack
+AFDIR = autopack.__path__[0]
 
 try :
-    helper = AutoFill.helper
+    helper = autopack.helper
 except :
     helper = None
 print ("helper is "+str(helper))
 
-from AutoFill import intersect_RayTriangle as iRT
-#from AutoFill.HistoVol import Grid   
+from autopack import intersect_RayTriangle as iRT
+#from autopack.HistoVol import Grid   
 
 class OrganelleList:
     
@@ -203,9 +203,9 @@ class Organelle(OrganelleList):
     def getMesh(self,filename=None,rep=None,**kw):
         geom = None
         gname = self.name
-        parent=helper.getObject("AutoFillHider")
+        parent=helper.getObject("autopackHider")
         if parent is None:
-            parent = helper.newEmpty("AutoFillHider")
+            parent = helper.newEmpty("autopackHider")
         if rep is not None :
             gname =rep 
             parent=helper.getObject('O%s'%self.name)
@@ -226,7 +226,7 @@ class Organelle(OrganelleList):
                 tmpFileName2 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolvert"
 #                print("#check if exist first1",tmpFileName1)
                 #check if exist first
-                if not os.path.isfile(tmpFileName1) or AutoFill.forceFetch:
+                if not os.path.isfile(tmpFileName1) or autopack.forceFetch:
 #                    print "download "+filename+".indpolface"
 #                    print "download "+filename+".indpolvert"
                     try :
@@ -241,7 +241,7 @@ class Organelle(OrganelleList):
             else :
                 tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
                 print("#check if exist first",tmpFileName,os.path.isfile(tmpFileName))
-                if not os.path.isfile(tmpFileName) or AutoFill.forceFetch:
+                if not os.path.isfile(tmpFileName) or autopack.forceFetch:
                     print("urlretrieve and fetch")
                     urllib.urlretrieve(filename, tmpFileName)
             filename = tmpFileName 
@@ -260,9 +260,9 @@ class Organelle(OrganelleList):
                 if helper.host != "c4d" and rep == None:
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.,-math.pi/2.0,0.0])
-#                p=helper.getObject("AutoFillHider")
+#                p=helper.getObject("autopackHider")
 #                if p is None:
-#                    p = helper.newEmpty("AutoFillHider")
+#                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
                 helper.reParent(geom,parent)
 #                return geom
@@ -279,9 +279,9 @@ class Organelle(OrganelleList):
                 if helper.host != "c4d"  and helper.host != "dejavu":
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
-#                p=helper.getObject("AutoFillHider")
+#                p=helper.getObject("autopackHider")
 #                if p is None:
-#                    p = helper.newEmpty("AutoFillHider")
+#                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
                 #print "reparent ",geom,p
                 helper.reParent(geom,parent)            
@@ -293,9 +293,9 @@ class Organelle(OrganelleList):
             if helper is not None:#neeed the helper
                 helper.read(filename)
                 geom = helper.getObject(gname)
-#                p=helper.getObject("AutoFillHider")
+#                p=helper.getObject("autopackHider")
 #                if p is None:
-#                    p = helper.newEmpty("AutoFillHider")
+#                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
                 helper.reParent(geom,parent) 
         if rep is None:
@@ -1769,7 +1769,7 @@ class Organelle(OrganelleList):
 
          
     def getSurfaceInnerPoints_sdf_interpolate(self,boundingBox,spacing,display = True,useFix=False):
-        from AutoFill.HistoVol import Grid        
+        from autopack.HistoVol import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -1830,7 +1830,7 @@ class Organelle(OrganelleList):
              
          
     def getSurfaceInnerPoints(self,boundingBox,spacing,display = True,useFix=False):
-        from AutoFill.HistoVol import Grid        
+        from autopack.HistoVol import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2010,9 +2010,9 @@ class Organelle(OrganelleList):
 
     def getSurfaceInnerPointsPandaRay(self,boundingBox,spacing,display = True,useFix=False):
         #should use the ray and see if it gave better reslt
-        from AutoFill.pandautil import PandaUtil
+        from autopack.pandautil import PandaUtil
         pud = PandaUtil()
-        from AutoFill.HistoVol import Grid        
+        from autopack.HistoVol import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2128,9 +2128,9 @@ class Organelle(OrganelleList):
         
     def getSurfaceInnerPointsPanda(self,boundingBox,spacing,display = True,useFix=False):
         #work for small object
-        from AutoFill.pandautil import PandaUtil
+        from autopack.pandautil import PandaUtil
         pud = PandaUtil()
-        from AutoFill.HistoVol import Grid        
+        from autopack.HistoVol import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
