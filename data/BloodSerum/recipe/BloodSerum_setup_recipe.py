@@ -165,7 +165,9 @@ rMatrix["ECM_box"].addIngredient(snakeIngr)
 BloodConc = 1.0
 if doMatrix :
     #ho1 = helper.getObject("3ghg_Fibrinogen")
-    m,mesh = helper.Sphere("HIV",radius=725.,res=12)
+    m = helper.getObject("HIV")
+    if m is None :
+      m,mesh = helper.Sphere("HIV",radius=725.,res=12)
     mHIV = SingleSphereIngr( BloodConc*800.0E-12,  725.,
                             name='HIVsphere', pdb=None,
                             meshObject=m,
