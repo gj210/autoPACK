@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AF_recipe>
-    <recipe name="SynapticVesicle" version="1.0">
-        <setupfile>autoFillRecipeScripts/SynapticVesicle/SynapticVesicle_setup_recipe.py</setupfile>
-        <wrkdir>autoFillRecipeScripts/SynapticVesicle</wrkdir>
-        <resultfile>autoFillRecipeScripts/SynapticVesicle/results/SynapticVesiclefillResult.apr</resultfile>
-    </recipe>
-    <recipe name="SynapticVesicle" version="1.1">
-        <setupfile>autoFillRecipeScripts/SynapticVesicle/SynapticVesicle_setup_recipe.py</setupfile>
-        <wrkdir>autoFillRecipeScripts/SynapticVesicle</wrkdir>
-        <resultfile>http://mgldev.scripps.edu/projects/AF/datas/SynapticVesicle/results/SynapticVesiclePACKResult.apr</resultfile>
-    </recipe>
     <recipe name="BloodSerum" version="1.0">
         <setupfile>autoFillRecipeScripts/BloodSerum/BloodSerum_setup_recipe.py</setupfile>
         <wrkdir>autoFillRecipeScripts/BloodSerum</wrkdir>
