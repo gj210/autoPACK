@@ -28,7 +28,7 @@
     <recipe name="HIVBloodSerum" version="1.0">
         <setupfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/recipe/HIVBloodSerum_recipe_setup_1_0.py</setupfile>
         <wrkdir>autoFillRecipeScripts/HIVBloodSerum</wrkdir>
-        <resultfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/results/HIVBloodSerumresult_1_1.apr</resultfile>
+        <resultfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/results/HIVBloodSerum_1_0.apr</resultfile>
     </recipe>
     <recipe name="Test_CylindersSpheres2D" version="1.0">
         <setupfile>autoFillRecipeScripts/2DcylinderSphereFill/2DCylindersSpheres_setup_recipe.py</setupfile>
