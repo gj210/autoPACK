@@ -1027,7 +1027,9 @@ resultfilename = h1.resultfile = httpdir+"HIVBloodSerum/HIVBloodSerum_1_0.apr"
 bbox = None
 #create the box
 bbox = afviewer.helper.getObject(hvb)
-if bbox is None : bbox = afviewer.helper.box(hvb,cornerPoints=h1.boundingBox)
+if bbox is None : 
+    h1.boundingBox = [[-1700.,-850.,-1050.],[1700,850.,1050.]]
+    bbox = afviewer.helper.box(hvb,cornerPoints=h1.boundingBox)
 #print "TEST",bbox
 helper = afviewer.helper
 
