@@ -947,7 +947,6 @@ h1.smallestProteinSize = 50 #10 takes 23minutes   #15
 #print o1.innerRecipe#
 
 pad = 0.
-h1.boundingBox = [[-1700.,-850.,-1050.],[1700,850.,1050.]]#1579.83 cm1700.248 cm3500 cm
 h1.pickWeightedIngr = True ##do we sort the ingrediant or not see  getSortedActiveIngredients
 h1.pickRandPt = True ##point pick randomly or one after the other?
 
@@ -1006,7 +1005,7 @@ afviewer.doPoints = 1#True
 afviewer.doSpheres = 0#1
 afviewer.quality = 1 #lowest quality for sphere and cylinder
 afviewer.visibleMesh = True #mesh default visibility 
-
+h1.boundingBox = [[-1700.,-850.,-1050.],[1700,850.,1050.]]#1579.83 cm1700.248 cm3500 cm
 h1.name="HIVBloodSerum"
 afviewer.SetHistoVol(h1,pad,display=False)
 
