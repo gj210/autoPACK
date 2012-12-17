@@ -538,7 +538,7 @@ if donucl:
 # BloodSerum recipe
 #==============================================================================
 httpwrkDir = httpwrkDirBlood
-sphDir = httpwrkDir+"spheres/"
+sphdir = sphDir = httpwrkDir+"spheres/"
 meshDir = httpwrkDir+"geoms/"
 
 #===============================================================================
@@ -601,7 +601,7 @@ if doMatrix :
     #I'll crank to 750,000/mL for high viral Load by multiplying by 18.75
     m2plv = MultiSphereIngr( BloodConc*18.75*6.43E-17,  50., 
         name='plv_Polio', 
-        meshFile=httpwrkDir+"BloodIngredientGeom/plv_Polio."+modelFormat,#+modeltype,#wrkDir+'/iTat',
+        meshFile=meshDir+"/plv_Polio."+modelFormat,#+modeltype,#wrkDir+'/iTat',
         placeType=mode, 
         pdb="2plv",
         sphereFile=sphdir+'/2plv.sph',
@@ -617,7 +617,7 @@ if doMatrix :
         name='Fibrinogen', 
         sphereFile=sphdir+'/3ghg.sph',
 #                                meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/Fibrinogen."+modelFormat,
+        meshFile=meshDir+"/Fibrinogen."+modelFormat,
         placeType=mode,  
         pdb="3ghg",
         **dict["d3ghg_Fibrinogen"]
@@ -631,7 +631,7 @@ if doMatrix :
     m3gau = MultiSphereIngr( BloodConc*3.23E-6,  
         name='FactorH1', 
         sphereFile=sphdir+'/3gau_FactorH3.sph',
-        meshFile=httpwrkDir+"BloodIngredientGeom/FactorH1."+modelFormat,
+        meshFile=meshDir+"/FactorH1."+modelFormat,
 #                                meshObject=hoo3,
         placeType=mode,
         pdb="3gau",
@@ -648,7 +648,7 @@ if doMatrix :
         sphereFile=sphdir+'/3irl_heparin2.sph',
 #                                meshObject=hoo3,
         pdb="3irl",
-        meshFile=httpwrkDir+"BloodIngredientGeom/Heparin."+modelFormat,
+        meshFile=meshDir+"/Heparin."+modelFormat,
         placeType=mode,  
         **dict["d3irl_Heparin"]
         #packingMode='close'
@@ -662,7 +662,7 @@ if doMatrix :
     m1e7i = MultiSphereIngr( BloodConc*0.0006376,  50.,  
         name='SerumAlbumin', 
 #                                meshObject=hoo1,
-        meshFile=httpwrkDir+"BloodIngredientGeom/SerumAlbumin."+modelFormat,
+        meshFile=meshDir+"/SerumAlbumin."+modelFormat,
         placeType=mode,  
         pdb="1e7i",
         sphereFile=sphdir+'/1e7i.sph',
@@ -676,7 +676,7 @@ if doMatrix :
     c1atu = MultiSphereIngr( BloodConc*0.00005510,
         name='AntiTrypsin', 
 #                                meshObject=hoo0,
-        meshFile=httpwrkDir+"BloodIngredientGeom/AntiTrypsin."+modelFormat,
+        meshFile=meshDir+"/AntiTrypsin."+modelFormat,
         placeType=mode,  
         pdb="1atu",
         sphereFile=sphdir+'/1atu.sph',
@@ -691,7 +691,7 @@ if doMatrix :
         name='Transferrin', 
         pdb="1lfg",
 #                                meshObject=hoo0,
-        meshFile=httpwrkDir+"BloodIngredientGeom/Transferrin."+modelFormat,
+        meshFile=meshDir+"/Transferrin."+modelFormat,
         placeType=mode,  
         sphereFile=sphdir+'/1lfg.sph',
         **dict["d1lfg_Transferrin"]
@@ -705,7 +705,7 @@ if doMatrix :
         name='IgG_Antibody_1mer', pdb=None, 
 #                                meshObject=hoo3,
         placeType=mode,  
-        meshFile=httpwrkDir+"BloodIngredientGeom/iIgG_Antibody_1mer."+modelFormat,
+        meshFile=meshDir+"/iIgG_Antibody_1mer."+modelFormat,
         sphereFile=sphdir+'/antB.sph',
         **dict["dIgG_Antibody_1mer"]
         #packingMode='close'
@@ -720,7 +720,7 @@ if doMatrix :
         name='iIgA_Antibody_2mer', pdb=None,
         sphereFile=sphdir+'/IgA_Antibody_2mer.sph',
 #                                meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/iIgA_Antibody_2mer."+modelFormat,
+        meshFile=meshDir+"/iIgA_Antibody_2mer."+modelFormat,
         placeType=mode,  
 #                                sphereFile=wrkDir+'/1atu.sph',
         **dict["dIgA_Antibody_2mer"]
@@ -737,7 +737,7 @@ if doMatrix :
         #positions=[[[-50,0,0]]], positions2=[[[50,0,0]]],
 #                                meshObject=hoo3,
         #principalVector=(1,0,0),
-        meshFile=httpwrkDir+"BloodIngredientGeom/iIgM_Antibody_5mer."+modelFormat,    
+        meshFile=meshDir+"/iIgM_Antibody_5mer."+modelFormat,    
         sphereFile=sphdir+'/IgM_Antibody_5mer.sph',
         placeType=mode,
         **dict["dIgM_Antibody_5mer"]
@@ -751,7 +751,7 @@ if doMatrix :
         sphereFile=sphdir+'/2hui.sph',
         name='Insulin', pdb="2hui",
 #        meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/Insulin."+modelFormat,   
+        meshFile=meshDir+"/Insulin."+modelFormat,   
         placeType=mode,  
         **dict["d2hui_Insulin"]
         #packingMode='close'
@@ -763,7 +763,7 @@ if doMatrix :
     ildl1 = MultiSphereIngr( BloodConc*1.4E-6,  140., 
         name='iLDL', 
 #                                meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/iLDL."+modelFormat,
+        meshFile=meshDir+"/iLDL."+modelFormat,
         pdb = "EMDB_5421",
         placeType=mode, 
         sphereFile=sphdir+'/EMDB_5421.sph',
@@ -777,7 +777,7 @@ if doMatrix :
         name='dLDL', 
 #        meshObject=hoo3,
         pdb="EMDB_5239",
-        meshFile=httpwrkDir+"BloodIngredientGeom/dLDL."+modelFormat,
+        meshFile=meshDir+"/dLDL."+modelFormat,
         placeType=mode,
         sphereFile=sphdir+'/EMDB_5239.sph',  
         **dict["dLDL_EMDB_5239"]
@@ -788,7 +788,7 @@ if doMatrix :
     #Replace these with low res versions by default:
 #    idhdl = MultiSphereIngr( BloodConc*3.93618461E-6,  140., 
 #        name='idHDLs', pdb=None,
-#        meshFile=httpwrkDir+"BloodIngredientGeom/idHDLs."+modelFormat,
+#        meshFile=meshDir+"/idHDLs."+modelFormat,
 #        placeType=mode,
 #        sphereFile=sphdir+'/dHDLminusH_simulated.sph',  
 #        **dict["ddHDL_Simulated"]
@@ -798,7 +798,7 @@ if doMatrix :
 #    
 #    ishdl = MultiSphereIngr( BloodConc*3.93618461E-6,  140., 
 #        name='isHDLs', pdb=None,
-#        meshFile=httpwrkDir+"BloodIngredientGeom/isHDLs."+modelFormat,
+#        meshFile=meshDir+"/isHDLs."+modelFormat,
 #        placeType=mode,
 #        sphereFile=sphdir+'/sHDLminusH_simulated.sph',  
 #        **dict["dsHDL_Simulated"]
@@ -811,7 +811,7 @@ if doMatrix :
     i2hhb = MultiSphereIngr( BloodConc*300.0E-9,  140., 
         name='Hemoglobin', pdb="2hhb",
 #        meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/Hemoglobin."+modelFormat,
+        meshFile=meshDir+"/Hemoglobin."+modelFormat,
         placeType=mode,
         sphereFile=sphdir+'/2hhb_hemoglobin.sph',  
         **dict["d2hhb_hemoglobin"]
@@ -824,7 +824,7 @@ if doMatrix :
     i1kcw = MultiSphereIngr( BloodConc*2.5E-6,  140., 
         name='Ceruloplasmin', pdb="1kcw",
 #        meshObject=hoo3,
-        meshFile=httpwrkDir+"BloodIngredientGeom/Ceruloplasmin."+modelFormat,
+        meshFile=meshDir+"/Ceruloplasmin."+modelFormat,
         placeType=mode,
         sphereFile=sphdir+'/1kcw_ceruloplasmin.sph',  
         **dict["d1kcw_ceruloplasmin"]
@@ -841,7 +841,7 @@ if doMatrix :
     i1ysx = MultiSphereIngr( BloodConc*2*3.93618461E-6,  50.,  
         name='i1ysx_23kD', pdb="1ysx",#is it SerumAlbumin ?
 #                                meshObject=hoo1,
-        meshFile=httpwrkDir+"BloodIngredientGeom/i1ysx_23kD."+modelFormat,
+        meshFile=meshDir+"/i1ysx_23kD."+modelFormat,
         placeType=mode,  
         sphereFile=sphdir+'/1ysx_23kD.sph',
         **dict["d1ysx_23kD"]
@@ -854,7 +854,7 @@ if doMatrix :
     i1smd = MultiSphereIngr( BloodConc*14*3.93618461E-6,  50.,  
         name='i1smd_56kD', pdb="1smd",
 #        meshObject=hoo1,
-        meshFile=httpwrkDir+"BloodIngredientGeom/i1smd_56kD."+modelFormat,
+        meshFile=meshDir+"/i1smd_56kD."+modelFormat,
         placeType=mode,
         sphereFile=sphdir+'/1smd_56kD.sph',
         **dict["d1smd_56kD"]
@@ -867,7 +867,7 @@ if doMatrix :
     i7aat = MultiSphereIngr( BloodConc*8*3.93618461E-6,  50.,  
         name='i7aat_91kD', pdb="7aat",
 #        meshObject=hoo1,
-        meshFile=httpwrkDir+"BloodIngredientGeom/i7aat_91kD."+modelFormat,
+        meshFile=meshDir+"/i7aat_91kD."+modelFormat,
         placeType=mode,  
         sphereFile=sphdir+'/7aat_91kD.sph',
         **dict["d7aat_91kD"]
@@ -880,7 +880,7 @@ if doMatrix :
     i2tsc = MultiSphereIngr( BloodConc*8*3.93618461E-6,  50.,  
         name='i2tsc_63kD', pdb="2tsc",
 #        meshObject=hoo1,
-        meshFile=httpwrkDir+"BloodIngredientGeom/i2tsc_63kD."+modelFormat,
+        meshFile=meshDir+"/i2tsc_63kD."+modelFormat,
         placeType=mode,  
         sphereFile=sphdir+'/2tsc_63kD.sph',
         **dict["d2tsc_63kD"]
