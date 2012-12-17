@@ -484,6 +484,9 @@ h1.setExteriorRecipe(rCyto)
 from DejaVu.IndexedPolygons import IndexedPolygonsFromFile
 #    from DejaVu.IndexedPolygons import IndexedPolygonsFromFile
 name=["Capside","Nucleus"]
+if helper.host == "3dsmax":
+    hext = "FBX"
+
 for n in name :
     f=wrkDirOrga+'/'+n
     if n == "Nucleus" :#and helper.host == "c4d":
