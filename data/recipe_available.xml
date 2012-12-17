@@ -15,16 +15,6 @@
         <wrkdir>autoFillRecipeScripts/BloodSerum</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/BloodSerum/results/BloodSerumfillResult.apr</resultfile>
     </recipe>
-    <recipe name="Test_CylindersSpheres2D" version="1.0">
-        <setupfile>autoFillRecipeScripts/2DcylinderSphereFill/2DCylindersSpheres_setup_recipe.py</setupfile>
-        <wrkdir>autoFillRecipeScripts/2DcylinderSphereFill</wrkdir>
-        <resultfile>autoFillRecipeScripts/2DcylinderSphereFill/results/CylSpherefillResult.apr.txt</resultfile>
-    </recipe>
-    <recipe name="Test_Cubes2D" version="1.0">
-        <setupfile>autoFillRecipeScripts/2DCubeFill/2DCubes_setup_recipe.py</setupfile>
-        <wrkdir>autoFillRecipeScripts/2DCubeFill</wrkdir>
-        <resultfile>autoFillRecipeScripts/2DCubeFill/results/2DCubesResult.afr.txt</resultfile>
-    </recipe>
     <recipe name="HIV" version="1.0">
         <setupfile>autoFillRecipeScripts/HIV/figureHiv3.5mesh2.py</setupfile>
         <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
@@ -34,6 +24,21 @@
         <setupfile>autoFillRecipeScripts/HIV/HIV_recipe_setup_1_1.py</setupfile>
         <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
         <resultfile>http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_1.apr</resultfile>
+    </recipe>
+    <recipe name="HIVBloodSerum" version="1.0">
+        <setupfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/recipes/HIVBloodSerum_recipe_setup_1_0.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/HIVBloodSerum</wrkdir>
+        <resultfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/results/HIVBloodSerumresult_1_1.apr</resultfile>
+    </recipe>
+    <recipe name="Test_CylindersSpheres2D" version="1.0">
+        <setupfile>autoFillRecipeScripts/2DcylinderSphereFill/2DCylindersSpheres_setup_recipe.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/2DcylinderSphereFill</wrkdir>
+        <resultfile>autoFillRecipeScripts/2DcylinderSphereFill/results/CylSpherefillResult.apr.txt</resultfile>
+    </recipe>
+    <recipe name="Test_Cubes2D" version="1.0">
+        <setupfile>autoFillRecipeScripts/2DCubeFill/2DCubes_setup_recipe.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/2DCubeFill</wrkdir>
+        <resultfile>autoFillRecipeScripts/2DCubeFill/results/2DCubesResult.afr.txt</resultfile>
     </recipe>
     <recipe name="GenericCytoplasm" version="1.0">
         <setupfile>autoFillRecipeScripts/GenericCytoplasm/GenericCytoplasm_setup_recipe.py</setupfile>
