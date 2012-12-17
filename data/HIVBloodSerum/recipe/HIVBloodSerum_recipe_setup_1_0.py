@@ -338,8 +338,9 @@ if dolipid:
     
   
 if domatrix:
+    density = 18.0E-05 #6.20E-5,
     meshDirMatrix=meshDir+"Matrix/"
-    rt = MultiSphereIngr( HIVmatrixConc * 6.20E-5,
+    rt = MultiSphereIngr( HIVmatrixConc * density,
                                 name='Cyt_RT', pdb="1hys",
                                 sphereFile=sphDir+'1hys_RT.sph',
                                 meshFile=meshDir+'Cyt_RT.'+modelFormat,
@@ -348,10 +349,11 @@ if domatrix:
                                 **dict["1hys"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
+    rt.compareCompartment = True
     rMatrix["Capside"].addIngredient( rt )
     
 #    hoo3=helper.getObject("1ex4")
-    inr = MultiSphereIngr( MSca* 6.20E-5,  
+    inr = MultiSphereIngr( MSca* density,  
                                 name='Cyt_IN', pdb="1ex4",
                                 sphereFile=sphDir+'1ex4_IN.sph',
                                 meshFile=meshDir+'Cyt_IN.'+modelFormat,
@@ -359,10 +361,11 @@ if domatrix:
                                 **dict["1ex4"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
+    inr.compareCompartment = True
     rMatrix["Capside"].addIngredient( inr )
     
 #    hoo3=helper.getObject("1hpv")
-    pr = MultiSphereIngr( MSca* 6.20E-5,  
+    pr = MultiSphereIngr( MSca* density,  
                                 name='Cyt_PR', pdb="1hpv",
                                 sphereFile=sphDir+'1hpv_PR.sph',
                                 meshFile=meshDir+'Cyt_PR.'+modelFormat,
@@ -370,10 +373,11 @@ if domatrix:
                                 **dict["1hpv"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
+    pr.compareCompartment = True
     rMatrix["Capside"].addIngredient( pr )
     
 #    hoo3=helper.getObject("1esx")
-    vpr = MultiSphereIngr( MSca* 6.20E-5,  
+    vpr = MultiSphereIngr( MSca* density,  
                                 name='Cyt_Vpr', pdb="1esx",
                                 sphereFile=sphDir+'1esx_6.sph',
                                 meshFile=meshDir+'Cyt_Vpr.'+modelFormat,
@@ -381,10 +385,11 @@ if domatrix:
                                 **dict["1esx"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
+    vpr.compareCompartment = True
     rMatrix["Capside"].addIngredient( vpr )
 
 #    hoo3=helper.getObject("3dcg")
-    dcg = MultiSphereIngr( MSca* 6.20E-5,  
+    dcg = MultiSphereIngr( MSca* density,  
                                 name='Cyt_3dcg', pdb="3dcg",
                                 sphereFile=sphDir+'3dcg_1.sph',
                                 meshFile=meshDir+'Cyt_3dcg.'+modelFormat,
@@ -392,6 +397,7 @@ if domatrix:
                                 **dict["3dcg"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
+    dcg.compareCompartment = True
     rMatrix["Capside"].addIngredient( dcg )
 
 #    hoo3=helper.getObject("3dcgT:E")
