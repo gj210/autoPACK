@@ -106,9 +106,9 @@ httpdir = "http://autofill.googlecode.com/svn/data/"
 httpwrkDirHIV=httpdir+"HIV/"
 httpwrkDirBlood=httpdir+"BloodSerum/"
 #httpwrkDir = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/"
-sphDir = httpwrkDir+"spheres/"
-meshDir = httpwrkDir+"geoms/"
-wrkDirOrga = meshDir
+##sphDir = httpwrkDir+"spheres/"
+##meshDir = httpwrkDir+"geoms/"
+wrkDirOrga = httpwrkDirHIV+"geoms/"
 
 #if modelFormat = "dae":
 #    meshDir = meshDir+"fbxIngredients/"
