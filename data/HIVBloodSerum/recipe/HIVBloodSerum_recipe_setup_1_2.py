@@ -240,7 +240,300 @@ sphDir = httpwrkDir+"spheres/"
 meshDir = httpwrkDir+"geoms/"
 
 HIVmatrixConc = 1.0  
+#===============================================================================
+# surface recipe
+#===============================================================================
+if dosurf :   
 
+    meshDirSurf = meshDir+"Surface/"
+
+    sutm = MultiSphereIngr( MSca*0.006,#0.0006189**(1/3.0),
+                                name='iSUTM', pdb="2ezo",
+                                #radii=[[100.]],
+                                #positions=[[[0.,-100.,0.]]], 
+                                #positions2=[[[0.,200.,0.]]],
+                                principalVector=(0,1.0,0.0),    
+								jitterMax=(0.2,0.1,0.2),                            
+                                sphereFile=sphDir+'2ezo_23.sph',
+                                meshFile=meshDir+"iSUTM."+modelFormat,
+                                placeType=mode,
+                                packingMode='gradient',
+                                gradient = grnameSPIKE,
+                                **dict["sutm"]
+                                ) #original radius is 3.61
+    rSurf["Capside"].addIngredient( sutm ) 
+
+    ma = MultiSphereIngr( HIVmatrixConc * 0.14,
+                                name='MA_matrix_G1',#"1uph_MA_MatrixProtein",#'MA_matrix_G1', 
+                                pdb="1uph",
+                                #radii=[[42.]],
+                                #positions=[[[0.,10.,0.]]], 
+                                #positions2=[[[0.,70.,0.]]],
+                                principalVector=(0,1.0,0.0), 
+								jitterMax=(0.5,0.2,0.5),                               
+                                sphereFile=sphDir+'1uph.sph',
+                                meshFile=meshDir+"MA_matrix_G1."+modelFormat,
+                                placeType=mode,
+                                packingMode='gradient',
+                                gradient = grnameMA,
+                                **dict["d1uph_MA"]
+                                ) #original radius is 3.61
+    rSurf["Capside"].addIngredient( ma )   
+    
+    Nef = MultiCylindersIngr( MSca*0.02,
+                                name='Surf_Nef',#'Nef',#'Surf_Nef', 
+                                pdb="1avv",
+                                radii=[[30.]],
+                                positions=[[[0.,13.,0.]]], positions2=[[[0.,13.,100]]],
+                                principalVector=(0.0,0.0,-1.0),
+                                meshFile=meshDir+"Surf_Nef."+modelFormat,
+                                placeType=mode,
+								jitterMax=(0.2,0.1,0.2),
+                                **dict["Nef"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    rSurf["Capside"].addIngredient( Nef )
+
+if dolipidCyl :
+    cyl26IngrO = MultiCylindersIngr(MSca*10.,  pdb='LipOut26',
+                                    name='LipOut26', radii=[[4.5]],
+                                    positions=[[[0,-.5,0]]], positions2=[[[0,25.5,0]]],
+                                    jitterMax=(0.3,0.8,0.8), #  CRITICAL !!! IF jitter is greater than radius of object, e.g. 5x(1,1,1) the point may not be consumed!!!
+                                    principalVector=(0,1,0),
+                                    placeType='jitter',
+                                    meshFile=wrkDirMesh+'/LipOut26',#meshObject=lipidmeshout,
+                                    **dict["LipidOut1"]
+                                    )
+    rSurf["Capside"].addIngredient(cyl26IngrO)
+    
+    # Inner Leaflet Lipids as Cyninders
+    cyl26IngrI = MultiCylindersIngr(MSca*10.,  pdb='LipIn26',
+                                    name='LipIn26', radii=[[4.5]],
+                                    positions=[[[0,-25.5,0]]], positions2=[[[0,+5.,0]]],
+                                    jitterMax=(0.3,0.8,0.8), #  CRITICAL !!! IF jitter is greater than radius of object, e.g. 5x(1,1,1) the point may not be consumed!!!
+                                    principalVector=(0,1.,0),placeType='jitter',
+                                    meshFile=wrkDirMesh+'/LipIn26',#meshObject=lipidmeshin,
+                                    **dict["LipidIn1"]
+                                    )
+    rSurf["Capside"].addIngredient(cyl26IngrI)
+
+if dolipid:
+    cyl26IngrO = MultiCylindersIngr(MSca*0.8, color=bisque, pdb='LipOut26c1',
+                             name='LipOut26c1', radii=[[34.5]],
+                              positions=[[[-.5,0,0]]], positions2=[[[10.5,0,0]]],
+                              packingPriority= -.2,
+                              jitterMax=(0.1,0.1,0.1), #  CRITICAL !!! IF jitter is greater than radius of object, e.g. 5x(1,1,1) the point may not be consumed!!!
+                              principalVector=(1,0,0)
+                              )
+#    rSurf["Capside"].addIngredient(cyl26IngrO)
+
+    cyl26Ingr2 = MultiCylindersIngr(MSca*0.4, color=bisque, pdb='LipOut26c2',
+                             name='LipOut26c2', radii=[[10.5]],
+                              positions=[[[-.5,0,0]]], positions2=[[[10.5,0,0]]],
+                              packingPriority= -.1,
+                              jitterMax=(0.1,0.1,0.1), #  CRITICAL !!! IF jitter is greater than radius of object, e.g. 5x(1,1,1) the point may not be consumed!!!
+                              principalVector=(1,0,0)
+                              )
+#    rSurf["Capside"].addIngredient(cyl26Ingr2)
+    
+  
+if domatrix:
+    density = 18.0E-05 #6.20E-5,
+    meshDirMatrix=meshDir+"Matrix/"
+    rt = MultiSphereIngr( HIVmatrixConc * density,
+                                name='Cyt_RT', pdb="1hys",
+                                sphereFile=sphDir+'1hys_RT.sph',
+                                meshFile=meshDir+'Cyt_RT.'+modelFormat,
+                                placeType=mode,
+                                  principalVector=(1,0,0),  
+                                **dict["1hys"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    rt.compareCompartment = True
+    rMatrix["Capside"].addIngredient( rt )
+    
+#    hoo3=helper.getObject("1ex4")
+    inr = MultiSphereIngr( MSca* density,  
+                                name='Cyt_IN', pdb="1ex4",
+                                sphereFile=sphDir+'1ex4_IN.sph',
+                                meshFile=meshDir+'Cyt_IN.'+modelFormat,
+                                placeType=mode,  
+                                **dict["1ex4"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    inr.compareCompartment = True
+    rMatrix["Capside"].addIngredient( inr )
+    
+#    hoo3=helper.getObject("1hpv")
+    pr = MultiSphereIngr( MSca* density,  
+                                name='Cyt_PR', pdb="1hpv",
+                                sphereFile=sphDir+'1hpv_PR.sph',
+                                meshFile=meshDir+'Cyt_PR.'+modelFormat,
+                                placeType=mode,  
+                                **dict["1hpv"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    pr.compareCompartment = True
+    rMatrix["Capside"].addIngredient( pr )
+    
+#    hoo3=helper.getObject("1esx")
+    vpr = MultiSphereIngr( MSca* density,  
+                                name='Cyt_Vpr', pdb="1esx",
+                                sphereFile=sphDir+'1esx_6.sph',
+                                meshFile=meshDir+'Cyt_Vpr.'+modelFormat,
+                                placeType=mode,  
+                                **dict["1esx"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    vpr.compareCompartment = True
+    rMatrix["Capside"].addIngredient( vpr )
+
+#    hoo3=helper.getObject("3dcg")
+    dcg = MultiSphereIngr( MSca* density,  
+                                name='Cyt_3dcg', pdb="3dcg",
+                                sphereFile=sphDir+'3dcg_1.sph',
+                                meshFile=meshDir+'Cyt_3dcg.'+modelFormat,
+                                placeType=mode,  
+                                **dict["3dcg"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    dcg.compareCompartment = True
+    rMatrix["Capside"].addIngredient( dcg )
+
+#    hoo3=helper.getObject("3dcgT:E")
+#    Vif = MultiSphereIngr( MSca*1.,  
+#                                name='Vif', pdb=None,
+#                                sphereFile=sphDir+'vif_6.sph',
+#                                meshObject=hoo3,
+#                                placeType=mode,  
+#                                **dict["Vif"]
+#                                #packingMode='close'
+#                                ) #original radius is 3.61
+#    rMatrix["Capside"].addIngredient( Vif )
+
+#    hoo3=helper.getObject("hex001")
+#    ca = MultiSphereIngr( MSca*1.,  
+#                                name='Cyt_CA', pdb="3h47",
+#                                sphereFile=sphDir+'hex001.sph',
+##                                meshObject=hoo3,
+#                                meshFile=meshDir+'Cyt_CA.'+modelFormat,
+#                                placeType=mode,  
+#                                **dict["hex001"]
+#                                #packingMode='close'
+#                                ) #original radius is 3.61
+##    rMatrix["Capside"].addIngredient( ca )
+#    ca.packingMode = "closePartner" #partner is  self
+#    ca.addPartner('CA',weight=10.0)
+#    ca.overwrite_distFunc = True
+
+if donucl:
+    meshDirNuc = meshDir+"Nuclear/"
+    nc = MultiSphereIngr( HIVmatrixConc * 6.20E-4,
+                                name='Nuc_FONC', pdb="1a1t",
+                                sphereFile=sphDir+'1a1t_3.sph',
+#                                meshObject=hoo3,
+                                meshFile=meshDir+"Nuc_FONC."+modelFormat,
+                                placeType=mode,  
+                                **dict["1a1t"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    rMatrix["Nucleus"].addIngredient( nc )
+    
+#    hoo3=helper.getObject("1eft_Nuc_Rev")
+    nc = MultiSphereIngr( HIVmatrixConc * 6.20E-4,  
+                                name="Nuc_FOiRev", pdb="1etf",#'iRev'
+                                sphereFile=sphDir+'1eft_Nuc_Rev.sph',
+                                meshFile=meshDir+"Nuc_FOiRev."+modelFormat,
+                                placeType=mode,  
+                                **dict["1etf"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    rMatrix["Nucleus"].addIngredient( nc )
+
+#    hoo3=helper.getObject("Tat")
+    nc = MultiSphereIngr( HIVmatrixConc * 6.20E-4,  
+                                name='Nuc_iTat', pdb="1jfw",
+                                sphereFile=sphDir+'Tat_2.sph',
+                                meshFile=meshDir+"Nuc_iTat."+modelFormat,
+                                placeType=mode,  
+                                **dict["Tat"]
+                                #packingMode='close'
+                                ) #original radius is 3.61
+    rMatrix["Nucleus"].addIngredient( nc )
+    
+    if dolipid:
+        cyl26Ingr1 = MultiCylindersIngr(MSca*0.5, color=bisque, pdb='LipOut26N',
+                                 name='LipOut26N', radii=[[34.5]],
+                                  positions=[[[-.5,0,0]]], positions2=[[[10.5,0,0]]],
+                                  packingPriority= -0.10,
+                                  jitterMax=(0.1,0.1,0.1), #  CRITICAL !!! IF jitter is greater than radius of object, e.g. 5x(1,1,1) the point may not be consumed!!!
+                                  principalVector=(1,0,0)
+                                  )
+#        rSurf["Nucleus"].addIngredient(cyl26Ingr1)
+
+#    #nucleus capside elements
+#    nc = MultiSphereIngr( HIVmatrixConc *12* 6.20E-4,  
+#                                name='fpen01G4', #pdb="1jfw",
+#                                sphereFile=sphDir+'Tat_2.sph',
+#                                meshFile=meshDir+"fpen01G4."+modelFormat,
+#                                placeType=mode,  
+#                                **dict["fpen"]
+#                                #packingMode='close'
+#                                ) #original radius is 3.61
+#    rSurf["Nucleus"].addIngredient(nc)#should be nucleus compartiment 2
+#
+#    nc = MultiSphereIngr( HIVmatrixConc *12* 6.20E-4,  
+#                                name='hex001G4', #pdb="1jfw",
+#                                sphereFile=sphDir+'hex001.sph',
+#                                meshFile=meshDir+"hex001G4."+modelFormatSpecial,
+#                                placeType=mode,  
+#                                **dict["hex"]
+#                                #packingMode='close'
+#                                ) #original radius is 3.61
+#    rSurf["Nucleus"].addIngredient(nc)#should be nucleus compartiment 2
+
+    #RNA
+    if rRNA :
+        cylsnake,snakem = helper.Cylinder('snakeCyl',radius=15.,
+                                   length=100.0,axis=[1.0,0.0,0.0])
+        snakeIngr = GrowIngrediant(1.18085538E-5, color=coral, pdb=None,
+                                      name='snake', radii=[[15.],],
+                                      positions=[[[0,0,0]]], positions2=[[[0., 100., 0.]]], #Ludo had 370 for y
+                                      packingPriority=-1,
+                                      biased=0.5,
+                                      principalVector=(0,1,0),
+                                      marge = 10.0,
+                                      meshObject=cylsnake,
+                                      modelType="Cylinders",placeType="jitter",
+                                      nbJitter=1, jitterMax=(0,0,0),
+                                      length = 8000,closed = False,
+                                      #walkingMode = "lattice",
+                                      nMol=0,#2-3
+                                      )
+        snakeIngr.cutoff_boundary=25.0
+        snakeIngr.cutoff_surface=25.0
+        snakeIngr.seedOnMinus = False#True
+        #snakeIngr.marge = 40.#25.
+        snakeIngr.constraintMarge = True
+        rMatrix["Nucleus"].addIngredient(snakeIngr)    
+    
+#9749bases # 3.4Å/1base = 33146.6Å per RNA
+    dnaIngr = GrowIngrediant(MSca*2., color=coral, pdb=None,
+                                  name='dnaGrow', radii=[[10.],],
+                                  positions=[[[0,0,0]]], positions2=[[[0.,25.,0]]],
+                                  packingPriority=-4,biased=0.5,
+                                  principalVector=(0,1,0),
+                                  marge = 70.0,
+                                  modelType="Cylinders",placeType="jitter",
+                                  nbJitter=1, jitterMax=(0,0,0),
+                                  length = 33146.6/2, #single octant
+                                  closed = False,
+                                  nMol=8,
+                                  walkingMode = "sphere",#or lattice
+                                  )
+    dnaIngr.cutoff_boundary=2.0
+    dnaIngr.cutoff_surface=2.0
+    dnaIngr.seedOnMinus = True
 #==============================================================================
 # BloodSerum recipe
 #==============================================================================
@@ -281,18 +574,18 @@ rMatrix["ECM_box"].addIngredient(snakeIngr)
 #===============================================================================
 BloodConc = 1.0
 if doMatrix :
-    m,mesh = helper.Sphere("HIV",radius=725.,res=12)
-    mHIV = MultiSphereIngr( BloodConc*800.0E-12,  725.,
-                            name='HIVsphere', pdb=None,
+    #ho1 = helper.getObject("3ghg_Fibrinogen")
+#    m,mesh = helper.Sphere("HIV",radius=725.,res=12)
+#    mHIV = SingleSphereIngr( BloodConc*800.0E-12,  725.,
+#                            name='HIVsphere', pdb=None,
 #                            meshObject=m,
-                            meshFile=httpwrkDirHIV+"geoms/HIV.fbx"#+modelFormat,
-                            placeType=mode,  
-                            #sphereFile=wrkDir+'/1e7i.sph',
-                            **dict["dHIV"]
-                            #packingMode='close'
-                            )                               
-    rMatrix["ECM_box"].addIngredient( mHIV )
-    should be a previous ingrdient
+#                            placeType=mode,  
+#                            #sphereFile=wrkDir+'/1e7i.sph',
+#                            **dict["dHIV"]
+#                            #packingMode='close'
+#                            )                               
+#    rMatrix["ECM_box"].addIngredient( mHIV )
+    
 #    m,mesh = helper.box("testB",center=[0.,0.,0.],size=[500,1000,2000])
 #    ingr = SingleCubeIngr( BloodConc*800.0E-12,  radii = [[500,1000,2000],],name="test", pdb=None,
 #                              positions=[[[0,0,0],[0,0,0],[0,0,0],]],
