@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-	<AutoFillSetup name="HIVBloodSerum">
+	<AutoFillSetup name="HIVBloodSerum" version="1.0">
 	<options EnviroOnly="False" _freePtsUpdateThrehod="0.0" _hackFreepts="False" _timer="False" boundingBox="[[-1700.0, -850.0, -1050.0], [1700.0, 850.0, 1050.0]]" cancelDialog="False" computeGridParams="True" gradients="['gradRadSPIKE', 'gradRadMA']" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="188.36" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="/Users/ludo/DEV/Autofill_svn_test/autofill/trunk/AutoFillClean/autoFillRecipeScripts/HIVBloodSerum/HIVBloodSerum_1_0.apr" runTimeDisplay="False" saveResult="True" smallestProteinSize="50" use_gradient="True" version="1.0" windowsSize="50.0"/>
 	<gradients>
 	<gradient description="" direction="[-480.0, -480.0, 0.0]" mode="radial" name="gradRadSPIKE" pick_mode="rnd" radius="1380.0" weight_mode="linear"/>
