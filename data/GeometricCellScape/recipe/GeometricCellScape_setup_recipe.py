@@ -378,7 +378,7 @@ if dosurface1:
                                   **dict["Brancher1"]
                                   )
     rSurf["Sphere"].addIngredient(cyl4Ingr1)
-    surf2 = MultiCylindersIngr(MSca*.0005,  pdb=None,
+    surf2 = MultiCylindersIngr(MSca*.01,  pdb=None,
                                   name='siTransporter', radii=[[50.]],
                                   positions=[[[0.,-30.,0]]], positions2=[[[0.,30.,0]]],
                                   meshFile=wrkDirMesh+'/siTransporter',#meshObject=fat1,
@@ -389,7 +389,7 @@ if dosurface1:
                                   )
     rSurf["Sphere"].addIngredient(surf2)
     
-    surf3 = MultiCylindersIngr(MSca*.0005,  pdb=None,
+    surf3 = MultiCylindersIngr(MSca*.02,  pdb=None,
                                   name='siDocker', radii=[[50.]],
                                   positions=[[[0,-30.,0]]], positions2=[[[0.,30,0]]],
                                   meshFile=wrkDirMesh+'/siDocker',#meshObject=tall,
@@ -411,7 +411,7 @@ if dosurface2:
                                   )
     rSurf["Ellipse"].addIngredient(cyl4Ingr2)
     
-    esurf2 = MultiCylindersIngr(MSca*.0005,  pdb=None,
+    esurf2 = MultiCylindersIngr(MSca*.015,  pdb=None,
                                   name='iTransporter', radii=[[50.]],
                                   positions=[[[0,-30.,0]]], positions2=[[[0.,30,0]]],
                                   meshFile=wrkDirMesh+'/iTransporter',#meshObject=fat1,
@@ -422,7 +422,7 @@ if dosurface2:
                                   )
     rSurf["Ellipse"].addIngredient(esurf2)
     
-    esurf3 = MultiCylindersIngr(MSca*.0005,  pdb=None,
+    esurf3 = MultiCylindersIngr(MSca*.02,  pdb=None,
                                   name='iDocker', radii=[[50.]],
                                   positions=[[[0,-30.,0]]], positions2=[[[0.,30,0]]],
                                   meshFile=wrkDirMesh+'/iDocker',#meshObject=tall,
