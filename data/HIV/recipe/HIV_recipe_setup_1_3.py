@@ -108,10 +108,10 @@ sphDir = httpwrkDir+"spheres/"
 meshDir = httpwrkDir+"geoms/"
 wrkDirOrga = meshDir
 
-httpwrkDir = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/"
-sphDir = httpwrkDir+"HIVsph/"
-meshDir = httpwrkDir+"HIV_IngredientGeoms/"
-wrkDirOrga = sphDir
+#httpwrkDir = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/"
+#sphDir = httpwrkDir+"HIVsph/"
+#meshDir = httpwrkDir+"HIV_IngredientGeoms/"
+#wrkDirOrga = sphDir
 wrkDirMesh = "http://grahamj.com/autofill/autoFillData/GeometricCellScape/Geometries/"
 
 
