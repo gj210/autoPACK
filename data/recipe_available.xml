@@ -36,9 +36,9 @@
         <resultfile>http://autofill.googlecode.com/svn/data/2DcylinderSphereFill/results/CylSpherefillResult.apr</resultfile>
     </recipe>
     <recipe name="Test_Cubes2D" version="1.0">
-        <setupfile>autoFillRecipeScripts/2DCubeFill/2DCubes_setup_recipe.py</setupfile>
-        <wrkdir>autoFillRecipeScripts/2DCubeFill</wrkdir>
-        <resultfile>autoFillRecipeScripts/2DCubeFill/results/2DCubesResult.afr.txt</resultfile>
+        <setupfile>http://autofill.googlecode.com/svn/data/Test_Cubes2D/2DCubes_setup_recipe.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/Test_Cubes2D</wrkdir>
+        <resultfile>http://autofill.googlecode.com/svn/data/Test_Cubes2D/results/CubesResult.apr</resultfile>
     </recipe>
     <recipe name="GenericCytoplasm" version="1.0">
         <setupfile>autoFillRecipeScripts/GenericCytoplasm/GenericCytoplasm_setup_recipe.py</setupfile>
