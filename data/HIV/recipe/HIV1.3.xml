@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-	<AutoFillSetup name="HIV" version="1.1">
+	<AutoFillSetup name="HIV" version="1.3">
 	<options EnviroOnly="False" _freePtsUpdateThrehod="0.0" _hackFreepts="False" _timer="False" boundingBox="[[-683.0, 139.78017964982905, -683.0], [683.0, 846.9543685225492, 683.0]]" cancelDialog="False" computeGridParams="True" gradients="['gradRadSPIKE', 'gradRadMA']" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="55.65" overwritePlaceMethod="False" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr" runTimeDisplay="False" saveResult="False" smallestProteinSize="50" use_gradient="False" windowsSize="50.0"/>
 	<gradients>
 	<gradient description="" direction="[-480.0, -480.0, 0.0]" mode="radial" name="gradRadSPIKE" pick_mode="rnd" radius="1380.0" weight_mode="linear"/>
