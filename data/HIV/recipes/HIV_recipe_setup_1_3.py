@@ -523,7 +523,7 @@ from DejaVu.IndexedPolygons import IndexedPolygonsFromFile
 #    from DejaVu.IndexedPolygons import IndexedPolygonsFromFile
 name=["Envelope","NucleoCapsid"]
 for n in name :
-    f=wrkDirOrga+'/'+n+'.'+modeltype
+    f=wrkDirOrga+'/'+n+'.'+modelFormat
     if n == "NucleoCapsid" :#and helper.host == "c4d":
         o1 = Organelle(n,None, None, None,
                filename=f,object_name = "HIV_Nucleocapside",
