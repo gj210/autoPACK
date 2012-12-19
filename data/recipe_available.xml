@@ -56,7 +56,7 @@
         <resultfile>http://mgldev.scripps.edu/projects/AF/datas/GenericCytoplasm/results/GenericCytoplasmPACKResult.apr</resultfile>
     </recipe>
     <recipe name="GeometricCellScape" version="1.0">
-        <setupfile>http://autofill.googlecode.com/svn/data/GeometricCellScape/GeometricCellScape_setup_recipe.py</setupfile>
+       <setupfile>http://autofill.googlecode.com/svn/data/GeometricCellScape/recipe/GeometricCellScape_setup_recipe.py</setupfile>
         <wrkdir>autoFillRecipeScripts/GeometricCellScape</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/GeometricCellScape/results/GeometricCellScapeResult.apr</resultfile>
     </recipe>
