@@ -16,7 +16,7 @@
         <resultfile>http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_1.apr</resultfile>
     </recipe>
     <recipe name="HIV" version="1.3">
-        <setupfile>http://autofill.googlecode.com/svn/data/HIV/recipe/HIV_recipe_setup_1_3.py</setupfile>
+        <setupfile>http://autofill.googlecode.com/svn/data/HIV/recipes/HIV_recipe_setup_1_3.py</setupfile>
         <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIVresult_1_3.apr</resultfile>
     </recipe>
