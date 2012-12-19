@@ -39,9 +39,10 @@ import sys
 #AUTOFILL
 import AutoFill
 wrkDir=localwrkDir = AutoFill.__path__[0]
-httpwrkDir = "http://grahamj.com/autofill/autoFillData/GeometricCellScape/"
+#httpwrkDir = "http://grahamj.com/autofill/autoFillData/GeometricCellScape/"
+httpwrkDir = "http://autofill.googlecode.com/svn/data/GeometricCellScape/"
 #sphdir = "http://grahamj.com/autofill/autoFillData/GeometricCellScape/spheres/"
-wrkDirMesh = "http://grahamj.com/autofill/autoFillData/GeometricCellScape/Geometries/"
+wrkDirMesh = httpwrkDir+"geoms/"#"http://grahamj.com/autofill/autoFillData/GeometricCellScape/Geometries/"
 
 localdir = AutoFill.__path__[0]+os.sep+"autoFillRecipeScripts"+os.sep+"GeometricCellScape"
 #localdir = AutoFill.RECIPES["GeometricCellScape"]["wrkdir"]
@@ -370,7 +371,8 @@ if dosurface1:
     cyl4Ingr1 = MultiCylindersIngr(MSca*.04,  pdb='1CYL1',
                                   name='Cylinders1_4', radii=[cylRadii],
                                   positions=[cylCoord1], positions2=[cylCoord2],
-                                  meshFile=wrkDirMesh+'/4Cylinders1',#meshObject=br, THE MESH IS WRONG NEED TO BE CHANGED
+                                  #meshFile=wrkDirMesh+'/4Cylinders1',#meshObject=br, THE MESH IS WRONG NEED TO BE CHANGED
+                                  meshFile=httpwrkDir+"geoms/4Cylinders1.dae",
                                   principalVector=principalVector,
                                   placeType="jitter",
                                   **dict["Brancher1"]
