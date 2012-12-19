@@ -404,8 +404,9 @@ if dosurface2:
     cyl4Ingr2 = MultiCylindersIngr(MSca*.04,  pdb='1CYL2',
                                  name='Cylinders2_4', radii=[cylRadii],
                                   positions=[cylCoord1], positions2=[cylCoord2],
-                                  meshFile=wrkDirMesh+'/4Cylinders2',#meshObject=br,THE MESH IS WRONG NEED TO BE CHANGED
-                                  principalVector=principalVector,
+                                  #meshFile=wrkDirMesh+'/4Cylinders2',#meshObject=br,THE MESH IS WRONG NEED TO BE CHANGED
+                                  meshFile=httpwrkDir+"geoms/Cylinders2_4.dae",
+       principalVector=principalVector,
                                   **dict["Brancher2"]
                                   )
     rSurf["Ellipse"].addIngredient(cyl4Ingr2)
