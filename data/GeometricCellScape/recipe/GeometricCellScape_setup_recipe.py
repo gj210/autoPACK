@@ -165,7 +165,7 @@ if doCyot :
                                   nbJitter=1, jitterMax=(0,0,0),
                                   closed = False,
                                   #meshObject=hactine,
-                                  meshFile=wrkDirMesh+'/Actine',	
+                                  meshFile=wrkDirMesh+'/Actine.dae',	
                                   orientation = (1,0,0),
                                   distExpression = dFunc[idFunc],
                                   **Actineparam[testName]
