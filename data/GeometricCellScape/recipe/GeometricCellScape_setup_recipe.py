@@ -372,7 +372,7 @@ if dosurface1:
                                   name='Cylinders1_4', radii=[cylRadii],
                                   positions=[cylCoord1], positions2=[cylCoord2],
                                   #meshFile=wrkDirMesh+'/4Cylinders1',#meshObject=br, THE MESH IS WRONG NEED TO BE CHANGED
-                                  meshFile=httpwrkDir+"geoms/4Cylinders1.dae",
+                                  meshFile=httpwrkDir+"geoms/Cylinders1_4.dae",
                                   principalVector=principalVector,
                                   placeType="jitter",
                                   **dict["Brancher1"]
@@ -404,7 +404,7 @@ if dosurface2:
     cyl4Ingr2 = MultiCylindersIngr(MSca*.04,  pdb='1CYL2',
                                  name='Cylinders2_4', radii=[cylRadii],
                                   positions=[cylCoord1], positions2=[cylCoord2],
-                                  #meshFile=wrkDirMesh+'/4Cylinders2',#meshObject=br,THE MESH IS WRONG NEED TO BE CHANGED
+                                  meshFile=wrkDirMesh+'/4Cylinders2',#meshObject=br,THE MESH IS WRONG NEED TO BE CHANGED
                                   principalVector=principalVector,
                                   **dict["Brancher2"]
                                   )
