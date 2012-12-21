@@ -92,7 +92,7 @@ if helper is None :
 #else :
 modelFormat = "fbx"
 modeltype = "fbx"
-if AutoFill.helper.host == 'c4d':
+if AutoFill.helper.host == 'c4d' or AutoFill.helper.host.find("blender") != -1:
     modelFormat = "dae"
 modelFormatSpecial = modelFormat
 if AutoFill.helper.host == 'c4d':
