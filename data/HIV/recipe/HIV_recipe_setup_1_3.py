@@ -90,10 +90,10 @@ if helper is None :
 #if AutoFill.helper.host == 'c4d' or AutoFill.helper.host == 'maya' :
 #    modeltype = "fbx"#"fbx"#"dae" #fbx
 #else :
-modelFormat = "fbx"
-modeltype = "fbx"
+modelFormat = "dae"
+modeltype = "dae"
 hext= AutoFill.helper.hext
-if AutoFill.helper.host == 'c4d' or AutoFill.helper.host.find("blender") != -1:
+if AutoFill.helper.host == 'c4d' or AutoFill.helper.host.find("blender") != -1 :
     modelFormat = "dae"
     
 modelFormatSpecial = modelFormat
