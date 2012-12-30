@@ -51,7 +51,7 @@
         <resultfile>autoFillRecipeScripts/GenericCytoplasm/results/GenericCytoplasmfillResult.apr</resultfile>
     </recipe>
     <recipe name="GenericCytoplasm" version="1.1">
-        <setupfile>autoFillRecipeScripts/GenericCytoplasm/GenericCytoplasm_setup_recipe.py</setupfile>
+        <setupfile>http://autofill.googlecode.com/svn/data/GenericCytoplasm/GenericCytoplasm_setup_recipe.py</setupfile>
         <wrkdir>autoFillRecipeScripts/GenericCytoplasm</wrkdir>
         <resultfile>http://mgldev.scripps.edu/projects/AF/datas/GenericCytoplasm/results/GenericCytoplasmPACKResult.apr</resultfile>
     </recipe>
