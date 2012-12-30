@@ -287,16 +287,16 @@ afviewer.quality = 1 #lowest quality for sphere and cylinder
 afviewer.visibleMesh = True #mesh default visibility
 
 h1.setMinMaxProteinSize()
-print 'Cyto', rCyto.getMinMaxProteinSize()
-print 'Surf', rSurf1.getMinMaxProteinSize()
-print 'Matrix', rMatrix1.getMinMaxProteinSize()
+#print 'Cyto', rCyto.getMinMaxProteinSize()
+#print 'Surf', rSurf1.getMinMaxProteinSize()
+#print 'Matrix', rMatrix1.getMinMaxProteinSize()
 #print 'o1', o1.getMinMaxProteinSize()
-print 'smallest', h1.smallestProteinSize
-print 'largest', h1.largestProteinSize
+#print 'smallest', h1.smallestProteinSize
+#print 'largest', h1.largestProteinSize
 h1.smallestProteinSize = 30
 
-print 'smallest via Override', h1.smallestProteinSize
-print 'largest via Override', h1.largestProteinSize
+#print 'smallest via Override', h1.smallestProteinSize
+#print 'largest via Override', h1.largestProteinSize
 
 h1.boundingBox = [[0.,0.,0.],[300.,300.,300.]]
 bbox=helper.getObject("histoVolBB")
