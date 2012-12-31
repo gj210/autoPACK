@@ -519,7 +519,7 @@ afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
 # Organelles Setup
 #===============================================================================
 #ok test with no organelle but the fill_box
-print (wrkDir+"/Geometries/ECM_box."+modelFormat) 
+#print (wrkDir+"/Geometries/ECM_box."+modelFormat) 
 #the organelle name is the geometry name
 organelle = False
 if organelle: 
@@ -541,15 +541,15 @@ afviewer.quality = 1 #lowest quality for sphere and cylinder
 afviewer.visibleMesh = 1 #mesh default visibility 
 
 h1.setMinMaxProteinSize()
-print 'ECM', rECM.getMinMaxProteinSize()
+#print 'ECM', rECM.getMinMaxProteinSize()
 #print 'Surf', rSurf1.getMinMaxProteinSize()
 #print 'Matrix', rMatrix1.getMinMaxProteinSize()
 #print 'o1', o1.getMinMaxProteinSize()
-print 'smallest', h1.smallestProteinSize
-print 'largest', h1.largestProteinSize
+#print 'smallest', h1.smallestProteinSize
+#print 'largest', h1.largestProteinSize
 h1.smallestProteinSize = 25 #20 takes ~20 sec #10 takes 23minutes   #15
-print 'smallest via Override', h1.smallestProteinSize
-print 'largest via Override', h1.largestProteinSize
+#print 'smallest via Override', h1.smallestProteinSize
+#print 'largest via Override', h1.largestProteinSize
 #print o1.innerRecipe#
 
 pad = 50.
@@ -642,14 +642,14 @@ def FILLT(h):
    t=thread.start_new_thread(h.fill3,(14,))
    #h.fill3(seedNum=14)
    #t2 = time()
-   print 'time to fill', t2-t1
+#   print 'time to fill', t2-t1
    return t
 
 def DISPLAY():
    t2 = time()
    afviewer.displayFill()
    afviewer.vi.toggleDisplay(afviewer.bsph,False)
-   print 'time to display', time()-t2
+#   print 'time to display', time()-t2
 
 
     
@@ -657,9 +657,9 @@ def FILL(h,seed=3,forceBuild=True):
     t1 = time()
     h.fill5(seedNum=seed,verbose=0)
     t2 = time()
-    print 'time to run Fill5', t2-t1
+#    print 'time to run Fill5', t2-t1
     afviewer.displayFill()
-    print 'time to display Fill5', time()-t2
+#    print 'time to display Fill5', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
     #execfile(plgDir+'/extension/testAF/c_displayFill.py')
     #afviewer.showHide(afviewer.undspMesh)
@@ -686,7 +686,7 @@ def GRID(h,forceBuild=True,fill=True):
     #actine.updateFromBB(h.grid)
     if fill :
         FILL(h)
-    print 'time to Build Grid', gridTime
+#    print 'time to Build Grid', gridTime
     
 def SecondFill(h):
     h.setMinMaxProteinSize()
@@ -701,9 +701,9 @@ def SecondFill(h):
     t1 = time()
     h.fill4(seedNum=14,verbose=True)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
 
 def load(h):
@@ -727,7 +727,7 @@ def FILLload(h):
     t1 = time()
     h.fill4(seedNum=14,verbose=True)
     t2 = time()
-    print 'time to fill Load', t2-t1
+#    print 'time to fill Load', t2-t1
     afviewer.displayFill()
-    print 'time to display Load', time()-t2
+#    print 'time to display Load', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
