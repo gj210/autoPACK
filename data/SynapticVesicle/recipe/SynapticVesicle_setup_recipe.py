@@ -614,18 +614,18 @@ afviewer.visibleMesh = True #mesh default visibility
 #print 'Bounding box x with padding', h1.boundingBox
 
 h1.setMinMaxProteinSize()
-print 'Cyto', rCyto.getMinMaxProteinSize()
-print 'Surf', rSurf1.getMinMaxProteinSize()
-print 'Matrix', rMatrix1.getMinMaxProteinSize()
+#print 'Cyto', rCyto.getMinMaxProteinSize()
+#print 'Surf', rSurf1.getMinMaxProteinSize()
+#print 'Matrix', rMatrix1.getMinMaxProteinSize()
 #print 'o1', o1.getMinMaxProteinSize()
-print 'smallest', h1.smallestProteinSize
-print 'largest', h1.largestProteinSize
+#print 'smallest', h1.smallestProteinSize
+#print 'largest', h1.largestProteinSize
 h1.smallestProteinSize = 10
 
-print 'smallest via Override', h1.smallestProteinSize
-print 'largest via Override', h1.largestProteinSize
+#print 'smallest via Override', h1.smallestProteinSize
+#print 'largest via Override', h1.largestProteinSize
 
-print o1.innerRecipe
+#print o1.innerRecipe
 
 pad = [100,100,100] #100.
 h1.name = "SynapticVesicle"
@@ -707,14 +707,14 @@ def FILLT(h):
    t=thread.start_new_thread(h.fill4,(14,))
    #h.fill3(seedNum=14)
    #t2 = time()
-   print 'time to fill', t2-t1
+#   print 'time to fill', t2-t1
    return t
    
 def DISPLAY():
    t2 = time()
    afviewer.displayFill()
    afviewer.vi.toggleDisplay(afviewer.bsph,False)
-   print 'time to display', time()-t2
+#   print 'time to display', time()-t2
 
 def FILL(h):
     doc =helper.getCurrentScene()
@@ -725,9 +725,9 @@ def FILL(h):
     t1 = time()
     h.fill5(seedNum=14)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     #afviewer.vi.toggleDisplay(afviewer.bsph,False)
     #execfile(plgDir+'/extension/testAF/c_displayFill.py')
     #afviewer.showHide(afviewer.undspMesh)

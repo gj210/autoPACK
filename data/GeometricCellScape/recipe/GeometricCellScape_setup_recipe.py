@@ -519,15 +519,15 @@ afviewer.quality = 1 #lowest quality for sphere and cylinder
 afviewer.visibleMesh = True #mesh default visibility 
 
 h1.setMinMaxProteinSize()
-print 'Cyto', rCyto.getMinMaxProteinSize()
+#print 'Cyto', rCyto.getMinMaxProteinSize()
 #print 'Surf', rSurf1.getMinMaxProteinSize()
 #print 'Matrix', rMatrix1.getMinMaxProteinSize()
 #print 'o1', o1.getMinMaxProteinSize()
-print 'smallest', h1.smallestProteinSize
-print 'largest', h1.largestProteinSize
+#print 'smallest', h1.smallestProteinSize
+#print 'largest', h1.largestProteinSize
 h1.smallestProteinSize = 15#15
-print 'smallest via Override', h1.smallestProteinSize
-print 'largest via Override', h1.largestProteinSize
+#print 'smallest via Override', h1.smallestProteinSize
+#print 'largest via Override', h1.largestProteinSize
 #print o1.innerRecipe#
 
 pad = 20.
@@ -615,14 +615,14 @@ def FILLT(h):
    t=thread.start_new_thread(h.fill3,(14,))
    #h.fill3(seedNum=14)
    #t2 = time()
-   print 'time to fill', t2-t1
+#   print 'time to fill', t2-t1
    return t
 
 def DISPLAY():
    t2 = time()
    afviewer.displayFill()
    afviewer.vi.toggleDisplay(afviewer.bsph,False)
-   print 'time to display', time()-t2
+#   print 'time to display', time()-t2
 
 
     
@@ -634,9 +634,9 @@ def FILL(h,seed=20,forceBuild=True):
         previngr.counter = 0
     h.fill5(seedNum=seed,verbose=4)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
     #execfile(plgDir+'/extension/testAF/c_displayFill.py')
     #afviewer.showHide(afviewer.undspMesh)
@@ -688,9 +688,9 @@ def SecondFill(h):
     t1 = time()
     h.fill4(seedNum=14,verbose=True)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
 
 def load(h):
@@ -714,9 +714,9 @@ def FILLload(h):
     t1 = time()
     h.fill4(seedNum=14,verbose=True)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
 
 #GRID(h1)  

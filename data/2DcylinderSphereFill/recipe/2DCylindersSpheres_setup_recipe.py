@@ -263,7 +263,7 @@ pad = [50,50,0]
 #h1.boundingBox = [[-550.,-550,-0.5],[550,550,0.5]]
 #bbox = afviewer.helper.getObject("fillBB")
 #if bbox is None : bbox = afviewer.helper.box("fillBB", cornerPoints=[[-500.,-500,-0.5],[500,500,0.5]])#cornerPoints=h1.boundingBox)
-print "exteriorOrganelle"
+#print "exteriorOrganelle"
 exteriorOrganelle = afviewer.helper.getObject("fillBB")
 if exteriorOrganelle is None : exteriorOrganelle = afviewer.helper.box("fillBB", cornerPoints=[[-400.,-400,-0.5],[400,400,0.5]])#cornerPoints=h1.boundingBox)
 
@@ -285,15 +285,15 @@ else :
 # histoVolume options
 #===============================================================================
 h1.setMinMaxProteinSize()
-print 'Cyto', rCyto.getMinMaxProteinSize()
+#print 'Cyto', rCyto.getMinMaxProteinSize()
 #print 'Surf', rSurf1.getMinMaxProteinSize()
 #print 'Matrix', rMatrix1.getMinMaxProteinSize()
 #print 'o1', o1.getMinMaxProteinSize()
-print 'smallest', h1.smallestProteinSize
-print 'largest', h1.largestProteinSize
+#print 'smallest', h1.smallestProteinSize
+#print 'largest', h1.largestProteinSize
 h1.smallestProteinSize = 10#15
-print 'smallest via Override', h1.smallestProteinSize
-print 'largest via Override', h1.largestProteinSize
+#print 'smallest via Override', h1.smallestProteinSize
+#print 'largest via Override', h1.largestProteinSize
 #print o1.innerRecipe#
 
 #pad = [0,0,0]
@@ -411,7 +411,7 @@ def GRID(h,forceBuild=True,fill=True):
     gridTime = t2-t1
     if fill :
         FILL(h)
-    print 'time to Build Grid', gridTime
+#    print 'time to Build Grid', gridTime
     afviewer.displayOrganellesPoints()
     #return
     #actine.updateFromBB(h.grid)
@@ -423,9 +423,9 @@ def FILL(h,seed=0,forceBuild=True):
 #    self.randomRot.setSeed(seed=seedNum)
     h.fill5(seedNum=seed,verbose=0, vTestid = testid)
     t2 = time()
-    print 'time to run Fill5', t2-t1
+#    print 'time to run Fill5', t2-t1
     afviewer.displayFill()
-    print 'time to display Fill5', time()-t2
+#    print 'time to display Fill5', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
     #execfile(plgDir+'/extension/testAF/c_displayFill.py')
     #afviewer.showHide(afviewer.undspMesh)
@@ -441,9 +441,9 @@ def SecondFill(h):
     t1 = time()
     h.fill4(seedNum=14,verbose=True)
     t2 = time()
-    print 'time to fill', t2-t1
+#    print 'time to fill', t2-t1
     afviewer.displayFill()
-    print 'time to display', time()-t2
+#    print 'time to display', time()-t2
     afviewer.vi.toggleDisplay(afviewer.bsph,False)
 
 #GRID(h1)
