@@ -1,0 +1,5 @@
+REMARK   4 XXXX COMPLIES WITH FORMAT V. 2.0
+ATOM      1  C   THR A   1       0.000   0.000   0.000  1.00  1.00           C  
+ATOM      2  O   THR A   1    1000.000   0.000   0.000  1.00  1.00           O  
+ATOM      3  S   THR A   1       0.0001000.000   0.000  1.00  1.00           S  
+ATOM      4  N   THR A   1       0.000   0.0001000.000  1.00  1.00           N  
