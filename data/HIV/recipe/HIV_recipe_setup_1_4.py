@@ -532,8 +532,6 @@ for n in name :
 #               object_filename = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/HIV_OrganelleGeoms/HIV_1_1_NucleocapsidHostMesh.c4d")
                 object_filename = meshDir+"HIV_1_1_NucleocapsidHostMesh."+hext)
     elif n == "Envelope" :#and helper.host == "c4d":
-        if helper.host == "3dsmax":
-            hext="fbx"
         o1 = Organelle(n,None, None, None,
                        filename=f,object_name = "EnvelopeBilayer",
                        #               object_filename = "http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/HIV_OrganelleGeoms/HIV_1_1_NucleocapsidHostMesh.c4d")
