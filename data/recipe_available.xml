@@ -21,6 +21,12 @@
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIVresult_1_3.apr</resultfile>
     </recipe>
     
+        <recipe name="HIV" version="1.4">
+        <setupfile>http://autofill.googlecode.com/svn/data/HIV/recipe/HIV_recipe_setup_1_4.py</setupfile>
+        <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
+        <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIVresult_1_4.apr</resultfile>
+    </recipe>
+    
     <recipe name="HIVBloodSerum" version="1.0">
         <setupfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/recipe/HIVBloodSerum_recipe_setup_1_0.py</setupfile>
         <wrkdir>autoFillRecipeScripts/HIVBloodSerum</wrkdir>
