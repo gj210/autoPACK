@@ -597,11 +597,8 @@ afviewer.displayPreFill()
 #afviewer = SetUPViewer()
 h1.saveResult = False
 
-resultfilename = h1.resultfile = "http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr"
-#resultfilename = h1.resultfile =wrkDir3+"/HIV/hivRes1/fillResultHIV.af"
-#resultfilename =h1.resultfile = wrkDir3+"/HIV/hivafresult_srf/fillResult.af"
-#resultfilename =h1.resultfile =wrkDir3+"/HIV/grahamafrogra0.txt"
-#print "resultfilename",resultfilename
+resultfilename = h1.resultfile = "http://code.google.com/p/autofill/source/browse/data/HIV/results/HIVresult_1_2.apr"
+
 bbox = None
 #create the box
 bbox = afviewer.helper.getObject(hvb)
@@ -733,7 +730,7 @@ def doloop(n):
     # doLoop automatically produces result files, images, and documents from the recipe while adjusting parameters
     # To run doLoop, 1) in your host's python console type:
     # execfile(pathothis recipe) # for example, on my computer:
-    #  execfile("/Users/grahamold/Dev/autoFillSVN/autofillSVNversions/trunk/AutoFillClean/autoFillRecipeScripts/HIV/figureHiv3.5mesh2.py")
+    #  execfile("/Users/user/Dev/autoFillSVN/autofillSVNversions/trunk/AutoFillClean/autoFillRecipeScripts/HIV/figureHiv3.5mesh2.py")
     # 2) prepare your scene for the rendering->render output should be 640,480 but you can change the size in the script at then end.  Set up textures lights, and effects as you wish
     #    Results will appear in the result folder of your recipe path
     rangeseed=range(n)
