@@ -1,0 +1,15 @@
+# rmin rmax
+  3.24    4.76
+
+# number of levels
+1
+
+# number of spheres in level 1
+4
+
+# x y z r of spheres in level 1
+ -0.95  -1.59 -19.61   6.71
+  1.91  -7.04  -6.67   6.59
+  2.34   4.05 -16.30   4.05
+  3.52   4.55  -6.72   4.76
+

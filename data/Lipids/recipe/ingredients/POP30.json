@@ -5,14 +5,14 @@
         0,
         0
     ],
-    "sphereFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/recipe/ingredients/POP30.sph",
+    "sphereFile": "http://autofill.googlecode.com/svn/data//Lipids/spheres/POP30.sph",
     "results": [],
     "radii": [
         [
-            4.5800000000000001,
-            5.5700000000000003,
-            5.6600000000000001,
-            4.8799999999999999
+            5.3200000000000003,
+            5.4699999999999998,
+            3.98,
+            9.3399999999999999
         ]
     ],
     "molarity": 1.0,
@@ -34,7 +34,7 @@
     "nbJitter": 5,
     "cutoff_boundary": 0,
     "rotRange": 6.2831000000000001,
-    "meshFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/geoms/ingredients_1/POP30.c4d",
+    "meshFile": "http://autofill.googlecode.com/svn/data//Lipids/geoms/0/POP30.c4d",
     "perturbAxisAmplitude": 0.10000000000000001,
     "principalVector": [
         0.0,
@@ -45,24 +45,24 @@
     "positions": [
         [
             [
-                -0.45000000000000001,
-                2.0299999999999998,
-                -5.3200000000000003
+                -0.27000000000000002,
+                3.0800000000000001,
+                -14.710000000000001
             ],
             [
-                5.3700000000000001,
-                -6.96,
-                -6.9299999999999997
+                2.8500000000000001,
+                -2.6899999999999999,
+                -15.800000000000001
             ],
             [
-                1.4099999999999999,
-                0.10000000000000001,
-                -14.380000000000001
+                -1.2,
+                0.089999999999999997,
+                -22.43
             ],
             [
-                -0.67000000000000004,
-                0.31,
-                -21.280000000000001
+                2.75,
+                -3.1099999999999999,
+                -5.7300000000000004
             ]
         ]
     ],

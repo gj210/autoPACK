@@ -5,13 +5,13 @@
         0,
         0
     ],
-    "sphereFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/recipe/ingredients/DPO110.sph",
+    "sphereFile": "http://autofill.googlecode.com/svn/data//Lipids/spheres/DPO110.sph",
     "results": [],
     "radii": [
         [
-            5.04,
-            3.8599999999999999,
             5.1900000000000004,
+            3.8599999999999999,
+            5.04,
             4.0
         ]
     ],
@@ -34,7 +34,7 @@
     "nbJitter": 5,
     "cutoff_boundary": 0,
     "rotRange": 6.2831000000000001,
-    "meshFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/geoms/ingredients_1/DPO110.c4d",
+    "meshFile": "http://autofill.googlecode.com/svn/data//Lipids/geoms/0/DPO110.c4d",
     "perturbAxisAmplitude": 0.10000000000000001,
     "principalVector": [
         0.0,
@@ -45,9 +45,9 @@
     "positions": [
         [
             [
-                -2.3700000000000001,
-                1.03,
-                19.059999999999999
+                0.28999999999999998,
+                -2.0899999999999999,
+                13.039999999999999
             ],
             [
                 -1.22,
@@ -55,9 +55,9 @@
                 10.23
             ],
             [
-                0.28999999999999998,
-                -2.0899999999999999,
-                13.039999999999999
+                -2.3700000000000001,
+                1.03,
+                19.059999999999999
             ],
             [
                 -2.4100000000000001,
