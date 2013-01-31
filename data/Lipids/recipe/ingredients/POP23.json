@@ -1,0 +1,73 @@
+{
+    "packingMode": "random",
+    "color": [
+        1,
+        0,
+        0
+    ],
+    "sphereFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/recipe/ingredients/POP23.sph",
+    "results": [],
+    "radii": [
+        [
+            2.8700000000000001,
+            5.9400000000000004,
+            5.6799999999999997,
+            4.6900000000000004
+        ]
+    ],
+    "molarity": 1.0,
+    "positions2": null,
+    "Type": "MultiSphere",
+    "useRotAxis": 1,
+    "gradient": "",
+    "jitterMax": [
+        0.5,
+        0.5,
+        0.10000000000000001
+    ],
+    "packingPriority": 0,
+    "rotAxis": [
+        0.0,
+        2.0,
+        1.0
+    ],
+    "nbJitter": 5,
+    "cutoff_boundary": 0,
+    "rotRange": 6.2831000000000001,
+    "meshFile": "/Users/ludo/DEV/autofill_googlesvn/data/Lipids/geoms/ingredients_1/POP23.c4d",
+    "perturbAxisAmplitude": 0.10000000000000001,
+    "principalVector": [
+        0.0,
+        0.0,
+        1.0
+    ],
+    "name": "POP23",
+    "positions": [
+        [
+            [
+                -6.5899999999999999,
+                3.0099999999999998,
+                6.4699999999999998
+            ],
+            [
+                6.0700000000000003,
+                -2.9199999999999999,
+                10.68
+            ],
+            [
+                0.070000000000000007,
+                -2.21,
+                21.780000000000001
+            ],
+            [
+                -2.9300000000000002,
+                2.0,
+                13.84
+            ]
+        ]
+    ],
+    "placeType": "jitter",
+    "cutoff_surface": 0,
+    "nbMol": 0,
+    "pdb": null
+}
