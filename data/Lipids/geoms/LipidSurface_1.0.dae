@@ -4,8 +4,8 @@
         <contributor>
             <authoring_tool>CINEMA4D 12.048 COLLADA Exporter</authoring_tool>
         </contributor>
-        <created>2013-02-12T02:49:28Z</created>
-        <modified>2013-02-12T02:49:28Z</modified>
+        <created>2013-02-12T02:55:46Z</created>
+        <modified>2013-02-12T02:55:46Z</modified>
         <unit meter="0.01" name="centimeter"/>
         <up_axis>Y_UP</up_axis>
     </asset>
@@ -79,7 +79,7 @@
     </library_geometries>
     <library_visual_scenes>
         <visual_scene id="ID3">
-            <node id="ID4" name="LipidSurface">
+            <node id="ID4" name="LipidSurface_1.0">
                 <translate sid="translate">0 0 -0</translate>
                 <rotate sid="rotateY">0 1 0 90</rotate>
                 <rotate sid="rotateX">1 0 0 0</rotate>
