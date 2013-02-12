@@ -9,7 +9,7 @@ placeMethod="jitter" resultfile="" runTimeDisplay="False" saveResult="True"
 smallestProteinSize="10" 
 use_gradient="True" version="1.0" windowsSize="50.0"/>
     <grid grid_result="" grid_storage="None"/>	
-	<organelle geom="http://autofill.googlecode.com/svn/data/Lipids/geoms/Surface.dae" name="Surface" rep="None" rep_file="None">
+	<organelle geom="http://autofill.googlecode.com/svn/data/Lipids/geoms/LipidSurface_1.0.dae" name="LipidSurface_1.0" rep="None" rep_file="None">
 	<surface>
 <include filename='http://autofill.googlecode.com/svn/data/Lipids/recipe/ingredients/POP1.xml'/>
 <include filename='http://autofill.googlecode.com/svn/data/Lipids/recipe/ingredients/POP2.xml'/>
