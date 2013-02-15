@@ -1,9 +1,9 @@
     <recipe name="HIV" version="1.4">
-        <setupfile>http://autofill.googlecode.com/svn/data/HIV/recipe/HIV_recipe_setup_1_4.py</setupfile>
+        <setupfile>http://autofill.googlecode.com/svn/data/HIV/recipesRight/HIV1.4_Right.xml</setupfile>
         <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/resultsRight/HIVresult_1_4chimera2.apr</resultfile>
     </recipe>
-*Tom, we need to remove this section to get these rep_surf objects objects from the SetupFile above
+*Tom, we need to remove this section to get these rep_file= objects objects from the SetupFile above
 <000.000000,000.000000,000.000000>,<1.00,0.00,0.00,0.000000,0.00,1.00,0.00,0.000000,0.00,0.00,1.00,0.000000,0.000000,0.000000,0.000000,1.000000>,<0.00>,<EnvelopeBilayer3>,<1>,<0>
 <000.000000,000.000000,000.000000>,<1.00,0.00,0.00,0.000000,0.00,1.00,0.00,0.000000,0.00,0.00,1.00,0.000000,0.000000,0.000000,0.000000,1.000000>,<0.00>,<HIV_1_1_NucleocapsidHostMesh>,<1>,<0>
       *getting HIV_1_1_NucleocapsidHostMesh will give you the .stl version of Mark's nucleocapsid, but in this file, I also pasted the .apr reconstruciton for the hex and pent at the bottom.
