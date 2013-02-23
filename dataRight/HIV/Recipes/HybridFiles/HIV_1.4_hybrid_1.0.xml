@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+	<AutoFillSetup name="HIV">
+	<options EnviroOnly="False" _hackFreepts="False" _timer="False" boundingBox="[[-693.41300000000001, -651.68600000000004, -735.077], [653.65499999999997, 664.005, 694.65200000000004]]" cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.15" gradients="['gradRadSPIKE', 'gradRadMA']" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="47.92" overwritePlaceMethod="False" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="http://autofill.googlecode.com/svn/dataRight/HIV/Results/autoPACKResultFiles/HIVresult_1_4chimera3.apr" runTimeDisplay="0" saveResult="False" smallestProteinSize="50" use_gradient="True" version="1.0" windowsSize="50.0"/>
+	<gradients>
+	<gradient description="" direction="[-480.0, -480.0, 0.0]" mode="radial" name="gradRadSPIKE" pick_mode="rnd" radius="1380.0" weight_mode="linear"/>
+	<gradient description="" direction="[480.0, 480.0, 0.0]" mode="radial" name="gradRadMA" pick_mode="rnd" radius="1380.0" weight_mode="linear"/>
+	</gradients>
+	<cytoplasme/>
+	<organelle geom="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Representations/Containers/Multimeric/Low/HIV_EnvelopePackMeshCenter_3.0" name="Envelope" rep="EnvelopeBilayer" rep_file="http://code.google.com/p/autofill/source/browse/dataRight/HIV/Components/Representations/Containers/Multimeric/Low/EnvelopeBilayer3">
+	<surface>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/iSUTM.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/MA_matrix_G1.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Surf_Nef.xml"/>
+	</surface>
+	<interior>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Cyt_RT.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Cyt_IN.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Cyt_PR.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Cyt_Vpr.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Cyt_3dcg.xml"/>
+	</interior>
+	</organelle>
+	<organelle geom="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Representations/Containers/Multimeric/Low/HIV_NucleoCapsidePackMeshOut_1.0" packingMeshOut=geom name="NucleoCapsid" rep="HIV_Nucleocapside" rep_file="">
+	<interior>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Nuc_FONC.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Nuc_FOiRev.xml"/>
+	<ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Nuc_iTat.xml"/>
+	</interior>
+	</organelle>
+	</AutoFillSetup>
