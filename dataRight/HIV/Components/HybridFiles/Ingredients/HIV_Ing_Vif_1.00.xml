@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <ingredient
     Type="MultiSphere"
+    coordsystem="right"
     color="[0, .6, 0]"
     cutoff_boundary="0"
     cutoff_surface="0"
@@ -10,9 +11,15 @@
     molarity="0.00018"
     name="Vif"
     nbJitter="5"
-    nbMol="143"
+    nbMol="0"
     packingMode="random"
-    packingPriority="0.207272727273"
+    packingPriority="0.0"
+    placeType="jitter"
+    perturbAxisAmplitude=""
+    sphereFile="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/CollisionTrees/3dcg_1.sph"
+    collisionFile=sphereFile
+    useRotAxis="False"
+    use_mesh_rb="False"
     customPDB="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/PDBs/BioUnit/HIV_Vif_3dcg_bioA2_1.00.pdb"
     onlinePDB="3dcg"
     pdb=customPDB
@@ -21,6 +28,4 @@
         bioUnitAssembly="2"
         bioUnitFile="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/BioUnitMatrices/HIV_Vif_3dcg_BioMT.txt"
         centroid="(15.246,-8.164,-9.987)"
-    placeType="pandaBullet"
-    sphereFile="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/CollisionTrees/3dcg_1.sph"
 />
