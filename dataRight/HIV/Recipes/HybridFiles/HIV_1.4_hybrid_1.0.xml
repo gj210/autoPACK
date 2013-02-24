@@ -1,5 +1,33 @@
 <?xml version="1.0" ?>
-<AutoFillSetup name="HIV">
+<AutoFillSetup name="HIV" recipeName=name>
+    <autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
+        <?ignore autoPACK_FilePaths contents on Feb 24 2013
+            <autoPACK_FilePaths name="autoPACK_FilePaths">
+                <paths
+                    autoPackDataBasePath="http://autofill.googlecode.com/svn/dataRight/"
+                    localDataBase=""
+                        recipesData=autoPackDataBasePath+recipeName+"/"
+                        resultsAprPath   = recipesData+"Results/autoPACK_ResultFiles/"
+                        recipesPath         = recipesData+"Recipes/HybridFiles/"
+                        componentsPath      = recipesData+"Components/"
+                            containersFilePath      = componentsPath+"HybridFiles/Containers/"
+                            ingredientsFilePath     = componentsPath+"HybridFiles/Ingredients/"
+                            representationsFilePath = componentsPath+"Representations/"
+                                containerRepresentationsPath    = representationsFilePath+"Containers/"
+                                ingredientRepresentationsPath   = representationsFilePath+"Ingredients/"
+                            componentsDataPath  = componentsPath+"Data/"
+                                componentsBioUnitMatricesPath   = componentsDataPath+"BioUnitMatrices/"
+                                componentsCollisionTreesPath    = componentsDataPath+"CollisionTrees/"
+                                componentsOtherDataPath         = componentsDataPath+"OtherData/"
+                                componentsPackingSurfacesPath   = componentsDataPath+"PackingSurfaces/"
+                                componentsPDBsPath              = componentsDataPath+"PDBs/"
+                                componentsVolumeMapsPath        = componentsDataPath+"VolumeMaps/"
+                />
+            </autoPACK_FilePaths>
+        ?>
+    </autoPACK_FilePaths>
+
+
 	<options EnviroOnly="False"
         _hackFreepts="False"
         _timer="False"
@@ -15,7 +43,7 @@
         pickRandPt="True"
         pickWeightedIngr="True"
         placeMethod="jitter"
-        resultfile="http://autofill.googlecode.com/svn/dataRight/HIV/Results/autoPACKResultFiles/HIVresult_1_4chimera3.apr"
+        resultfile=resultsAprPath+"HIVresult_1_4chimera3.apr"
         runTimeDisplay="0"
         saveResult="False"
         smallestProteinSize="50"
