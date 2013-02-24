@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
+	<organelle name="Nucleocapsid" packingMeshName=name geom=componentsPackingSurfacesPath+"HIV_Nucleocapsid_PackMesh_Out_1.01" packingMeshOut=geom packingMesh=packingMeshOut rep="HIV_Nucleocapside" repName=rep rep_file=containerRepresentationsPath+"HIV_Nucleocapsid_Rep_Low_1.00" containerPosition=(0.,0.,0.) containerRotation=[(1,0,0),(0,1,0),(0,0,1)]
+
+        Ludo- to use these new perfect Nucleocapsid meshes, we need HPB rotation or PDB style matrices that give equivalent of setting HPB in C4D to (0, 0, 13.862)... remember that this is left-handed so it needs to be converted to right for use in this file and then back to left by uPy for use in C4D.
+    >

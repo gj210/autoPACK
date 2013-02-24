@@ -1,0 +1,3 @@
+<?xml version="1.0" ?>
+<autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
+<organelle name="Envelope_1.03" packingMeshName=name geom=componentsPackingSurfacesPath+"HIV_Envelope_PackMesh_Center_1.03" packingMesh=geom rep="EnvelopeBilayer_1.03" repName=rep rep_file=containerRepresentationsPath+"HIV_EnvelopeBilayer_Rep_Low_1.03" containerPosition=(0.,0.,0.) containerRotation=[(1,0,0),(0,1,0),(0,0,1)]>

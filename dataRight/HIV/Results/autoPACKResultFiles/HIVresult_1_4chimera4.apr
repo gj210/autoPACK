@@ -1,7 +1,9 @@
+<?xml version="1.0" ?>
+<autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
     <recipe name="HIV" version="1.4">
-        <setupfile>http://autofill.googlecode.com/svn/dataRight/HIV/Recipes/HybridFiles/HIV_1.4_hybrid_1.0.xml</setupfile>
+        <setupfile>recipesPath+"HIV_1.4_hybrid_1.0.xml"</setupfile>
         <wrkdir>autoFillRecipeScripts/HIV</wrkdir>
-        <resultfile>http://autofill.googlecode.com/svn/dataRight/HIV/Results/autoPACKResultFiles/HIVresult_1_4chimera4.apr</resultfile>
+        <resultfile>resultsAprPath+"HIVresult_1_4chimera4.apr"</resultfile>
     </recipe>
 *Tom, we need to remove this section to get these rep_file= objects objects from the SetupFile above
 <000.000000,000.000000,000.000000>,<1.00,0.00,0.00,0.000000,0.00,1.00,0.00,0.000000,0.00,0.00,1.00,0.000000,0.000000,0.000000,0.000000,1.000000>,<0.00>,<EnvelopeBilayer3>,<1>,<0>

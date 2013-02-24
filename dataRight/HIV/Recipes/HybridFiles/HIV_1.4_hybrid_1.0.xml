@@ -1,7 +1,8 @@
 <?xml version="1.0" ?>
 <AutoFillSetup name="HIV" recipeName=name>
     <autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
-        <?ignore autoPACK_FilePaths contents on Feb 24 2013
+    
+        <?ignore autoPACK_FilePaths contents on Feb 24 2013 using this for quick reference to cutAndPaste filepaths
             <autoPACK_FilePaths name="autoPACK_FilePaths">
                 <paths
                     autoPackDataBasePath="http://autofill.googlecode.com/svn/dataRight/"
@@ -25,7 +26,6 @@
                 />
             </autoPACK_FilePaths>
         ?>
-    </autoPACK_FilePaths>
 
 
 	<options EnviroOnly="False"
@@ -57,7 +57,8 @@
         <gradient description="" direction="[480.0, 480.0, 0.0]" mode="radial" name="gradRadMA" pick_mode="rnd" radius="1380.0" weight_mode="linear"/>
 	</gradients>
 	<cytoplasme/>
-	<organelle name="Envelope_1.03" packingMeshName=name geom=componentsPackingSurfacesPath+"HIV_Envelope_PackMesh_Center_1.03" packingMesh=geom rep="EnvelopeBilayer_1.03" repName=rep rep_file=containerRepresentationsPath+"HIV_EnvelopeBilayer_Rep_Low_1.03" containerPosition=(0.,0.,0.) containerRotation=[(1,0,0),(0,1,0),(0,0,1)]>
+
+    <organelle include=containersFilePath+"HIV_Cont_Envelope_1.00.xml"/>    
         <surface>
         <!--    <ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/iSUTM.xml"/>
             <ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/MA_matrix_G1.xml"/>
@@ -71,7 +72,8 @@
             <ingredient include=ingredientsFilePath+"HIV_Ing_Vif_1.00.xml"/>
         </interior>
 	</organelle>
-	<organelle name="Nucleocapsid" packingMeshName=name geom=componentsPackingSurfacesPath+"HIV_Nucleocapsid_PackMesh_Out_1.01" packingMeshOut=geom packingMesh=packingMeshOut rep="HIV_Nucleocapside" repName=rep rep_file=containerRepresentationsPath+"HIV_Nucleocapsid_Rep_Low_1.00" containerPosition=(0.,0.,0.) containerRotation=[(1,0,0),(0,1,0),(0,0,1)] Ludo- to use these new perfect Nucleocapsid meshes, we need HPB rotation or PDB style matrices that give equivalent of setting HPB in C4D to (0, 0, 13.862)... remember that this is left-handed so it needs to be converted to right for use in this file and then back to left by uPy for use in C4D.>
+
+    <organelle include=containersFilePath+"HIV_Cont_Nucleocapsid_1.03.xml"/>
         <interior>
          <!--   <ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Nuc_FONC.xml"/>
             <ingredient include="/Users/grahamold/Desktop/HIV1.4hybrid/Nuc_FOiRev.xml"/>
