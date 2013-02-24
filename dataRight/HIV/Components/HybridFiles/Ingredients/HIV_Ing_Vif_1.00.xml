@@ -1,4 +1,5 @@
 <?xml version="1.0" ?>
+<autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
 <ingredient
     Type="MultiSphere"
     coordsystem="right"
@@ -7,7 +8,7 @@
     cutoff_surface="0"
     gradient=""
     jitterMax="(1, 1, 1)"
-    meshFile="http://autofill.googlecode.com/svn/data/HIV/geoms/Cyt_3dcg.dae"
+    meshFile=ingredientRepresentationsPath+"Cyt_3dcg"
     molarity="0.00018"
     name="Vif"
     nbJitter="5"
@@ -16,16 +17,18 @@
     packingPriority="0.0"
     placeType="jitter"
     perturbAxisAmplitude=""
-    sphereFile="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/CollisionTrees/3dcg_1.sph"
+    sphereFile=componentsCollisionTreesPath+"3dcg_1.sph"
     collisionFile=sphereFile
     useRotAxis="False"
     use_mesh_rb="False"
-    customPDB="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/PDBs/BioUnit/HIV_Vif_3dcg_bioA2_1.00.pdb"
+    customPDB=componentsPDBsPath+"BioUnit/"+"HIV_Vif_3dcg_bioA2_1.00.pdb"
     onlinePDB="3dcg"
+    onlinePDBdataBank="PDB"
     pdb=customPDB
-    <!-- if using onlinePDB -->
+    <ifUsingOnlinePDB>
         useBioUnit="True"
         bioUnitAssembly="2"
-        bioUnitFile="http://autofill.googlecode.com/svn/dataRight/HIV/Components/Data/BioUnitMatrices/HIV_Vif_3dcg_BioMT.txt"
+        bioUnitFile="componentsBioUnitMatricesPath+"HIV_Vif_3dcg_BioMT.txt"
         centroid="(15.246,-8.164,-9.987)"
+    </ifUsingOnlinePDB>
 />
