@@ -28,7 +28,7 @@
     <ifUsingOnlinePDB>
         useBioUnit="True"
         bioUnitAssembly="2"
-        bioUnitFile="componentsBioUnitMatricesPath+"HIV_Vif_3dcg_BioMT.txt"
+        bioUnitFile=componentsBioUnitMatricesPath+"HIV_Vif_3dcg_BioMT.txt"
         centroid="(15.246,-8.164,-9.987)"
     </ifUsingOnlinePDB>
 />

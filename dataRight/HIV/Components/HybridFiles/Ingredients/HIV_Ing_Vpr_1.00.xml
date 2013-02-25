@@ -28,7 +28,7 @@
     <ifUsingOnlinePDB>
         useBioUnit="False"
         bioUnitAssembly=""
-        bioUnitFile="componentsBioUnitMatricesPath+""
+        bioUnitFile=componentsBioUnitMatricesPath+""
         centroid="(-38.945,-13.849,2.544)"
     </ifUsingOnlinePDB>
 />
