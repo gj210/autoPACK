@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<autoPACK_FilePaths include="http://autofill.googlecode.com/svn/autoPACK_filePaths.xml"/>
+<ingredient
+    Type="MultiSphere"
+    coordsystem="right"
+    color="[0, .6, 0]"
+    cutoff_boundary="0"
+    cutoff_surface="0"
+    gradient=""
+    jitterMax="(1, 1, 1)"
+    meshFile=ingredientRepresentationsPath+"Cyt_Vpr"
+    molarity="0.00018"
+    name="Vpr"
+    nbJitter="5"
+    nbMol="0"
+    packingMode="random"
+    packingPriority="0.0"
+    placeType="jitter"
+    perturbAxisAmplitude=""
+    sphereFile=componentsCollisionTreesPath+"1esx_6.sph"
+    collisionFile=sphereFile
+    useRotAxis="False"
+    use_mesh_rb="False"
+    customPDB=componentsPDBsPath+"Asymmetric/"+"HIV_Vpr_1esx_1mer_1.00.pdb"
+    onlinePDB="1esx"
+    onlinePDBdataBank="PDB"
+    pdb=customPDB
+    <ifUsingOnlinePDB>
+        useBioUnit="False"
+        bioUnitAssembly=""
+        bioUnitFile="componentsBioUnitMatricesPath+""
+        centroid="(-38.945,-13.849,2.544)"
+    </ifUsingOnlinePDB>
+/>
