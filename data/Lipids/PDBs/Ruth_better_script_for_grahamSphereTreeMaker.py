@@ -11,7 +11,7 @@ def saveSphereModel(fileRead,filename, minR=-1, maxR=-1 ):
     
     minR = 1.50 #self.radg #added by Graham 4/4/11
     maxR = 2.00 #self.radm #added by Graham 4/4/11
-    r=3.0
+    r=2.0
     centers=(19,7,4)
 
     fw = open(filename, 'w')
@@ -28,7 +28,7 @@ def saveSphereModel(fileRead,filename, minR=-1, maxR=-1 ):
     fw.write("1\n")
     fw.write("\n")
     fw.write("# number of spheres in level 1\n")
-    fw.write("%d\n"%int(ctr/2))  #len(ctr))
+    fw.write("%d\n"%int(ctr/2+1))  #len(ctr))
     fw.write("\n")
     fw.write("# x y z r of spheres in level 1\n")
     ctr2=0
@@ -40,6 +40,7 @@ def saveSphereModel(fileRead,filename, minR=-1, maxR=-1 ):
             if ctr2%2==0:
                 fw.write("%6.2f %6.2f %6.2f %6.2f\n"%(xcoord,ycoord,zcoord,r))
             ctr2 += 1
+    fw.write("  0.00   0.00   0.00   2.00\n") # Need a base sphere to mask off used surface points
     fw.close()
 
 
