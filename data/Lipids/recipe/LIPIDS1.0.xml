@@ -6,7 +6,7 @@ cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0"
 ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="10" 
 overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" 
 placeMethod="jitter" resultfile="" runTimeDisplay="False" saveResult="True" 
-smallestProteinSize="10" 
+smallestProteinSize="13" 
 use_gradient="True" version="1.0" windowsSize="13.0" windowsSize_overwrite="True"/>
     <grid grid_result="" grid_storage="None"/>	
 	<organelle geom="http://autofill.googlecode.com/svn/data/Lipids/geoms/LipidSurface_1_0.dae" name="LipidSurface_1_0" rep="None" rep_file="None">
