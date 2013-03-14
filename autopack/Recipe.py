@@ -16,7 +16,7 @@
 #
 # Class restructuring and organization: Michel Sanner
 #
-# This file "Recipe.py" is part of autoPACK, cellPACK, and autopack.
+# This file "Recipe.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -55,13 +55,14 @@ class Recipe:
         
         self.ingredients = []
         self.activeIngredients = []
-        self.organelle = None 
-        # will be set when recipe is added to organelle
+        self.compartment = None 
+        # will be set when recipe is added to compartment
         self.exclude = []
-    
+        self.number=0
+        
     def delIngredient(self, ingr):
         """ remove the given ingredient from the recipe """ 
-        print ingr,ingr.name
+#        print ingr,ingr.name
         if ingr in self.ingredients : 
             ind = self.ingredients.index(ingr)
             self.ingredients.pop(ind)
@@ -71,7 +72,7 @@ class Recipe:
     def addIngredient(self, ingr):
         """ add the given ingredient from the recipe """ 
 #        assert isinstance(ingr, Ingredient)
-        print ingr,ingr.name
+#        print ingr,ingr.name
         if ingr not in self.ingredients :
             self.ingredients.append(ingr)
         ingr.recipe = weakref.ref(self)

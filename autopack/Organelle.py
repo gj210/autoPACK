@@ -15,7 +15,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and autopack.
+# This file "Organelle.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -59,17 +59,28 @@
 
 ## NOTE changing smallest molecule radius changes grid spacing and invalidates
 ##      arrays saved to file
+import sys
 import numpy.oldnumeric as N
-import numpy, pickle, weakref, pdb
+import numpy
+import pickle
+import weakref
+import pdb
 from time import time,sleep
 from .ray import vlen, vdiff, vcross
 import math
 from math import sqrt,ceil
 import os
+try :
+    import urllib.request as urllib# , urllib.parse, urllib.error
+except :
+    import urllib
+
 #from .Ingredient import Ingredient
 from .Recipe import Recipe
-print "import autopack"
+#print "import AutoFill"
 import autopack
+from autopack import checkURL
+
 AFDIR = autopack.__path__[0]
 
 try :
@@ -80,7 +91,9 @@ print ("helper is "+str(helper))
 
 from autopack import intersect_RayTriangle as iRT
 #from autopack.HistoVol import Grid   
-
+if sys.version > "3.0.0":
+    xrange = range
+    
 class OrganelleList:
     
     def __init__(self):
@@ -106,8 +119,8 @@ class Organelle(OrganelleList):
     """
 
     def __init__(self, name, vertices, faces, vnormals, **kw):
-
         OrganelleList.__init__(self)
+        #print ("organelle init",name,kw)
         self.name = name
         self.vertices = vertices
         self.faces = faces
@@ -116,6 +129,7 @@ class Organelle(OrganelleList):
         if "fnormals" in kw :
             self.fnormals = kw["fnormals"]
         self.mesh = None
+        self.gname= ""
         self.ghost =False
         self.bb = None
         if "ghost" in kw :
@@ -125,9 +139,10 @@ class Organelle(OrganelleList):
             self.ref_obj = kw["ref_obj"]
         if vertices == None :
             if "filename" in kw :
-                self.faces,self.vertices,self.vnormals = self.getMesh(kw["filename"])
+                self.faces,self.vertices,self.vnormals = self.getMesh(filename=kw["filename"])
                 self.filename=kw["filename"]
                 self.ref_obj = name
+                #print ("mesh",self.name,self.filename)
         if self.vertices is not None and len(self.vertices):
             #can be dae/fbx file, object name that have to be in the scene or dejaVu indexedpolygon file
             self.bb = self.getBoundingBox()
@@ -135,9 +150,11 @@ class Organelle(OrganelleList):
         self.representation = None
         self.representation_file = None
         if "object_name" in kw :
-            self.representation = kw["object_name"]
-            self.representation_file =  kw["object_filename"]
-            self.getMesh(self.representation_file,rep=self.representation)
+            if kw["object_name"] is not None:
+                #print ("rep",kw["object_name"],kw["object_filename"])
+                self.representation = kw["object_name"]
+                self.representation_file =  kw["object_filename"]
+                self.getMesh(filename=self.representation_file,rep=self.representation)
         self.innerRecipe = None
         self.surfaceRecipe = None
         self.surfaceVolume = 0.0
@@ -203,13 +220,14 @@ class Organelle(OrganelleList):
     def getMesh(self,filename=None,rep=None,**kw):
         geom = None
         gname = self.name
+        helper = autopack.helper
         parent=helper.getObject("autopackHider")
         if parent is None:
             parent = helper.newEmpty("autopackHider")
         if rep is not None :
             gname =rep 
             parent=helper.getObject('O%s'%self.name)
-#        print ("organelle",filename)
+        #print ("organelle",filename,gname,rep)
         if filename.find("http") != -1 or filename.find("ftp")!= -1 :
             try :
                 import urllib.request as urllib# , urllib.parse, urllib.error
@@ -229,37 +247,54 @@ class Organelle(OrganelleList):
                 if not os.path.isfile(tmpFileName1) or autopack.forceFetch:
 #                    print "download "+filename+".indpolface"
 #                    print "download "+filename+".indpolvert"
-                    try :
-                        urllib.urlretrieve(filename+".indpolface", tmpFileName1)
-                    except :
-                        print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
+                    if checkURL(filename+".indpolface"):
+                        try :
+                            urllib.urlretrieve(filename+".indpolface", tmpFileName1)
+                        except :
+                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
+                    else :
+                        if not os.path.isfile(tmpFileName1)  :
+                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
+                            return
                 if not os.path.isfile(tmpFileName2):
-                    try :
-                        urllib.urlretrieve(filename+".indpolvert", tmpFileName2)
-                    except :
-                        print ("problem downloading "+filename+".indpolface to"+tmpFileName2)
+                    if checkURL(filename+".indpolvert"):
+                        try :
+                            urllib.urlretrieve(filename+".indpolvert", tmpFileName2)
+                        except :
+                            print ("problem downloading "+filename+".indpolface to"+tmpFileName2)
+                    else :
+                        if not os.path.isfile(tmpFileName2)  :
+                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
+                            return
             else :
                 tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
                 print("#check if exist first",tmpFileName,os.path.isfile(tmpFileName))
                 if not os.path.isfile(tmpFileName) or autopack.forceFetch:
                     print("urlretrieve and fetch")
-                    urllib.urlretrieve(filename, tmpFileName)
+                    if checkURL(filename):
+                        urllib.urlretrieve(filename, tmpFileName)
+                    else :
+                        if not os.path.isfile(tmpFileName)  :
+                            print ("problem downloading "+filename)
+                            return
+                        
             filename = tmpFileName 
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
-        if fileExtension == ".fbx":
+        if fileExtension.lower() == ".fbx":
             print ("read withHelper",filename)
             #use the host helper if any to read
             if helper is not None:#neeed the helper
                 helper.read(filename)
                 geom = helper.getObject(gname)
-#                print ("geom ",geom,geomname,helper.getName(geom))
                 #reparent to the fill parent
                 if helper.host == "3dsmax" :
                     helper.resetTransformation(geom)#remove rotation and scale from importing
-                if helper.host != "c4d" and rep == None:
+                if helper.host != "c4d" and rep == None  and helper.host != "softimage":
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.,-math.pi/2.0,0.0])
+                if helper.host =="softimage"  :
+                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0],primitive=True)#need to rotate the primitive                    
 #                p=helper.getObject("autopackHider")
 #                if p is None:
 #                    p = helper.newEmpty("autopackHider")
@@ -272,18 +307,20 @@ class Organelle(OrganelleList):
             if helper is not None:#neeed the helper
                 helper.read(filename)
                 geom = helper.getObject(gname)
-#                print ("should have read...",geomname,geom)
+                print ("should have read...",gname,geom,parent)
 #                helper.update()
                 if helper.host == "3dsmax" :
                     helper.resetTransformation(geom)#remove rotation and scale from importing
-                if helper.host != "c4d"  and helper.host != "dejavu":
+                if helper.host != "c4d"  and helper.host != "dejavu"  and helper.host != "softimage":
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
+                if helper.host =="softimage"  :
+                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0],primitive=True)#need to rotate the primitive                    
 #                p=helper.getObject("autopackHider")
 #                if p is None:
 #                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
-                #print "reparent ",geom,p
+                print ("reparent ",geom,parent)
                 helper.reParent(geom,parent)            
 #                return geom
 #            return None
@@ -299,9 +336,13 @@ class Organelle(OrganelleList):
 #                    helper.toggleDisplay(p,False)
                 helper.reParent(geom,parent) 
         if rep is None:
-            helper.toggleDisplay(parent,False)  
+            if helper.host.find("blender") == -1 :
+                helper.toggleDisplay(parent,False) 
+            elif helper.host == "dejavu":
+                helper.toggleDisplay(geom,False)                 
         else :
-            return None                     
+            return None 
+        self.gname = gname                    
         if geom is not None and fileExtension != '' and not self.ghost:
             faces,vertices,vnormals = helper.DecomposeMesh(geom,
                                 edit=False,copy=False,tri=True,transform=True)
@@ -355,6 +396,7 @@ class Organelle(OrganelleList):
         assert self.number is not None
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
+        self.innerRecipe.number= self.number
         recipe.organelle = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
@@ -363,6 +405,7 @@ class Organelle(OrganelleList):
         assert self.number is not None
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
+        self.surfaceRecipe.number= self.number
         recipe.organelle = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
@@ -713,6 +756,192 @@ class Organelle(OrganelleList):
         self.ogsurfacePoints = points
         self.ogsurfacePointsNormals = normals
 
+    #Jordan Curve Theorem
+    def BuildGridJordan(self, histoVol,ray=1):
+        # create surface points 
+        if self.ghost : return
+        t0 = t1 = time()        
+        if self.isBox :
+            self.overwriteSurfacePts = True
+        if self.overwriteSurfacePts:
+            self.ogsurfacePoints = self.vertices[:]
+            self.ogsurfacePointsNormals = self.vnormals[:]
+        else :
+            self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
+#        helper = None
+#        afvi = None
+#        if hasattr(histoVol,"afviewer"):
+#            if histoVol.afviewer is not None and hasattr(histoVol.afviewer,"vi"):
+#                helper = histoVol.afviewer.vi
+#            afvi = histoVol.afviewer       
+        
+        # Graham Sum the SurfaceArea for each polyhedron
+        vertices = self.vertices  #NEED to make these limited to selection box, not whole organelle
+        faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
+        normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
+        vSurfaceArea = sum(areas)
+        #for gnum in range(len(normalList2)):
+        #    vSurfaceArea = vSurfaceArea + areas[gnum]
+#        print 'Graham says Surface Area is %d' %(vSurfaceArea)
+#        print 'Graham says the last triangle area is is %d' %(areas[-1])
+        #print '%d surface points %.2f unitVol'%(len(surfacePoints), unitVol)
+        
+        # build a BHTree for the vertices
+        if self.isBox :
+            nbGridPoints = len(histoVol.grid.masterGridPositions)
+            insidePoints = histoVol.grid.getPointsInCube(self.bb, None, 
+                                                None,addSP=False)     
+            for p in insidePoints : histoVol.grid.gridPtId[p]=-self.number
+            print('is BOX Total time', time()-t0)
+            surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(self.ogsurfacePoints,histoVol)
+            srfPts = surfPtsBB
+            surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,srfPts,
+                        surfPtsBBNorms,histoVol)
+            self.insidePoints = insidePoints
+            self.surfacePoints = surfacePoints
+            self.surfacePointsCoords = surfPtsBB
+            self.surfacePointsNormals = surfacePointsNormals
+            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+                len(self.surfacePoints), len(self.insidePoints),
+                nbGridPoints, len(histoVol.grid.masterGridPositions)))
+        
+            self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
+                                          self.insidePoints,areas=vSurfaceArea)    
+            print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
+            return self.insidePoints, self.surfacePoints
+        
+        print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
+
+        distances = histoVol.grid.distToClosestSurf
+        idarray = histoVol.grid.gridPtId
+        diag = histoVol.grid.diag
+
+        t1 = time()
+
+        #build BHTree for off grid surface points
+        from bhtree import bhtreelib
+        srfPts = self.ogsurfacePoints
+#        print len(srfPts),srfPts[0]
+#        stemp = afvi.vi.Points("surfacePts", vertices=self.ogsurfacePoints, materials=[[0,1,0],],
+#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
+#                   visible=1,parent=None)
+#        stemp = afvi.vi.Points("surfacePts2", vertices=histoVol.grid.masterGridPositions, materials=[[0,1,0],],
+#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
+#                   visible=1,parent=None)
+        #??why the bhtree behave like this
+        self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+        res = numpy.zeros(len(srfPts),'f')
+        dist2 = numpy.zeros(len(srfPts),'f')
+#        print "nspt",len(srfPts)
+#        print srfPts
+        number = self.number
+        ogNormals = self.ogsurfacePointsNormals
+        insidePoints = []
+
+        # find closest off grid surface point for each grid point 
+        #FIXME sould be diag of organelle BB inside fillBB
+        grdPos = histoVol.grid.masterGridPositions
+        returnNullIfFail = 0
+        print ("organelle build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
+        closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)
+        helper = autopack.helper
+        geom =   helper.getObject(self.gname)      
+        if geom is None :
+            self.gname = '%s_Mesh'%self.name            
+            geom = helper.getObject(self.gname)
+        center = helper.getTranslation( geom )
+#        print len(closest),diag,closest[0]
+#        print closest
+#        bhtreelib.freeBHtree(bht)
+        self.closestId = closest
+#        print len(self.closestId)
+#would it be faster using c4d vector ? or hots system?
+##        import c4d
+#        c4d.StatusSetBar(0)
+        helper.resetProgressBar()
+        for ptInd in range(len(grdPos)):#len(grdPos)):
+            # find closest OGsurfacepoint
+            inside = False
+            gx, gy, gz = grdPos[ptInd]
+            sptInd = closest[ptInd]
+            if closest[ptInd]==-1:
+                print("ouhoua, closest OGsurfacePoint = -1")
+                #pdb.set_trace()#???  Can be used to debug with http://docs.python.org/library/pdb.html
+            if sptInd < len(srfPts):
+                sx, sy, sz = srfPts[sptInd]
+                d = sqrt( (gx-sx)*(gx-sx) + (gy-sy)*(gy-sy) +
+                          (gz-sz)*(gz-sz))
+            else :
+                try :
+                    n=bht.closePointsDist2(tuple(grdPos[ptInd]),diag,res,dist2)
+                    d = min(dist2[0:n])
+                    sptInd = res[tuple(dist2).index(d)]
+                except :
+                    #this is quite long
+                    delta = numpy.array(srfPts)-numpy.array(grdPos[ptInd])
+                    delta *= delta
+                    distA = numpy.sqrt( delta.sum(1) )
+                    d = min(distA)
+                    sptInd = list(distA).index(d)
+                sx, sy, sz = srfPts[sptInd]
+            if distances[ptInd]>d: distances[ptInd] = d  # case a diffent surface ends up being closer in the linear walk through the grid
+            #should check if in organelle bounding box
+            insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
+            r=False
+            if insideBB:
+                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
+                r= ((count % 2) == 1)
+                if ray == 3 :
+                    intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
+                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
+                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
+                    if r :
+                       if (count2 % 2) == 1 and (count3 % 2) == 1 :
+                           r=True
+                       else : 
+                           r=False
+            if r : # odd inside
+                inside = True
+#
+#            # check if ptInd in inside
+#            intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[1.001,0.,0.], diag, count = True )
+#            if (count % 2) == 1: # odd inside
+                #and the point is actually inside the mesh bounding box
+                inside = True
+                if inside :
+                    insidePoints.append(ptInd)
+            p=(ptInd/float(len(grdPos)))*100.0
+            helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
+        print('time to update distance field and idarray', time()-t1)
+        
+        t1 = time()
+        nbGridPoints = len(histoVol.grid.masterGridPositions)
+        
+        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(srfPts,histoVol)
+        srfPts = surfPtsBB
+        print ("compare length id distances",nbGridPoints,(nbGridPoints == len(idarray)),(nbGridPoints == len(distances)))
+        ex = True#True if nbGridPoints == len(idarray) else False
+        surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,
+                                            srfPts,surfPtsBBNorms,histoVol,extended=ex)
+
+        insidePoints = insidePoints
+        print('time to extend arrays', time()-t1)
+
+        print('Total time', time()-t0)
+
+        self.insidePoints = insidePoints
+        self.surfacePoints = surfacePoints
+        self.surfacePointsCoords = surfPtsBB
+        self.surfacePointsNormals = surfacePointsNormals
+        print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+            len(self.surfacePoints), len(self.insidePoints),
+            nbGridPoints, len(histoVol.grid.masterGridPositions)))
+
+        self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
+                                      self.insidePoints,areas=vSurfaceArea)
+        bhtreelib.freeBHtree(bht)
+        return self.insidePoints, self.surfacePoints
+        
     def BuildGrid(self, histoVol):
         # create surface points 
         if self.ghost : return
@@ -810,13 +1039,12 @@ class Organelle(OrganelleList):
 ##        import c4d
 #        c4d.StatusSetBar(0)
         for ptInd in range(len(grdPos)):#len(grdPos)):
-
             # find closest OGsurfacepoint
             gx, gy, gz = grdPos[ptInd]
             sptInd = closest[ptInd]
             if closest[ptInd]==-1:
                 print("ouhoua, closest OGsurfacePoint = -1")
-                pdb.set_trace()#???  Can be used to debug with http://docs.python.org/library/pdb.html
+                #pdb.set_trace()#???  Can be used to debug with http://docs.python.org/library/pdb.html
             if sptInd < len(srfPts):
                 sx, sy, sz = srfPts[sptInd]
                 d = sqrt( (gx-sx)*(gx-sx) + (gy-sy)*(gy-sy) +
@@ -1720,6 +1948,7 @@ class Organelle(OrganelleList):
         idx=(numpy.abs(array-value)).argmin()
         return array[idx]
 
+
     def getSurfaceInnerPoints_sdf(self,boundingBox,spacing,display = True,useFix=False):
         print ("beforea import" )        
         print ("ok1" )
@@ -1747,10 +1976,16 @@ class Organelle(OrganelleList):
         xl,yl,zl = boundingBox[0]
         xr,yr,zr = boundingBox[1]
         
-        print len(verts),len(tris),type(verts),type(tris),verts[0],tris[0]        
+        print (len(verts),len(tris),type(verts),type(tris),verts[0],tris[0])
         surfacePoints = srfPts = self.vertices
         print ("ok grid points")
+#        verts = N.ascontiguousarray(verts, dtype='f')
+#        tris = N.ascontiguousarray(tris, dtype=N.int32)
+#        verts = N.ascontiguousarray(verts, dtype='f')
+#        tris = N.ascontiguousarray(tris, dtype=N.int32)
+
         datap = utsdf.computeSDF(verts,tris)
+        #datap = utsdf.computeSDF(verts,tris)
         print ("ok computeSDF")
         data = utsdf.createNumArr(datap,size)
 
@@ -1766,6 +2001,89 @@ class Organelle(OrganelleList):
         #need to update the surface. need to create a aligned grid
         return pointinside[0],self.vertices
 
+    def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
+        from autopack.HistoVol import Grid        
+        grid = Grid()
+        grid.boundingBox = boundingBox
+        grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
+        helper.progressBar(label="BuildGRid")        
+        grid.gridVolume,grid.nbGridPoints = grid.computeGridNumberOfPoint(boundingBox,spacing)
+        grid.create3DPointLookup()
+        nbPoints = grid.gridVolume
+        grid.gridPtId = [0]*nbPoints
+        xl,yl,zl = boundingBox[0]
+        xr,yr,zr = boundingBox[1]
+        # distToClosestSurf is set to self.diag initially
+        grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
+        grid.distToClosestSurf = [diag]*nbPoints        
+        distances = grid.distToClosestSurf
+        idarray = grid.gridPtId
+        diag = grid.diag
+        
+        from bhtree import bhtreelib
+        self.ogsurfacePoints = self.vertices[:]
+        self.ogsurfacePointsNormals = self.vnormals[:]#helper.FixNormals(self.vertices,self.faces,self.vnormals,fn=self.fnormals)
+        mat = helper.getTransformation(self.ref_obj)
+        surfacePoints = srfPts = self.ogsurfacePoints
+        self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+
+        res = numpy.zeros(len(srfPts),'f')
+        dist2 = numpy.zeros(len(srfPts),'f')
+        number = self.number
+        insidePoints = []
+        grdPos = grid.masterGridPositions
+        returnNullIfFail = 0
+        t1=time()
+        center = helper.getTranslation( self.ref_obj )
+        helper.resetProgressBar()
+        if display :
+            cyl2 = helper.oneCylinder("ray",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0)
+            if ray == 3 :
+                cyl1 = helper.oneCylinder("ray2",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0)
+                cyl3 = helper.oneCylinder("ray3",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0) 
+                helper.changeObjColorMat(cyl1,(1.,1.,1.))
+                helper.changeObjColorMat(cyl3,(1.,1.,1.))
+        for ptInd in xrange(len(grdPos)):#len(grdPos)):
+            inside = False
+            t2=time()
+            gx, gy, gz = grdPos[ptInd]
+            if display :
+                helper.updateOneCylinder("ray",grdPos[ptInd],grdPos[ptInd]+(numpy.array([1.1,0.,0.])*spacing*10.0),radius=10.0)
+                helper.changeObjColorMat(cyl2,(1.,1.,1.))
+                helper.update()
+            intersect, count = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[1.1,0.,0.], diag, count = True )
+            r= ((count % 2) == 1)
+            if ray == 3 :
+                if display :
+                    helper.updateOneCylinder("ray2",grdPos[ptInd],grdPos[ptInd]+(numpy.array([0.,0.0,1.1])*spacing*10.0),radius=10.0)
+                    helper.changeObjColorMat(cyl1,(1.,1.,1.))
+                    helper.update()
+                intersect2, count2 = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
+                center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
+                if display :
+                    helper.updateOneCylinder("ray3",grdPos[ptInd],grdPos[ptInd]+(numpy.array([0.,1.1,0.])*spacing*10.0),radius=10.0)
+                    helper.changeObjColorMat(cyl3,(1.,1.,1.))
+                    helper.update()
+                intersect3, count3 = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
+                if r :
+                   if (count2 % 2) == 1 and (count3 % 2) == 1 :
+                       r=True
+                   else : 
+                       r=False
+            if r : # odd inside
+                inside = True
+                if inside :
+                    if display :
+                        helper.changeObjColorMat(cyl2,(1.,0.,0.))
+                        if ray == 3 :
+                            helper.changeObjColorMat(cyl1,(1.,0.,0.))
+                            helper.changeObjColorMat(cyl3,(1.,0.,0.))    
+                    #idarray[ptInd] = -number
+                    insidePoints.append(grdPos[ptInd]) 
+            p=(ptInd/float(len(grdPos)))*100.0
+            helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
+        print('total time', time()-t1)
+        return insidePoints, surfacePoints
 
          
     def getSurfaceInnerPoints_sdf_interpolate(self,boundingBox,spacing,display = True,useFix=False):
@@ -1859,7 +2177,7 @@ class Organelle(OrganelleList):
 #        faces = self.faces[:]
 #        self.createSurfacePoints(maxl=grid.gridSpacing/2.0)
         surfacePoints = srfPts = self.ogsurfacePoints
-        print len(self.ogsurfacePointsNormals),self.ogsurfacePointsNormals
+        print (len(self.ogsurfacePointsNormals),self.ogsurfacePointsNormals)
         self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
 
         res = numpy.zeros(len(srfPts),'f')
@@ -1966,8 +2284,8 @@ class Organelle(OrganelleList):
                     helper.updateOneCylinder("normal",srfPts[sptInd],numpy.array(srfPts[sptInd])+(fn*spacing*10.0),radius=10.0)
                     helper.update()
             gr=numpy.greater(dots, 0.0)
-            print dots
-            print gr
+#            print dots
+#            print gr
             include = True
             if True in gr and False in gr:
                 include = False 
@@ -2049,7 +2367,7 @@ class Organelle(OrganelleList):
 #        faces = self.faces[:]
 #        self.createSurfacePoints(maxl=grid.gridSpacing)
         surfacePoints = srfPts = self.ogsurfacePoints
-        print len(self.ogsurfacePointsNormals),self.ogsurfacePointsNormals
+        print (len(self.ogsurfacePointsNormals),self.ogsurfacePointsNormals)
         self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
 
         res = numpy.zeros(len(srfPts),'f')
@@ -2091,6 +2409,7 @@ class Organelle(OrganelleList):
             #raycats and see what it it on the mesh
             #or result = world.sweepTestClosest(shape, tsFrom, tsTo, penetration)
             res = pud.rayCast(grdPos[ptInd],(numpy.array(grdPos[ptInd])+v)*99999,closest=True)#world.rayTestAll(start, end)
+            #can we get the number of hit?
             if res.hasHit():
                 h = res
 #                hit=res.getHits() 
@@ -2175,7 +2494,7 @@ class Organelle(OrganelleList):
         for ct in meshcontacts.getContacts():
             m=ct.getManifoldPoint ()
             d = m.getDistance ()
-            print ct.getNode0().getName(), ct.getNode1().getName(),d
+            print (ct.getNode0().getName(), ct.getNode1().getName(),d)
             i = eval(ct.getNode0().getName())
             if i not in iPtList :
                 insidePoints.append(grdPos[i])

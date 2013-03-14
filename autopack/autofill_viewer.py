@@ -32,7 +32,7 @@ Created on Mon Jul 12 15:04:18 2010
 ###############################################################################
 @author: Ludovic Autin
 
-Viewer/helper of autopack result.
+Viewer/helper of AutoFill result.
 """
 import os
 import math
@@ -46,11 +46,11 @@ from upy import colors as c
 
 #===============================================================================
 # to do :
+#      - use layer for hiding the parent of ingredient ! probably faster than creating a specific hider object
 #      - save-restore + grid interesectnio continuation
 #          =>imply deocmpose histoVol in Grid class and HistoVol class
 #      - hierarchy
-#      - snake/grow algo
-#      - dejaVu compatibility
+#   
 #===============================================================================
 import numpy
 import upy
@@ -63,7 +63,11 @@ from upy.colors import red, aliceblue, antiquewhite, aqua, \
      blue, cyan, mediumslateblue, steelblue, darkcyan, \
      limegreen, darkorchid, tomato, khaki, gold, magenta, green
 
-from autopack.Ingredient import GrowIngrediant,ActinIngrediant
+from AutoFill.Ingredient import GrowIngrediant,ActinIngrediant
+try :
+    import urllib.request as urllib# , urllib.parse, urllib.error
+except :
+    import urllib
 
 class AFViewer:
 
@@ -87,9 +91,9 @@ class AFViewer:
         if self.vi is None :
             helperClass = upy.getHelperClass()
             if self.ViewerType == 'dejavu':
-                from DejaVu import Viewer
-                master = Viewer()
-                self.vi = helperClass(master=master)
+#                from DejaVu import Viewer
+#                master = Viewer()
+                self.vi = helperClass()#master=master)
             else :
                 self.vi = helperClass()
         sc = self.vi.getCurrentScene()
@@ -112,7 +116,8 @@ class AFViewer:
         self.doOrder = False
         self.renderDistance = False
         self._timer = False
-        self.fbb = None        
+        self.fbb = None   
+        self.meshGeoms={}
         self.OPTIONS = {
                     "doPoints":{"name":"doPoints","value":True,"default":True,"type":"bool"},
                     "doSpheres":{"name":"doSpheres","value":True,"default":True,"type":"bool"},
@@ -160,7 +165,7 @@ class AFViewer:
         """
         Define the current histo volume.
         
-        @type  histo: autopack.HistoVol
+        @type  histo: AutoFill.HistoVol
         @param histo: the current histo-volume
         @type  pad: float
         @param pad: the pading value to extend the histo volume bounding box
@@ -200,7 +205,7 @@ class AFViewer:
         """
         Create a empty master/parent geometry for a ingredient
         
-        @type  ingr: autopack.Ingredient
+        @type  ingr: AutoFill.Ingredient
         @param ingr: the ingredient 
         @type  parent: hostObject
         @param parent: specifiy a parent to insert under
@@ -209,14 +214,14 @@ class AFViewer:
             organelle = self.histo
         else :
             organelle = self.histo.organelles[abs(ingr.compNum)-1]
-        print("parent",parent,self.vi.getName(parent))
+        #print("parent",parent,self.vi.getName(parent))
         name = '%s_%s'%(ingr.name,organelle.name)
         gi = self.vi.getObject(name)
         print(gi,name)
         if gi is None :
             gi = self.vi.newEmpty(name, parent=parent)
 #            self.vi.AddObject(gi)
-            print(gi,name)
+#            print(gi,name)
         self.orgaToMasterGeom[ingr] = gi
 
     def prepareMaster(self):
@@ -231,7 +236,7 @@ class AFViewer:
         self.master = self.vi.getObject(self.name)
         if self.master is None :
             self.master = self.vi.newEmpty(self.name)
-        print ("master",self.name)
+        print ("master",self.name,self.master)
         name = self.name+'_cytoplasm'
         g = self.vi.getObject(name)
         if g is None:
@@ -270,12 +275,23 @@ class AFViewer:
             self.vi.AddObject(self.staticMesh)
             self.movingMesh=self.vi.newEmpty(self.name+"moving",parent=self.master)
             self.vi.AddObject(self.movingMesh)
+        
         self.prevIngrOrga = self.vi.getObject(self.name+"_PreviousIngrOrga") #g
         if self.prevIngrOrga is None : #g
             self.prevIngrOrga=self.vi.newEmpty(self.name+"_PreviousIngrOrga",parent=self.master)
-        self.prevIngr = self.vi.getObject(self.name+"_PreviousIngr") #g
+        
+        self.prevIngr = self.vi.getObject(self.name+"_PreviousIngrExterior") #g
         if self.prevIngr is None : #g
-            self.prevIngr=self.vi.newEmpty(self.name+"_PreviousIngr",parent=self.prevIngrOrga)
+            self.prevIngr=self.vi.newEmpty(self.name+"_PreviousIngrExterior",parent=self.prevIngrOrga)
+        self.prevIngrOrg={}
+        for i,o in enumerate(self.histo.organelles):
+            self.prevIngrOrg[i]  = self.vi.getObject(self.name+"_PreviousIngr"+o.name+"_surface") #g
+            if self.prevIngrOrg[i] is None : #g
+                self.prevIngrOrg[i]=self.vi.newEmpty(self.name+"_PreviousIngr"+o.name+"_surface",parent=self.prevIngrOrga)
+            self.prevIngrOrg[-i]  = self.vi.getObject(self.name+"_PreviousIngr"+o.name+"_inner") #g
+            if self.prevIngrOrg[-i] is None : #g
+                self.prevIngrOrg[-i]=self.vi.newEmpty(self.name+"_PreviousIngr"+o.name+"_inner",parent=self.prevIngrOrga)
+                
         self.prevOrga = self.vi.getObject(self.name+"_PreviousOrga") #g
         if self.prevOrga is None : #g
             self.prevOrga=self.vi.newEmpty(self.name+"_PreviousOrga",parent=self.prevIngrOrga)
@@ -305,7 +321,7 @@ class AFViewer:
         """
         Create and display geometry for an organelle.
         
-        @type  orga: autopack.Organelle
+        @type  orga: AutoFill.Organelle
         @param orga: the organelle 
         """    
 
@@ -351,17 +367,17 @@ class AFViewer:
                                   inheritCulling=0, culling='none',
                                   inheritShading=0, shading='flat')
                 self.vi.AddObject(tet, parent=g)
-            if self.ViewerType == 'dejavu':
-                cp = self.vi.viewer.clipP[0]
-                self.vi.viewer.GUI.clipvar[0][0].set(1)
-                tet.AddClipPlane( cp, 1, False)    
+#            if self.ViewerType == 'dejavu':
+#                cp = self.vi.viewer.clipP[0]
+#                self.vi.viewer.GUI.clipvar[0][0].set(1)
+#                tet.AddClipPlane( cp, 1, False)    
             orga.mesh = tet
         if orga.representation != None:
             name = '%s_Rep'%orga.name
             p = self.vi.getObject(name)
             if p is None :
                 p = self.vi.newEmpty(name,parent='O%s'%orga.name)
-            print (name, p, orga.representation)
+            print ("orga.representation ",name, p, orga.representation)
             self.vi.reParent(orga.representation,p)  
     #        orga.ref_obj = name
 
@@ -421,8 +437,18 @@ class AFViewer:
         self.displayHistoVol()
         self.prepareIngrediant()
         self.prepareDynamic()
-        
-#        if self.ViewerType == 'dejavu':
+        if self.vi.host.find("blender") != -1 :
+            #change the viewportshadr
+            from .ray import vlen, vdiff, vcross
+            boundingBox=self.histo.boundingBox
+            xl,yl,zl = boundingBox[0]
+            xr,yr,zr = boundingBox[1]
+            diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
+            if diag < 10000.0 :
+                diag = 10000.0
+            self.vi.setViewport(clipstart=0,clipend=diag,center=True)#shader="glsl",
+            print ("#########VIEWPORT SET#######")
+#        elif self.ViewerType == 'dejavu':
 #            self.vi.viewer.Reset_cb()
 #            self.vi.viewer.Normalize_cb()
 #            self.vi.viewer.Center_cb()
@@ -473,13 +499,21 @@ class AFViewer:
             self.vi.progressBar(label="displayPoints")
             self.callFunction(self.displayOrganellesPoints)#()
             self.callFunction(self.displayFreePoints)#()
+        self.vi.progressBar(label="displayCytoplasmIngredients")
         self.callFunction(self.displayCytoplasmIngredients)#
+        self.vi.progressBar(label="displayOrganellesIngredients")
         self.callFunction(self.displayOrganellesIngredients)#
-
+        
+        if self.vi.host.find("blender") != -1 :
+            p=self.vi.getObject("AutoFillHider")
+            self.vi.setLayers(p,[1])
+            
         if self.ViewerType == 'dejavu':
 #            from DejaVu.colorTool import RGBRamp#, Map
             verts = []
             labels = []
+            p=self.vi.getObject("AutoFillHider")
+            self.vi.toggleDisplay(p,True)
             if hasattr(self.histo, 'distToClosestSurf'):
                 for i, value in enumerate(self.histo.distToClosestSurf):
                     if self.histo.gridPtId[i]==1:
@@ -497,7 +531,10 @@ class AFViewer:
                 jv = self.vi.Polylines('jitter_vectors', vertices=verts, visible=1,
                                inheritLineWidth=0, lineWidth=4)
                 self.vi.AddObject(jv, parent=self.master)
-
+        self.vi.resetProgressBar()
+        if self.vi.host.find("blender") != -1 :
+            #change the viewportshadr
+            self.vi.setViewport(center=1)
 
     def displayPoints(self,name,points,parent,colors=[[1,1,0]]):
         """
@@ -518,7 +555,7 @@ class AFViewer:
         verts = []
         labels = []
         if len(points) == 0 :
-            print name, " have no points" 
+            print (name, " have no points") 
         if type(points[0]) is int :
 #            verts,labels=[(self.histo.grid.masterGridPositions[ptInd],"%d"%ptInd) for ptInd in points]
             for ptInd in points:
@@ -544,7 +581,7 @@ class AFViewer:
         """
         Use this function to display grid pointCloud for an organelle
 
-        @type  orga: autopack.Organelle
+        @type  orga: AutoFill.Organelle
         @param orga: the organelle 
         """            
         vGridPointHider = self.vi.getObject(orga.name+"GridPointHider") #g
@@ -679,10 +716,10 @@ class AFViewer:
             snake = self.helper.getObject(name)
             if snake is None :
                 snake=self.vi.spline(name, ingr.listePtLinear[i],close=0,type=1,
-                             scene=self.sc,parent=parent)
+                             scene=self.sc,parent=parent)[0]
             else :
                 self.vi.update_spline(name,ingr.listePtLinear[i])
-            self.vi.toggleDisplay(snake[0],visible)
+            self.vi.toggleDisplay(snake,visible)
             if pobj is not None :
                 name = o.name+str(i)+"_unit_"+ingr.name.replace(" ","_")
                 #pathDeform instance of one turn using snake
@@ -691,17 +728,14 @@ class AFViewer:
                     actine = self.vi.newInstance(name,pobj)
                 modifier = self.helper.getObject(name+"pd")
                 if modifier is None :
-                    modifier = self.vi.pathDeform(actine,snake[0])
+                    modifier = self.vi.pathDeform(actine,snake)
                 else :
-                    self.vi.updatePathDeform(modifier,object=actine,spline=snake[0])
+                    self.vi.updatePathDeform(modifier,object=actine,spline=snake)
                 #what about a reall long one -> cloner or instance
             else :
-                try :
-                    #do a extrusion
                     circle = self.vi.build_2dshape(name+"_shape",opts=[ ingr.encapsulatingRadius,])
                     extruder,shape = self.vi.extrudeSpline(snake,shape=circle)#shoud use the radius for a circle ?
-                except :
-                    print ("problem creating the loft nurbs")
+                    #reparent ?
                     
     def prepareIngrediant(self,):
        #cyto ingr
@@ -741,7 +775,8 @@ class AFViewer:
         vParentHiders = self.vi.getObject(self.name+"ParentHiders") #g
         if vParentHiders is None : #g
             vParentHiders=self.vi.newEmpty(self.name+"ParentHiders",parent=self.master) #g
-        self.vi.toggleDisplay(vParentHiders,False)
+        if self.vi.host.find("blender") == -1 :
+            self.vi.toggleDisplay(vParentHiders,False)
         parent = self.vi.getObject(ingr.name+"MeshsParent") 
         
         if parent is None : #g
@@ -763,13 +798,13 @@ class AFViewer:
 # END original section removed by Graham on July 16, 2012
  
             #create the polygon    
-            from DejaVu.IndexedPolygons import IndexedPolygons 
+            #from DejaVu.IndexedPolygons import IndexedPolygons 
             name = o.name+ingr.name+"Mesh"
             material = None
             if ingr.color != None :
                 material=self.vi.retrieveColorMat(ingr.color)
 #            print ("parent is ", ingr.name+"MeshsParent",vParentHiders,parent)
-            if isinstance(geom,IndexedPolygons):
+            if isinstance(geom,int):
                 polygon = self.vi.createsNmesh(name,geom.getVertices(),None,
                                        geom.getFaces(),
                                        material=material,
@@ -777,12 +812,14 @@ class AFViewer:
             else :
                 polygon = self.vi.newInstance(name,geom,
                                        material=material,
-                                       parent=parent)
+                                       parent=parent)#identity?
             #self.vi.toggleDisplay(parent,False)
             if not self.visibleMesh : 
                 self.vi.toggleDisplay(parent,False)
                 self.vi.toggleDisplay(polygon[0],False)
-#            self.vi.setTranslation(parent,pos=[1000.,1000.,1000.])              
+#            self.vi.setTranslation(parent,pos=[1000.,1000.,1000.]) 
+#            if self.vi.host.find("blender") != -1 :
+#                self.orgaToMasterGeom[ingr]= polygon            
         if not hasattr(ingr,"mesh_3d") or ingr.mesh_3d is None:
             ingr.mesh_3d = parent#polygon[0] is this will work in other host
         print ("after build",ingr.mesh_3d)
@@ -832,7 +869,31 @@ class AFViewer:
         mat = rot.copy()
         mat[:3, 3] = pos
         return verts,radii,numpy.array(mat)
-        
+
+    def replaceIngrMesh(self,ingredient, newMesh):
+        polygon = ingredient.mesh_3d
+        o = self.vi.getObject(polygon)#should be an empty or locator
+        childs = self.vi.getChilds(o)  
+        instance = None
+        if not len(childs):
+            print ("no Childs")
+        else :
+            instance = childs[0]
+#        print (polygon,instance,newMesh)
+#        if self.vi.host == "maya" :
+#            instance = ingredient.mesh
+        if self.vi.host.find("blender") != -1 :
+            instance = self.orgaToMasterGeom[ingredient]
+        elif self.vi.host == "dejavu" or self.vi.host == "softimage":
+            instance = polygon
+#        print (polygon,instance,newMesh)
+        self.vi.updateMasterInstance(instance,[newMesh])
+        if self.vi.host.find("blender") != -1 :
+            newMesh = self.vi.getObject(newMesh)
+            #ingredient.mesh_3d = newMesh
+            self.orgaToMasterGeom[ingredient] = newMesh#permit to toggle the display
+            self.vi.setLayers(newMesh,[1])
+            
     def displayIngrResults(self,ingredient,doSphere=False,doMesh=True):
         """
         Display the result for the given ingr after filling
@@ -864,6 +925,7 @@ class AFViewer:
                 self.displayIngrCylinders(ingredient,{ingredient:verts},
                                           {ingredient:radii},visible=1)
         if doMesh and matrices:
+            dejavui = False
             #recipe can be orga name or cyto_
             #o =  ingredient.recipe().organelle()
 #            geom = ingredient.mesh     
@@ -877,14 +939,16 @@ class AFViewer:
                 if parent is None :
                     parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingredient])
 #                    self.vi.AddObject(parent)
-            instances = self.vi.getChilds(parent)   
-            if not hasattr(ingr,'ipoly') or ingr.ipoly is None or instances is None or not len(instances):
-                    color = [ingredient.color] if ingredient.color is not None else None
-                    print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
-                    ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.name,
-                                            matrices=matrices,
-                                            mesh=polygon,parent = parent,
-                                            transpose= True,colors=color)             
+                instances = self.vi.getChilds(parent)  
+                dejavui = not len(instances)
+            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or dejavui:
+                color = [ingredient.color] if ingredient.color is not None else None
+#                print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
+                ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.name,
+                                        matrices=matrices,
+                                        mesh=polygon,parent = parent,
+                                        transpose= True,colors=color,
+                                        axis=ingredient.principalVector)
         
     
     def displayInstancesIngredient(self,ingredient, matrices):
@@ -902,17 +966,21 @@ class AFViewer:
             ingredient.ipoly = self.vi.instancePolygon(self.histo.FillName[self.histo.cFill]+ingredient.name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
-                                        transpose= True,colors=[ingredient.color])             
+                                        transpose= True,colors=[ingredient.color],
+                                        axis=ingredient.principalVector)
         
     def displayCytoplasmIngredients(self):
         verts = {}
         radii = {}
         r =  self.histo.exteriorRecipe
+        ningr =0
         if r :
+            ningr=len(r.ingredients)
             for ingr in r.ingredients:
                 verts[ingr] = []
                 radii[ingr] = []
-        
+        else :
+            return
         if self.doSpheres :
             for pos, rot, ingr, ptInd in self.histo.molecules:
                 level = ingr.maxLevel
@@ -944,16 +1012,16 @@ class AFViewer:
         # display cytoplasm meshes
         r =  self.histo.exteriorRecipe
         if r :
-            meshGeoms = {}
+            meshGeoms = {}#self.meshGeoms#{}
             inds = {}
             for pos, rot, ingr, ptInd in self.histo.molecules:
-#                print "ingr",ingr,ingr.mesh,ingr.mesh_3d                
+                #print "ingr",ingr,ingr.mesh,ingr.mesh_3d                
                 if ingr.mesh: # display mesh
 #                    geom = ingr.mesh
                     mat = rot.copy()
                     mat[:3, 3] = pos
                     if self.helper.host == 'dejavu':
-                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
+                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
                         mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
                     if ingr not in meshGeoms:
                         inds[ingr] = [ptInd]
@@ -967,7 +1035,9 @@ class AFViewer:
                         meshGeoms[ingr].append(mat)
                         #if self.ViewerType == 'dejavu': 
                         #    self.vi.AddObject(geom, parent=self.orgaToMasterGeom[ingr])
+            j=0
             for ingr in r.ingredients:
+                #self.vi.progressBar(j/ningr,label="instances for "+str(j)+" "+ingr.name+" "+str(len(meshGeoms[ingr]))) 
                 geom = ingr.mesh
                 #geom.Set(instanceMatrices=meshGeoms[ingr], visible=1)        
                 #if self.ViewerType != 'dejavu':
@@ -978,20 +1048,33 @@ class AFViewer:
                 if parent is None :
                     parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingr])
 #                    self.vi.AddObject(parent)
+                if self.helper.host == 'dejavu':
+                    parent = None
                 if ingr not in meshGeoms:
                     continue
                 ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.name,
                                             matrices=meshGeoms[ingr],
                                             mesh=polygon,parent = parent,
-                                            transpose= True,colors=[ingr.color])
+                                            transpose= True,colors=[ingr.color],
+                                            axis=ingr.principalVector)
 #                if self.doOrder :
-                if type(ingr.ipoly) != list : return
-                for i,ip in enumerate(ingr.ipoly):
-#                    print i,ip,type(ip)
-                    name = self.vi.getName(ip)
-                    if inds[ingr][i] in self.histo.order:
-#                        print name,name+"_"+str(self.histo.order[inds[ingr][i]])
-                        self.vi.setName(ip,name+"_"+str(self.histo.order[inds[ingr][i]]))
+                #print ingr.ipoly
+                if self.vi.host.find("blender") != -1 :
+                    self.orgaToMasterGeom[ingr] = polygon
+                    if not self.vi.dupliVert :
+                        self.vi.setLayers(polygon,[1])#and do it for child too.
+                elif self.vi.host == "dejavu" or self.vi.host == "softimage":
+                    self.orgaToMasterGeom[ingr] = ingr.mesh
+                if self.helper.host != 'dejavu':
+                    if type(ingr.ipoly) != list : return
+                    for i,ip in enumerate(ingr.ipoly):
+    #                    print i,ip,type(ip)
+                        name = self.vi.getName(ip)
+                        if inds[ingr][i] in self.histo.order:
+    #                        print name,name+"_"+str(self.histo.order[inds[ingr][i]])
+                            self.vi.setName(ip,name+"_"+str(self.histo.order[inds[ingr][i]]))
+#                self.vi.progressBar(j/ningr,label="instances for "+str(j)+" "+ingr.name+" "+str(len(meshGeoms[ingr]))) 
+                j+=1
                 
     def displayOrganellesIngredients(self):
         # display organelle ingredients
@@ -1078,8 +1161,11 @@ class AFViewer:
                             self.createIngrMesh(ingr) 
             print("nbMAtrices",len(matrices))
             if ri :
+                ningri=len(ri.ingredients)
+                j=0
                 for ingr in ri.ingredients:
                     if ingr.mesh:
+#                        self.vi.progressBar(j/ningri,label="instances for "+str(j)+" "+ingr.name+" "+str(len(matrices[ingr]))) 
                         geom = ingr.mesh
                         #geom.Set(instanceMatrices=matrices[ingr], visible=1)        
 #                        if self.ViewerType != 'dejavu':
@@ -1094,14 +1180,29 @@ class AFViewer:
                         if parent is None :
                             parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingr])
                             self.vi.AddObject(parent)
+                        if self.helper.host == 'dejavu':
+                            parent = None                           
                         print("ri instanciation of polygon",polygon)
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,
                                                     parent = parent,
-                                                    transpose=True,colors=[ingr.color])
-                        #print len(ingr.ipoly)
+                                                    transpose=True,colors=[ingr.color],
+                                                    axis=ingr.principalVector)
+                        if self.vi.host.find("blender") != -1 :
+                            self.orgaToMasterGeom[ingr] = polygon
+                            if not self.vi.dupliVert : 
+                                self.vi.setLayers(polygon,[1])#and do it for child too.
+                        elif self.vi.host == "dejavu":
+                            self.orgaToMasterGeom[ingr] = ingr.mesh
+                        elif self.vi.host == "softimage":
+                            self.orgaToMasterGeom[ingr] = ingr.mesh#self.getMasterInstance(polygon)
+                            #polygon already an instance from a different object\
+                            
+                    j+=1
             if rs:
+                ningrs=len(rs.ingredients)
+                j=0
                 for ingr in rs.ingredients:
                     if ingr.mesh:
                         geom = ingr.mesh
@@ -1115,16 +1216,27 @@ class AFViewer:
                             continue
                         else :
                             print(name,len(matrices[ingr]))                        
+#                        self.vi.progressBar(j/ningrs,label="instances for "+str(j)+" "+ingr.name+" "+str(len(matrices[ingr]))) 
                         if parent is None :
                             parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingr])
 #                            self.vi.AddObject(parent)
+                        if self.helper.host == 'dejavu':
+                            parent = None                           
                         print("rs instanciation of polygon",polygon)
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,
                                                     parent = parent,
-                                                    transpose= True,colors=[ingr.color])            
-                        
+                                                    transpose= True,colors=[ingr.color],
+                                                    axis=ingr.principalVector)            
+                        if self.vi.host.find("blender") != -1 :
+                            self.orgaToMasterGeom[ingr] = polygon
+                            if not self.vi.dupliVert :
+                                self.vi.setLayers(polygon,[1])#and do it for child too.
+                        elif self.vi.host == "dejavu":
+                            self.orgaToMasterGeom[ingr] = ingr.mesh
+                    j+=1
+
     
     def appendIngrInstance(self,ingr,sel = None,bb=None):
         if self is None :
@@ -1403,7 +1515,7 @@ class AFViewer:
         
     
     def addIngredientFromGeom(self,name, ingrobj, recipe=None, **kw):
-        print ("ADD",ingrobj, self.helper.getName(ingrobj),self.helper.getType(ingrobj))
+        #print ("######ADD",ingrobj, self.helper.getName(ingrobj),self.helper.getType(ingrobj))
         ingr = None 
         obj = ingrobj
         if self.helper.getType(ingrobj) == self.helper.INSTANCE :
@@ -1423,7 +1535,7 @@ class AFViewer:
                 child0 = self.helper.getMasterInstance(child0)
                 ingtype = self.helper.getType(child0)
             if ingtype == self.helper.SPHERE :
-                from autopack.Ingredient import MultiSphereIngr
+                from AutoFill.Ingredient import MultiSphereIngr
                 positions=[]
                 radius = []
                 for io in child :
@@ -1439,7 +1551,7 @@ class AFViewer:
                     meshObject=obj)
 #                print("spheres ",positions)
             if ingtype == self.helper.CYLINDER :
-                from autopack.Ingredient import MultiCylindersIngr
+                from AutoFill.Ingredient import MultiCylindersIngr
                 positions=[]
                 positions2=[]
                 radius = []
@@ -1461,7 +1573,7 @@ class AFViewer:
                     principalVector=axis)
 #                print (name, [radius],[positions],[positions2]) 
             if ingtype == self.helper.CUBE :
-                from autopack.Ingredient import SingleCubeIngr
+                from AutoFill.Ingredient import SingleCubeIngr
                 #need to create a SphereIngredient
                 s = self.helper.getPropertyObject(child0,key=["scale"])[0]
                 if self.helper.getType(child0) == self.helper.INSTANCE :
@@ -1471,7 +1583,7 @@ class AFViewer:
                                   positions=[[[0,0,0],[0,0,0],[0,0,0],]],
                                     meshObject=obj,)
         if self.helper.getType(obj) == self.helper.SPHERE :
-            from autopack.Ingredient import SingleSphereIngr
+            from AutoFill.Ingredient import SingleSphereIngr
             #need to create a SphereIngredient
             ingr = SingleSphereIngr( 1.0, 
                     name=name,
@@ -1480,7 +1592,7 @@ class AFViewer:
                     meshObject = ingrobj)
             #compartiment ?
         elif self.helper.getType(obj) == self.helper.CYLINDER :
-            from autopack.Ingredient import MultiCylindersIngr
+            from AutoFill.Ingredient import MultiCylindersIngr
             #need to create a SphereIngredient
             r,h,axis = res = self.helper.getPropertyObject(obj,key=["radius","length","axis"])
             ingr = MultiCylindersIngr(1.0, name=name, 
@@ -1495,7 +1607,7 @@ class AFViewer:
                 principalVector=axis,#should come from the object
                 )
         elif self.helper.getType(obj) == self.helper.CUBE :
-            from autopack.Ingredient import SingleCubeIngr
+            from AutoFill.Ingredient import SingleCubeIngr
             #need to create a SphereIngredient
             size = self.helper.getPropertyObject(obj,key=["length"])[0]
             ingr = SingleCubeIngr( 1.0,  [self.helper.ToVec(size),],name=name,
@@ -1510,15 +1622,33 @@ class AFViewer:
                 ingr.histoVol = self.histo
             else :
                 recipe.addIngredient( ingr ) 
+                o = recipe.organelle()
+                ingr.compNum = recipe.number
+                g = self.vi.getObject("O"+o.name)
+                ingr.histoVol = self.histo
+            rep = self.vi.getObject(ingr.name+'_mesh')
+            print (ingr.name+'_mesh is',rep)
+            if rep is not None :
+               ingr.mesh=rep
+               ingr.use_mesh_rb=True
+            self.addMasterIngr(ingr,parent=g)
         return ingr
+
     
     def addOrganelleFromGeom(self,name, obj, **kw):
-        from autopack.Organelle import Organelle
+        from AutoFill.Organelle import Organelle
         o1 = None
+        print ("ADD ORGA",name,obj,self.helper.getType(obj) ) 
         if self.helper.getType(obj) == self.helper.EMPTY: #Organelle master parent?
             childs = self.helper.getChilds(obj)
             for ch in childs:
-                name = self.helper.getName(ch)
+                chname = self.helper.getName(ch)
+                if self.helper.host == "maya" :
+                    if chname.find("Shape") == -1 :
+                        name=chname
+                else :
+                    name=chname
+                print ("name 1 org",name)
 #                print name,helper.getType(ch),helper.EMPTY,helper.POLYGON
                 if self.helper.getType(ch) == self.helper.EMPTY:
                     c = self.helper.getChilds(ch)
@@ -1554,7 +1684,13 @@ class AFViewer:
 #                print o1.name,o1.number
         elif self.helper.getType(obj) == self.helper.POLYGON :
             c4dorganlle = obj
-            name = self.helper.getName(obj)
+            nname = self.helper.getName(obj)
+            if self.helper.host == "maya" :
+                if nname.find("Shape") == -1 :
+                    name=nname
+            else :
+                name=nname            #name = self.helper.getName(obj)
+            print ("name 2 org",name)
             #helper.triangulate(c4dorganlle)
             faces,vertices,vnormals = self.helper.DecomposeMesh(c4dorganlle,
                                     edit=False,copy=False,tri=True,transform=True)
@@ -1809,7 +1945,7 @@ class AFViewer:
         list(map(PS.SetAge,ids,ages))#should avoid map
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
         
         rd = doc.GetActiveRenderData().GetData()
         bmp = c4d.bitmaps.BaseBitmap()
@@ -1841,7 +1977,7 @@ class AFViewer:
 #        map(PS.SetAge,ids,ages)
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
         
 #        rd = doc.GetActiveRenderData().GetData()
 #        bmp = c4d.bitmaps.BaseBitmap()

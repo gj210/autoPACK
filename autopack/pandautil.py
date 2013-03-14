@@ -13,7 +13,7 @@ Created on Tue Aug 28 20:47:45 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFGui.py" is part of autoPACK, cellPACK.
+# This file "AFGui.py" is part of autoPACK, cellPACK, and AutoFill.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ Name: 'pandautil'
 import sys
 import numpy
 try :
-    import autopack
-    helper = autopack.helper
+    import AutoFill
+    helper = AutoFill.helper
 except :
     helper= None
 try :
@@ -76,7 +76,7 @@ class PandaUtil:
         # Make sure we don't need a graphics engine 
         #(Will also prevent X errors / Display errors when starting on linux without X server)
         loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
-        loadPrcFileData('', 'bullet-max-objects 10240')
+        loadPrcFileData('', 'bullet-max-objects 100240')#what number here ?
         import direct.directbase.DirectStart
         self.scale  = 10.0   
         self.worldNP = render.attachNewNode('World')            
@@ -238,6 +238,39 @@ class PandaUtil:
         self.world.attachRigidBody(inodenp.node())
         return inodenp
 
+    def addMeshConvexRB(self,vertices, faces,ghost=False,**kw):
+        #step 1) create GeomVertexData and add vertex information
+        format=GeomVertexFormat.getV3()
+        vdata=GeomVertexData("vertices", format, Geom.UHStatic)
+        
+        vertexWriter=GeomVertexWriter(vdata, "vertex")
+        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in vertices]
+        
+        #step 2) make primitives and assign vertices to them
+        tris=GeomTriangles(Geom.UHStatic)
+        [self.setGeomFaces(tris,face) for face in faces]
+        
+        #step 3) make a Geom object to hold the primitives
+        geom=Geom(vdata)
+        geom.addPrimitive(tris)
+        
+        #step 4) create the bullet mesh and node
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)
+
+        shape = BulletConvexHullShape(mesh, dynamic=not ghost)#
+        if ghost :
+            inodenp = self.worldNP.attachNewNode(BulletGhostNode('Mesh'))
+        else :
+            inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode('Mesh'))
+        inodenp.node().addShape(shape)
+#        inodenp.setPos(0, 0, 0.1)
+        self.setRB(inodenp,**kw)
+        inodenp.setCollideMask(BitMask32.allOn())
+   
+        self.world.attachRigidBody(inodenp.node())
+        return inodenp
+        
     def addTriMeshSB(self,vertices, faces,normals = None,ghost=False,**kw):
         #step 1) create GeomVertexData and add vertex information
         # Soft body world information
