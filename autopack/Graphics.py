@@ -9,11 +9,10 @@ Created on Mon Jul 12 15:04:18 2010
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input
 #   from Arthur Olson's Molecular Graphics Lab
 #
-# autofill_viewer.py Authors: Ludovic Autin with minor editing/enhancement from G Johnson
+# autopack_viewer.py Authors: Ludovic Autin with minor editing/enhancement from G Johnson
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "autofill_viewer.py" is part of autoPACK.
 #
 #    autoPack is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -32,7 +31,7 @@ Created on Mon Jul 12 15:04:18 2010
 ###############################################################################
 @author: Ludovic Autin
 
-Viewer/helper of AutoFill result.
+Viewer/helper of autoPACK result.
 """
 import os
 import math
@@ -40,8 +39,6 @@ import math
 
 from time import time
      
-#from DejaVu.colorTool import Map
-#from pyubic import colors as c
 from upy import colors as c
 
 #===============================================================================
@@ -63,23 +60,23 @@ from upy.colors import red, aliceblue, antiquewhite, aqua, \
      blue, cyan, mediumslateblue, steelblue, darkcyan, \
      limegreen, darkorchid, tomato, khaki, gold, magenta, green
 
-from AutoFill.Ingredient import GrowIngrediant,ActinIngrediant
+from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
     import urllib
 
-class AFViewer:
+class AutopackViewer:
 
     """
-    the base class for viewing/displaying autoFill result in a specified viewer
+    the base class for viewing/displaying autopack result in a specified viewer
     ie DejaVu, Cinema4D, Maya or Blender (which are supported hostApp by ePMV)
     """
     
     def __init__(self, helper=None, ViewerType='dejavu'):
         """
         Constructor of the AFViewer. Define the needed function for constructing
-        the geometry representing the different organelle and recipe that have 
+        the geometry representing the different compartment and recipe that have 
         been used for the filling.
         
         @type  ViewerType: string
@@ -165,7 +162,7 @@ class AFViewer:
         """
         Define the current histo volume.
         
-        @type  histo: AutoFill.HistoVol
+        @type  histo: autopack.HistoVol
         @param histo: the current histo-volume
         @type  pad: float
         @param pad: the pading value to extend the histo volume bounding box
@@ -181,7 +178,7 @@ class AFViewer:
         # add padding
         bb = self.histo.boundingBox
         if bb == ([0,0,0], [.1,.1,.1]):
-            print('no organelle no bb')
+            print('no compartment no bb')
             return
         x,y,z = bb[0]
         px,py,pz = [0.,0.,0.]  #Oct 16,2012 Graham- need to control padding on 3 sides.
@@ -205,17 +202,17 @@ class AFViewer:
         """
         Create a empty master/parent geometry for a ingredient
         
-        @type  ingr: AutoFill.Ingredient
+        @type  ingr: autopack.Ingredient
         @param ingr: the ingredient 
         @type  parent: hostObject
         @param parent: specifiy a parent to insert under
         """ 
         if ingr.compNum == 0 :
-            organelle = self.histo
+            compartment = self.histo
         else :
-            organelle = self.histo.organelles[abs(ingr.compNum)-1]
+            compartment = self.histo.compartments[abs(ingr.compNum)-1]
         #print("parent",parent,self.vi.getName(parent))
-        name = '%s_%s'%(ingr.name,organelle.name)
+        name = '%s_%s'%(ingr.name,compartment.name)
         gi = self.vi.getObject(name)
         print(gi,name)
         if gi is None :
@@ -284,7 +281,7 @@ class AFViewer:
         if self.prevIngr is None : #g
             self.prevIngr=self.vi.newEmpty(self.name+"_PreviousIngrExterior",parent=self.prevIngrOrga)
         self.prevIngrOrg={}
-        for i,o in enumerate(self.histo.organelles):
+        for i,o in enumerate(self.histo.compartments):
             self.prevIngrOrg[i]  = self.vi.getObject(self.name+"_PreviousIngr"+o.name+"_surface") #g
             if self.prevIngrOrg[i] is None : #g
                 self.prevIngrOrg[i]=self.vi.newEmpty(self.name+"_PreviousIngr"+o.name+"_surface",parent=self.prevIngrOrga)
@@ -317,15 +314,15 @@ class AFViewer:
             self.fbb = self.vi.Box('fillBox',cornerPoints=bb,visible=1) #maybe /10.
             self.vi.AddObject(self.fbb)
 
-    def displayOrganelle(self,orga):
+    def displayCompartment(self,orga):
         """
-        Create and display geometry for an organelle.
+        Create and display geometry for an compartment.
         
-        @type  orga: AutoFill.Organelle
-        @param orga: the organelle 
+        @type  orga: autopack.Compartment
+        @param orga: the compartment 
         """    
 
-        # create master for organelle
+        # create master for compartment
         name = 'O%s'%orga.name
         g = self.helper.getObject(name)
         if g is None :
@@ -356,7 +353,7 @@ class AFViewer:
                 self.addMasterIngr(ingr,parent=gc)
         
         if orga.isOrthogonalBoudingBox != 1:
-            #create the mesh for the organelle
+            #create the mesh for the compartment
             name = '%s_Mesh'%orga.name
             tet = self.helper.getObject(name)
             if tet is None :
@@ -400,40 +397,40 @@ class AFViewer:
                                   faces=orga.faces)
 
     def toggleOrganelMesh(self,organame,display):
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
             if orga.name == organame :
                 self.vi.toggleDisplay('%s_Mesh'%orga.name,display)
     
     def toggleOrganelMatr(self,organame,display):
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
             if orga.name == organame :
                 self.vi.toggleDisplay('%s_Matrix'%orga.name,display)
     
     def toggleOrganelSurf(self,organame,display):
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
             if orga.name == organame :
                 self.vi.toggleDisplay('%s_Surface'%orga.name,display)
         
-    def displayOrganelles(self):
+    def displayCompartments(self):
         """
-        Create and display geometry for all organelles defined for the histoVolume.
+        Create and display geometry for all compartments defined for the histoVolume.
         """            
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
 #            print("In orga $$$$$$$$$$$$$$$$$$$$$$$$ with orthogonalBoundingBox = ", orga.isOrthogonalBoudingBox)
 #            if orga.isOrthogonalBoudingBox != 1:
 #                print("in orga is box because isOrthogonalBoudingBox = ", orga.isOrthogonalBoudingBox)
-            self.displayOrganelle(orga)
+            self.displayCompartment(orga)
 
     def displayPreFill(self):
         """
-        Use this function once a histoVol and his organelles are defined. 
+        Use this function once a histoVol and his compartments are defined. 
         displayPreFill will prepare all master, and will create the geometry for 
-        the histovolume bounding box, and the different organelles defined.
+        the histovolume bounding box, and the different compartments defined.
         """            
 
-        #use this script once a histoVol and organelles are defined
+        #use this script once a histoVol and compartments are defined
         self.prepareMaster()
-        self.displayOrganelles()
+        self.displayCompartments()
         self.displayHistoVol()
         self.prepareIngrediant()
         self.prepareDynamic()
@@ -488,7 +485,7 @@ class AFViewer:
         """
         Use this function once a Box have been filled. displayFill will display 
         all placed ingredients in the Box, and affilated them according if they are
-        on surface, in cytoplasme or in the organelle. displayFill also display 
+        on surface, in cytoplasme or in the compartment. displayFill also display 
         optionally the differnt point grid.
         """     
         if self.master is None :
@@ -497,22 +494,22 @@ class AFViewer:
         self.vi.progressBar(label="displayFill")
         if self.doPoints:
             self.vi.progressBar(label="displayPoints")
-            self.callFunction(self.displayOrganellesPoints)#()
+            self.callFunction(self.displayCompartmentsPoints)#()
             self.callFunction(self.displayFreePoints)#()
         self.vi.progressBar(label="displayCytoplasmIngredients")
         self.callFunction(self.displayCytoplasmIngredients)#
-        self.vi.progressBar(label="displayOrganellesIngredients")
-        self.callFunction(self.displayOrganellesIngredients)#
+        self.vi.progressBar(label="displayCompartmentsIngredients")
+        self.callFunction(self.displayCompartmentsIngredients)#
         
         if self.vi.host.find("blender") != -1 :
-            p=self.vi.getObject("AutoFillHider")
+            p=self.vi.getObject("autopackHider")
             self.vi.setLayers(p,[1])
             
         if self.ViewerType == 'dejavu':
 #            from DejaVu.colorTool import RGBRamp#, Map
             verts = []
             labels = []
-            p=self.vi.getObject("AutoFillHider")
+            p=self.vi.getObject("autopackHider")
             self.vi.toggleDisplay(p,True)
             if hasattr(self.histo, 'distToClosestSurf'):
                 for i, value in enumerate(self.histo.distToClosestSurf):
@@ -577,12 +574,12 @@ class AFViewer:
                              visible=0)
             self.vi.AddObject(labDistg, parent=parent)
 
-    def displayOrganellePoints(self,orga):
+    def displayCompartmentPoints(self,orga):
         """
-        Use this function to display grid pointCloud for an organelle
+        Use this function to display grid pointCloud for an compartment
 
-        @type  orga: AutoFill.Organelle
-        @param orga: the organelle 
+        @type  orga: autopack.Compartment
+        @param orga: the compartment 
         """            
         vGridPointHider = self.vi.getObject(orga.name+"GridPointHider") #g
         if vGridPointHider is None : #g
@@ -613,19 +610,19 @@ class AFViewer:
             self.displayPoints('%s_insidePts'%orga.name,orga.insidePoints,
                                vGridPointHider,colors = [(0,1,0)])
 
-    def displayOrganellesPoints(self):
+    def displayCompartmentsPoints(self):
         """
-        Create and display grid points for all organelles defined for the histoVolume.
+        Create and display grid points for all compartments defined for the histoVolume.
         """            
-        for orga in self.histo.organelles:
-            self.displayOrganellePoints(orga)
+        for orga in self.histo.compartments:
+            self.displayCompartmentPoints(orga)
     #        print("In orga $$$$$$$$$$$$$$$$$$$$$$$$ with orthogonalBoundingBox = ", orga.isOrthogonalBoudingBox)
 #            if orga.isOrthogonalBoudingBox != 1:
     #            print("in orga is box because isOrthogonalBoudingBox = ", orga.isOrthogonalBoudingBox)
-#                self.displayOrganellePoints(orga)
+#                self.displayCompartmentPoints(orga)
 
     def displayIngrSpheres(self,ingr,verts,radii,visible=1):
-        o = ingr.recipe().organelle()
+        o = ingr.recipe().compartment()
         if len(verts[ingr]):
             if ingr.modelType=='Spheres':
                 name = o.name+"_Spheres_"+ingr.name.replace(" ","_")
@@ -655,7 +652,7 @@ class AFViewer:
         #just use the realtime capbility
         if isinstance(ingr,GrowIngrediant):
             return
-        o = ingr.recipe().organelle()
+        o = ingr.recipe().compartment()
         v = numpy.array(verts[ingr])
         f = numpy.arange(len(v))
         f.shape=(-1,2)
@@ -688,15 +685,15 @@ class AFViewer:
             for ingr in r.ingredients:
                 if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                     self.displayIngrGrow(ingr)
-        #organelle ingr
-        for orga in self.histo.organelles:
-            #organelle surface ingr
+        #compartment ingr
+        for orga in self.histo.compartments:
+            #compartment surface ingr
             rs =  orga.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
                     if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                         self.displayIngrGrow(ingr)
-            #organelle matrix ingr
+            #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
                 for ingr in ri.ingredients:
@@ -706,7 +703,7 @@ class AFViewer:
     def displayIngrGrow(self,ingr,visible=1):
         print ("displayIngrGrow",ingr,ingr.nbCurve)
         #how to restore / store gro ingedient
-        o = ingr.recipe().organelle()
+        o = ingr.recipe().compartment()
         parent=self.orgaToMasterGeom[ingr]
         pobj = None
         if ingr.unitParent is not None:
@@ -743,11 +740,11 @@ class AFViewer:
         if r :
             self.displayIngrediants(r)
 
-        #organelle ingr
-        for orga in self.histo.organelles:
-            #organelle surface ingr
+        #compartment ingr
+        for orga in self.histo.compartments:
+            #compartment surface ingr
             rs =  orga.surfaceRecipe
-            #organelle matrix ingr
+            #compartment matrix ingr
             ri =  orga.innerRecipe
             if rs :
                 self.displayIngrediants(rs)
@@ -766,7 +763,7 @@ class AFViewer:
                     ingr.mesh_3d = ingr.mesh
                     
     def createIngrMesh(self,ingr):
-        o = ingr.recipe().organelle()
+        o = ingr.recipe().compartment()
         geom = ingr.mesh   
         print ("createIngrMesh ",ingr.name, ingr.mesh, self.helper.getName(ingr.mesh) )
 # START New section added by Graham on July 16, 2012 replaces section below
@@ -842,7 +839,7 @@ class AFViewer:
         r =  self.histo.exteriorRecipe
         if r :
             res = [self.printOneIngr(ingr) for ingr in r.ingredients]                 
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
             rs =  orga.surfaceRecipe
             if rs :
                 res =[self.printOneIngr(ingr) for ingr in rs.ingredients]  
@@ -902,7 +899,7 @@ class AFViewer:
         if ingredient is None :
             print ("no ingredient provided")
             return
-        o =  ingredient.recipe().organelle()
+        o =  ingredient.recipe().compartment()
 #        comp = ingredient.compNum
         verts = []
         radii = []
@@ -927,7 +924,7 @@ class AFViewer:
         if doMesh and matrices:
             dejavui = False
             #recipe can be orga name or cyto_
-            #o =  ingredient.recipe().organelle()
+            #o =  ingredient.recipe().compartment()
 #            geom = ingredient.mesh     
             if self.ViewerType != 'dejavu':
                 polygon = ingredient.mesh_3d
@@ -1076,9 +1073,9 @@ class AFViewer:
 #                self.vi.progressBar(j/ningr,label="instances for "+str(j)+" "+ingr.name+" "+str(len(meshGeoms[ingr]))) 
                 j+=1
                 
-    def displayOrganellesIngredients(self):
-        # display organelle ingredients
-        for orga in self.histo.organelles:
+    def displayCompartmentsIngredients(self):
+        # display compartment ingredients
+        for orga in self.histo.compartments:
             #Sphere and Cylinders
             verts = {}
             radii = {}
@@ -1245,7 +1242,7 @@ class AFViewer:
         #what about the ptId
         #molecules is [pos, rot, ingr, ptInd]
         #whats the compartiments, so the ingr have to be reviously add to a compartiments
-        orga = ingr.recipe().organelle()#what if it is cytoplsme?
+        orga = ingr.recipe().compartment()#what if it is cytoplsme?
         #res = o.molecules[:]
         res=[]
         if self.histo.grid is None :
@@ -1466,7 +1463,7 @@ class AFViewer:
             for ingr in r.ingredients:
                 master = self.orgaToMasterGeom[ingr]
                 func(master)
-        for orga in self.histo.organelles:
+        for orga in self.histo.compartments:
             rs =  orga.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
@@ -1485,22 +1482,22 @@ class AFViewer:
         self.displayHistoVol()
 #        g = self.vi.newEmpty("--------------",parent=self.master)
         setup = self.vi.newEmpty(self.name+"_Setup",parent=self.master)        
-        g = self.vi.newEmpty(self.name+'_organelles_name_geometries',parent=setup)
-        orgamesh = self.vi.newEmpty("Place here your organelles geometries",parent=g)
+        g = self.vi.newEmpty(self.name+'_compartments_name_geometries',parent=setup)
+        orgamesh = self.vi.newEmpty("Place here your compartments geometries",parent=g)
         name = self.name+'_cytoplasm_ingredient'
         g = self.vi.newEmpty(self.name+'_cytoplasm_ingredient',parent=setup)
         ingrcyto = self.vi.newEmpty("Place here your cytoplasm ingredients",parent=g)
         
-        g = self.vi.newEmpty(self.name+'_organelles_recipes',parent=setup)
+        g = self.vi.newEmpty(self.name+'_compartments_recipes',parent=setup)
         s = self.vi.newEmpty('Setup following the template',parent=g)
-        r = self.vi.newEmpty('organellename_recipe',parent=g)
-        rs = self.vi.newEmpty('organellename_surface',parent=r)
+        r = self.vi.newEmpty('compartmentname_recipe',parent=g)
+        rs = self.vi.newEmpty('compartmentname_surface',parent=r)
         ingrorga = self.vi.newEmpty("Place here your surface ingredients",parent=rs)
-        ri = self.vi.newEmpty('organellename_interior',parent=r)
+        ri = self.vi.newEmpty('compartmentname_interior',parent=r)
         ingrorga = self.vi.newEmpty("Place here your interior ingredients",parent=ri)
         
-    def createTemplateOrganelle(self,organame,**kw):
-        parent= self.vi.getObject(self.name+'_organelles_recipes')
+    def createTemplateCompartment(self,organame,**kw):
+        parent= self.vi.getObject(self.name+'_compartments_recipes')
         r = self.vi.getObject(organame+'_recipe')
         if r is None :
             r = self.vi.newEmpty(organame+'_recipe',parent=parent)
@@ -1535,7 +1532,7 @@ class AFViewer:
                 child0 = self.helper.getMasterInstance(child0)
                 ingtype = self.helper.getType(child0)
             if ingtype == self.helper.SPHERE :
-                from AutoFill.Ingredient import MultiSphereIngr
+                from autopack.Ingredient import MultiSphereIngr
                 positions=[]
                 radius = []
                 for io in child :
@@ -1551,7 +1548,7 @@ class AFViewer:
                     meshObject=obj)
 #                print("spheres ",positions)
             if ingtype == self.helper.CYLINDER :
-                from AutoFill.Ingredient import MultiCylindersIngr
+                from autopack.Ingredient import MultiCylindersIngr
                 positions=[]
                 positions2=[]
                 radius = []
@@ -1573,7 +1570,7 @@ class AFViewer:
                     principalVector=axis)
 #                print (name, [radius],[positions],[positions2]) 
             if ingtype == self.helper.CUBE :
-                from AutoFill.Ingredient import SingleCubeIngr
+                from autopack.Ingredient import SingleCubeIngr
                 #need to create a SphereIngredient
                 s = self.helper.getPropertyObject(child0,key=["scale"])[0]
                 if self.helper.getType(child0) == self.helper.INSTANCE :
@@ -1583,7 +1580,7 @@ class AFViewer:
                                   positions=[[[0,0,0],[0,0,0],[0,0,0],]],
                                     meshObject=obj,)
         if self.helper.getType(obj) == self.helper.SPHERE :
-            from AutoFill.Ingredient import SingleSphereIngr
+            from autopack.Ingredient import SingleSphereIngr
             #need to create a SphereIngredient
             ingr = SingleSphereIngr( 1.0, 
                     name=name,
@@ -1592,7 +1589,7 @@ class AFViewer:
                     meshObject = ingrobj)
             #compartiment ?
         elif self.helper.getType(obj) == self.helper.CYLINDER :
-            from AutoFill.Ingredient import MultiCylindersIngr
+            from autopack.Ingredient import MultiCylindersIngr
             #need to create a SphereIngredient
             r,h,axis = res = self.helper.getPropertyObject(obj,key=["radius","length","axis"])
             ingr = MultiCylindersIngr(1.0, name=name, 
@@ -1607,7 +1604,7 @@ class AFViewer:
                 principalVector=axis,#should come from the object
                 )
         elif self.helper.getType(obj) == self.helper.CUBE :
-            from AutoFill.Ingredient import SingleCubeIngr
+            from autopack.Ingredient import SingleCubeIngr
             #need to create a SphereIngredient
             size = self.helper.getPropertyObject(obj,key=["length"])[0]
             ingr = SingleCubeIngr( 1.0,  [self.helper.ToVec(size),],name=name,
@@ -1622,7 +1619,7 @@ class AFViewer:
                 ingr.histoVol = self.histo
             else :
                 recipe.addIngredient( ingr ) 
-                o = recipe.organelle()
+                o = recipe.compartment()
                 ingr.compNum = recipe.number
                 g = self.vi.getObject("O"+o.name)
                 ingr.histoVol = self.histo
@@ -1635,11 +1632,11 @@ class AFViewer:
         return ingr
 
     
-    def addOrganelleFromGeom(self,name, obj, **kw):
-        from AutoFill.Organelle import Organelle
+    def addCompartmentFromGeom(self,name, obj, **kw):
+        from autopack.Compartment import Compartment
         o1 = None
         print ("ADD ORGA",name,obj,self.helper.getType(obj) ) 
-        if self.helper.getType(obj) == self.helper.EMPTY: #Organelle master parent?
+        if self.helper.getType(obj) == self.helper.EMPTY: #Compartment master parent?
             childs = self.helper.getChilds(obj)
             for ch in childs:
                 chname = self.helper.getName(ch)
@@ -1662,17 +1659,17 @@ class AFViewer:
                         faces.extend(f)
                         vertices.extend(v)
                         vnormals.extend(vn)
-                    o1 = Organelle(name,vertices, faces, vnormals)
+                    o1 = Compartment(name,vertices, faces, vnormals)
                     o1.overwriteSurfacePts = True
                 elif self.helper.getType(ch) == self.helper.POLYGON :
-                    #each childs is polygin ->organelle                
+                    #each childs is polygin ->compartment                
                     faces,vertices,vnormals = self.helper.DecomposeMesh(ch,
                                     edit=False,copy=False,tri=True,transform=True)
-                    o1 = Organelle(name,vertices, faces, vnormals)
+                    o1 = Compartment(name,vertices, faces, vnormals)
                     o1.overwriteSurfacePts = True
                 else :
                     continue
-#                h1.addOrganelle(o1)
+#                h1.addCompartment(o1)
 #                if rSurf.has_key(name): 
 #                    if rSurf[name].ingredients:
 #                        r  = rSurf[name]
@@ -1694,10 +1691,10 @@ class AFViewer:
             #helper.triangulate(c4dorganlle)
             faces,vertices,vnormals = self.helper.DecomposeMesh(c4dorganlle,
                                     edit=False,copy=False,tri=True,transform=True)
-            o1 = Organelle(name,vertices, faces, vnormals)
+            o1 = Compartment(name,vertices, faces, vnormals)
             o1.overwriteSurfacePts = True
         return o1        
-#            h1.addOrganelle(o1)
+#            h1.addCompartment(o1)
 #            if rSurf.has_key(name): 
 #                if rSurf[name].ingredients:
 #                    r  = rSurf[name]
@@ -1783,10 +1780,10 @@ class AFViewer:
         listeDistances = []
         if distances is None :
             #get all object except itself,use hierarchy from host
-            #cytoplasme,organellename
+            #cytoplasme,compartmentname
             if parents is None :
                 listeParent = ["cytoplasme"]
-                for o in self.histo.organelles :
+                for o in self.histo.compartments :
                     listeParent.append(o.name+"_Matrix")
                     listeParent.append(o.name+"_surface")
             else :
@@ -1846,10 +1843,10 @@ class AFViewer:
         if orders is None :
             if orderInName :
                 #get all object except itself,use hierarchy from host
-                #cytoplasme,organellename
+                #cytoplasme,compartmentname
                 if parents is None :
                     listeParent = ["cytoplasm"]
-                    for o in self.histo.organelles :
+                    for o in self.histo.compartments :
                         listeParent.append(o.name+"_Matrix")
                         listeParent.append(o.name+"_surface")
                 else :
@@ -1917,8 +1914,8 @@ class AFViewer:
             r = [self.exportIngredient(ingr) for ingr in recipe.ingredients]
         
     def exportAsIndexedMeshs(self,):
-        #organelle mesh and ingredient
-        for o in self.histo.organelles:
+        #compartment mesh and ingredient
+        for o in self.histo.compartments:
             if o.mesh is None :
                 v,f,vn,fn = o.vertices,o.faces,o.vnormals,o.fnormals
                 self.helper.writeMeshToFile(self.wrkdir+os.sep+o.name,
@@ -1945,7 +1942,7 @@ class AFViewer:
         list(map(PS.SetAge,ids,ages))#should avoid map
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
         
         rd = doc.GetActiveRenderData().GetData()
         bmp = c4d.bitmaps.BaseBitmap()
@@ -1977,7 +1974,7 @@ class AFViewer:
 #        map(PS.SetAge,ids,ages)
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
         
 #        rd = doc.GetActiveRenderData().GetData()
 #        bmp = c4d.bitmaps.BaseBitmap()
@@ -2001,7 +1998,7 @@ class AFViewer:
             self.helper.deleteObject(parent) #is this dleete the child ?
         #need to do the same for cylinder
         if self.doSpheres :
-            orga = ingr.recipe().organelle()
+            orga = ingr.recipe().compartment()
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
             print (name,parent)            

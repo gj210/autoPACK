@@ -55,7 +55,7 @@ import bisect
 import numpy, pickle, weakref
 
 print ('AF import')
-from autopack.Organelle import OrganelleList
+from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 from autopack.ray import vlen, vdiff, vcross
@@ -567,8 +567,8 @@ class Grid:
         self.boundingBox=([0,0,0], [.1,.1,.1])
         # this list provides the id of the component this grid points belongs
         # to. The id is an integer where 0 is the Histological Volume, and +i is
-        # the surface of organelle i and -i is the interior of organelle i
-        # in the list self. organelles
+        # the surface of compartment i and -i is the interior of compartment i
+        # in the list self. compartments
         self.gridPtId = []
         # will be a list of indices into 3D of histovol
         # of points that have not yet been used by the fill algorithm
@@ -579,7 +579,7 @@ class Grid:
         self.nbFreePoints = 0
         # this list evolves in parallel with self.freePoints and provides
         # the distance to the closest surface (either an already placed
-        # object (or an organelle surface NOT IMPLEMENTED)
+        # object (or an compartment surface NOT IMPLEMENTED)
         self.distToClosestSurf = []
         self.diag=None
         self.gridSpacing = None
@@ -589,7 +589,7 @@ class Grid:
         # list of (x,y,z) for each grid point (x index moving fastest)
         self.masterGridPositions = []
         
-        #this are specific for each organelle
+        #this are specific for each compartment
         self.aInteriorGrids = []
         self.aSurfaceGrids = []
         #bhtree
@@ -739,12 +739,12 @@ class Grid:
 #        print ("zPlaneLength = ", zPlaneLength)
 
         ptIndices = []
-        for z in range(k0,k1):
+        for z in range(int(k0),int(k1)):
             offz = z*zPlaneLength
-            for y in range(j0,j1):
+            for y in range(int(j0),int(j1)):
                 off = y*NX + offz
                 #ptIndices.extend(numpy.arange(i0,i1)+off)
-                for x in range(i0,i1):
+                for x in range(int(i0),int(i1)):
                     ptIndices.append( x + off)
 #                    print("position of point ",x+off," = ", self.masterGridPositions[x+off])
 
@@ -784,10 +784,10 @@ class Grid:
     def restore(self):
         pass
         
-class Environment(OrganelleList):
+class Environment(CompartmentList):
 
     def __init__(self,name="H"):
-        OrganelleList.__init__(self)
+        CompartmentList.__init__(self)
         self.verbose = verbose  #Graham added to try to make universal "global variable Verbose" on Aug 28
         self.timeUpDistLoopTotal = 0 #Graham added to try to make universal "global variable Verbose" on Aug 28
         self.name = name        
@@ -796,9 +796,9 @@ class Environment(OrganelleList):
         self.world = None
         self.grid = Grid()
         self.encapsulatingGrid = 1  # Only override this with 0 for 2D fills- otherwise its very unsafe!
-        self.nbOrganelles = 1 # 0 is the exterior, 1 is organelle 1 surface, -1 is organelle 1 interior, etc.
+        self.nbCompartments = 1 # 0 is the exterior, 1 is compartment 1 surface, -1 is compartment 1 interior, etc.
         self.name = "out"
-        self.organelles = [] # list of all organelles in thei sHistoVol
+        #self.compartments = [] # list of all compartments in thei sHistoVol
         self.order={}#give the order of drop ingredient by ptInd from molecules
         self.lastrank=0
         # smallest and largest protein radii acroos all recipes
@@ -923,7 +923,7 @@ class Environment(OrganelleList):
         #filling name root
         #histoVol option
         #cytoplasme recipe if any and its ingredient
-        #organelle name= mesh ?
+        #compartment name= mesh ?
         #orga surfaceingr#file or direct
         #orga interioringr#file or direct
         #etc...
@@ -1008,14 +1008,6 @@ class Environment(OrganelleList):
             ingrnodes = rnode.getElementsByTagName("ingredient")
             for ingrnode in ingrnodes:
                 ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                name = str(ingrnode.getAttribute("name"))
-#                kw = {}
-#                for k in ingr.KWDS:
-#                    v=self.getValueToXMLNode(ingr.KWDS[k]["type"],ingrnode,k)
-#                    if v is not None :
-#                        kw[k]=v                   
-                #create the ingredient according the type
-#                ingre = self.makeIngredient(**kw)                    
                 rCyto.addIngredient(ingre) 
             #check for includes 
             ingrnodes_include = rnode.getElementsByTagName("include")
@@ -1026,8 +1018,8 @@ class Environment(OrganelleList):
             #setup recipe
             self.setExteriorRecipe(rCyto)
             
-        onodes = root.getElementsByTagName("organelle")
-        from autopack.Organelle import Organelle
+        onodes = root.getElementsByTagName("organelle")#Change to Compartment
+        from autopack.Compartment import Compartment
         for onode in onodes:
             name = str(onode.getAttribute("name"))
             geom = str(onode.getAttribute("geom"))
@@ -1045,8 +1037,8 @@ class Environment(OrganelleList):
             else :
                 rep=None
                 rep_file=None
-            o = Organelle(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
-            self.addOrganelle(o)
+            o = Compartment(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
+            self.addCompartment(o)
             rsnodes = onode.getElementsByTagName("surface")
             if len(rsnodes) :
                 rSurf = Recipe()
@@ -1054,14 +1046,6 @@ class Environment(OrganelleList):
                 ingrnodes = rsnodes.getElementsByTagName("ingredient")
                 for ingrnode in ingrnodes:
                     ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                    name = str(ingrnode.getAttribute("name"))
-#                    kw = {}
-#                    for k in ingr.KWDS:
-#                        v=self.getValueToXMLNode(ingr.KWDS[k]["type"],ingrnode,k)
-#                        if v is not None :
-#                            kw[k]=v                   
-                    #create the ingredient according the type
-#                    ingre = self.makeIngredient(**kw)                    
                     rSurf.addIngredient(ingre) 
                 ingrnodes_include = rsnodes.getElementsByTagName("include")
                 for inclnode in ingrnodes_include:
@@ -1076,14 +1060,6 @@ class Environment(OrganelleList):
                 ingrnodes = rinodes.getElementsByTagName("ingredient")
                 for ingrnode in ingrnodes:
                     ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                    name = str(ingrnode.getAttribute("name"))
-#                    kw = {}
-#                    for k in ingr.KWDS:
-#                        v=self.getValueToXMLNode(ingr.KWDS[k]["type"],ingrnode,k)
-#                        if v is not None :
-#                            kw[k]=v                   
-#                   create the ingredient according the type
-#                    ingre = self.makeIngredient(**kw)                    
                     rMatrix.addIngredient(ingre) 
                 ingrnodes_include = rinodes.getElementsByTagName("include")
                 for inclnode in ingrnodes_include:
@@ -1189,8 +1165,8 @@ class Environment(OrganelleList):
                         v = getattr(ingr,k)
     #                    print ingr.name+" keyword ",k,v
                         self.setValueToXMLNode(v,ingrnode,k)
-        for o in self.organelles:
-            onode=self.xmldoc.createElement("organelle")
+        for o in self.compartments:
+            onode=self.xmldoc.createElement("compartment")
             root.appendChild(onode)
             onode.setAttribute("name",str(o.name))
             onode.setAttribute("geom",str(o.filename))#should point to the used filename
@@ -1242,7 +1218,7 @@ class Environment(OrganelleList):
         r =  self.exteriorRecipe
         if (self.includeIngrRecipe(ingrname, include,r)) :
             return
-        for o in self.organelles:
+        for o in self.compartments:
             rs =  o.surfaceRecipe
             if (self.includeIngrRecipe(ingrname, include,rs)) :
                 return
@@ -1396,8 +1372,8 @@ class Environment(OrganelleList):
         f = open(gridFileOut, 'wb')#'w'
         self.writeArraysToFile(f) #save self.gridPtId and self.distToClosestSurf
         
-        for organelle in self.organelles:
-            organelle.saveGridToFile(f)
+        for compartment in self.compartments:
+            compartment.saveGridToFile(f)
         f.close()
 
     def restoreGridFromFile(self, gridFileName):
@@ -1406,66 +1382,10 @@ class Environment(OrganelleList):
         f = open(gridFileName,'rb')
         self.readArraysFromFile(f) #read gridPtId and distToClosestSurf
         self.BuildGrids()        
-#        for organelle in self.organelles:
-#            
-#            #surfacePoints, insidePoints, normals, srfPtsCoords = organelle.readGridFromFile(f)
-#            surfacePoints, insidePoints, normals,surfacePointsCoords = organelle.readGridFromFile(f)
-#            aInteriorGrids.append( insidePoints)
-#            aSurfaceGrids.append( surfacePoints )
-#            
-#            srfPts = organelle.ogsurfacePoints = surfacePoints
-#            ogNormals = organelle.ogsurfacePointsNormals = normals
-#            nbGridPoints = len(self.grid.masterGridPositions)
-#
-#            length = len(srfPts)
-#            
-#            pointArrayRaw = numpy.zeros( (nbGridPoints + length, 3), 'f')
-#            pointArrayRaw[:nbGridPoints] = self.grid.masterGridPositions
-#            pointArrayRaw[nbGridPoints:] = srfPts
-#            
-#            organelle.surfacePointscoords = srfPts
-#            self.grid.nbSurfacePoints += length
-#            self.grid.masterGridPositions = pointArrayRaw
-#            self.grid.distToClosestSurf.extend( [self.grid.diag]*length )
-#            
-#            self.grid.gridPtId.extend( [organelle.number]*length )
-#            surfacePoints = range(nbGridPoints, nbGridPoints+length)
-#            self.grid.freePoints.extend(surfacePoints)
-#            
-#            organelle.surfacePointsNormals = normals
-#            organelle.surfacePoints = surfacePoints
-#            organelle.insidePoints = insidePoints
-#            organelle.surfacePointsCoords = surfacePointsCoords
-#            
-#            organelle.computeVolumeAndSetNbMol(self, surfacePoints, insidePoints)
-#            print '%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
-#                len(organelle.surfacePoints), len(organelle.insidePoints),
-#                nbGridPoints, len(self.grid.masterGridPositions))
-
-#        self.grid.aInteriorGrids = aInteriorGrids
-#        self.grid.aSurfaceGrids = aSurfaceGrids
-
-
-
-##     def getSmallestProteinSize(self, smallest):
-##         for organelle in self.organelles:
-##             size = organelle.getSmallestProteinSize(smallest)
-##             if size < smallest:
-##                 smallest = size
-##         return smallest
-
-    
-##     def getLargestProteinSize(self, largest):
-##         for organelle in self.organelles:
-##             size = organelle.getLargestProteinSize(largest)
-##             if size > largest:
-##                 largest = size
-##         return largest
-
 
     def setMinMaxProteinSize(self):
-        for organelle in self.organelles:
-            mini, maxi = organelle.getMinMaxProteinSize()
+        for compartment in self.compartments:
+            mini, maxi = compartment.getMinMaxProteinSize()
             if mini < self.smallestProteinSize:
                 self.computeGridParams = True
                 self.smallestProteinSize = mini
@@ -1488,7 +1408,7 @@ class Environment(OrganelleList):
         if helper is None : 
             print ("no Helper found")            
             return None,None,None
-        if helper.getType(obj) == helper.EMPTY: #Organelle master parent?
+        if helper.getType(obj) == helper.EMPTY: #compartment master parent?
             childs = helper.getChilds(obj)
             for ch in childs:
                 name = helper.getName(ch)
@@ -1525,8 +1445,8 @@ class Environment(OrganelleList):
                    helper.getType(obj)==helper.POLYGON)
             return None,None,None
             
-    def setOrganelleMesh(self, organelle, ref_obj):
-        if organelle.ref_obj == ref_obj : return
+    def setCompartmentMesh(self, compartment, ref_obj):
+        if compartment.ref_obj == ref_obj : return
         if os.path.isfile(ref_obj):
             fileName, fileExtension = os.path.splitext(ref_obj)            
             if helper is not None:#neeed the helper
@@ -1542,17 +1462,17 @@ class Environment(OrganelleList):
             geom = helper.getObject(ref_obj)
         if geom is not None :
             vertices, faces, vnormals = self.extractMeshComponent(geom)
-            organelle.setMesh(filename=ref_obj,vertices=vertices, faces=faces, vnormals=vnormals )
+            compartment.setMesh(filename=ref_obj,vertices=vertices, faces=faces, vnormals=vnormals )
                 
-    def addOrganelle(self, organelle):
-        organelle.setNumber(self.nbOrganelles)
-        self.nbOrganelles += 1
+    def addCompartment(self, compartment):
+        compartment.setNumber(self.nbCompartments)
+        self.nbCompartments += 1
 
-        fits, bb = organelle.inBox(self.boundingBox)
+        fits, bb = compartment.inBox(self.boundingBox)
         
         if not fits:
             self.boundingBox = bb
-        OrganelleList.addOrganelle(self, organelle)
+        CompartmentList.addCompartment(self, compartment)
 
     def longestIngrdientName(self):
         M=20        
@@ -1561,7 +1481,7 @@ class Environment(OrganelleList):
             for ingr in r.ingredients:
                 if len(ingr.name) > M :
                     M = len(ingr.name)
-        for o in self.organelles:
+        for o in self.compartments:
             rs = o.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
@@ -1579,7 +1499,7 @@ class Environment(OrganelleList):
         if r :
             for ingr in r.ingredients:
                 cb_function(ingr)
-        for o in self.organelles:
+        for o in self.compartments:
             rs = o.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
@@ -1604,7 +1524,7 @@ class Environment(OrganelleList):
             r = self.exteriorRecipe
             ingr = self.getIngrFromNameInRecipe(name,r)
             if ingr is not None : return ingr
-            for o in self.organelles :            
+            for o in self.compartments :            
                 rs = o.surfaceRecipe
                 ingr = self.getIngrFromNameInRecipe(name,rs)
                 if ingr is not None : return ingr
@@ -1617,13 +1537,13 @@ class Environment(OrganelleList):
             if ingr is not None : return ingr
             else : return None
         elif compNum > 0 :
-            o=self.organelles[compNum-1]
+            o=self.compartments[compNum-1]
             rs = o.surfaceRecipe
             ingr = self.getIngrFromNameInRecipe(name,rs)
             if ingr is not None : return ingr
             else : return None
         else : #<0
-            o=self.organelles[(compNum*-1)-1]
+            o=self.compartments[(compNum*-1)-1]
             ri = o.innerRecipe
             ingr = self.getIngrFromNameInRecipe(name,ri)
             if ingr is not None : return ingr
@@ -1632,85 +1552,49 @@ class Environment(OrganelleList):
     def setExteriorRecipe(self, recipe):
         assert isinstance(recipe, Recipe)
         self.exteriorRecipe = recipe
-        recipe.organelle = weakref.ref(self)
+        recipe.compartment = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = 0
 
-    def BuildGridsOld(self):
-    # FIXME make recursive?
-        aInteriorGrids = []
-        aSurfaceGrids = []
-        if self.EnviroOnly:
-           v = self.EnviroOnlyCompartiment #the compartiment number
-           if v < 0 and len(self.organelles):
-              organelle = self.organelles[abs(v)-1]
-              aInteriorGrids, aSurfaceGrids = organelle.BuildGridEnviroOnly(self,v)
-           elif  len(self.organelles) :
-              organelle = self.organelles[0]
-              aInteriorGrids, aSurfaceGrids = organelle.BuildGridEnviroOnly(self,1)
-              #aInteriorGrids =[]
-              #aSurfaceGrids =[]    
-        else :
-            for organelle in self.organelles:
-                if self.innerGridMethod =="sdf" :
-                       a, b = organelle.BuildGrid_utsdf(self)
-                elif self.innerGridMethod == "bhtree":
-                       a, b = organelle.BuildGrid(self)                
-                aInteriorGrids.append( a)
-                aSurfaceGrids.append( b )
-                
-        self.grid.aInteriorGrids = aInteriorGrids
-        self.grid.aSurfaceGrids = aSurfaceGrids
-        print ("build Grids",self.innerGridMethod,len(self.grid.aSurfaceGrids))
-
+ 
     def BuildGrids(self):  #New version allows for orthogonal box to be used as an organelle requireing no expensive InsidePoints test
         # FIXME make recursive?
         aInteriorGrids = []
         aSurfaceGrids = []
-        #    if self.EnviroOnly:
-        #        v = self.EnviroOnlyCompartiment #the compartiment number
-        #        if v < 0 and len(self.organelles):
-        #            organelle = self.organelles[abs(v)-1]
-        #            aInteriorGrids, aSurfaceGrids = organelle.BuildGridEnviroOnly(self,v)
-        #        elif  len(self.organelles) :
-        #            organelle = self.organelles[0]
-        #            aInteriorGrids, aSurfaceGrids = organelle.BuildGridEnviroOnly(self,1)
-        #    #aInteriorGrids =[]
-        #    #aSurfaceGrids =[]
-        #    else :
-        for organelle in self.organelles:
-            print("in HistoVol, organelle.isOrthogonalBoudingBox =", organelle.isOrthogonalBoudingBox)
+
+        for compartment in self.compartments:
+            print("in HistoVol, compartment.isOrthogonalBoudingBox =", compartment.isOrthogonalBoudingBox)
             b = []
-            if organelle.isOrthogonalBoudingBox==1:
+            if compartment.isOrthogonalBoudingBox==1:
                 self.EnviroOnly = True
                 print(">>>>>>>>>>>>>>>>>>>>>>>>> Not building a grid because I'm an Orthogonal Bounding Box")
-                a =self.grid.getPointsInCube(organelle.bb, None, None) #This is the highspeed shortcut for inside points! and no surface! that gets used if the fillSelection is an orthogonal box and there are no other organelles.
-                self.grid.gridPtId[a] = -organelle.number
-                organelle.surfacePointsCoords = None
-                bb0x, bb0y, bb0z = organelle.bb[0]
-                bb1x, bb1y, bb1z = organelle.bb[1]
+                a =self.grid.getPointsInCube(compartment.bb, None, None) #This is the highspeed shortcut for inside points! and no surface! that gets used if the fillSelection is an orthogonal box and there are no other compartments.
+                self.grid.gridPtId[a] = -compartment.number
+                compartment.surfacePointsCoords = None
+                bb0x, bb0y, bb0z = compartment.bb[0]
+                bb1x, bb1y, bb1z = compartment.bb[1]
                 AreaXplane = (bb1y-bb0y)*(bb1z-bb0z)
                 AreaYplane = (bb1x-bb0x)*(bb1z-bb0z)
                 AreaZplane = (bb1y-bb0y)*(bb1x-bb0x)
                 vSurfaceArea = abs(AreaXplane)*2+abs(AreaYplane)*2+abs(AreaZplane)*2
                 print("vSurfaceArea = ", vSurfaceArea)
-                organelle.insidePoints = a
-                organelle.surfacePoints = b
-                organelle.surfacePointsCoords = []
-                organelle.surfacePointsNormals = []
+                compartment.insidePoints = a
+                compartment.surfacePoints = b
+                compartment.surfacePointsCoords = []
+                compartment.surfacePointsNormals = []
                 print(' %d inside pts, %d tot grid pts, %d master grid'%( len(a),len(a), len(self.grid.masterGridPositions)))
-                organelle.computeVolumeAndSetNbMol(self, b, a,areas=vSurfaceArea)               
-                #print("I've built a grid in the organelle test with no surface", a)
+                compartment.computeVolumeAndSetNbMol(self, b, a,areas=vSurfaceArea)               
+                #print("I've built a grid in the compartment test with no surface", a)
                 print("The size of the grid I build = ", len(a))
 
-            if self.innerGridMethod =="sdf" and organelle.isOrthogonalBoudingBox!=1: # A fillSelection can now be a mesh too... it can use either of these methods
-                a, b = organelle.BuildGrid_utsdf(self) # to make the outer most selection from the master and then the organelle
-            elif self.innerGridMethod == "bhtree" and organelle.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = organelle.BuildGrid(self)
-            elif self.innerGridMethod == "jordan" and organelle.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = organelle.BuildGridJordan(self)
-            elif self.innerGridMethod == "jordan3" and organelle.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = organelle.BuildGridJordan(self,ray=3)
+            if self.innerGridMethod =="sdf" and compartment.isOrthogonalBoudingBox!=1: # A fillSelection can now be a mesh too... it can use either of these methods
+                a, b = compartment.BuildGrid_utsdf(self) # to make the outer most selection from the master and then the compartment
+            elif self.innerGridMethod == "bhtree" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+                a, b = compartment.BuildGrid(self)
+            elif self.innerGridMethod == "jordan" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+                a, b = compartment.BuildGridJordan(self)
+            elif self.innerGridMethod == "jordan3" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+                a, b = compartment.BuildGridJordan(self,ray=3)
             aInteriorGrids.append(a)
             print("I'm ruther in the loop")
             aSurfaceGrids.append(b)
@@ -1778,7 +1662,7 @@ class Environment(OrganelleList):
         if self.exteriorRecipe:
             self.exteriorRecipe.sort()
 
-        for o in self.organelles:
+        for o in self.compartments:
             if o.innerRecipe:
                 o.innerRecipe.sort()
             if o.surfaceRecipe:
@@ -1826,7 +1710,7 @@ class Environment(OrganelleList):
 #            gridFileIn = None
 
 #        if rebuild :
-            #this restore/store the grid information of the organelle.
+            #this restore/store the grid information of the compartment.
         if gridFileIn is not None :
             self.grid.filename = gridFileIn
             self.restoreGridFromFile(gridFileIn)
@@ -1837,14 +1721,14 @@ class Environment(OrganelleList):
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
         # get new set of freePoints which includes surface points
- #       nbPoints = nbPoints-1			#Graham Turned off this redundant nbPoints-1 call on 8/27/11
+ #       nbPoints = nbPoints-1            #Graham Turned off this redundant nbPoints-1 call on 8/27/11
  #       nbPoints = nbPoints-1          #Graham Turned this one off on 5/16/12 to match August repair in Hybrid
         grid.nbFreePoints = nbPoints#-1
         grdPts = grid.masterGridPositions
         # build BHTree for surface points (off grid)
         if rebuild :
             verts = []            
-            for orga in self.organelles:
+            for orga in self.compartments:
                 if orga.surfacePointsCoords:
                     for pt3d in orga.surfacePointsCoords:
                         verts.append( pt3d )
@@ -1858,7 +1742,7 @@ class Environment(OrganelleList):
         noRecipe = []
         if self.exteriorRecipe is None:
             noRecipe.append( 0 )
-        for o in self.organelles:
+        for o in self.compartments:
             if o.surfaceRecipe is None:
                 noRecipe.append( o.number )
             if o.innerRecipe is None:
@@ -1870,7 +1754,7 @@ class Environment(OrganelleList):
         if self.fbox_bb is not None :
                 V,nbG = self.callFunction(self.computeGridNumberOfPoint,(self.fbox_bb,space))
                 totalVolume = V*unitVol
-        for o in self.organelles:
+        for o in self.compartments:
             #totalVolume -= o.surfaceVolume
             totalVolume -= o.interiorVolume
         self.exteriorVolume = totalVolume
@@ -1895,12 +1779,13 @@ class Environment(OrganelleList):
             #update the curentpass
 #            #how to update the distance for each prest ingr ?
             distance = self.grid.distToClosestSurf#[:]
-#            nbFreePoints = nbPoints-1				#This already comes from the Point Volume- no subtraction needed (Graham turned off on 8/27/11)
+#            nbFreePoints = nbPoints-1                #This already comes from the Point Volume- no subtraction needed (Graham turned off on 8/27/11)
             nbFreePoints = nbPoints#-1              #Graham turned this off on 5/16/12 to match August Repair for May Hybrid
+            backup = self.molecules[:]
             molecules=self.molecules
 #            print("molecules",molecules)
-            for organelle in self.organelles:
-                molecules.extend(organelle.molecules)
+            for compartment in self.compartments:
+                molecules.extend(compartment.molecules)
             for i,mingrs in enumerate(molecules) :#( jtrans, rotMatj, self, ptInd )
                 jtrans, rotMatj, ingr, ptInd = mingrs
 #                print ("OK",jtrans, rotMatj, ingr, ptInd)
@@ -1917,35 +1802,41 @@ class Environment(OrganelleList):
                                     jtrans=jtrans, 
                                     rotMatj=rotMatj)
                 # update free points
-                if len(insidePoints) and ingr.is_previous:
-                	print (ingr.name," is previous")
-                	self.checkPtIndIngr(ingr,insidePoints,i,ptInd)
+                if len(insidePoints) and self.placeMethod.find("panda") != -1:
+                    print (ingr.name," is previous")
+                #in case of pandaBullet we should update he ptInd of the rbnode
+                    self.checkPtIndIngr(ingr,insidePoints,i,ptInd)
                 #(self, histoVol,insidePoints, newDistPoints, freePoints,
                 #        nbFreePoints, distance, masterGridPositions, verbose)
                 nbFreePoints = ingr.updateDistances(self,insidePoints, newDistPoints, 
                             self.grid.freePoints, nbFreePoints, distance, 
                             self.grid.masterGridPositions,0)
+            self.molecules = backup              
             self.grid.nbFreePoints = nbFreePoints
         #self.hgrid.append(self.grid)
         self.setCompatibility()
 
     def checkPtIndIngr(self,ingr,insidePoints,i,ptInd):
-    	#change key for rbnode too
-    	rbnode = ingr.rbnode[ptInd]
-    	ingr.rbnode.pop(ptInd)
+        #change key for rbnode too
+        rbnode = ingr.rbnode[ptInd]
+        ingr.rbnode.pop(ptInd)
         if i < len(self.molecules):
+            print self.molecules[i][3]
+            print type(self.molecules[i][3])
+            print ingr.compNum
+            print insidePoints.keys()[0]
             self.molecules[i][3]=insidePoints.keys()[0]
             ingr.rbnode[insidePoints.keys()[0]] = rbnode
         else :
             nmol = len(self.molecules)
-            for j,organelle in enumerate(self.organelles):
-            	print (i,nmol+len(organelle.molecules))
-                if i < nmol+len(organelle.molecules):
-                    organelle.molecules[i-nmol][3]=insidePoints.keys()[0]
+            for j,compartment in enumerate(self.compartments):
+                print (i,nmol+len(compartment.molecules))
+                if i < nmol+len(compartment.molecules):
+                    compartment.molecules[i-nmol][3]=insidePoints.keys()[0]
                     ingr.rbnode[insidePoints.keys()[0]] = rbnode
                 else :
-                    nmol+=len(organelle.molecules)
-			
+                    nmol+=len(compartment.molecules)
+            
     def setCompatibility(self):
         self.getPointsInCube = self.grid.getPointsInCube
         self.boundingBox=self.grid.boundingBox
@@ -2107,7 +1998,7 @@ class Environment(OrganelleList):
         r =  self.exteriorRecipe
         self.resetIngrRecip(r)
         self.molecules=[]
-        for orga in self.organelles:
+        for orga in self.compartments:
             orga.reset()
             rs =  orga.surfaceRecipe
             self.resetIngrRecip(rs)
@@ -2180,7 +2071,7 @@ class Environment(OrganelleList):
                 else:
                     ingr.completion = 1.0
             
-        for o in self.organelles:
+        for o in self.compartments:
             if not hasattr(o,"molecules") :
                 o.molecules = []
             r = o.surfaceRecipe
@@ -2423,7 +2314,7 @@ class Environment(OrganelleList):
                 print ("time to reject the picking", time()-t)
 # End of massive overruling section from corrected thesis file of Sept. 25, 2011
 # this chunk overwrites the next three lines from July version. July 5, 2012
-#            self.thresholdPriorities.pop(ind)					
+#            self.thresholdPriorities.pop(ind)                    
 #            self.normalizedPriorities.pop(ind)
 #            print(("time to reject the picking", time()-t))
             return False,vRangeStart
@@ -2484,7 +2375,7 @@ class Environment(OrganelleList):
                 freePoints[vLastFree] = vKill
                 # End New replaced by Graham on Aug 18, 2012
         except:
-				pass
+                pass
         return nbFreePoints
     
     def fill5(self, seedNum=14, stepByStep=False, verbose=False, sphGeom=None,
@@ -2517,7 +2408,7 @@ class Environment(OrganelleList):
         freePoints = self.grid.freePoints[:]
         nbFreePoints = len(freePoints)#-1
 #        self.freePointMask = numpy.ones(nbFreePoints,dtype="int32")
-        if "fbox" in kw :  # Oct 20, 2012  This is part of the code that is breaking the grids for all meshless organelle fills
+        if "fbox" in kw :  # Oct 20, 2012  This is part of the code that is breaking the grids for all meshless compartment fills
             self.fbox = kw["fbox"]
         if self.fbox is not None and not self.EnviroOnly :
             self.freePointMask = numpy.ones(nbFreePoints,dtype="int32")
@@ -2602,8 +2493,8 @@ class Environment(OrganelleList):
 #==============================================================================
         while nbFreePoints:
 #            print (".........At start of while loop, with vRangeStart = ", vRangeStart)
-#            for o in self.organelles:
-#                print ("organelles = ", o.name)
+#            for o in self.compartments:
+#                print ("compartments = ", o.name)
 #            print("freePoints = ", freePoints, "nbFreePoints = ", nbFreePoints)
             if verbose > 1:
                 print('Points Remaining', nbFreePoints, id(freePoints))
@@ -2794,13 +2685,13 @@ class Environment(OrganelleList):
                 #totalVolume = self.grid.gridVolume*unitVol
                 wrkDirRes= self.resultfile+"_analyze_"
                 print('TODO: overwrite wrkDirRes with specific user directory for each run or each script or put in a cache and offer a chance to save it')
-                print("self.organelles = ", self.organelles)
-                for o in self.organelles: #only for organelle ?
+                print("self.compartments = ", self.compartments)
+                for o in self.compartments: #only for compartment ?
                     #totalVolume -= o.surfaceVolume
                     #totalVolume -= o.interiorVolume
                     innerPointNum = len(o.insidePoints)-1
                     print ('  .  .  .  . ')
-                    print ('for Organelle o = ', o.name)
+                    print ('for compartment o = ', o.name)
                     print ('inner Point Count = ', innerPointNum)
                     print ('inner Volume = ', o.interiorVolume)
                     print ('innerVolume temp Confirm = ', innerPointNum*unitVol)
@@ -2920,14 +2811,14 @@ class Environment(OrganelleList):
                     print ('self.gridVolume = ', self.gridVolume)
     #        self.exteriorVolume = totalVolume
                         
-            print("self.organelles In HistoVol = ", len(self.organelles))
-            if self.organelles == [] :
+            print("self.compartments In HistoVol = ", len(self.compartments))
+            if self.compartments == [] :
                 #o = self.histoVol
 #                o = self.exteriorRecipe
                 unitVol = self.grid.gridSpacing**3
                 innerPointNum = len(freePoints)
                 print ('  .  .  .  . ')
-#                print ('for Organelle o = ', o.name)
+#                print ('for compartment o = ', o.name)
                 print ('inner Point Count = ', innerPointNum)
 #                print ('inner Volume = ', o.interiorVolume)
                 print ('innerVolume temp Confirm = ', innerPointNum*unitVol)
@@ -3027,7 +2918,7 @@ class Environment(OrganelleList):
             ingredients[ingr.name][1].append(pos)
             ingredients[ingr.name][2].append(rot)
             ingredients[ingr.name][3].append(numpy.array(mat))
-        for o in self.organelles:
+        for o in self.compartments:
             for pos, rot, ingr, ptInd in o.molecules:
                 if ingr.name not  in ingredients :
                     ingredients[ingr.name]=[ingr,[],[],[]]
@@ -3037,7 +2928,13 @@ class Environment(OrganelleList):
                 ingredients[ingr.name][2].append(rot)
                 ingredients[ingr.name][3].append(numpy.array(mat)) 
         self.ingr_result = ingredients
-                            
+
+    def build_grid_and_pack(self,seed=12):
+        #this function should call bothv build grid and fill5 with default value
+        self.buildGrid(boundingBox=self.boundingBox,gridFileIn=None,rebuild=True ,
+                      gridFileOut=None,previousFill=False)  
+        self.fill5(seedNum=seed,verbose=0)
+                          
     def displayCancelDialog(self):
         print('Popup CancelBox: if Cancel Box is up for more than 10 sec, close box and continue loop from here')
 #        from pyubic.cinema4d.c4dUI import TimerDialog
@@ -3076,8 +2973,8 @@ class Environment(OrganelleList):
         self.molecules = molecules
         if self.exteriorRecipe:
             self.exteriorRecipe.molecules = molecules
-        if len(orgaresult) == len(self.organelles):
-            for i,o in enumerate(self.organelles):
+        if len(orgaresult) == len(self.compartments):
+            for i,o in enumerate(self.compartments):
                 molecules=[]
                 for elem in orgaresult[i] :
                     pos,rot,name,compNum,ptInd = elem
@@ -3137,7 +3034,7 @@ class Environment(OrganelleList):
         #pos,rot,ingr.name,ingr.compNum,ptInd
         orgaresult=[]
         freePoint=[]
-        for i, orga in enumerate(self.organelles):
+        for i, orga in enumerate(self.compartments):
             orfile = open(resultfilename+"ogra"+str(i),'rb')
             orgaresult.append(pickle.load(orfile))
             orfile.close()
@@ -3163,7 +3060,7 @@ class Environment(OrganelleList):
             result.append([pos,rot,ingr.name,ingr.compNum,ptInd])
         pickle.dump(result, rfile)
         rfile.close()
-        for i, orga in enumerate(self.organelles):
+        for i, orga in enumerate(self.compartments):
             orfile = open(resultfilename+"ogra"+str(i), 'wb')
             result=[]
             for pos, rot, ingr, ptInd in orga.molecules:
@@ -3216,7 +3113,7 @@ class Environment(OrganelleList):
         rfile = open(resultfilename,'r')
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.organelles)
+        orgaresult=[[],]*len(self.compartments)
 #        mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
 #        numpy.array([[0.0, 1.0, 0.0, 0.0], 
 #                 [-1., 0.0, 0.0, 0.0], 
@@ -3232,7 +3129,7 @@ class Environment(OrganelleList):
                 result.append([numpy.array(pos),numpy.array(r),ingrname,ingrcompNum,ptInd])
             else :
                 orgaresult[abs(ingrcompNum)-1].append([numpy.array(pos),numpy.array(r),ingrname,ingrcompNum,ptInd])
-#        for i, orga in enumerate(self.organelles):
+#        for i, orga in enumerate(self.compartments):
 #            orfile = open(resultfilename+"ogra"+str(i),'rb')
 #            orgaresult.append(pickle.load(orfile))
 #            orfile.close()
@@ -3253,7 +3150,7 @@ class Environment(OrganelleList):
                 pass#already store
             else :
                 ingr.results.append([pos,rot])
-        for i, orga in enumerate(self.organelles):
+        for i, orga in enumerate(self.compartments):
             for pos, rot, ingr, ptInd in orga.molecules:
                 if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                     pass#already store
@@ -3268,7 +3165,7 @@ class Environment(OrganelleList):
             self.result_json=json.load(fp)#,indent=4, separators=(',', ': ')
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.organelles)
+        orgaresult=[[],]*len(self.compartments)
         r =  self.exteriorRecipe
         if r :
             for ingr in r.ingredients:                
@@ -3276,9 +3173,9 @@ class Environment(OrganelleList):
                 for r in iresults:
                     rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                     result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
-        #organelle ingr
-        for orga in self.organelles:
-            #organelle surface ingr
+        #compartment ingr
+        for orga in self.compartments:
+            #compartment surface ingr
             rs =  orga.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
@@ -3286,7 +3183,7 @@ class Environment(OrganelleList):
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
-            #organelle matrix ingr
+            #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
                 for ingr in ri.ingredients:                    
@@ -3332,15 +3229,15 @@ class Environment(OrganelleList):
             for ingr in r.ingredients:
                 self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
 
-        #organelle ingr
-        for orga in self.organelles:
-            #organelle surface ingr
+        #compartment ingr
+        for orga in self.compartments:
+            #compartment surface ingr
             rs =  orga.surfaceRecipe
             if rs :
                 self.result_json[orga.name+"_surfaceRecipe"]={}
                 for ingr in rs.ingredients:
                     self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
-            #organelle matrix ingr
+            #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
                 self.result_json[orga.name+"_innerRecipe"]={}
@@ -3364,7 +3261,7 @@ class Environment(OrganelleList):
         #write the curve point 
 
         rfile.close()
-        for i, orga in enumerate(self.organelles):
+        for i, orga in enumerate(self.compartments):
             orfile = open(resultfilename+"ogra"+str(i)+".txt", 'w')
             result=[]
             line=""
@@ -3416,7 +3313,7 @@ class Environment(OrganelleList):
             print('    histoVol exterior recipe:')
             r.printFillInfo('        ')
             
-        for o in self.organelles:
+        for o in self.compartments:
             o.printFillInfo()
 
     def finishWithWater(self,freePoints=None,nbFreePoints=None):
@@ -3451,7 +3348,7 @@ class Environment(OrganelleList):
         r = self.exteriorRecipe
         if r :
             r.setCount(realTotalVol,reset=False)
-        for o in self.organelles:
+        for o in self.compartments:
             o.estimateVolume(hBB=grid.boundingBox)
             rs = o.surfaceRecipe
             if rs :
@@ -3491,7 +3388,7 @@ class Environment(OrganelleList):
                 ingr.vol_nbmol = int(ingr.molarity * onemol)
                 print ("ingr %s has %d points representing %f for one mol thus %d mol" %(ingr.name, ingr.nbPts, onemol, ingr.vol_nbmol))
 #                ingr.vol_nbmol = ?
-        for o in self.organelles:
+        for o in self.compartments:
             rs = o.surfaceRecipe
             if rs :
                 for ingr in rs.ingredients:
@@ -3643,13 +3540,14 @@ class Environment(OrganelleList):
         geom=Geom(vdata)
         geom.addPrimitive(tris)
         #step 4) create the bullet mesh and node
-        mesh = BulletTriangleMesh()
-        mesh.addGeom(geom)    
-        shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape
-        #or
-        #shape = BulletConvexHullShape()
-        #shape.add_geom(geom)
-        print "shape ok",shape
+        if ingr.convex_hull:
+            shape = BulletConvexHullShape()
+            shape.add_geom(geom)
+        else :
+            mesh = BulletTriangleMesh()
+            mesh.addGeom(geom)    
+            shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape            
+        print ("shape ok",shape)
         #inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
         #inodenp.node().setMass(1.0)
         inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
@@ -3682,10 +3580,10 @@ class Environment(OrganelleList):
         
         shape = None
         inodenp = None
-#        print (pMat) 		
+#        print (pMat)         
         if ingr.use_mesh_rb:
             rtype = "Mesh"
-            print "#######RBNode Mesh ####", ingr.name, ingr.rbnode,self.rb_func_dic[rtype]
+            print ("#######RBNode Mesh ####", ingr.name, ingr.rbnode,self.rb_func_dic[rtype])
         inodenp = self.rb_func_dic[rtype](ingr,pMat,trans,rotMat)
         inodenp.setCollideMask(BitMask32.allOn())
         inodenp.node().setAngularDamping(1.0)

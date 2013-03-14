@@ -13,7 +13,7 @@ Created on Fri Jul 20 23:53:00 2012
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFGui.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "AFGui.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -77,8 +77,8 @@ import upy
 uiadaptor = upy.getUIClass()
 
 
-import AutoFill
-AFwrkDir1 = AutoFill.__path__[0]
+import autopack
+AFwrkDir1 = autopack.__path__[0]
 
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -91,11 +91,11 @@ geturl=None
 global OS
 OS = os
 
-from AutoFill.ingr_ui import SphereTreeUI
-from AutoFill.Recipe import Recipe
-from AutoFill.Ingredient import GrowIngrediant,ActinIngrediant
-from AutoFill.autofill_viewer import AFViewer
-from AutoFill import checkURL
+from autopack.ingr_ui import SphereTreeUI
+from autopack.Recipe import Recipe
+from autopack.Ingredient import GrowIngrediant,ActinIngrediant
+from autopack.Graphics import AutopackViewer
+from autopack import checkURL
 from upy.register_user import Register_User_ui
 
 #need a global Dictionary
@@ -103,7 +103,7 @@ from upy.register_user import Register_User_ui
 
 #import here othergui
 #import HIV gui ? specfic or generic AF gui for setup ?
-#from AutoFill.af_script_ui_AFLightSpecific import AFScriptUI require helper load ?
+#from autopack.af_script_ui_AFLightSpecific import AFScriptUI require helper load ?
 class SubdialogGradient(uiadaptor):
     def CreateLayout(self):
         self._createLayout()
@@ -149,7 +149,7 @@ class SubdialogGradient(uiadaptor):
             self.initWidgetEdit()
             self.setupLayoutEdit()
         elif self.mode == "Add":
-            from AutoFill.HistoVol import Gradient
+            from autopack.Environment import Gradient
             self.histoVol.gradients[self.gname] = self.gradient = Gradient(self.gname)
             if self.parent is not None: 
                 self.parent.addItemToPMenu(self.parent.Widget["options"]["gradients"],str(self.gname))
@@ -287,7 +287,7 @@ class SubdialogIngrdient(uiadaptor):
          "packingMode","gradient","placeType",
          "isAttractor","weight","proba_binding","proba_not_binding",
          "cutoff_boundary","cutoff_surface",
-         "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold",]
+         "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold","use_mesh_rb","convex_hull"]
 
         dic={"int":"inputInt","float":"inputFloat","bool":"checkbox","liste":"pullMenu","filename":"inputStr"}
         dic2={"int":"int","float":"float","bool":"int","liste":"int","filename":"str"}  
@@ -460,15 +460,15 @@ class SubdialogCustomFiller(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
-            self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
+            from autopack.Graphics import AutopackViewer
+            self.afviewer = AutopackViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
         else :
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.Environment import Environment
             self.histo = self.histoVol = Environment()
             self.histo.name = self.recipe
             self.afviewer.SetHistoVol(self.histo,20.,display=False)
@@ -489,8 +489,8 @@ class SubdialogCustomFiller(uiadaptor):
         self.LABELS={}
         self.LABELS["intro"] = self._addElemt(name=self.recipe+"_wizard_intro",label="Setup a custom recipe from the outliner custom_setup object",width=120)
         self.LABELS["sOrga"] = self._addElemt(name=self.recipe+"_sOrga",
-                    label="Place an organelle geometry in the Custom setup and click to update the setup",width=180)
-        self.btn_setup_orga=self._addElemt(name="SetupOrganelle",width=100,height=10,
+                    label="Place an compartment geometry in the Custom setup and click to update the setup",width=180)
+        self.btn_setup_orga=self._addElemt(name="SetupCompartment",width=100,height=10,
                          action=self.SetupOrga,type="button",icon=None,
                                      variable=self.addVariable("int",0))
         self.LABELS["setup"] = self._addElemt(name=self.recipe+"_setup",
@@ -508,27 +508,27 @@ class SubdialogCustomFiller(uiadaptor):
         self._layout.append([self.btn_setup])
         
     def SetupOrga (self, *args, **kw):
-        p = self.helper.getObject(self.recipe+'_organelles_name_geometries')
+        p = self.helper.getObject(self.recipe+'_compartments_name_geometries')
         ochild = self.helper.getChilds(p)
         for ob in ochild :
             name = self.helper.getName(ob)
             if name.find("Place") != -1 :
                 continue
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 if o.name == name :
                     #compare to the one already there
                     if o.ref_obj != name : 
-                        self.histoVol.setOrganelleMesh(o,name)
+                        self.histoVol.setCompartmentMesh(o,name)
                         self.afviewer.createOrganelMesh(o)
-            orga = self.afviewer.addOrganelleFromGeom(name,ob)
-            self.histoVol.addOrganelle(orga)
+            orga = self.afviewer.addCompartmentFromGeom(name,ob)
+            self.histoVol.addCompartment(orga)
             self.rSurf[name] = Recipe()
             self.rMatrix[name] = Recipe()
-            self.afviewer.createTemplateOrganelle(name)            
+            self.afviewer.createTemplateCompartment(name)            
 
     def SetupFill (self, *args, **kw):
         #should parse the outlinr to find :            
-        #organelles        
+        #compartments        
         #ingredients
         #histoVolBox
         p = self.helper.getObject(self.recipe+"_Setup")
@@ -539,15 +539,15 @@ class SubdialogCustomFiller(uiadaptor):
 #                print ("object",name)
                 ochild = self.helper.getChilds(c)
                 #first gem
-                if name == self.recipe+'_organelles_name_geometries':                    
+                if name == self.recipe+'_compartments_name_geometries':                    
                     for o in ochild:
                         name = self.helper.getName(o)
                         if name.find("Place") != -1 :
                             continue
                         if name in self.rSurf :
                             continue
-                        orga = self.afviewer.addOrganelleFromGeom(name,o)
-                        self.histoVol.addOrganelle(orga)
+                        orga = self.afviewer.addCompartmentFromGeom(name,o)
+                        self.histoVol.addCompartment(orga)
                         self.rSurf[name] = Recipe()
                         self.rMatrix[name] = Recipe()
                 if name == self.recipe+'_cytoplasm_ingredient':
@@ -561,12 +561,12 @@ class SubdialogCustomFiller(uiadaptor):
                         if mesh is not None :
                             ingr.mesh = mesh
                     self.histoVol.setExteriorRecipe(self.rCyto)
-                if name == self.recipe+'_organelles_recipes':
+                if name == self.recipe+'_compartments_recipes':
                     #we hould have orga_name_recipe, followedby orga_name_surface and matrix
-#                    print ("orga",self.histoVol.organelles)
-                    for orga in self.histoVol.organelles :
+#                    print ("orga",self.histoVol.compartments)
+                    for orga in self.histoVol.compartments :
                         name = orga.name+"_surface"
-#                        print ("organelle",orga,name) 
+#                        print ("compartment",orga,name) 
                         o = self.helper.getObject(name)
                         if o is not None :
                             ingrchild = self.helper.getChilds(o)
@@ -638,15 +638,15 @@ class SubdialogFiller(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
-            self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
+            from autopack.Graphics import AutopackViewer
+            self.afviewer = AutopackViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
         else :
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.Environment import Environment
             self.histo = self.histoVol = Environment()        
         self.parent = None
         if "parent" in kw :
@@ -660,8 +660,8 @@ class SubdialogFiller(uiadaptor):
         self.ingr_added={}
         self.orga_added={}
         self.cleared = False
-        self.gridresultfile = None #AutoFill.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
-        self.setupfile= self.histoVol.setupfile#AutoFill.RECIPES[self.recipe]["setupfile"]
+        self.gridresultfile = None #autopack.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+        self.setupfile= self.histoVol.setupfile#autopack.RECIPES[self.recipe]["setupfile"]
         #define the widget here too
         #getingrname longest
         W=self.histoVol.longestIngrdientName()*5
@@ -804,7 +804,7 @@ class SubdialogFiller(uiadaptor):
                                      
                                      
         self.LABELS["RandomSeed"] = self._addElemt(label="Random seed =",width=50, height=5)  
-        self.LABELS["WelcomeVersionNumber"] = self._addElemt(label="Welcome to autoPACK v"+AutoFill.__version__,width=100, height=5)  
+        self.LABELS["WelcomeVersionNumber"] = self._addElemt(label="Welcome to autoPACK v"+autopack.__version__,width=100, height=5)  
 
         self.seedId = self._addElemt(name='seed',width=30,height=10,
                                               action=None,type="inputFloat",icon=None,
@@ -871,15 +871,15 @@ class SubdialogFiller(uiadaptor):
 
     def getFunctionForWidgetCallBackInclude(self,oname,rname,i):
         #inr_cb = self.getFunctionForWidgetCallBack(ingr)
-        #def toggleIngrIncOrganelle():                    
+        #def toggleIngrIncCompartment():                    
             #includeTog  = self.getVal(self.ingr_include[o.name+"surface"])
             #self.togleRecipeIngrInc(rs,includeTog)         
         aStr  = "def toggleIngrInc"+oname+rname+"(*args):\n"
         aStr +="\tincludeTog  = gui.getVal(gui.ingr_include['"+oname+rname+"'])\n"
         if rname =="surface" :
-            recipe = "gui.histoVol.organelles["+str(i)+"].surfaceRecipe"
+            recipe = "gui.histoVol.compartments["+str(i)+"].surfaceRecipe"
         else :
-            recipe = "gui.histoVol.organelles["+str(i)+"].innerRecipe"
+            recipe = "gui.histoVol.compartments["+str(i)+"].innerRecipe"
         aStr +="\tgui.togleRecipeIngrInc("+recipe+",includeTog)\n"#print("+ingr.name+","+ingr.name+".name)\n
         #code_local = compile(aStr, '<string>', 'exec')
         l_dict={}#{ingr.name:ingr,"gui":self}
@@ -900,8 +900,8 @@ class SubdialogFiller(uiadaptor):
         self.ingr_priority={}
         self.ingr_advanced={} 
         self.ingr_vol_nbmol={} 
-        self.Widget["organelles_mesh"]={}   
-        self.Widget["organelles_overw"]={}
+        self.Widget["compartments_mesh"]={}   
+        self.Widget["compartments_overw"]={}
         
         self.LABELS["fbox"]=self._addElemt(name="fbox",label="Set Filling Box to Object named:",width=120)
         self.fbox_name=self._addElemt(name=self.recipe+"fbox",action=None,width=100,
@@ -948,14 +948,14 @@ class SubdialogFiller(uiadaptor):
                             width=self.wicolumn[0],height=10,
                             action=self.toggleIngrIncExterior,type="checkbox",icon=None,
                             variable=self.addVariable("int",1),value=1)                             
-        for i,o in enumerate(self.histoVol.organelles):
+        for i,o in enumerate(self.histoVol.compartments):
             self.LABELS[o.name] = self._addElemt(name="orgalabel",label="Set %s %s to object named :"%(self.recipe, o.name),width=120)#,height=50)
-            self.Widget["organelles_mesh"][o.name]=self._addElemt(name=o.name+"mesh",action=None,width=100,
+            self.Widget["compartments_mesh"][o.name]=self._addElemt(name=o.name+"mesh",action=None,width=100,
                           value=o.ref_obj,type="inputStr",variable=self.addVariable("str",o.ref_obj)) 
             
-            self.Widget["organelles_overw"][o.name]=self._addElemt(name="overwriteSurfacePts "+o.name,
+            self.Widget["compartments_overw"][o.name]=self._addElemt(name="overwriteSurfacePts "+o.name,
                             width=self.wicolumn[0],height=10,
-                            action=self.toggleoverWOrganelle,type="checkbox",icon=None,
+                            action=self.toggleoverWCompartment,type="checkbox",icon=None,
                             variable=self.addVariable("int",1),value=1)
               
             self.LABELS[o.name+"surface"+"_ingr"] = self._addElemt(name="ingrorgalabel",label="Setup ingredient for %s %s surface"%(self.recipe, o.name),width=120)#,height=50)
@@ -1050,11 +1050,11 @@ class SubdialogFiller(uiadaptor):
         elemFrame.append([self.LABELS["fbox"],self.fbox_name])
         
 #        elemFrame.append(self.LABELSINGR)
-        for o in self.histoVol.organelles:
-            #each organelle
+        for o in self.histoVol.compartments:
+            #each compartment
             subelem=[]
-            subelem.append([self.LABELS[o.name],self.Widget["organelles_mesh"][o.name]])
-            subelem.append([self.Widget["organelles_overw"][o.name],])
+            subelem.append([self.LABELS[o.name],self.Widget["compartments_mesh"][o.name]])
+            subelem.append([self.Widget["compartments_overw"][o.name],])
             subelem.append([self.LABELS[o.name+"surface"+"_ingr"] ])#,self.ingr_include[o.name+"surface"]])
             rs =  o.surfaceRecipe
             if rs :
@@ -1145,7 +1145,7 @@ class SubdialogFiller(uiadaptor):
         ingr.ipoly = None
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
         if self.afviewer.doSpheres :
-            orga = ingr.recipe().organelle()
+            orga = ingr.recipe().compartment()
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
 #            print (name,parent)            
@@ -1162,7 +1162,7 @@ class SubdialogFiller(uiadaptor):
                 self.helper.deleteObject(parent)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().organelle()
+            o = ingr.recipe().compartment()
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
@@ -1193,9 +1193,9 @@ class SubdialogFiller(uiadaptor):
     def clearOrgaAdded(self,):
         for oname in self.orga_added:
             o=self.orga_added[oname]
-            if o in self.histoVol.organelles:
-                i = self.histoVol.organelles.index(o)
-                self.histoVol.organelles.pop(o)
+            if o in self.histoVol.compartments:
+                i = self.histoVol.compartments.index(o)
+                self.histoVol.compartments.pop(o)
                 del o
         self.orga_added={}
                 
@@ -1207,7 +1207,7 @@ class SubdialogFiller(uiadaptor):
                     i = self.histoVol.exteriorRecipe.ingredients.index(ingr)
                     self.histoVol.exteriorRecipe.ingredients.pop(i)
                     del ingr
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 if o.surfaceRecipe:
                     if ingr in o.surfaceRecipe.ingredients:
                         i = o.surfaceRecipe.ingredients.index(ingr)
@@ -1251,7 +1251,7 @@ class SubdialogFiller(uiadaptor):
             point = self.helper.getChilds(parent)
             [self.helper.deleteObject(o) for o in point]
         
-        for orga in self.histoVol.organelles:  
+        for orga in self.histoVol.compartments:  
             parent = self.helper.getObject(orga.name+"GridPointHider")
             if parent is not None :
                 point = self.helper.getChilds(parent)
@@ -1275,7 +1275,7 @@ class SubdialogFiller(uiadaptor):
             includeTog  = self.getVal(self.ingr_include["cytoplasm"])
             r =  self.histoVol.exteriorRecipe
             self.togleRecipeIngrInc(r,includeTog)
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
             rs =  o.surfaceRecipe
             if rs :                
                 includeTog  = self.getVal(self.ingr_include[o.name+"surface"])
@@ -1300,7 +1300,7 @@ class SubdialogFiller(uiadaptor):
             if wkey.find("cytoplasm") != -1 :#or  wkey.find("surface") != -1 or wkey.find("matrix") != -1:
                 continue
             c=False
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 if wkey == o.name+"surface" or wkey == o.name+"matrix":
                     c=True
             if c : continue
@@ -1331,23 +1331,23 @@ class SubdialogFiller(uiadaptor):
             if wname == "gradients" :
                 continue
             self.setVal(w,v)
-        for o in self.histoVol.organelles:
-            if o.name in self.Widget["organelles_mesh"]:
-                self.setVal(self.Widget["organelles_mesh"][o.name],o.ref_obj)
+        for o in self.histoVol.compartments:
+            if o.name in self.Widget["compartments_mesh"]:
+                self.setVal(self.Widget["compartments_mesh"][o.name],o.ref_obj)
 
-    def toggleoverWOrganelle(self,*args):
-        for o in self.histoVol.organelles:
-            if o.name in self.Widget["organelles_overw"]:
-                v = self.getVal(self.Widget["organelles_overw"][o.name])
+    def toggleoverWCompartment(self,*args):
+        for o in self.histoVol.compartments:
+            if o.name in self.Widget["compartments_overw"]:
+                v = self.getVal(self.Widget["compartments_overw"][o.name])
                 o.overwriteSurfacePts = v
                 
     def updateOMesh_cb(self,oname,meshname,o=None):
         if o == None :
-            for orga in self.histoVol.organelles:
+            for orga in self.histoVol.compartments:
                 if orga.name == oname :
                     o = orga
         if o.ref_obj != meshname : 
-            self.histoVol.setOrganelleMesh(o,meshname)
+            self.histoVol.setCompartmentMesh(o,meshname)
             self.afviewer.createOrganelMesh(o)#overwrite if already..user should backup        
 
     def applyWidgetValue(self):
@@ -1361,13 +1361,13 @@ class SubdialogFiller(uiadaptor):
 #            print (wname,v)
             self.setVal(w,v)
         self.histoVol.rejectionThreshold= 1000
-        #check organelle mesh
-        for o in self.histoVol.organelles:
-            if o.name in self.Widget["organelles_mesh"]:
-                meshname = self.getVal(self.Widget["organelles_mesh"][o.name])
+        #check compartment mesh
+        for o in self.histoVol.compartments:
+            if o.name in self.Widget["compartments_mesh"]:
+                meshname = self.getVal(self.Widget["compartments_mesh"][o.name])
                 #compare to the one already there
                 if o.ref_obj != meshname and meshname != "None" and meshname != "": 
-                    self.histoVol.setOrganelleMesh(o,meshname)
+                    self.histoVol.setCompartmentMesh(o,meshname)
                     self.afviewer.createOrganelMesh(o)#overwrite if already..user should backup
         #applyd option to all ingrdients
         #ingr_molarity
@@ -1379,7 +1379,7 @@ class SubdialogFiller(uiadaptor):
         if recipe is None :
             array = self.histoVol.molecules
         else :
-            array = recipe.organelle().molecules
+            array = recipe.compartment().molecules
         
         if self.helper.getType(hostobj) == self.helper.EMPTY:
             if not self.getVal(self.Widget["options"]["prevIngr"]):
@@ -1443,7 +1443,7 @@ class SubdialogFiller(uiadaptor):
 #                print (c, self.helper.getName(c),self.helper.getType(c))
                 if self.guimode != "Simple" and self.guimode != "Intermediate":
                     self.addOnePrevIngr(c)
-        for i,o in enumerate(self.histoVol.organelles):
+        for i,o in enumerate(self.histoVol.compartments):
             if o.surfaceRecipe :
                 p = self.helper.getObject(self.recipe+"_PreviousIngr"+o.name+"_surface")
                 childs = self.helper.getChilds(p)
@@ -1466,22 +1466,22 @@ class SubdialogFiller(uiadaptor):
         childs = self.helper.getChilds(p)
         if childs is not None :
             for c in childs :
-                #create and add an organelle to the system
+                #create and add an compartment to the system
                 cname = self.helper.getName(c)
                 vertices, faces, vnormals = self.histoVol.extractMeshComponent(c)
                 found = False 
                 o=None
-                for o in self.histoVol.organelles :
+                for o in self.histoVol.compartments :
                     if o.name == cname :
                         found = True
                         break
                 if not found :
-                    from AutoFill.Organelle import Organelle
-                    o = Organelle(cname,vertices, faces, vnormals,ref_obj=cname)
-                    self.histoVol.addOrganelle(o)
+                    from autopack.Compartment import Compartment
+                    o = Compartment(cname,vertices, faces, vnormals,ref_obj=cname)
+                    self.histoVol.addCompartment(o)
                     self.orga_added[cname]=o
 #            else :
-#                self.histoVol.setOrganelleMesh(o,cname)
+#                self.histoVol.setCompartmentMesh(o,cname)
 #                self.afviewer.createOrganelMesh(o)#this will update the mesh
 
     def updateNBMOL(self,*args):
@@ -1543,17 +1543,17 @@ class SubdialogFiller(uiadaptor):
     def fillGrid_cb(self,seed,bname,fbox_name,pFill,pIngr,fbuild,doPts=False,
 				doSphere=False):
 #        if self.gridresultfile == None :
-#            if self.recipe in AutoFill.RECIPES:
-#                self.gridresultfile = AutoFill.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+#            if self.recipe in autopack.RECIPES:
+#                self.gridresultfile = autopack.RECIPES[self.recipe]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
 #            else : 
 #                self.gridresultfile = self.histoVol.gridresultfile
-#            print (self.recipe,AutoFill.RECIPES[self.recipe]["wrkdir"])
+#            print (self.recipe,autopack.RECIPES[self.recipe]["wrkdir"])
 #            print (self.gridresultfile)
 #        print "grid"
-        if self.recipe in AutoFill.RECIPES and self.recipe_version in AutoFill.RECIPES[self.recipe]:
-            self.gridresultfile = AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
-            if not os.path.isdir(AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results") :
-                os.makedirs(AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results")                
+        if self.recipe in autopack.RECIPES and self.recipe_version in autopack.RECIPES[self.recipe]:
+            self.gridresultfile = autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+            if not os.path.isdir(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results") :
+                os.makedirs(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results")                
         else :
             self.gridresultfile =  self.grid_filename#or grid_filename?
  
@@ -1585,12 +1585,6 @@ class SubdialogFiller(uiadaptor):
         if pIngr :
             pFill = True
             self.checkAndGetPrevIngredient()
-#            previngr.completion = 1.1 or 2 ?
-#            previngr.nbMol = 0
-#            previngr.counter = 0
-#            previngr.histoVol = h
-#            previngr.vi = afviewer.vi
-#            afviewer.appendIngrInstance(previngr,sel = previngrInstance,bb=bb)
         if fbuild :
             gridFileOut=self.gridresultfile
         else :
@@ -1599,7 +1593,7 @@ class SubdialogFiller(uiadaptor):
         self.histoVol.buildGrid(boundingBox=bb,gridFileIn=gridFileIn,rebuild=fbuild ,
                       gridFileOut=gridFileOut,previousFill=pFill)
         #should use some cache for the box here,maybe compreto current one
-#        self.afviewer.displayOrganellesPoints() # this is optional and should not be called here
+#        self.afviewer.displayCompartmentsPoints() # this is optional and should not be called here
 #        print "fill"
         t1 = time()
         #if rigidbody need some code
@@ -1665,7 +1659,7 @@ class SubdialogFiller(uiadaptor):
         self.setupfile=filename
         
     def save(self,*args):
-        filename= AutoFill.RECIPES[self.recipe]["setupfile"]
+        filename= autopack.RECIPES[self.recipe]["setupfile"]
         if filename.find(".py") != -1 :
             self.saveDialog(label="choose a xml file",callback=self.savexml)
             return
@@ -1678,24 +1672,24 @@ class SubdialogFiller(uiadaptor):
         n,v = name.split(" ")
         name = n
         version = v
-        if name not in AutoFill.USER_RECIPES:
-            AutoFill.USER_RECIPES[name]={}
-            if version not in AutoFill.USER_RECIPES[name] :
-                AutoFill.USER_RECIPES[name][version]={}
-        AutoFill.USER_RECIPES[name][version]["setupfile"]=self.setupfile
-        AutoFill.USER_RECIPES[name][version]["resultfile"]=self.getVal(self.Widget["options"]["resultfile"])
-        AutoFill.USER_RECIPES[name][version]["wrkdir"]=os.path.abspath(self.getVal(self.Widget["options"]["resultfile"]))
-        AutoFill.saveRecipeAvailable(AutoFill.USER_RECIPES,AutoFill.recipe_user_pref_file)
-#        relem=AutoFill.XML.createElement("recipe")
+        if name not in autopack.USER_RECIPES:
+            autopack.USER_RECIPES[name]={}
+            if version not in autopack.USER_RECIPES[name] :
+                autopack.USER_RECIPES[name][version]={}
+        autopack.USER_RECIPES[name][version]["setupfile"]=self.setupfile
+        autopack.USER_RECIPES[name][version]["resultfile"]=self.getVal(self.Widget["options"]["resultfile"])
+        autopack.USER_RECIPES[name][version]["wrkdir"]=os.path.abspath(self.getVal(self.Widget["options"]["resultfile"]))
+        autopack.saveRecipeAvailable(autopack.USER_RECIPES,autopack.recipe_user_pref_file)
+#        relem=autopack.XML.createElement("recipe")
 #        relem.setAttribute("name",name)
-#        AutoFill.XML.documentElement.appendChild(relem)
+#        autopack.XML.documentElement.appendChild(relem)
 #        for l in ["setupfile","resultfile","wrkdir"]:
-#            node = AutoFill.XML.createElement(l)
-#            data = AutoFill.XML.createTextNode(AutoFill.RECIPES[name][version][l])
+#            node = autopack.XML.createElement(l)
+#            data = autopack.XML.createTextNode(autopack.RECIPES[name][version][l])
 #            node.appendChild(data)
 #            relem.appendChild(node)
-#        f = open(AutoFill.recipe_user_pref_file,"w")        
-#        AutoFill.XML.writexml(f, indent="\t", addindent="", newl="\n")
+#        f = open(autopack.recipe_user_pref_file,"w")        
+#        autopack.XML.writexml(f, indent="\t", addindent="", newl="\n")
 #        f.close()
         #update the pent menu, so no need to restart
         self.parent.addItemToPMenu(self.parent.WidgetViewer["menuscene"],name)
@@ -1801,7 +1795,7 @@ class SubdialogIngredientViewer(uiadaptor):
     def applySetting(self,*args):
         res  = self.getVal(self.ingr_resolution) 
         geom = self.getVal(self.ingr_basegeom)
-        #switch using autofill_viewer
+        #switch using Graphics
         #compare geom to current
 #        if geom != self.ingr_basegeom_default:
         if geom == "" :
@@ -1842,15 +1836,15 @@ class SubdialogViewer(uiadaptor):
         if "afviewer" in kw :
             self.afviewer = kw["afviewer"]
         else :
-            from AutoFill.autofill_viewer import AFViewer
-            self.afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
+            from autopack.Graphics import AutopackViewer
+            self.afviewer = AutopackViewer(ViewerType=self.host,helper=self.helper)
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
         else :
             self.histoVol = None
         if self.histoVol is None :
             # create HistoVol
-            from AutoFill.HistoVol import Environment
+            from autopack.Environment import Environment
             self.histo = self.histoVol = Environment()        
         self.guimode = "Advanced"
         if "guimode" in kw :
@@ -1880,7 +1874,7 @@ class SubdialogViewer(uiadaptor):
         
         #second setup the histoVol that will decribe the recipe from 2 files:
         #thi should actuallu go in the main AFGui as reused in Filler
-        #- recipe : organelle and ingredient   : execfile or textfile to parse ?  
+        #- recipe : compartment and ingredient   : execfile or textfile to parse ?  
         #displayPreFill
         #- result file
         W=self.histoVol.longestIngrdientName()*5
@@ -1939,7 +1933,7 @@ class SubdialogViewer(uiadaptor):
         if len(self.histoVol.ingr_result):# is not None :
             self.ingredients =self.histoVol.ingr_result
             return
-        fname = AutoFill.RECIPES[self.recipe][self.recipe_version]["resultfile"]
+        fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
         print ("loadResult ",fname,) 
         if fname.find("http") != -1 or fname.find("ftp") != -1:
             #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
@@ -1973,8 +1967,8 @@ class SubdialogViewer(uiadaptor):
         buildGrid=None
         gridFileOut=None
         #the gridfile in ? shoud it be in the histoVol from the xml
-        if self.recipe in AutoFill.RECIPES:
-            gridFileIn=AutoFill.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+        if self.recipe in autopack.RECIPES:
+            gridFileIn=autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
         else :
             gridFileIn = self.grid_filename#or grid_filename?
 #        1 ("gridFileIn check ",gridFileIn)
@@ -2040,7 +2034,7 @@ class SubdialogViewer(uiadaptor):
     def oneRecipeColumnLabel(self,rname):
 #        if self.helper.host.find("maya") == 1:
         hostWidth = 60
-        if AutoFill.helper.host == 'maya':
+        if autopack.helper.host == 'maya':
             hostWidth = 30
         a="hfit"
         self.LABELS[rname+"columns"]={}
@@ -2103,7 +2097,7 @@ class SubdialogViewer(uiadaptor):
         hostWidth = 60
         a="hfit"
         self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="%s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
-        if AutoFill.helper.host == 'maya':
+        if autopack.helper.host == 'maya':
                 hostWidth = 30
                 self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="   %s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"build")
@@ -2117,7 +2111,7 @@ class SubdialogViewer(uiadaptor):
                     action=inr_cb,type="checkbox",icon=None,#self.toggleOrganelDisplay
                     variable=self.addVariable("int",1),value=self._show,label="----")
         hostWidth = 75
-        if AutoFill.helper.host == 'maya':
+        if autopack.helper.host == 'maya':
             hostWidth = 30
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"primitive")
         self.ingr_display_primitive[ingr.name] = self._addElemt(name=ingr.name+'DisplayPrimitive',
@@ -2135,7 +2129,7 @@ class SubdialogViewer(uiadaptor):
 #                    type="inputStr",variable=self.addVariable("str","")) 
         inr_cb = self.getFunctionForWidgetCallBack(ingr)
         hostWidth = 42
-        if AutoFill.helper.host == 'maya':
+        if autopack.helper.host == 'maya':
             hostWidth = 25
         self.ingr_advanced[ingr.name] = self._addElemt(name="Edit",action=inr_cb,width=hostWidth,height=10,
                 type="button",variable=self.addVariable("int",0),alignement=a) 
@@ -2149,7 +2143,7 @@ class SubdialogViewer(uiadaptor):
         self.ingr_resolution={}
         self.ingr_basegeom={}
         self.ingr_advanced={}
-        self.organelles_display={}# if self.histoVol is None else [o.name for o in self.histoVol.organelles]
+        self.compartments_display={}# if self.histoVol is None else [o.name for o in self.histoVol.compartments]
           
         #Ingredient        Build        Display: Geometry   SphereTree       Geometry Resolution  
 #        self.LABELS["points"]=self._addElemt(name=self.recipe+"points",label="Points",width=120)
@@ -2172,7 +2166,7 @@ class SubdialogViewer(uiadaptor):
 
         self.listeRes=["High","Med","Low"]
 #        self.LABELS["cytoplasm"] = self._addElemt(name=self.recipe+"cyto",label="Exterior",width=120)#,height=50)
-        self.listWidget["cytoplasm_ingr"] = self.organelles_display["cytoplasm"] = self._addElemt(name='Display exterior ingredients',
+        self.listWidget["cytoplasm_ingr"] = self.compartments_display["cytoplasm"] = self._addElemt(name='Display exterior ingredients',
                                     width=120,height=10,
                                       action=self.toggleCytoplasmeDisplay,type="checkbox",icon=None,
                                       variable=self.addVariable("int",1),value=self._show,
@@ -2184,28 +2178,28 @@ class SubdialogViewer(uiadaptor):
             for ingr in r.ingredients:
                 self.oneIngredientWidget(ingr)
         
-        for o in self.histoVol.organelles:
-            self.LABELS[o.name] = self._addElemt(name="orgalabel",label="Organelle #%d:%s"%(o.number,o.name),width=120)#,height=50)
-            self.organelles_display['%s_%s'%(o.name,"Mesh")] = self._addElemt(name='Display %s Geom'%(o.name),
+        for o in self.histoVol.compartments:
+            self.LABELS[o.name] = self._addElemt(name="orgalabel",label="Compartment #%d:%s"%(o.number,o.name),width=120)#,height=50)
+            self.compartments_display['%s_%s'%(o.name,"Mesh")] = self._addElemt(name='Display %s Geom'%(o.name),
                                                 width=120,height=10,
                                               action=self.toggleOrganelGeomDisplay,type="checkbox",icon=None,
                                               variable=self.addVariable("int",0),value=0,label="Display %s packing surface"%(o.name))
             toggle = 1
 #            if o.representation is None:
 #                toggle = 0
-            self.organelles_display['%s_%s'%(o.name,"Rep")] = self._addElemt(name='Display %s Rep'%(o.name),width=135,height=10,
+            self.compartments_display['%s_%s'%(o.name,"Rep")] = self._addElemt(name='Display %s Rep'%(o.name),width=135,height=10,
                                               action=self.toggleOrganelRepDisplay,type="checkbox",icon=None,
                                               variable=self.addVariable("int",toggle),value=toggle,
                                             label="Display %s surface representation"%(o.name))
 
             #for e in ["Matrix","Surface"]:
-            self.organelles_display['%s_%s'%(o.name,"Matrix")] = self._addElemt(name='Display %s_%s Ingredients'%(o.name,"Matrix"),
+            self.compartments_display['%s_%s'%(o.name,"Matrix")] = self._addElemt(name='Display %s_%s Ingredients'%(o.name,"Matrix"),
                                             width=120,height=10,
                                               action=self.toggleOrganelMatrixDisplay,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=self._show,
                                                 label = 'Show all %s %s Ingredients'%(o.name,"Matrix"))
             
-            self.organelles_display['%s_%s'%(o.name,"Surface")] = self._addElemt(name='Display %s_%s Ingredients'%(o.name,"Surface"),
+            self.compartments_display['%s_%s'%(o.name,"Surface")] = self._addElemt(name='Display %s_%s Ingredients'%(o.name,"Surface"),
                                             width=120,height=10,
                                               action=self.toggleOrganelSurfaceDisplay,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=self._show,
@@ -2284,19 +2278,19 @@ class SubdialogViewer(uiadaptor):
             frame = self._addLayout(id=196,name="Advanced display options "+self.recipe,elems=elemFrame,collapse=False)#,type="tab")
             self._layout.append(frame)
         
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
             elemFrame=[]  
-            elemFrame.append([self.organelles_display['%s_Rep'%(o.name)],])
+            elemFrame.append([self.compartments_display['%s_Rep'%(o.name)],])
             if self.guimode == "Advanced" or self.guimode == "Debug":
-                elemFrame.append([self.organelles_display['%s_Mesh'%(o.name)],]) 
+                elemFrame.append([self.compartments_display['%s_Mesh'%(o.name)],]) 
             rs =  o.surfaceRecipe
             if rs and len(rs.ingredients):
-                elemFrame.append([self.organelles_display['%s_Surface'%(o.name)],])  #self.LABELS[o.name],                       
+                elemFrame.append([self.compartments_display['%s_Surface'%(o.name)],])  #self.LABELS[o.name],                       
                 elemFrame.extend(self.layout_oneRecipe(rs,o.name+"Surface"))
             
             ri =  o.innerRecipe
             if ri and len(ri.ingredients):
-                elemFrame.append([self.organelles_display['%s_Matrix'%(o.name)],]) #self.LABELS[o.name],
+                elemFrame.append([self.compartments_display['%s_Matrix'%(o.name)],]) #self.LABELS[o.name],
                 elemFrame.extend(self.layout_oneRecipe(ri,o.name+"Matrix"))        
             frame = self._addLayout(id=196,name="Compartment #%d: %s"%(o.number,o.name),
                                     elems=elemFrame,collapse=False,scrolling=True)#,type="tab")
@@ -2305,7 +2299,7 @@ class SubdialogViewer(uiadaptor):
         r =  self.histoVol.exteriorRecipe
         if r and len(r.ingredients):
             elemFrame=[]              
-            elemFrame.append([self.organelles_display['cytoplasm']])
+            elemFrame.append([self.compartments_display['cytoplasm']])
             elemFrame.extend(self.layout_oneRecipe(r,'cytoplasm'))           
             frame = self._addLayout(id=196,name="Cytoplasm "+self.recipe,
                                     elems=elemFrame,collapse=False,scrolling=True)#,type="tab")
@@ -2318,7 +2312,7 @@ class SubdialogViewer(uiadaptor):
     def delIngrPrim(self,ingr):
         if hasattr(ingr,"isph") : ingr.isph = None
         if hasattr(ingr,"icyl") : ingr.icyl = None
-        orga = ingr.recipe().organelle()
+        orga = ingr.recipe().compartment()
         name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
         parent = self.helper.getObject(name)
 #        print (name,parent)            
@@ -2353,7 +2347,7 @@ class SubdialogViewer(uiadaptor):
         ingr.ipoly = None
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
         if self.afviewer.doSpheres :
-            orga = ingr.recipe().organelle()
+            orga = ingr.recipe().compartment()
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
 #            print (name,parent)            
@@ -2370,7 +2364,7 @@ class SubdialogViewer(uiadaptor):
                 self.helper.deleteObject(parent)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().organelle()
+            o = ingr.recipe().compartment()
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
@@ -2391,7 +2385,7 @@ class SubdialogViewer(uiadaptor):
 #            self.delIngrPrim(ingr)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().organelle()
+            o = ingr.recipe().compartment()
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
@@ -2444,7 +2438,7 @@ class SubdialogViewer(uiadaptor):
                 freePoint = self.histoVol.loadFreePoint(self.result_filame)
                 self.histoVol.restoreGridFromFile(self.result_filame+"grid")#restore grid distance and ptId
                 self.histoVol.restoreFreePoints(freePoints)
-            self.afviewer.displayOrganellesPoints()
+            self.afviewer.displayCompartmentsPoints()
             self.afviewer.displayFreePoints()
         
     def toggleLipidsDisplay(self,*args):
@@ -2469,24 +2463,24 @@ class SubdialogViewer(uiadaptor):
     def toggleOrganelGeomDisplay(self,*args):
         #too slow for blender...
         #check if they are build prior to toggle the display.
-        for o in self.histoVol.organelles:
-            toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,"Mesh")])                
+        for o in self.histoVol.compartments:
+            toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,"Mesh")])                
             self.helper.toggleDisplay('%s_%s'%(o.name,"Mesh"),toggle)
 
     def toggleOrganelRepDisplay(self,*args):
         #too slow for blender...
         #check if they are build prior to toggle the display.
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
             if o.representation is not None :
                 e="Rep"
-                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,e)])                
+                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,e)])                
                 self.helper.toggleDisplay('%s_%s'%(o.name,e),toggle)
 
     def toggleOrganelSurfaceDisplay(self,*args):
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
             rs =  o.surfaceRecipe
             if rs :
-                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,"Surface")])
+                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,"Surface")])
                 for ingr in rs.ingredients:
                     self.setVal(self.ingr_display[ingr.name],toggle)
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
@@ -2496,10 +2490,10 @@ class SubdialogViewer(uiadaptor):
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle)
 
     def toggleOrganelMatrixDisplay(self,*args):
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
             ri =  o.innerRecipe
             if ri :
-                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,"Matrix")])
+                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,"Matrix")])
                 for ingr in ri.ingredients:
                     self.setVal(self.ingr_display[ingr.name],toggle)
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
@@ -2509,7 +2503,7 @@ class SubdialogViewer(uiadaptor):
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
                     
     def toggleCytoplasmeDisplay(self,*args):
-        toggle = self.getVal(self.organelles_display['cytoplasm'])
+        toggle = self.getVal(self.compartments_display['cytoplasm'])
 #        self.helper.toggleDisplay(self.recipe+"_cytoplasm",toggle)
         r =  self.histoVol.exteriorRecipe
         if r :
@@ -2525,13 +2519,13 @@ class SubdialogViewer(uiadaptor):
     def toggleOrganelDisplay(self,*args):
         #too slow for blender...
         #check if they are build prior to toggle the display.
-        for o in self.histoVol.organelles:
+        for o in self.histoVol.compartments:
 #            for e in ["Rep","Mesh","Matrix","Surface"]:
-#                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,e)])
+#                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,e)])
 #                self.helper.toggleDisplay('%s_%s'%(o.name,e),toggle,child=False)#blender go recursif
             rs =  o.surfaceRecipe
             if rs :
-                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,"Surface")])
+                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,"Surface")])
                 for ingr in rs.ingredients:
                     self.setVal(self.ingr_display[ingr.name],toggle)
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
@@ -2541,7 +2535,7 @@ class SubdialogViewer(uiadaptor):
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle)
             ri =  o.innerRecipe
             if ri :
-                toggle = self.getVal(self.organelles_display['%s_%s'%(o.name,"Matrix")])
+                toggle = self.getVal(self.compartments_display['%s_%s'%(o.name,"Matrix")])
                 for ingr in ri.ingredients:
                     print (ingr,toggle,self.afviewer.orgaToMasterGeom[ingr])
                     self.setVal(self.ingr_display[ingr.name],toggle)
@@ -2550,7 +2544,7 @@ class SubdialogViewer(uiadaptor):
                         self.setVal(self.ingr_build[ingr.name],toggle)
                         self.buildIngredient(ingr.name,togglePrimitive)
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
-        toggle = self.getVal(self.organelles_display['cytoplasm'])
+        toggle = self.getVal(self.compartments_display['cytoplasm'])
 #        self.helper.toggleDisplay(self.recipe+"_cytoplasm",toggle)
         r =  self.histoVol.exteriorRecipe
         if r :
@@ -2604,7 +2598,7 @@ class SubdialogViewer(uiadaptor):
         print (args)
         
 
-class AFGui(uiadaptor):
+class AutoPackGui(uiadaptor):
     #savedialog dont work
     __url__=["http://autopack.org",
              "http://autopack.org/documentation/autofill-api",
@@ -2613,7 +2607,7 @@ class AFGui(uiadaptor):
              #  "https://sites.google.com/site/autofill21/documentation/autofill-api",
     ]
     def setup(self,id=None,rep="",host="",**kw):
-        self.title = "autoPACK"#+" "+AutoFill.__version__#+self.mol.name
+        self.title = "autoPACK"#+" "+autopack.__version__#+self.mol.name
         #witdh=350
         self.h=130
         self.w=250
@@ -2627,9 +2621,9 @@ class AFGui(uiadaptor):
         if "vi" in kw :
             vi = kw["vi"]
         self.helper = upy.getHelperClass()(vi=vi)
-        AutoFill.helper = self.helper
+        autopack.helper = self.helper
         self.histoVol={}
-        self.recipe_available = AutoFill.RECIPES
+        self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
         self.initWidget()
         self.setupLayout()
@@ -2656,8 +2650,8 @@ class AFGui(uiadaptor):
             if "afviewer" in kw :
                 self.histoVol[name].afviewer = kw["afviewer"]
             else :
-                from AutoFill.autofill_viewer import AFViewer
-                self.histoVol[name].afviewer = AFViewer(ViewerType=self.host,helper=self.helper)
+                from autopack.Graphics import AutopackViewer
+                self.histoVol[name].afviewer = AutopackViewer(ViewerType=self.host,helper=self.helper)
         else :
             self.histoVol[name] = None
         if "bbox" in kw : 
@@ -2665,16 +2659,16 @@ class AFGui(uiadaptor):
 
     def compareMessage(self,messag):
         draw = False
-        if messag != AutoFill.messag:
-            f = open(AutoFill.afdir+os.sep+"__init__.py","r")
+        if messag != autopack.messag:
+            f = open(autopack.afdir+os.sep+"__init__.py","r")
             text = f.read()
             f.close()
-            text = text.replace("messag = '''"+str(AutoFill.messag)+"'''","messag = '''"+str(messag)+"'''")
-            f = open(AutoFill.afdir+os.sep+"__init__.py","w")        
+            text = text.replace("messag = '''"+str(autopack.messag)+"'''","messag = '''"+str(messag)+"'''")
+            f = open(autopack.afdir+os.sep+"__init__.py","w")        
             f.write(text)        
             f.close()
             draw = True
-        AutoFill.messag = messag
+        autopack.messag = messag
         return draw
         
     def onlinMessage(self,*args):
@@ -2738,7 +2732,7 @@ class AFGui(uiadaptor):
             self.setupMenu()
 
         self.LABELGMODE  = self._addElemt(label="GUI mode",width=100, height=5)
-        self.LABELSV = self._addElemt(label="Welcome to autoPACK v"+AutoFill.__version__,width=100, height=5)
+        self.LABELSV = self._addElemt(label="Welcome to autoPACK v"+autopack.__version__,width=100, height=5)
         self.list_gmode = ["Simple","Intermediate","Advanced","Debug"]
         self.gmode = self._addElemt(name="guimode",
                                     value=self.list_gmode,
@@ -2749,7 +2743,7 @@ class AFGui(uiadaptor):
                                             label="Check for latest recipes at startup (takes effect after host restart)",
                                             width=150,height=10,
                                               action=self.toggleCheckLatestRecipe,type="checkbox",icon=None,
-                                              variable=self.addVariable("int",int(AutoFill.checkAtstartup)),value=AutoFill.checkAtstartup)
+                                              variable=self.addVariable("int",int(autopack.checkAtstartup)),value=autopack.checkAtstartup)
         if self.host.find("blender") != -1 :
             self.use_dupli_vert = self._addElemt(name="useDupli",
                                             label="use vertex instance vs individual instance (only Blender for now)",
@@ -2899,12 +2893,12 @@ class AFGui(uiadaptor):
 
 
     def UpdateRecipesList(self,*args):
-        AutoFill.checkRecipeAvailable()
-        AutoFill.updateRecipAvailable(AutoFill.recipe_web_pref_file)
-        AutoFill.updateRecipAvailable(AutoFill.recipe_user_pref_file)
+        autopack.checkRecipeAvailable()
+        autopack.updateRecipAvailable(autopack.recipe_web_pref_file)
+        autopack.updateRecipAvailable(autopack.recipe_user_pref_file)
         #update menu
-        self.recipe_available = AutoFill.RECIPES
-        liste_recipe = list(AutoFill.RECIPES.keys())
+        self.recipe_available = autopack.RECIPES
+        liste_recipe = list(autopack.RECIPES.keys())
         self.ListCurrentSet = list(liste_recipe)#["HIV_x_x","Synaptic_Vesicle","Cytoplasme","SimpleSpheres"]["HIV","BloodSerum","GenericCytoplasm"]#,"SynapticVesicle"]#
 #        self.ListCurrentSet.sort()
 #        self.ListCurrentSet.append("Load")
@@ -2923,14 +2917,14 @@ class AFGui(uiadaptor):
         
 
     def toggleCheckLatestRecipe_cb(self,toggle):
-        f = open(AutoFill.afdir+os.sep+"__init__.py","r")
+        f = open(autopack.afdir+os.sep+"__init__.py","r")
         text = f.read()
         f.close()
         text = text.replace("checkAtstartup = False","checkAtstartup = "+str(toggle))
-        f = open(AutoFill.afdir+os.sep+"__init__.py","w")        
+        f = open(autopack.afdir+os.sep+"__init__.py","w")        
         f.write(text)        
         f.close()
-        AutoFill.checkAtstartup = toggle
+        autopack.checkAtstartup = toggle
 
     def toggleCheckLatestRecipe(self,*args):
         toggle = self.getVal(self.forceRecipeAvailable)
@@ -2944,7 +2938,7 @@ class AFGui(uiadaptor):
         cache = wkr+os.sep+"cache_results"
         cachei = wkr+os.sep+"cache_ingredients"
         cache_sphere = wkr+os.sep+"cache_ingredients"+os.sep+"sphereTree"
-        cacheo = wkr+os.sep+"cache_organelles"
+        cacheo = wkr+os.sep+"cache_compartments"
         for d in [cache_sphere,cachei,cache,cacheo]:            
             shutil.rmtree(d)
             os.makedirs(d)
@@ -3036,7 +3030,7 @@ class AFGui(uiadaptor):
         
     def update_AF(self,backup=False):
         import zipfile
-        p = AutoFill.__path__[0]+os.sep       
+        p = autopack.__path__[0]+os.sep       
 #        print "update_AF",AFwrkDir1
         URI="http://mgldev.scripps.edu/projects/ePMV/updates/autofill.zip"
         os.chdir(p)
@@ -3053,11 +3047,11 @@ class AFGui(uiadaptor):
             return False
         zfile = zipfile.ZipFile(tmpFileName)    
 #        TF=tarfile.TarFile(tmpFileName)
-        dirname1=AFwrkDir1#+os.sep+".."+os.sep+"AutoFill"
+        dirname1=AFwrkDir1#+os.sep+".."+os.sep+"autopack"
         import shutil
         if backup :
             #rename AF to AFv
-            dirname2=dirname1+AutoFill.__version__
+            dirname2=dirname1+autopack.__version__
 #            print(dirname1,dirname2)
             if os.path.exists(dirname2):
                 shutil.rmtree(dirname2,True)
@@ -3092,14 +3086,14 @@ class AFGui(uiadaptor):
 
     def devCheckUpdate(self,*args):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
-                      "AutoFill":{"version_current":AutoFill.__version__,"path":AutoFill.__path__[0]}}
+                      "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
         up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="dev")
         up.checkUpdate()
 
     def stdCheckUpdate(self,*args):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
-                      "AutoFill":{"version_current":AutoFill.__version__,"path":AutoFill.__path__[0]}}
+                      "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
         up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin)
         up.checkUpdate()
@@ -3111,7 +3105,7 @@ class AFGui(uiadaptor):
 #        self.epmv.inst.PMVv = Support.version.__version__
 #        self.epmv.inst.upyv = upy.__version__
         self.upyv = upyv = upy.__version__
-        self.afv = afv = AutoFill.__version__
+        self.afv = afv = autopack.__version__
         doit=self.checkForUpdate(upyv,afv)
         if True in doit :
             #need some display?
@@ -3136,16 +3130,16 @@ class AFGui(uiadaptor):
 
     def drawAbout(self,*args):
         self.upyv = upyv = upy.__version__
-        self.afv = afv = AutoFill.__version__        
+        self.afv = afv = autopack.__version__        
         #doit=self.checkForUpdate(upyv,afv)
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]+os.sep},
-                      "AutoFill":{"version_current":AutoFill.__version__,"path":AutoFill.__path__[0]+os.sep}}
+                      "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]+os.sep}}
         from upy.upy_updater import Updater
         up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="std")
         up.readUpdateNote()
-        self.__about__="v"+AutoFill.__version__ +" of autoPACK is installed.\nv"+up.result_json["AutoFill"]["version_std"]+" is available under Help/Check for Updates.\n\n"
+        self.__about__="v"+autopack.__version__ +" of autoPACK is installed.\nv"+up.result_json["autopack"]["version_std"]+" is available under Help/Check for Updates.\n\n"
         self.__about__+="v"+upy.__version__+" of uPy is installed.\nv"+up.result_json["upy"]["version_std"]+" is available under Help/Check for Updates.\n"
-#        self.__about__="v"+AutoFill.__version__ +" of autoPACK is installed.\nv"+self.newAFv+" is available under Help/Check for Updates.\n\n"
+#        self.__about__="v"+autopack.__version__ +" of autoPACK is installed.\nv"+self.newAFv+" is available under Help/Check for Updates.\n\n"
 #        self.__about__+="v"+upy.__version__+" of uPy is installed.\nv"+self.newuPyv+" is available under Help/Check for Updates.\n"
         self.__about__+="""
         
@@ -3259,7 +3253,7 @@ Copyright: Graham Johnson ©2010
             return True
 
     def loadxml(self, filename,recipe=None):
-        from AutoFill.HistoVol import Environment
+        from autopack.Environment import Environment
         fileName, fileExtension = os.path.splitext(filename)
         n=recipe#os.path.basename(fileName)#version with it ...
         if n is None:
@@ -3267,7 +3261,7 @@ Copyright: Graham Johnson ©2010
         self.histoVol[n] = Environment(name=n)
         recipe=n
         self.histoVol[n].load_XML(filename)
-        afviewer = AFViewer(ViewerType=self.helper.host,helper=self.helper)
+        afviewer = AutopackViewer(ViewerType=self.helper.host,helper=self.helper)
         self.histoVol[n].name=n
         afviewer.SetHistoVol(self.histoVol[n],20.0,display=False)
         self.histoVol[n].host=self.helper.host
@@ -3305,7 +3299,7 @@ Copyright: Graham Johnson ©2010
         dlg.toggleHistoVolDisplay(None)        
               
     def drawSubsetViewer(self,*args):
-        AutoFill.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
+        autopack.forceFetch = self.getVal(self.WidgetViewer["forceFetch"])
         #should drawhe dialog for the seleced recipe
         recipe = self.getVal(self.WidgetViewer["menuscene"]) 
         version = self.getVal(self.WidgetViewer["recipeversion"])
@@ -3347,7 +3341,7 @@ Copyright: Graham Johnson ©2010
         dlg.updateWidget()
         
     def drawSubsetFiller(self,*args):
-        AutoFill.forceFetch = self.getVal(self.WidgetFiller["forceFetch"])
+        autopack.forceFetch = self.getVal(self.WidgetFiller["forceFetch"])
         #should drawhe dialog for the seleced recipe
         recipe = self.getVal(self.WidgetFiller["menuscene"]) 
         version = self.getVal(self.WidgetFiller["recipeversion"])
@@ -3394,4 +3388,4 @@ Copyright: Graham Johnson ©2010
 ##    print "setup"
 #mygui.display() 
 #    print "display"
-#execfile("/Users/ludo/DEV/autofill_svn_test/autofill/trunk/AutoFillClean/AFGui.py")
+#execfile("/Users/ludo/DEV/autofill_svn_test/autofill/trunk/autopackClean/AFGui.py")

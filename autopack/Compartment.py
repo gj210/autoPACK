@@ -7,7 +7,7 @@
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
 #   from Arthur Olson's Molecular Graphics Lab
 #
-# Organelle.py Authors: Graham Johnson & Michel Sanner with editing/enhancement from Ludovic Autin
+# Compartment.py Authors: Graham Johnson & Michel Sanner with editing/enhancement from Ludovic Autin
 #
 # Translation to Python initiated March 1, 2010 by Michel Sanner with Graham Johnson
 #
@@ -47,9 +47,9 @@
 #   filling surfaces.  This should be formalized and named something other than molarity
 #   or molarity should be converted to a 2D value behind the scenes.
 # IDEA: We should offer the user an option to override molarity with a specific
-#   number, e.g., "I want to place 3 1xyz.pdb files in organelle A" rather than
+#   number, e.g., "I want to place 3 1xyz.pdb files in compartment A" rather than
 #   forcing them to calculate- "I need to place 0.00071M of 1xyz.pdb to get 3 of them
-#   in an organelle A of volume=V."
+#   in an compartment A of volume=V."
 
 ## IDEAS
 
@@ -89,38 +89,41 @@ except :
     helper = None
 print ("helper is "+str(helper))
 
-from autopack import intersect_RayTriangle as iRT
-#from autopack.HistoVol import Grid   
+#from autopack import intersect_RayTriangle as iRT
+#from autopack.Environment import Grid   
 if sys.version > "3.0.0":
     xrange = range
     
-class OrganelleList:
+class CompartmentList:
     
     def __init__(self):
-        # list of organelles inside this organelle
-        self.organelles = []
+        # list of compartments inside this compartment
+        self.compartments = []
 
-        # point to parent organelle or HistoVol
+        # point to parent compartment or Environment
         self.parent = None
 
-    def addOrganelle(self, organelle):
-        assert organelle.parent == None
-        assert isinstance(organelle, Organelle)
-        self.organelles.append(organelle)
-        organelle.parent = self
+#    def addOrganelle(self, compartment):
+#        assert compartment.parent == None
+#        assert isinstance(compartment, Organelle)
+#        self.compartments.append(compartment)
+#        compartment.parent = self
 
+    def addCompartment(self, compartment):
+        assert compartment.parent == None
+        assert isinstance(compartment, Compartment)
+        self.compartments.append(compartment)
+        compartment.parent = self
 
-#from ray import ray_intersect_polyhedron
-
-class Organelle(OrganelleList):
+class  Compartment(CompartmentList):
     """
     This class represents a sub-cellular volume delimited by a polyhedral
     surface. Organelles can be nested
     """
 
     def __init__(self, name, vertices, faces, vnormals, **kw):
-        OrganelleList.__init__(self)
-        #print ("organelle init",name,kw)
+        CompartmentList.__init__(self)
+        #print ("compartment init",name,kw)
         self.name = name
         self.vertices = vertices
         self.faces = faces
@@ -159,15 +162,15 @@ class Organelle(OrganelleList):
         self.surfaceRecipe = None
         self.surfaceVolume = 0.0
         self.interiorVolume = 0.0
-        
-        # list of grid point indices inside organelle
+        self.closed = False
+        # list of grid point indices inside compartment
         self.insidePoints = None
-        # list of grid point indices on organelle surface
+        # list of grid point indices on compartment surface
         self.surfacePoints = None
         self.surfacePointsNormals = {} # will be point index:normal
         
-        self.number = None # will be set to an integer when this organelle
-                           # is added to a HistoVol. Positivefor surface pts
+        self.number = None # will be set to an integer when this compartment
+                           # is added to a Environment. Positivefor surface pts
                            # negative for interior points
 #        self.parent = None
         self.molecules = [] 
@@ -177,20 +180,20 @@ class Organelle(OrganelleList):
         self.highresVertices = None 
         # if a highres vertices is provided this give the surface point, 
         #not the one provides
-        self.isBox = False #the organelle shape is a box, no need 
+        self.isBox = False #the compartment shape is a box, no need 
         #to compute inside points.
         if "isBox" in kw :
             self.isBox = kw["isBox"]
                 
-        self.isOrthogonalBoudingBox = None #the organelle shape is a box, no need
+        self.isOrthogonalBoudingBox = None #the compartment shape is a box, no need
         #to compute inside points.
         if "isOrthogonalBoudingBox" in kw :
             self.isOrthogonalBoudingBox = kw["isOrthogonalBoudingBox"]
 
     def reset(self):
-        # list of grid point indices inside organelle
+        # list of grid point indices inside compartment
         self.insidePoints = None
-        # list of grid point indices on organelle surface
+        # list of grid point indices on compartment surface
         self.surfacePoints = None
         self.surfacePointsNormals = {} # will be point index:normal
         self.molecules = [] 
@@ -227,7 +230,7 @@ class Organelle(OrganelleList):
         if rep is not None :
             gname =rep 
             parent=helper.getObject('O%s'%self.name)
-        #print ("organelle",filename,gname,rep)
+        #print ("compartment",filename,gname,rep)
         if filename.find("http") != -1 or filename.find("ftp")!= -1 :
             try :
                 import urllib.request as urllib# , urllib.parse, urllib.error
@@ -397,7 +400,7 @@ class Organelle(OrganelleList):
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
         self.innerRecipe.number= self.number
-        recipe.organelle = weakref.ref(self)
+        recipe.compartment = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
 
@@ -406,7 +409,7 @@ class Organelle(OrganelleList):
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
         self.surfaceRecipe.number= self.number
-        recipe.organelle = weakref.ref(self)
+        recipe.compartment = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
 
@@ -479,8 +482,8 @@ class Organelle(OrganelleList):
  
     def inBox(self, box):
         """
-        check if bounding box of this organelle fits inside the give box
-        returns true or false and the extended bounding box if this organelle
+        check if bounding box of this compartment fits inside the give box
+        returns true or false and the extended bounding box if this compartment
         did not fit
         """
         if self.ghost:
@@ -522,8 +525,8 @@ class Organelle(OrganelleList):
 
     def inGrid(self, point, fillBB):
         """
-        check if bounding box of this organelle fits inside the give box
-        returns true or false and the extended bounding box if this organelle
+        check if bounding box of this compartment fits inside the give box
+        returns true or false and the extended bounding box if this compartment
         did not fit
         """
         mini, maxi = fillBB
@@ -536,8 +539,8 @@ class Organelle(OrganelleList):
             return False
 
     def getMinMaxProteinSize(self):
-        #for organelle in self.organelles:
-        #    mini, maxi = organelle.getSmallestProteinSize(size)
+        #for compartment in self.compartments:
+        #    mini, maxi = compartment.getSmallestProteinSize(size)
         mini1 = mini2 = 9999999.
         maxi1 = maxi2 = 0.
         if self.surfaceRecipe:
@@ -776,7 +779,7 @@ class Organelle(OrganelleList):
 #            afvi = histoVol.afviewer       
         
         # Graham Sum the SurfaceArea for each polyhedron
-        vertices = self.vertices  #NEED to make these limited to selection box, not whole organelle
+        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
         faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
         normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
         vSurfaceArea = sum(areas)
@@ -839,10 +842,10 @@ class Organelle(OrganelleList):
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = histoVol.grid.masterGridPositions
         returnNullIfFail = 0
-        print ("organelle build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
+        print ("compartment build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
         closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)
         helper = autopack.helper
         geom =   helper.getObject(self.gname)      
@@ -885,16 +888,21 @@ class Organelle(OrganelleList):
                     sptInd = list(distA).index(d)
                 sx, sy, sz = srfPts[sptInd]
             if distances[ptInd]>d: distances[ptInd] = d  # case a diffent surface ends up being closer in the linear walk through the grid
-            #should check if in organelle bounding box
-            insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
+            #should check if in compartment bounding box
+            #should check only if closed geom
+            insideBB = True
+            if self.closed :
+                insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
             r=False
             if insideBB:
-                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
+                #should use an optional direction for the ray, which will help for unclosed surface....
+                #intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
+                intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
                 r= ((count % 2) == 1)
                 if ray == 3 :
                     intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
-                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
-                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
+                    #center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
+                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
                     if r :
                        if (count2 % 2) == 1 and (count3 % 2) == 1 :
                            r=True
@@ -953,23 +961,14 @@ class Organelle(OrganelleList):
             self.ogsurfacePointsNormals = self.vnormals[:]
         else :
             self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
-#        helper = None
-#        afvi = None
-#        if hasattr(histoVol,"afviewer"):
-#            if histoVol.afviewer is not None and hasattr(histoVol.afviewer,"vi"):
-#                helper = histoVol.afviewer.vi
-#            afvi = histoVol.afviewer       
         
         # Graham Sum the SurfaceArea for each polyhedron
-        vertices = self.vertices  #NEED to make these limited to selection box, not whole organelle
+        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
         faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
         normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
         vSurfaceArea = sum(areas)
         #for gnum in range(len(normalList2)):
         #    vSurfaceArea = vSurfaceArea + areas[gnum]
-#        print 'Graham says Surface Area is %d' %(vSurfaceArea)
-#        print 'Graham says the last triangle area is is %d' %(areas[-1])
-        #print '%d surface points %.2f unitVol'%(len(surfacePoints), unitVol)
         
         # build a BHTree for the vertices
         if self.isBox :
@@ -1006,13 +1005,6 @@ class Organelle(OrganelleList):
         #build BHTree for off grid surface points
         from bhtree import bhtreelib
         srfPts = self.ogsurfacePoints
-#        print len(srfPts),srfPts[0]
-#        stemp = afvi.vi.Points("surfacePts", vertices=self.ogsurfacePoints, materials=[[0,1,0],],
-#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
-#                   visible=1,parent=None)
-#        stemp = afvi.vi.Points("surfacePts2", vertices=histoVol.grid.masterGridPositions, materials=[[0,1,0],],
-#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
-#                   visible=1,parent=None)
         #??why the bhtree behave like this
         self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
         res = numpy.zeros(len(srfPts),'f')
@@ -1024,10 +1016,10 @@ class Organelle(OrganelleList):
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = histoVol.grid.masterGridPositions
         returnNullIfFail = 0
-        print ("organelle build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
+        print ("compartment build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
         closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)
         
 #        print len(closest),diag,closest[0]
@@ -1094,7 +1086,7 @@ class Organelle(OrganelleList):
                 inside = True
                 if self.checkinside :
                     inside  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
-                #this is not working for a plane, or any unclosed organelle...
+                #this is not working for a plane, or any unclosed compartment...
                 if inside :
                     if ptInd < len(idarray)-1:   #Oct 20, 2012 Graham asks: why do we do this if test? not in old code
                         idarray[ptInd] = -number
@@ -1191,7 +1183,7 @@ class Organelle(OrganelleList):
         self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
         print("Creating surface points and preparing to sum the surface area, TODO- limit to selection box")
         # Graham Sum the SurfaceArea for each polyhedron
-        vertices = self.vertices  #NEED to make these limited to selection box, not whole organelle
+        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
         faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
         normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
         vSurfaceArea = sum(areas)
@@ -1221,7 +1213,7 @@ class Organelle(OrganelleList):
         insidePoints = []
         #self.vnormals = ogNormals = normalList2
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = histoVol.grid.masterGridPositions
         returnNullIfFail = 0
         closest = bht.closestPointsArray(grdPos, diag, returnNullIfFail)
@@ -1335,7 +1327,7 @@ class Organelle(OrganelleList):
         self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
         
         # Graham Sum the SurfaceArea for each polyhedron
-        vertices = self.vertices  #NEED to make these limited to selection box, not whole organelle
+        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
         faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
         normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
         vSurfaceArea = sum(areas)
@@ -1366,7 +1358,7 @@ class Organelle(OrganelleList):
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = histoVol.grid.masterGridPositions
 #        returnNullIfFail = 0
         closest = []#bht.closestPointsArray(grdPos, diag, returnNullIfFail)
@@ -1517,7 +1509,7 @@ class Organelle(OrganelleList):
 #        volarr.shape = (dim1, dim1, dim1)
 #        volarr = numpy.ascontiguousarray(numpy.transpose(volarr), 'f')
 #        
-#        # get grid points distances to organelle surface
+#        # get grid points distances to compartment surface
 #        from Volume.Operators.trilinterp import trilinterp
 #        invstep =(1./(sizex[0]/dim), 1./(sizex[1]/dim), 1./(sizex[2]/dim))
 #        origin = self.bb[0]
@@ -1596,7 +1588,7 @@ class Organelle(OrganelleList):
         vSurfaceArea = sum(areas)
 #        labels = numpy.ones(len(faces), 'i')
         
-        # FIXME .. dimensions on SDF should addapt to organelle size
+        # FIXME .. dimensions on SDF should addapt to compartment size
         bbox = self.bb
         xmin = bbox[0][0]; ymin = bbox[0][1]; zmin = bbox[0][2]
         xmax = bbox[1][0]; ymax = bbox[1][1]; zmax = bbox[1][2]
@@ -1627,7 +1619,7 @@ class Organelle(OrganelleList):
         volarr.shape = (dim1, dim1, dim1)
         volarr = numpy.ascontiguousarray(numpy.transpose(volarr), 'f')
         
-        # get grid points distances to organelle surface
+        # get grid points distances to compartment surface
         from Volume.Operators.trilinterp import trilinterp
         invstep =(1./(sizex[0]/dim), 1./(sizex[1]/dim), 1./(sizex[2]/dim))
         origin = self.bb[0]
@@ -1737,7 +1729,7 @@ class Organelle(OrganelleList):
         faces = self.faces
         labels = numpy.ones(len(faces), 'i')
         
-        # FIXME .. dimensions on SDF should addapt to organelle size
+        # FIXME .. dimensions on SDF should addapt to compartment size
         bbox = self.get_bbox(vertices)
         xmin = bbox[0]; ymin = bbox[1]; zmin = bbox[2]
         xmax = bbox[3]; ymax = bbox[4]; zmax = bbox[5]
@@ -1764,7 +1756,7 @@ class Organelle(OrganelleList):
         volarr.shape = (dimz, dimy, dimx)
         volarr = numpy.ascontiguousarray(numpy.transpose(volarr), 'f')
 
-        # get grid points distances to organelle surface
+        # get grid points distances to compartment surface
         from Volume.Operators.trilinterp import trilinterp
         invstep =(1./gridSpacing, 1./gridSpacing, 1./gridSpacing)
         origin = (xmin, ymin, zmin)
@@ -2002,7 +1994,7 @@ class Organelle(OrganelleList):
         return pointinside[0],self.vertices
 
     def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
-        from autopack.HistoVol import Grid        
+        from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2087,7 +2079,7 @@ class Organelle(OrganelleList):
 
          
     def getSurfaceInnerPoints_sdf_interpolate(self,boundingBox,spacing,display = True,useFix=False):
-        from autopack.HistoVol import Grid        
+        from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2122,7 +2114,7 @@ class Organelle(OrganelleList):
         volarr.shape = (dim1, dim1, dim1)
         volarr = numpy.ascontiguousarray(numpy.transpose(volarr), 'f')
         
-        # get grid points distances to organelle surface
+        # get grid points distances to compartment surface
         from Volume.Operators.trilinterp import trilinterp
         sizex = self.getSizeXYZ()
         invstep =(1./(sizex[0]/dim), 1./(sizex[0]/dim), 1./(sizex[0]/dim))
@@ -2148,7 +2140,7 @@ class Organelle(OrganelleList):
              
          
     def getSurfaceInnerPoints(self,boundingBox,spacing,display = True,useFix=False):
-        from autopack.HistoVol import Grid        
+        from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2188,7 +2180,7 @@ class Organelle(OrganelleList):
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = grid.masterGridPositions
         returnNullIfFail = 0
         closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)#diag is  cutoff ? meanin max distance ?
@@ -2307,7 +2299,7 @@ class Organelle(OrganelleList):
                 inside = True
 #                if self.checkinside :
 #                    inside  = self.checkPointInsideBB(grdPos[ptInd])
-                #this is not working for a plane, or any unclosed organelle...
+                #this is not working for a plane, or any unclosed compartment...
                 if inside :
                     idarray[ptInd] = -number
                     insidePoints.append(grdPos[ptInd]) 
@@ -2330,7 +2322,7 @@ class Organelle(OrganelleList):
         #should use the ray and see if it gave better reslt
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
-        from autopack.HistoVol import Grid        
+        from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2378,7 +2370,7 @@ class Organelle(OrganelleList):
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of organelle BB inside fillBB
+        #FIXME sould be diag of compartment BB inside fillBB
         grdPos = grid.masterGridPositions
         returnNullIfFail = 0
         closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)#diag is  cutoff ? meanin max distance ?
@@ -2449,7 +2441,7 @@ class Organelle(OrganelleList):
         #work for small object
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
-        from autopack.HistoVol import Grid        
+        from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
@@ -2504,7 +2496,7 @@ class Organelle(OrganelleList):
         return insidePoints, surfacePoints
 
     def printFillInfo(self):
-        print('organelle %d'%self.number)
+        print('compartment %d'%self.number)
         r = self.surfaceRecipe
         if r is not None:
             print('    surface recipe:')
