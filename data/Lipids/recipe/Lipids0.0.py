@@ -16,8 +16,12 @@ if helper is None :
     helperClass = upy.getHelperClass()
     helper =helperClass()
 #create the viewer
-hext=".c4d"
+hext=".fbx"
 ViewerType=AutoFill.helper.host    
+if ViewerType == "c4d":
+  hext = ".c4d"
+elif ViewerType.find("blender") != -1 :
+  hext = ".dae"
 afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
 #make some option here 	
 afviewer.doPoints = False
