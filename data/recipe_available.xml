@@ -36,7 +36,7 @@
     
     <recipe name="HIV_1.3-1.4_LipidBilayerTest" version="0.0">
         <setupfile>http://autofill.googlecode.com/svn/data/Lipids/recipe/HIV_1.3-1.4_LipidBilayerTest0.0.xml</setupfile>
-        <wrkdir>autoFillRecipeScripts\\Lipids</wrkdir>
+      <wrkdir>autoFillRecipeScripts/Lipids</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr</resultfile>
     </recipe>
     
