@@ -40,11 +40,11 @@
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr</resultfile>
     </recipe>
     
-    <recipe name="HIV_Lipids" version="0.2">
+    <recipeHide name="HIV_Lipids" version="0.2">
         <setupfile>http://autofill.googlecode.com/svn/data/Lipids/recipe/HIV_Lipids0.2.py</setupfile>
         <wrkdir>autoFillRecipeScripts/Lipids</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr</resultfile>
-    </recipe>
+    </recipeHide>
     
     <recipe name="HIVBloodSerum" version="1.0">
         <setupfile>http://autofill.googlecode.com/svn/data/HIVBloodSerum/recipe/HIVBloodSerum_recipe_setup_1_0.py</setupfile>
