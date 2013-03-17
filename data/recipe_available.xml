@@ -40,8 +40,8 @@
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr</resultfile>
     </recipe>
     
-    <recipe name="HIV_1.3-1.4_LipidBilayerTest" version="0.1">
-        <setupfile>http://autofill.googlecode.com/svn/data/Lipids/recipe/HIV_1.3-1.4_LipidBilayerTest0.1.py</setupfile>
+    <recipe name="HIV_1.3-1.4_LipidBilayerTest" version="0.2">
+        <setupfile>http://autofill.googlecode.com/svn/data/Lipids/recipe/HIV_1.3-1.4_LipidBilayerTest0.2.py</setupfile>
         <wrkdir>autoFillRecipeScripts/Lipids</wrkdir>
         <resultfile>http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr</resultfile>
     </recipe>
