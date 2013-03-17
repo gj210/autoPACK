@@ -26,7 +26,7 @@ afviewer.quality = 1 #lowest quality for sphere and cylinder
 afviewer.visibleMesh = True #mesh default visibility 
 #create the env
 h1 = Environment()
-h1.name='HIV_1.3-1.4_LipidBilayerTest'
+h1.name='Lipids'
 h1.computeGridParams=True
 h1.pickRandPt=True
 h1.cancelDialog=False
@@ -3775,7 +3775,7 @@ helper = afviewer.helper
 noGUI = False
 try :
     print ('try')
-    AFGui.Set('HIV_1.3-1.4_LipidBilayerTest',helper=afviewer.helper,afviewer=afviewer,histoVol=h1,bbox=bbox)
+    AFGui.Set('Lipids',helper=afviewer.helper,afviewer=afviewer,histoVol=h1,bbox=bbox)
 except:
     print ('no GUI')
     noGUI = True
