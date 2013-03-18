@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-	<AutoFillSetup name="Lipids">
+	<AutoFillSetup name="HIVLipids">
 	<options EnviroOnly="False" _hackFreepts="False" _timer="False" boundingBox="[[-220.0, -70.0, -70.000000000000014], [220.0, 70.0, 70.000000000000014]]" cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" gradients="[]" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="10" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="http://autofill.googlecode.com/svn/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr" runTimeDisplay="False" saveResult="True" smallestProteinSize="13" use_gradient="True" version="1.0" windowsSize="13.0"/>
 	<organelle geom="http://autofill.googlecode.com/svn/data/Lipids/geoms/LipidSurface_1_0.dae" name="LipidSurface_1_0" rep="None" rep_file="None">
 	<surface>

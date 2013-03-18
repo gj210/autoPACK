@@ -1804,7 +1804,8 @@ class Environment(CompartmentList):
                 # update free points
                 if len(insidePoints) and self.placeMethod.find("panda") != -1:
                     print (ingr.name," is previous")
-                #in case of pandaBullet we should update he ptInd of the rbnode
+                    #in case of pandaBullet we should update the ptInd of the rbnode. The point Id in 
+                    #molecules refer to previous grid
                     self.checkPtIndIngr(ingr,insidePoints,i,ptInd)
                 #(self, histoVol,insidePoints, newDistPoints, freePoints,
                 #        nbFreePoints, distance, masterGridPositions, verbose)
@@ -1821,11 +1822,11 @@ class Environment(CompartmentList):
         rbnode = ingr.rbnode[ptInd]
         ingr.rbnode.pop(ptInd)
         if i < len(self.molecules):
-            print self.molecules[i][3]
-            print type(self.molecules[i][3])
-            print ingr.compNum
-            print insidePoints.keys()[0]
-            self.molecules[i][3]=insidePoints.keys()[0]
+#            print self.molecules[i][3]
+#            print type(self.molecules[i][3])
+#            print ingr.compNum
+#            print insidePoints.keys()[0]
+            self.molecules[i][3]=insidePoints.keys()[0]#or take the center point ?
             ingr.rbnode[insidePoints.keys()[0]] = rbnode
         else :
             nmol = len(self.molecules)
