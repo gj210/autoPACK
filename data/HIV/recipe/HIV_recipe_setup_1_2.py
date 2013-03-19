@@ -410,7 +410,7 @@ if donucl:
                                 **dict["fpen"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
-    rSurf["Envelope"].addIngredient(nc)#should be NucleoCapsid compartiment 2
+    #rSurf["Envelope"].addIngredient(nc)#should be NucleoCapsid compartiment 2
 
     nc = MultiSphereIngr( HIVmatrixConc *12* 6.20E-4,  
                                 name='hex001G4', #pdb="1jfw",
@@ -420,7 +420,7 @@ if donucl:
                                 **dict["hex"]
                                 #packingMode='close'
                                 ) #original radius is 3.61
-    rSurf["Envelope"].addIngredient(nc)#should be NucleoCapsid compartiment 2
+    #rSurf["Envelope"].addIngredient(nc)#should be NucleoCapsid compartiment 2
 
     #RNA
     snakeIngr = GrowIngrediant(1.18085538E-5, color=coral, pdb=None,
