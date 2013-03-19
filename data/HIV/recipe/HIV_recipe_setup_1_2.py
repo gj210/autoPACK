@@ -348,9 +348,8 @@ if domatrix:
 #    ca.packingMode = "closePartner" #partner is  self
 #    ca.addPartner('CA',weight=10.0)
 #    ca.overwrite_distFunc = True
-
-httpwrkDirGC = "http://code.google.com/p/autofill/source/browse/data/GenericCytoplasm/geoms/"
-sphdirGC = "http://code.google.com/p/autofill/source/browse/data/GenericCytoplasm/spheres/"
+httpwrkDirGC = "http://autofill.googlecode.com/svn/data/GenericCytoplasm/geoms/"
+sphdirGC = "http://autofill.googlecode.com/svn/data/GenericCytoplasm/spheres/"
 ####### BEGIN New generic Cytoplasm
 #should cal the generic scrip here
 setupfile=localwrkDir+os.sep+"autoFillRecipeScripts"+os.sep+"GenericCytoplasm"+os.sep+"GenericCytoplasmRecipeFile1.py"
