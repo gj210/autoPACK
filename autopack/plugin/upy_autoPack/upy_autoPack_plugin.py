@@ -146,3 +146,6 @@ def initializePlugin(mobject):
     af_plugin.register(af_Dialog,mobject=mobject,menuadd={"head":None,"mt":None})
 def uninitializePlugin(mobject):
     af_plugin.deregister(object=mobject)
+
+if __name__ == '__main__':
+    af_plugin.register(af_Dialog,Object=af_plugin,menuadd={"head":None,"mt":None})
