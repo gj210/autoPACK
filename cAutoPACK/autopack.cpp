@@ -57,7 +57,7 @@ general include
 /*
 xml parser for collada import, dont forgot the lib in the folder
 */
-#include "../pugixml-1.2/src/pugixml.hpp" 
+#include "../../cautoPACK/pugixml-1.2/src/pugixml.hpp" 
 
 
 /*some general option for autpoack to run*/
@@ -65,10 +65,12 @@ xml parser for collada import, dont forgot the lib in the folder
 float stepsize = 15*1.1547;         //grid step size ie smallest ingredients radius
 const float dmax = 999999.0;        //maximum value assign to the grid for intialisation
 const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
-const bool DEBUG = false;                   //DEBUG mode for prining some information
+const bool DEBUG = true;                   //DEBUG mode for prining some information
 const float MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
 const float spherewidth = 10.0;             //default or more ? close packing need to increase this number
-const std::string packing = "random";       //packing mode, can be random or close
+const std::string packing = "close";       //packing mode, can be random or close
+//deprecated use now the packingMode from the setup file
+//easy to overwrite but need to recompile
 
 //a simple point, deprecated with openvdb::Vec3
 struct point {
@@ -131,12 +133,12 @@ struct Local {
 
 /*
 a container // ie organelle
-
+not use yet
 */
 
 struct container{
-    string name;
-    string id;
+    std::string name;
+    int id;
     openvdb::FloatGrid::Ptr grid;
     openvdb::CoordBBox bbox;
     //why no use the mesh struct.
@@ -145,7 +147,7 @@ struct container{
     std::vector<openvdb::Vec3I > faces;
     std::vector<openvdb::Vec4I > quads;
     //list of indice too ?
-}
+};
 
 /* 
 a SingleSphere ingredient with the radius and the packing mode
@@ -360,6 +362,7 @@ inline sphere makeSphere(float radius, int mode, float concentration,
 }
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
+//if only one radius and one position given we build a uniq sphere.
 inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions){
@@ -1801,11 +1804,8 @@ big_grid load_xml(std::string path,int _mode,float _seed){
     bool pickWeightedIngr =doc.child("AutoFillSetup").child("options").attribute("pickWeightedIngr").as_bool();
     bool pickRandPt =doc.child("AutoFillSetup").child("options").attribute("pickRandPt").as_bool();
 
-    //for (unsigned i=0;i < bb.size(); i++){
-    //    std::cout << '#' << bb[i] << std::endl;
-    //}
-    //get the ingredient.
-    //only cytoplsme for now
+    //only cytoplsme for now, should parse, organelle and gradient as well
+    //could we use openvdb do compute compute/prepare the gradient?
     std::vector<sphere> _ingredients;
     //need to add organelle as well...organelle ingredient are inside organelle levelSet.
     pugi::xml_node cytoplasme = doc.child("AutoFillSetup").child("cytoplasme");
@@ -1859,14 +1859,21 @@ big_grid load_xml(std::string path,int _mode,float _seed){
             ingr = makeMultiSpheres(radii,_mode,mol,priority,nMol,iname,
                     color,nbJitter,jitter,positions);
         }
+
         ingr.principalVector=principalVector;
         if (ingredient.attribute("useRotAxis")){
             ingr.useRotAxis = ingredient.attribute("useRotAxis").as_bool();
             ingr.rotRange = ingredient.attribute("rotRange").as_float();
-            std::string strRaxe(ingredient.attribute("rotAxis").value());
-            ingr.rotAxis =  getArray(strRaxe);
+            if (ingr.useRotAxis){
+                std::string strRaxe(ingredient.attribute("rotAxis").value());
+                ingr.rotAxis =  getArray(strRaxe);
+            }
         }
-        ingr.perturbAxisAmplitude = ingredient.attribute("perturbAxisAmplitude").as_float();
+        if (ingredient.attribute("perturbAxisAmplitude")){
+            ingr.perturbAxisAmplitude = ingredient.attribute("perturbAxisAmplitude").as_float();
+        }
+        //packing mode overwrite from xml file
+        ingr.packingMode = std::string(ingredient.attribute("packingMode").value());
         _ingredients.push_back(ingr);
         if (DEBUG)std::cout << "#ok ingredient "<< std::endl;
     }
@@ -2243,6 +2250,6 @@ int main(int argc, char* argv[])
 //to compile assumin all dependancy present
 //sh ./compile_Example
 //to run :
-// time ./autopack /Users/ludo/Desktop/Cylinder.xml 0 <seed> > ~/Dropbox/testCpp.py
+// time ./autopack Cylinder.xml 0 <seed> > ~/Dropbox/testCpp.py
 //the command to run in python and visualize the result
 //execfile("/Users/ludo/DEV/testCpp.py")
