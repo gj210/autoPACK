@@ -1,3 +1,43 @@
+/*
+###############################################################################
+#
+# autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin, Michel Sanner
+#   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010 
+#   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
+#   from Arthur Olson's Molecular Graphics Lab
+#
+# autopack.cpp Authors: Ludovic Autin
+#
+# Translation from Python initiated March 15, 2010 by Ludovic Autin
+#
+#
+# Copyright: Graham Johnson Ludovic Autin ©2010
+#
+# This file "autopack.cpp" is part of autoPACK, cellPACK.
+#    
+#    autoPACK is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#    
+#    autoPACK is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#    
+#    You should have received a copy of the GNU General Public License
+#    along with autoPACK (See "CopyingGNUGPL" in the installation.
+#    If not, see <http://www.gnu.org/licenses/>.
+#
+#
+###############################################################################
+@author: Graham Johnson, Ludovic Autin, & Michel Sanner
+"""
+*/
+
+/*
+openvdb includes
+*/
 #include <openvdb/openvdb.h>
 #include <openvdb/Types.h>
 #include <openvdb/tools/Interpolation.h>
@@ -6,26 +46,37 @@
 #include <openvdb/tree/Tree.h>
 #include <openvdb/tools/GridTransformer.h>
 
+/*
+general include
+*/
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <random>
 
-//xml parser lib, dont forgot the lib
+/*
+xml parser for collada import, dont forgot the lib in the folder
+*/
 #include "../pugixml-1.2/src/pugixml.hpp" 
 
-float stepsize = 15*1.1547;
-const float dmax = 999999.0;
-const int rejectionThresholdIngredient = 300;//30 by default
-const bool DEBUG = false;
-const float MaxRadius = (2.0*1.1547)*20.0;
-const float spherewidth = 10.0;//default or more ? close packing need to increase this number
-const std::string packing = "random";
+
+/*some general option for autpoack to run*/
+
+float stepsize = 15*1.1547;         //grid step size ie smallest ingredients radius
+const float dmax = 999999.0;        //maximum value assign to the grid for intialisation
+const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
+const bool DEBUG = false;                   //DEBUG mode for prining some information
+const float MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
+const float spherewidth = 10.0;             //default or more ? close packing need to increase this number
+const std::string packing = "random";       //packing mode, can be random or close
+
+//a simple point, deprecated with openvdb::Vec3
 struct point {
     float x,y,z;
 };
 /* 
 a box, let define the grid size in x y an z
+again deprectaed with openvdb
 */
 struct box {
     unsigned x,y,z;
@@ -33,6 +84,9 @@ struct box {
 
 /* 
 a simple mesh struct
+need to add normal (surface packing and organelle definition)
+- faceNormal
+- verticeNormal ?
 */
 struct mesh {
     std::vector<openvdb::Vec3s> vertices;
@@ -85,6 +139,7 @@ struct container{
     string id;
     openvdb::FloatGrid::Ptr grid;
     openvdb::CoordBBox bbox;
+    //why no use the mesh struct.
     std::vector<openvdb::Vec3s> vertices;
     std::vector<openvdb::Vec3s> normals;
     std::vector<openvdb::Vec3I > faces;
@@ -94,6 +149,8 @@ struct container{
 
 /* 
 a SingleSphere ingredient with the radius and the packing mode
+Need to  be rename to Ingredient
+Should it bea class instead of a struct ?
 */
 struct sphere {
     float radius;
@@ -129,6 +186,8 @@ struct sphere {
     openvdb::Vec3f rotAxis;
     float perturbAxisAmplitude;
 };
+
+/* the comparison function are strict translatio from the python code */
 //sort function for ingredient//
 //The value returned indicates whether the element passed as first argument 
 //is considered to go before the second in the specific strict weak ordering it defines.
@@ -237,6 +296,8 @@ openvdb::CoordBBox getBB(float radius,  openvdb::Vec3f pos){
 }
 */
 
+
+//exapl of function applied on grid data
 struct SetMaxToDefault {
     float _max;
     SetMaxToDefault(float max) {_max=max;}
@@ -246,8 +307,7 @@ struct SetMaxToDefault {
 };
 
 
-
-//helper to create a singleSphere ingredient given a radius
+//helper to create a singleSphere ingredient given a radius, and some options
 inline sphere makeSphere(float radius, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax){
@@ -299,7 +359,7 @@ inline sphere makeSphere(float radius, int mode, float concentration,
     return sp;
 }
 
-//helper to create a singleSphere ingredient given a radius
+//helper to create a multiSpheres ingredient given a list of radii and positions
 inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions){
@@ -389,7 +449,7 @@ inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concent
     return sp;
 }
 
-//helper to create a singleSphere ingredient given a radius
+//helper to create an ingredient given a 3d mesh triangles or quads
 inline sphere makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d){
@@ -456,6 +516,8 @@ inline sphere makeMeshIngredient(std::vector<float> radii, int mode, float conce
     return sp;
 }
 
+
+//code from the openvdb documentation
 template<typename OpType>
 void processTypedGrid(openvdb::GridBase::Ptr grid, OpType& op)
 {
@@ -492,6 +554,8 @@ struct PruneOp {
         grid->tree().prune();
     }
 };
+
+//some expermental functions for the IJK<->U grid index convertion
 inline unsigned getU(openvdb::Coord dim,openvdb::Coord ijk){
     return (int)(ijk.x()*dim.x()*dim.y() + ijk.y()*dim.x() + ijk.z());
 }
@@ -591,8 +655,13 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
 }
 
 
-
+/* the main class that handle the packing
+came from oleg trott code for the bidirectional array swapping.
+extended to do the main autopack loop with ingredient and point picking
+*/
 struct big_grid { // needs 8*n bytes 
+    //Lot of theses parameteres are deprecated and not used.
+    //original wrote in hw.cc file
     std::vector<unsigned> all; //all point indice // should point to ijk
     std::vector<unsigned> empty;//available point indice 
     std::vector<point> data;    //the grid 3d coordintates
@@ -1535,37 +1604,12 @@ struct big_grid { // needs 8*n bytes
     }
 };
 
-struct big_grid1 { // needs 8*n bytes 
-    std::vector<unsigned> all; 
-    std::vector<unsigned> empty; 
-    unsigned num_empty;
-    big_grid1(unsigned n) : all(n),
-      empty(n),
-      num_empty(n) {
-    for(unsigned i = 0; i < n; ++i) { all[i] = i;
-                empty[i] = i;
-            }
-    }
-
-unsigned sample_empty() const {
-    return empty[rand() % num_empty]; }
-
-void set_filled(unsigned i) {
-    unsigned empty_index = all[i];
-    if(empty_index < num_empty) { // really is empty
-        --num_empty;
-        unsigned filled_index = empty[num_empty]; 
-        std::swap(empty[empty_index], empty[num_empty]); 
-        std::swap(all[i], all[filled_index]);
-    } }
-
-bool is_empty(unsigned i) const { 
-    return all[i] < num_empty;
-} };
-
 
 
 /* XML CODE */
+/* 
+parsing information from the autopack setup file as well as the collada mesh file 
+*/
 
 float getRadii(std::string str){
     //std::string str(input);  
@@ -1737,6 +1781,8 @@ mesh getMesh(std::string path){
     return mesh3d;
 }
 
+
+//we load the autopack xml setup and create the grid class object
 big_grid load_xml(std::string path,int _mode,float _seed){
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
@@ -1889,6 +1935,7 @@ void printIngredientGrid(sphere ingr){
     std::cout << "isph=helper.PointCloudObject(iname+\"_inside\",vertices = inside,materials=[[0,0,1]])\n";
 }
 
+//main loop is here
 int main(int argc, char* argv[])
 {   
     /*
@@ -2039,11 +2086,11 @@ int main(int argc, char* argv[])
         //if   (counterRej > 100) break; 
         //if   (counter > 10) break;        
     }
-    //need to expot the grid as well, with value of distance for the color.
+    //The packing is done, we will generate a python script executed in a 3d Host for the vizualisation
+    //this can be replace by any output.
+
     std::cout << "#distance_grid->activeVoxelCount() " << g.num_empty << " " <<g.distance_grid->activeVoxelCount()<<std::endl;
-   //fancy python ouput for easy visualization in 3d Host
     std::cout << "#main loop " << g.rtrans.size() << " on " << totalNumMols << std::endl;
-    //rotation?
 
     std::cout << "pts=[" << std::endl;
     openvdb::Vec3f pos;
@@ -2115,7 +2162,7 @@ int main(int argc, char* argv[])
     std::cout << "Distances=[]\n";
     std::cout << "all=[]\n";
     counter=0;
-    //evalMinMax
+    //the main grid, extract some distance information from it
     for (openvdb::FloatGrid::ValueAllIter  iter = g.distance_grid->beginValueAll(); iter; ++iter) {//g.distance_grid
     //for (openvdb::FloatGrid::ValueAllIter  iter = g.ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
         //create a sphere with color or radius dependant of value ?
@@ -2152,7 +2199,6 @@ int main(int argc, char* argv[])
         }
         }
     }
-    //or pointCloud?
     std::cout << "isph=helper.PointCloudObject(\"inside\",vertices = inside,materials=[[0,0,1]])\n";
     std::cout << "isph=helper.PointCloudObject(\"background\",vertices = background)\n";
     std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
@@ -2171,6 +2217,7 @@ int main(int argc, char* argv[])
     //mesh
     //foreac ingredient load the mesh?
     //if mesh
+    //for each inredient get the original mesh and create instance for their different poisition in the grid
     for(unsigned i = 0; i < g.ingredients.size(); ++i) { //segmntaton fault here ?
         if (g.ingredients[i].filename.empty())
             continue;
@@ -2188,7 +2235,14 @@ int main(int argc, char* argv[])
         std::cout << "                      transpose= False,colors=["<<g.ingredients[i].color << "],\n";
         std::cout << "                      axis=axis)\n";
         printIngredientGrid(g.ingredients[i]);
+        //this will create the individual ingredient grid for debugging the voxelization
+        //openvdb use convex - hull, art was suggesting decomposing the mesh to compensate
     }    
     //stdout the grid
 }
+//to compile assumin all dependancy present
+//sh ./compile_Example
+//to run :
+// time ./autopack /Users/ludo/Desktop/Cylinder.xml 0 <seed> > ~/Dropbox/testCpp.py
+//the command to run in python and visualize the result
 //execfile("/Users/ludo/DEV/testCpp.py")
