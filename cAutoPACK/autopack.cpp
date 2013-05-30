@@ -60,6 +60,51 @@ xml parser for collada import, dont forgot the lib in the folder
 #include "../../cautoPACK/pugixml-1.2/src/pugixml.hpp" 
 
 
+/*assimp include*/
+//#include <assimp/assimp.h>// C importer interface
+#include <assimp/assimp.hpp>// C++ importer interface
+#include <assimp/aiPostProcess.h>// Post processing flags
+#include <assimp/aiScene.h>// Output data structure
+#include <assimp/DefaultLogger.h>
+#include <assimp/LogStream.h>
+
+
+// Create an instance of the Importer class
+Assimp::Importer* importer;
+const aiScene* scene;
+void createAILogger()
+{
+	//Assimp::Logger::LogSeverity severity = Assimp::Logger::NORMAL;
+	Assimp::Logger::LogSeverity severity = Assimp::Logger::VERBOSE;
+
+	// Create a logger instance for Console Output
+	//Assimp::DefaultLogger::create("",severity, aiDefaultLogStream_STDOUT);
+
+	// Create a logger instance for File Output (found in project folder or near .exe)
+	Assimp::DefaultLogger::create("assimp_log.txt",severity, aiDefaultLogStream_FILE);
+
+	// Now I am ready for logging my stuff
+	Assimp::DefaultLogger::get()->info("this is my info-call");
+}
+void destroyAILogger()
+{
+	// Kill it after the work is done
+	Assimp::DefaultLogger::kill();
+}
+
+void logInfo(std::string logString)
+{
+	//Will add message to File with "info" Tag
+	Assimp::DefaultLogger::get()->info(logString.c_str());
+}
+
+void logDebug(const char* logString)
+{
+	//Will add message to File with "debug" Tag
+	Assimp::DefaultLogger::get()->debug(logString);
+}
+
+
 /*some general option for autpoack to run*/
 
 float stepsize = 15*1.1547;         //grid step size ie smallest ingredients radius
@@ -1810,6 +1855,71 @@ openvdb::Vec3f getArray(std::string str){
     return p;
 }
 
+//use Open Asset Import BSD Licence
+//see here for repo woth xcode project https://bitbucket.org/sherief/open-asset-import/src
+void getMeshs_assimp_node(const struct aiNode* nd,
+                            struct aiMatrix4x4* trafo,
+                            std::vector<mesh>* meshs){
+    struct aiMatrix4x4 prev;
+    unsigned int n = 0, t;
+    prev = *trafo;
+    *trafo = prev * nd->mTransformation;
+    //aiMultiplyMatrix4(trafo,&nd->mTransformation);
+    std::cout << " mNumMeshes is " <<  nd->mNumMeshes << std::endl;
+    for (; n < nd->mNumMeshes; ++n) {
+        mesh mesh3d;  
+        std::vector<openvdb::Vec3s> vertices;
+        std::vector<openvdb::Vec3I> faces;
+        std::vector<openvdb::Vec4I> quads;
+        const struct aiMesh* m = scene->mMeshes[nd->mMeshes[n]];
+        for (t = 0; t < m->mNumVertices; ++t) {
+            struct aiVector3D tmp = m->mVertices[t];//*(*trafo);
+            tmp*=*trafo;
+            //aiTransformVecByMatrix4(&tmp,trafo);
+            vertices.push_back(openvdb::Vec3s(tmp.x,tmp.y,tmp.z));
+        // get the vertices and fill mesh         
+        }
+        for (t = 0; t < m->mNumFaces; ++t) {
+            struct aiFace f = m->mFaces[t];
+            if (f.mNumIndices == 3) faces.push_back(openvdb::Vec3I(f.mIndices[0],f.mIndices[1],f.mIndices[2]));
+            else if (f.mNumIndices == 3) quads.push_back(openvdb::Vec4I(f.mIndices[0],f.mIndices[1],f.mIndices[2],f.mIndices[3]));
+        }
+        mesh3d.vertices = vertices; 
+        mesh3d.faces = faces;
+        mesh3d.quads = quads;
+        meshs->push_back(mesh3d);
+        std::cout << " nmesh is " <<  meshs->size() << std::endl;   
+   }
+    std::cout << " nchildren is " <<  nd->mNumChildren << std::endl;
+	for (n = 0; n < nd->mNumChildren; ++n) {
+		getMeshs_assimp_node(nd->mChildren[n],trafo,meshs);
+	}
+	*trafo = prev;
+}
+
+std::vector<mesh> getMeshs_assimp(std::string path){
+    unsigned int n = 0, t;
+    std::vector<mesh> meshs;
+    //const struct aiScene* scene = NULL;
+    std::cout << " scene to load  " <<  path << std::endl; 
+     // Create an instance of the Importer class
+    //Assimp::Importer importer;
+    // And have it read the given file with some example postprocessing
+    // Usually - if speed is not the most important aspect for you - you'll
+    // propably to request more postprocessing than we do in this example.
+    scene = importer->ReadFile(path.c_str(),aiProcessPreset_TargetRealtime_Fast);
+    //scene = aiImportFile(path.c_str(),aiProcessPreset_TargetRealtime_Fast);//aiProcessPreset_TargetRealtime_Quality);//require const char*
+    std::cout << " scene loaded  and has mesh ? " <<  scene->HasMeshes () << std::endl;    
+    //for every node ?recursively from scene->mRootNode
+    struct aiNode* nd = scene->mRootNode;
+    struct aiMatrix4x4 trafo;
+    //aiIdentityMatrix4(&trafo);
+    getMeshs_assimp_node(scene->mRootNode,&trafo,&meshs);
+    importer->FreeScene( );
+    //Assimp::aiReleaseImport(scene); 
+    return meshs;
+}
+//
 
 std::vector<mesh> getMeshs(std::string path){
     //need a more efficient parser that will get node-transformation-mesh
@@ -2057,7 +2167,9 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         sphere ingr ;
         if ((!strmeshFile.empty())&&(!forceSphere)){
             //mesh3d = getMesh(strmeshFile);
-            meshs = getMeshs(strmeshFile);
+            //meshs = getMeshs(strmeshFile);
+            meshs = getMeshs_assimp(strmeshFile);
+            std::cout << "# mesh nb " << meshs.size()  << std::endl;
             if (meshs.size()==1) {
                 ingr = makeMeshIngredient(radii,_mode,mol,priority,nMol,iname,
                     color,nbJitter,jitter,meshs[0]);
@@ -2210,6 +2322,9 @@ void printTheGrid(big_grid g){
 //main loop is here
 int main(int argc, char* argv[])
 {   
+
+    createAILogger();
+
     float seed = atof(argv[2]);             //random seed
     forceSphere = (bool) atoi(argv[3]);     //force using sphere level set instead of mesh level set
     std::string filename = argv[1];         //xml setuo file
