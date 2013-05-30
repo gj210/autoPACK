@@ -65,10 +65,11 @@ xml parser for collada import, dont forgot the lib in the folder
 float stepsize = 15*1.1547;         //grid step size ie smallest ingredients radius
 const float dmax = 999999.0;        //maximum value assign to the grid for intialisation
 const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
-const bool DEBUG = true;                   //DEBUG mode for prining some information
+const bool DEBUG = false;                   //DEBUG mode for prining some information
 const float MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
 const float spherewidth = 10.0;             //default or more ? close packing need to increase this number
-const std::string packing = "close";       //packing mode, can be random or close
+const std::string packing = "random";       //packing mode, can be random or close
+bool forceSphere = true;
 //deprecated use now the packingMode from the setup file
 //easy to overwrite but need to recompile
 
@@ -160,6 +161,7 @@ struct sphere {
     std::vector<openvdb::Vec3f> positions;
     float minRadius;
     float maxRadius;
+    float stepsize;
     //point trans;
     int mode;
     int nbMol;
@@ -336,9 +338,13 @@ inline sphere makeSphere(float radius, int mode, float concentration,
     sp.positions[0] = openvdb::Vec3f(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
+    float size=stepsize;
+    if (stepsize > sp.minRadius) size = sp.minRadius/2.0;
+    sp.stepsize = size;
+
     sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
               /*radius=*/radius, /*center=*/sp.trans,//where is the sphere is  index or worl
-               /*voxel size=*/stepsize, /*width=*/25.0);//width could be maxRadius / stepsize (int)MaxRadius/stepsize
+               /*voxel size=*/size, /*width=*/25.0);//width could be maxRadius / stepsize (int)MaxRadius/stepsize
     //sp.gsphere->signedFloodFill();
         
     //sphere bounding box
@@ -393,11 +399,15 @@ inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concent
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
+
+    float size=stepsize;
+    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
+    sp.stepsize = stepsize;
     
     if (radii.size() == 1 ){
          sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
               /*radius=*/sp.radius, /*center=*/positions[0],//where is the sphere is  index or worl
-               /*voxel size=*/stepsize, /*width=*/spherewidth); 
+               /*voxel size=*/size, /*width=*/spherewidth); 
         //sphere bounding box
         const openvdb::Vec3d ibotleft(-sp.radius,-sp.radius,-sp.radius);//(0,0,0)
         const openvdb::Vec3d iupright(sp.radius,sp.radius,sp.radius);//(1000,1000,10);
@@ -413,13 +423,15 @@ inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concent
     else {
         std::vector<openvdb::FloatGrid::Ptr> gspheres;
         sp.gsphere = openvdb::FloatGrid::create(dmax);
+        sp.gsphere->setTransform(
+            openvdb::math::Transform::createLinearTransform(/*voxel size=*/size)); 
         gspheres.resize(radii.size());
         for (int i =0 ; i < radii.size();i++){
             //is the position in xyz or ijk ?
             if (DEBUG)std::cout << "#r " << radii[i] << " pos " <<  positions[i] << std::endl;
             gspheres[i] = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
                   /*radius=*/radii[i], /*center=*/positions[i],//where is the sphere is  index or worl
-                   /*voxel size=*/stepsize, /*width=*/(int)spherewidth);
+                   /*voxel size=*/size, /*width=*/(int)spherewidth);
             //union with gsphere
             sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
             //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
@@ -481,22 +493,25 @@ inline sphere makeMeshIngredient(std::vector<float> radii, int mode, float conce
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
     sp.gsphere = openvdb::FloatGrid::create(dmax);
+    float size=stepsize;
+    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
+    sp.stepsize = stepsize;
     //levelSet
     if (DEBUG) std::cout << "#mesh have v "<< mesh3d.vertices.size() << " f " << mesh3d.faces.size() << " q " << mesh3d.quads.size() << std::endl;
     
     if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() != 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
-            *openvdb::math::Transform::createLinearTransform(stepsize), 
+            *openvdb::math::Transform::createLinearTransform(size), 
                 mesh3d.vertices, mesh3d.faces, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() == 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
-            *openvdb::math::Transform::createLinearTransform(stepsize), 
+            *openvdb::math::Transform::createLinearTransform(size), 
             mesh3d.vertices, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() == 0)&&(mesh3d.faces.size() != 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
-            *openvdb::math::Transform::createLinearTransform(stepsize), 
+            *openvdb::math::Transform::createLinearTransform(size), 
             mesh3d.vertices, mesh3d.faces);
     }
     
@@ -519,6 +534,79 @@ inline sphere makeMeshIngredient(std::vector<float> radii, int mode, float conce
     return sp;
 }
 
+//helper to create an ingredient given a different 3d mesh triangles or quads
+inline sphere makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
+         float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
+        unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs){
+    sphere sp;
+    sp.radii = radii;
+    sp.positions.resize(1);
+    sp.positions[0] = openvdb::Vec3f(0,0,0);
+    //sp.positions = positions;
+    sp.radius = radii[0];
+    sp.mode = mode;
+    sp.minRadius = sp.radius ;
+    sp.maxRadius = 0.0;
+    sp.nbMol=nbMol;
+    sp.completion = 0.0;
+    sp.packingMode = packing;
+    sp.packingPriority = packingPriority;
+    sp.name = name;
+    sp.counter = 0;
+    sp.rejectionCounter = 0;
+    sp.rejectionThreshold  = rejectionThresholdIngredient;
+    sp.active = true;
+    sp.color = color;
+    sp.nbJitter = nbJitter;
+    sp.trans = openvdb::Vec3f(0,0,0);
+    sp.jitterMax = jitterMax;
+    //build the grid
+    //need to create as many grid as sphere, then combine then in one uniq ie union?
+    sp.gsphere = openvdb::FloatGrid::create(dmax);
+    float size=stepsize;
+    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
+    sp.stepsize = stepsize;
+    //levelSet
+    std::vector<openvdb::FloatGrid::Ptr> gspheres;
+    sp.gsphere->setTransform(
+            openvdb::math::Transform::createLinearTransform(/*voxel size=*/size));    
+    gspheres.resize(meshs.size());
+    if (DEBUG) std::cout << "#merge "<< meshs.size() << " voxelmesh " << std::endl;
+    for (int i =0 ; i < meshs.size();i++){
+        //is the position in xyz or ijk ?
+        if (DEBUG) std::cout << "#mesh have v "<< meshs[i].vertices.size() << " f " << meshs[i].faces.size() << " q " << meshs[i].quads.size() << std::endl;
+        if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() != 0)){
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+                *openvdb::math::Transform::createLinearTransform(size), 
+                    meshs[i].vertices, meshs[i].faces, meshs[i].quads);
+        }
+        else if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() == 0)){
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+                *openvdb::math::Transform::createLinearTransform(size), 
+                meshs[i].vertices, meshs[i].quads);
+        }
+        else if ((meshs[i].quads.size() == 0)&&(meshs[i].faces.size() != 0)){
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+                *openvdb::math::Transform::createLinearTransform(size), 
+                meshs[i].vertices, meshs[i].faces);
+        }
+        if (DEBUG) std::cout <<  "combine " <<size <<std::endl;
+        sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
+        sp.gsphere->prune();
+        //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
+    }
+    if (DEBUG) std::cout <<  "OK merged all of them and step is "<< size <<std::endl;
+    //sp.gsphere->prune();
+    sp.bbox = sp.gsphere->evalActiveVoxelBoundingBox();
+    if (DEBUG) std::cout <<  "OK bbox "<< sp.bbox << std::endl;    
+    sp.useRotAxis=false;
+    sp.gsphere->evalMinMax(sp.miniVal,sp.maxiVal);//distance
+    // Apply the functor to all active values.
+    std::cout << "#radius is "<< sp.minRadius <<" mini " << sp.miniVal << " maxi " << sp.maxiVal << " bb " << sp.bbox<<std::endl;
+    //openvdb::tools::foreach(sp.gsphere->beginValueAll(), SetMaxToDefault(sp.maxiVal));
+    //translate (const Coord &t)
+    return sp;
+}
 
 //code from the openvdb documentation
 template<typename OpType>
@@ -684,6 +772,7 @@ struct big_grid { // needs 8*n bytes
     unsigned num_points;        //total number of point in the grid
     float space;                //spacing of the grid (unit depends on user)
     float maxradius;            //the biggest ingredient
+    float minradius;            //the biggest ingredient
     float lowestPriority;       //priority the lowest after sorting
     float totalRadii;           //sum of all ingredient radii
     float totalPriorities;
@@ -772,21 +861,28 @@ struct big_grid { // needs 8*n bytes
         //retrieve the biggest one
         ingredients = _ingredients;
         maxradius = 0.0;
+        minradius = 9999999.9;
         activeIngr.resize(ingredients.size());
         for(unsigned i = 0; i < ingredients.size(); ++i) { 
             if (ingredients[i].maxRadius > maxradius) 
                 maxradius = ingredients[i].maxRadius;
+            if (ingredients[i].minRadius < minradius) 
+                minradius = ingredients[i].minRadius;
             activeIngr[i] = &ingredients[i];
         }
         numActiveIngr = ingredients.size();
+        std::cout << "#min radius " << minradius << " stepsize " << stepsize << std::endl;
         //activeIngr = &ingredients;
     }
     
     void getMaxRadius(){
         maxradius = 0.0;
+        //minradius = 9999.9;
         for(unsigned i = 0; i < numActiveIngr; ++i) { 
             if (activeIngr[i]->maxRadius > maxradius) 
                 maxradius = activeIngr[i]->maxRadius;
+            //if (activeIngr[i].minRadius < minradius) 
+            //    minradius = activeIngr[i].minRadius;
         }
     }
 
@@ -1046,7 +1142,9 @@ struct big_grid { // needs 8*n bytes
             }
         }else {
             //pick random
-            ingr = activeIngr[rand() % numActiveIngr];
+            //ingr = activeIngr[rand() % numActiveIngr];
+            ingr = activeIngr[(int) (uniform(generator) * numActiveIngr)];
+            //uniform(generator)
         }
         return ingr;
     }
@@ -1187,7 +1285,8 @@ struct big_grid { // needs 8*n bytes
             //else if (ingr->packingMode=="gradient") //&& (use_gradient)  
             //    ptInd =0;// self.gradients[ingr.gradient].pickPoint(allIngrPts) 
             //else{
-            else cijk = allIngrPts[rand() % allIngrPts.size()];
+            //else cijk = allIngrPts[rand() % allIngrPts.size()]; // is this working correctly?
+            else cijk = allIngrPts[(int)(uniform(generator) * allIngrPts.size())];
             //if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
             //}     
         }else {
@@ -1406,22 +1505,20 @@ struct big_grid { // needs 8*n bytes
                 rtrans.push_back(openvdb::math::Vec3f(target.x,target.y,target.z)); 
                 rrot.push_back(openvdb::math::Mat4d(rotMatj));
                 results[rtrans.size()-1] = ingr;
+
                 if (DEBUG) std::cout << "#combine the grid "<< std::endl;
+
                 // A linear transform with the correct spacing
                 openvdb::math::Transform::Ptr sourceXform =
-                    openvdb::math::Transform::createLinearTransform(stepsize);
+                    openvdb::math::Transform::createLinearTransform(ingr->stepsize);//should be stepsize or minRadius
+                //which stepsize for the target transform
                 openvdb::math::Transform::Ptr targetXform =
-                    openvdb::math::Transform::createLinearTransform();
+                    openvdb::math::Transform::createLinearTransform();//stepsize ?
                 // Add the offset.
-                openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
+                openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
                 targetXform->preMult(rotMatj);
                 targetXform->postTranslate(woffset);
-                //if (DEBUG) std::cout << "#" << pid << " collide ? " << collision << " "<<woffset<<std::endl;
-                //targetXform->preTranslate(woffset);
-                //transform->worldToIndex
-                //ingr.gsphere->setTransform(transform);
-                //openvdb::math::Mat4d matrix = transform->getBaseMap()->getAffineMap()->getMat4();
-                //matrix.postTranslate(distance_grid->worldToIndex(offset));
+
                 openvdb::Vec3d vcc;
                 openvdb::Vec3d cc;
                 openvdb::Coord spcc;
@@ -1434,6 +1531,7 @@ struct big_grid { // needs 8*n bytes
                 openvdb::FloatGrid::Ptr copyOfGridSphere = openvdb::FloatGrid::create(dmax);
                 //openvdb::FloatGrid::Ptr copyOfGridSphere = ingr.gsphere->deepCopy();
                 copyOfGridSphere->setTransform(targetXform);
+
                 openvdb::Mat4R xform =
                     sourceXform->baseMap()->getAffineMap()->getMat4() *
                     targetXform->baseMap()->getAffineMap()->getMat4().inverse();
@@ -1551,7 +1649,7 @@ struct big_grid { // needs 8*n bytes
         openvdb::math::Vec3f offset(pos.x,pos.y,pos.z);//where the sphere should be.
         openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
         openvdb::math::Transform::Ptr transform =
-            openvdb::math::Transform::createLinearTransform(stepsize);
+            openvdb::math::Transform::createLinearTransform(sp->stepsize);//
         transform->postTranslate(woffset);
         //transform->worldToIndex
         //sp.gsphere->setTransform(transform);
@@ -1585,7 +1683,10 @@ struct big_grid { // needs 8*n bytes
                 //test if ci in bb ?
                 //std::cout << "#ci " << ci << std::endl;
                 //if  (!bbox.isInside(ci)){collide = true;return true;continue;}//or reject ?
-                if  (!bbox.isInside(ci)){continue;}//or reject ? or we can just look for collision outside ? could have an outside layer...
+                if  (!bbox.isInside(ci)){
+                        //some point are not inside the grid but could update as well?
+                        //continue;                       
+                }//or reject ? or we can just look for collision outside ? could have an outside layer...
                 //like two bounding box
                 float v  = accessor_distance.getValue(ci);
                 //std::cout << "#v " << v << " " << ci << std::endl;
@@ -1677,7 +1778,7 @@ std::vector<openvdb::Vec3s> getPositionsS(std::vector<float> pos){
     return positions;
 }
 
-std::vector<openvdb:: Vec3I > getPositionsInt(std::vector<int> pos){
+std::vector<openvdb::Vec3I> getPositionsInt(std::vector<int> pos){
     int i = 0; 
     std::vector<openvdb:: Vec3I > positions;   
     while (i<pos.size()-2){
@@ -1709,11 +1810,112 @@ openvdb::Vec3f getArray(std::string str){
     return p;
 }
 
+
+std::vector<mesh> getMeshs(std::string path){
+    //need a more efficient parser that will get node-transformation-mesh
+    
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file(path.c_str());
+    std::cout << "#Load result: " << result.description() << " library_geometries " << doc.child("COLLADA").child("library_geometries") << std::endl;
+    int nbGeom = 0;  
+    std::vector<mesh> meshs;  
+    for (pugi::xml_node geometry = doc.child("COLLADA").child("library_geometries").first_child(); geometry; geometry = geometry.next_sibling())
+    {
+        if (std::string(geometry.name()) != "geometry") continue;
+        std::cout << "#geometry: " << nbGeom << std::endl;
+        mesh mesh3d;   
+        //find source geom
+        pugi::xml_node meshnode = geometry.child("mesh");
+        if (DEBUG)std::cout << "#meshnode " << meshnode << std::endl;
+        pugi::xml_node vnode = meshnode.child("vertices");
+        if (DEBUG)std::cout << "#vnode " << vnode << " x " << vnode.child("input") << std::endl;
+        //get the ID of the array of float ie input source
+        std::string idsource(vnode.child("input").attribute("source").value());
+        //remove the #
+        //std::replace(idsource.begin(), idsource.end(), '#', '');
+        idsource.erase(std::remove(idsource.begin(), idsource.end(), '#'), idsource.end()); 
+        if (DEBUG)std::cout << "#idsource " << idsource  << std::endl;
+        pugi::xml_node varray;
+        int vcount=0;
+        //find_child_by_attribute(const char_t* name, const char_t* attr_name, const char_t* attr_value) const
+        for (pugi::xml_node source = meshnode.child("source"); source; source = source.next_sibling("source")){
+            std::string strid(source.attribute("id").value());
+            if (DEBUG)std::cout << "#id " << strid  << std::endl;
+            if ( strid == idsource){
+                 varray =  source.child("float_array");  
+                 vcount =  varray.attribute("count").as_int();
+                 break;
+            }
+        }
+        if (DEBUG)std::cout << "#vcount " << vcount  << std::endl;
+        //std::string varraysource(varray.value());
+        //std::cout << "#varray " << varray.text().get()  << std::endl;
+        std::string strarray( varray.text().get() );
+        std::vector<float> pos = getBox(strarray);     
+        std::vector<openvdb::Vec3s> vertices = getPositionsS(pos);
+        //now the face
+        std::vector<openvdb:: Vec3I > faces;
+        std::vector<openvdb:: Vec4I > quads;
+        pugi::xml_node fnode = meshnode.child("polylist");//or triangles
+        if (fnode) {
+            //std::cout << "#fnode " << fnode.child("p").text().get()  << std::endl;
+            //get the vertices fload array ID and parse it
+            std::string strintfcount( fnode.child("vcount").text().get() );
+            std::vector<int> fcount = getInts(strintfcount);
+            std::string strintarray( fnode.child("p").text().get() );
+            std::vector<int> f = getInts(strintarray);
+            if (DEBUG)std::cout << "#fcount polylist " << fcount.size() << std::endl;
+            for (int i = 0; i< fcount.size();i++){
+                  if (fcount[i] == 3){
+                    faces.push_back(openvdb:: Vec3I(f[i],f[i+1],f[i+2]));                
+                    }
+                  else if (fcount[i] == 4){
+                    quads.push_back(openvdb:: Vec4I(f[i],f[i+1],f[i+2],f[i+3]));  
+                    }       
+            }
+        }
+        else {
+            fnode = meshnode.child("triangles");//or triangles
+            std::string strintarray( fnode.child("p").text().get() );
+            std::vector<int> f = getInts(strintarray);
+            //actually need every third position not all
+            int counter = 0 ;
+            int face[3];
+            for (int i = 0; i< f.size();i++){
+                 if ((i % 3) == 0)  {
+                    face[counter] = f[i];
+                    counter++;
+                    if (counter == 3) {
+                        counter = 0;
+                         openvdb:: Vec3I  p(face[0],face[1],face[2]);//, openvdb::util::INVALID_IDX);
+                         faces.push_back(p);
+                    }
+                }
+            }    
+            //faces = getPositionsInt(f);
+            quads.resize(0);
+            if (DEBUG)std::cout << "#fcount triangle " <<faces.size() << " " << f.size() << std::endl;
+        }
+        
+        //same for the triangle
+        mesh3d.vertices = vertices; 
+        mesh3d.faces = faces;
+        mesh3d.quads = quads;
+        nbGeom+=1; 
+        meshs.push_back(mesh3d);  
+    }
+    return meshs;
+}
+
 mesh getMesh(std::string path){
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
     std::cout << "#Load result: " << result.description() << " library_geometries " << doc.child("COLLADA").child("library_geometries") << std::endl;
-    mesh mesh3d;
+    mesh mesh3d;    
+    //whatabout different geoms in one file
+    //how many geometry node there is ?
+    pugi::xml_node gnodes = doc.child("COLLADA").child("library_geometries").child("geometry"); //is this gave the number of geom ?    
+    std::cout << "#gnodes " << gnodes << std::endl;//
     pugi::xml_node meshnode = doc.child("COLLADA").child("library_geometries").child("geometry").child("mesh");
     std::cout << "#meshnode " << meshnode << std::endl;
     pugi::xml_node vnode = meshnode.child("vertices");
@@ -1826,9 +2028,12 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         if (DEBUG)std::cout << "#priority "<< priority << std::endl;        
         int nMol = ingredient.attribute("nbMol").as_int();
         if (DEBUG)std::cout << "#nmol "<< nMol << std::endl; 
-        std::string iname(ingredient.attribute("name").value());         
-        std::string strcol(ingredient.attribute("color").value());
-        openvdb::Vec3f color = getArray(strcol);
+        std::string iname(ingredient.attribute("name").value()); 
+        openvdb::Vec3f color(1,0,0);
+        if (ingredient.attribute("color")){        
+            std::string strcol(ingredient.attribute("color").value());
+            openvdb::Vec3f color = getArray(strcol);
+        }
         unsigned nbJitter = ingredient.attribute("nbJitter").as_int();
         if (DEBUG)std::cout << "#color "<< color << std::endl;
         std::string strjitter(ingredient.attribute("jitterMax").value());
@@ -1848,19 +2053,28 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         std::cout << "# mesh file ? " << strmeshFile << " x " << strmeshFile.empty() << std::endl;
         //can be none
         mesh mesh3d;
+        std::vector<mesh> meshs;
         sphere ingr ;
-        if (!strmeshFile.empty()){
-            mesh3d = getMesh(strmeshFile);
-            ingr = makeMeshIngredient(radii,_mode,mol,priority,nMol,iname,
-                    color,nbJitter,jitter,mesh3d);
-            ingr.filename = strmeshFile;
+        if ((!strmeshFile.empty())&&(!forceSphere)){
+            //mesh3d = getMesh(strmeshFile);
+            meshs = getMeshs(strmeshFile);
+            if (meshs.size()==1) {
+                ingr = makeMeshIngredient(radii,_mode,mol,priority,nMol,iname,
+                    color,nbJitter,jitter,meshs[0]);
+            }
+            else {
+                ingr = makeMeshesIngredient(radii,_mode,mol,priority,nMol,iname,
+                    color,nbJitter,jitter,meshs);
+            }
+            
         }
         else {
             ingr = makeMultiSpheres(radii,_mode,mol,priority,nMol,iname,
                     color,nbJitter,jitter,positions);
         }
-
+        ingr.filename = strmeshFile;
         ingr.principalVector=principalVector;
+        ingr.useRotAxis = false;
         if (ingredient.attribute("useRotAxis")){
             ingr.useRotAxis = ingredient.attribute("useRotAxis").as_bool();
             ingr.rotRange = ingredient.attribute("rotRange").as_float();
@@ -1869,6 +2083,7 @@ big_grid load_xml(std::string path,int _mode,float _seed){
                 ingr.rotAxis =  getArray(strRaxe);
             }
         }
+        ingr.perturbAxisAmplitude = 0.1;
         if (ingredient.attribute("perturbAxisAmplitude")){
             ingr.perturbAxisAmplitude = ingredient.attribute("perturbAxisAmplitude").as_float();
         }
@@ -1939,64 +2154,78 @@ void printIngredientGrid(sphere ingr){
         }
     }
     //or pointCloud?
-    std::cout << "isph=helper.PointCloudObject(iname+\"_inside\",vertices = inside,materials=[[0,0,1]])\n";
+    std::cout << "isph=helper.PointCloudObject(iname+\"_inside\",vertices = inside,materials=[[0,0,1]],parent = parentHider)\n";
 }
 
+void printTheGrid(big_grid g){
+    std::cout << "inside=[]\n";
+    std::cout << "outside=[]\n";
+    std::cout << "background=[]\n";
+    std::cout << "distances=[]\n";
+    std::cout << "Distances=[]\n";
+    std::cout << "all=[]\n";
+    int counter=0;
+    openvdb::Coord cc;
+    //the main grid, extract some distance information from it
+    for (openvdb::FloatGrid::ValueAllIter  iter = g.distance_grid->beginValueAll(); iter; ++iter) {//g.distance_grid
+    //for (openvdb::FloatGrid::ValueAllIter  iter = g.ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
+        //create a sphere with color or radius dependant of value ?
+        cc=iter.getCoord();
+        if (g.bbox.isInside(cc)){
+        //if (g.ingredients[1].bbox.isInside(cc)){
+            counter++;
+            float d = iter.getValue();
+            float dv = d;
+            openvdb::Vec3f pos=g.distance_grid->indexToWorld(cc); //getValue? 
+            /*if (iter.getValue() > 0.0 ){
+                float d = iter.getValue();
+                if (d == dmax) d=90.0;
+                std::cout << "distances.append( "<< d <<")\n";
+                std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+            }*/
+            //if (iter.getValue() > 0.0 ){
+            //    if (d == dmax) dv=g.maxradius;
+            //    std::cout << "Distances.append( "<< dv <<")\n";
+            //    std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+           // }
+            if (d < 0.0 ) {
+            //std::cout << "#" <<  cc.x() <<"," <<cc.y()<<"," << cc.z() <<std::endl;
+                std::cout << "inside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+            //std::cout << "s=helper.Sphere(\"sphere" << counter << "\",parent=parent,pos=pos)[0]\n";
+            }
+            else if ((d == dmax )||(d >= spherewidth*stepsize)) {
+                if (d == dmax) d=spherewidth*stepsize;
+                //std::cout << "background.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+                //std::cout << "distances.append( "<< d <<")\n";
+            }
+            else {
+                //std::cout << "outside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+        }
+        }
+    }
+    std::cout << "isph=helper.PointCloudObject(\"inside\",vertices = inside,materials=[[0,0,1]])\n";
+    std::cout << "isph=helper.PointCloudObject(\"background\",vertices = background)\n";
+    std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
+}
 //main loop is here
 int main(int argc, char* argv[])
 {   
-    /*
-    int seed=10;
-    std::vector<sphere> _ingredients;
-    _ingredients.resize(5);
-    _ingredients[0] = makeSphere(200.0,0,0.001,0,2,"5_n200",openvdb::Vec3f(0.827, 0.827, 0.827),3,openvdb::Vec3f(1,1,1));
-    _ingredients[1] = makeSphere(100.0,0,0.01,0,8,"10_n100",openvdb::Vec3f(0.498, 0.498, 0.498),3,openvdb::Vec3f(1,1,1));
-    _ingredients[2] = makeSphere(50.0,0,0.1,0,16,"200_n50",openvdb::Vec3f(0.306, 0.451, 0.816),3,openvdb::Vec3f(1,1,1));
-    _ingredients[3] = makeSphere(25.0,0,1.0,0,64,"x400_n25",openvdb::Vec3f(0.784, 0.204, 0.204),3,openvdb::Vec3f(1,1,1));
-    _ingredients[4] = makeSphere(25.0,0,10.0,0,64,"y400_n25",openvdb::Vec3f(0.467, 0.239, 0.972),3,openvdb::Vec3f(1,1,1));
-    
-    //makeMultiSpheres(std:vector<float> radii, int mode, float concentration, 
-    //     float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-    //    unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions)
-    //can do some multisphere
-    //  radius=[3,4]#1,2
-    //  position=[[0,0,0], [0,0,3]]
-    std::vector< openvdb::Vec3f> positions(2);
-    positions[0] = openvdb::Vec3f(0,0,0);
-    positions[1] = openvdb::Vec3f(6.0,0,0.0);
-    std::vector< float> radii(2);
-    radii[0] = 3.0;
-    radii[1] = 6.0;
-    //_ingredients.resize(1);
-    //_ingredients[0] = makeMultiSpheres(radii,0,0,0,100,"bispheres",openvdb::Vec3f(0.827, 0.827, 0.827),3,openvdb::Vec3f(1,1,1),positions);
-
-    */
-    int mode = atoi(argv[2]);
-    float seed = atof(argv[3]);
-
-    std::string filename = argv[1];    
+    float seed = atof(argv[2]);             //random seed
+    forceSphere = (bool) atoi(argv[3]);     //force using sphere level set instead of mesh level set
+    std::string filename = argv[1];         //xml setuo file
  
+    bool ds_ingrgrid = (bool) atoi(argv[4]);//display level set grid for ingredient
+    bool ds_grid = (bool) atoi(argv[5]);    //display global set grid
     //float stepsize = 5.0*1.1547;
     srand (seed);
     // Initialize the OpenVDB library.  This must be called at least
     // once per program and may safely be called multiple times.
     openvdb::initialize();
     
-    big_grid g = load_xml(filename,mode,seed);
-    std::cout << "#ok grid";
+    //load and setup the pack
+    big_grid g = load_xml(filename,0,seed);
     //return 0;
-    /*
-    const openvdb::Vec3d ibotleft(0,0,0);
-    const openvdb::Vec3d iupright(1000,1000,10);
-    box nxyz;   
-    nxyz.x = unsigned(ceil((iupright.x()-ibotleft.x())/stepsize));//+encapsulatingGrid
-    nxyz.y = unsigned(ceil((iupright.y()-ibotleft.y())/stepsize));//+encapsulatingGrid
-    nxyz.z = unsigned(ceil((iupright.z()-ibotleft.z())/stepsize));//+encapsulatingGrid
-    
-    
-    //should create the grid from a xml file...easier setup
-    big_grid g(nxyz.x,nxyz.y,nxyz.z,stepsize,ibotleft,iupright,seed);
-    */
+
     int pt;
     int i_ijk[3]={0,0,0};
     int counterRej=0;
@@ -2008,12 +2237,6 @@ int main(int argc, char* argv[])
     std::vector<float> radiis;
     std::vector<openvdb::Vec3f> colors;
 
-    ///g.vRangeStart=0.0;
-    //g.pickWeightedIngr=true;
-    //g.pickRandPt =true; 
-    //g.setMode(0);//1-close packing 0-random
-    //g.setIngredients(_ingredients);
-    std::cout << "#set ingredient complete\n";
     int totalNumMols = g.prepareIngredient();
     std::cout << "#prepare ingredient complete\n";
     //g.setMode(0);//random packing
@@ -2160,61 +2383,13 @@ int main(int argc, char* argv[])
     std::cout << "pesph=helper.newEmpty(\"base_sphere\")\n";
     std::cout << "bsph=helper.Sphere(\"sphere\",parent=pesph)[0]\n";
     std::cout << "parent=helper.newEmpty(\"grid parent\")\n";
+    std::cout << "parentHider=helper.newEmpty(\"hider parent\")\n";
+    std::cout << "parentInstance=helper.newEmpty(\"instances parent\")\n";
     std::cout << "parentdistance=helper.newEmpty(\"grid distance\")\n";
     std::cout << "isph=helper.instancesSphere(\"cpp\",pts,r,pesph,color,None,parent=parent)\n";
-    std::cout << "inside=[]\n";
-    std::cout << "outside=[]\n";
-    std::cout << "background=[]\n";
-    std::cout << "distances=[]\n";
-    std::cout << "Distances=[]\n";
-    std::cout << "all=[]\n";
-    counter=0;
-    //the main grid, extract some distance information from it
-    for (openvdb::FloatGrid::ValueAllIter  iter = g.distance_grid->beginValueAll(); iter; ++iter) {//g.distance_grid
-    //for (openvdb::FloatGrid::ValueAllIter  iter = g.ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
-        //create a sphere with color or radius dependant of value ?
-        cc=iter.getCoord();
-        if (g.bbox.isInside(cc)){
-        //if (g.ingredients[1].bbox.isInside(cc)){
-            counter++;
-            float d = iter.getValue();
-            float dv = d;
-            openvdb::Vec3f pos=g.distance_grid->indexToWorld(cc); //getValue? 
-            /*if (iter.getValue() > 0.0 ){
-                float d = iter.getValue();
-                if (d == dmax) d=90.0;
-                std::cout << "distances.append( "<< d <<")\n";
-                std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
-            }*/
-            //if (iter.getValue() > 0.0 ){
-            //    if (d == dmax) dv=g.maxradius;
-            //    std::cout << "Distances.append( "<< dv <<")\n";
-            //    std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
-           // }
-            if (d < 0.0 ) {
-            //std::cout << "#" <<  cc.x() <<"," <<cc.y()<<"," << cc.z() <<std::endl;
-                std::cout << "inside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
-            //std::cout << "s=helper.Sphere(\"sphere" << counter << "\",parent=parent,pos=pos)[0]\n";
-            }
-            else if ((d == dmax )||(d >= spherewidth*stepsize)) {
-                if (d == dmax) d=spherewidth*stepsize;
-                //std::cout << "background.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
-                //std::cout << "distances.append( "<< d <<")\n";
-            }
-            else {
-                //std::cout << "outside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
-        }
-        }
-    }
-    std::cout << "isph=helper.PointCloudObject(\"inside\",vertices = inside,materials=[[0,0,1]])\n";
-    std::cout << "isph=helper.PointCloudObject(\"background\",vertices = background)\n";
-    std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
-    //std::cout << "from DejaVu.colorTool import Map, RGBRamp\n";
-    //std::cout << "from DejaVu.colorMap import ColorMap\n";
-    //std::cout << "ramp = RGBRamp()\n";
-    //std::cout << "v=Distances\n";
-    //std::cout << "dcolors = []#Map(v, ramp)\n";
-    //std::cout << "#isph=helper.instancesSphere(\"distance_cpp\",all,Distances,pesph,dcolors,None,parent=parentdistance)\n";
+
+    if (ds_grid) printTheGrid(g);
+    
     std::cout << "#" << g.num_empty << std::endl;
     std::cout << "#" << g.distance_grid->activeVoxelCount() << std::endl;
     float mini=0.0;
@@ -2226,30 +2401,35 @@ int main(int argc, char* argv[])
     //if mesh
     //for each inredient get the original mesh and create instance for their different poisition in the grid
     for(unsigned i = 0; i < g.ingredients.size(); ++i) { //segmntaton fault here ?
-        if (g.ingredients[i].filename.empty())
-            continue;
+        if (ds_ingrgrid) printIngredientGrid(g.ingredients[i]);
+        //this will create the individual ingredient grid for debugging the voxelization
+        //if (g.ingredients[i].filename.empty())
+        //    continue;
         std::cout << "# ingr " << g.ingredients[i].radius << std::endl;
         std::cout << "iname = \"" << g.ingredients[i].name << "\"\n";    
-        std::cout << "parent=helper.newEmpty(iname+\"_parent\")\n";
+        std::cout << "parent=helper.newEmpty(iname+\"_parent\",parent = parentHider)\n";
         std::cout << "helper.read(\"" << g.ingredients[i].filename << "\")\n"; 
         std::cout << "geom = helper.getObject(iname)\n";
-        std::cout << "helper.reParent(geom,parent)\n";
-        std::cout << "iparent=helper.newEmpty(iname+\"_iparent\")\n";
-        std::cout << "axis = " << g.ingredients[i].principalVector << "\n";
-        std::cout << "ipoly = helper.instancePolygon(iname+\"inst\",\n";
+        std::cout << "if geom is not None :\n";
+        std::cout << "\thelper.rotateObj(geom,[0,math.pi/2.0,0.0])\n";//rotate on X in C4D
+        std::cout << "\thelper.reParent(geom,parent)\n";
+        std::cout << "\tiparent=helper.newEmpty(iname+\"_iparent\")\n";
+        std::cout << "\taxis = " << g.ingredients[i].principalVector << "\n";
+        std::cout << "\tipoly = helper.instancePolygon(iname+\"inst\",\n";
         std::cout << "                      matrices=matrices[iname],\n";
         std::cout << "                      mesh=parent,parent = iparent,\n";
         std::cout << "                      transpose= False,colors=["<<g.ingredients[i].color << "],\n";
         std::cout << "                      axis=axis)\n";
-        printIngredientGrid(g.ingredients[i]);
-        //this will create the individual ingredient grid for debugging the voxelization
         //openvdb use convex - hull, art was suggesting decomposing the mesh to compensate
+        //or just use the multisphere as in blood recipe. Using the mesh merging seems difficult because
+        // of the transformation inside the collada file.
     }    
     //stdout the grid
 }
-//to compile assumin all dependancy present
+//to compile assuming all dependancy present (openvdb, pugixml)
 //sh ./compile_Example
 //to run :
-// time ./autopack Cylinder.xml 0 <seed> > ~/Dropbox/testCpp.py
+// time ./autopack <setup.xml> <seed> <forceSphere> <dsIngrG> <dsG> > ~/Dropbox/testCpp.py
+//example : sh ./compile_Example;time ./autopack  CellScape1.0.xml 12 0 1 1 > ~/Dropbox/testCpp.py
 //the command to run in python and visualize the result
-//execfile("/Users/ludo/DEV/testCpp.py")
+//execfile("/Users/ludo/Dropbox/testCpp.py")
