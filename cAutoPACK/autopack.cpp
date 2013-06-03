@@ -70,40 +70,8 @@ xml parser for collada import, dont forgot the lib in the folder
 
 
 // Create an instance of the Importer class
-Assimp::Importer* importer;
-const aiScene* scene;
-void createAILogger()
-{
-	//Assimp::Logger::LogSeverity severity = Assimp::Logger::NORMAL;
-	Assimp::Logger::LogSeverity severity = Assimp::Logger::VERBOSE;
-
-	// Create a logger instance for Console Output
-	//Assimp::DefaultLogger::create("",severity, aiDefaultLogStream_STDOUT);
-
-	// Create a logger instance for File Output (found in project folder or near .exe)
-	Assimp::DefaultLogger::create("assimp_log.txt",severity, aiDefaultLogStream_FILE);
-
-	// Now I am ready for logging my stuff
-	Assimp::DefaultLogger::get()->info("this is my info-call");
-}
-void destroyAILogger()
-{
-	// Kill it after the work is done
-	Assimp::DefaultLogger::kill();
-}
-
-void logInfo(std::string logString)
-{
-	//Will add message to File with "info" Tag
-	Assimp::DefaultLogger::get()->info(logString.c_str());
-}
-
-void logDebug(const char* logString)
-{
-	//Will add message to File with "debug" Tag
-	Assimp::DefaultLogger::get()->debug(logString);
-}
-
+Assimp::Importer importer;
+//const aiScene* scene;
 
 /*some general option for autpoack to run*/
 
@@ -210,6 +178,7 @@ struct sphere {
     //point trans;
     int mode;
     int nbMol;
+    float molarity; 
     float completion;
     float packingPriority;
     std::string name;
@@ -355,13 +324,28 @@ struct SetMaxToDefault {
     }
 };
 
-
+void setCount(sphere* ingr, float volume){
+    float nbr = ingr->molarity * volume * .000602;// #Mod by Graham 8/18/11
+    int nbi = (int) nbr; //ceil, floor ?              #Mod by Graham 8/18/11
+    float nbmod;    
+    if (nbi == 0) 
+        nbmod = nbr;
+    else 
+        nbmod = fmodf(nbr,(float) nbi);  //#Mod by Graham 8/18/11 ??
+    float randval = rand();                 //#Mod by Graham 8/18/11
+    if (nbmod >= randval)             //   #Mod by Graham 8/18/11
+        nbi = (int)nbi+1;              //#Mod by Graham 8/18/11
+    int nb = nbi;                        //#Mod by Graham 8/18/11
+    std::cout << "#ingredient " << ingr->name << " nbMol " << ingr->nbMol << " nb "<< nb << " total " << nb + ingr->nbMol << std::endl;
+    ingr->nbMol = nb + ingr->nbMol;
+}
 //helper to create a singleSphere ingredient given a radius, and some options
 inline sphere makeSphere(float radius, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax){
     sphere sp;
     sp.radius = radius;
+    sp.molarity=concentration;
     sp.mode = mode;
     sp.minRadius = radius;
     sp.maxRadius = radius;
@@ -422,6 +406,7 @@ inline sphere makeMultiSpheres(std::vector<float> radii, int mode, float concent
     sp.positions = positions;
     sp.radius = radii[0];
     sp.mode = mode;
+    sp.molarity=concentration;
     sp.minRadius = 9999999.0;
     sp.maxRadius = 0.0;
     for (int i =0 ; i < radii.size();i++){
@@ -514,6 +499,7 @@ inline sphere makeMeshIngredient(std::vector<float> radii, int mode, float conce
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d){
     sphere sp;
+    sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
     sp.positions[0] = openvdb::Vec3f(0,0,0);
@@ -584,6 +570,7 @@ inline sphere makeMeshesIngredient(std::vector<float> radii, int mode, float con
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs){
     sphere sp;
+    sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
     sp.positions[0] = openvdb::Vec3f(0,0,0);
@@ -635,15 +622,15 @@ inline sphere makeMeshesIngredient(std::vector<float> radii, int mode, float con
                 *openvdb::math::Transform::createLinearTransform(size), 
                 meshs[i].vertices, meshs[i].faces);
         }
-        if (DEBUG) std::cout <<  "combine " <<size <<std::endl;
+        if (DEBUG) std::cout <<  "#combine " <<size <<std::endl;
         sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
         sp.gsphere->prune();
         //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
     }
-    if (DEBUG) std::cout <<  "OK merged all of them and step is "<< size <<std::endl;
+    if (DEBUG) std::cout <<  "#OK merged all of them and step is "<< size <<std::endl;
     //sp.gsphere->prune();
     sp.bbox = sp.gsphere->evalActiveVoxelBoundingBox();
-    if (DEBUG) std::cout <<  "OK bbox "<< sp.bbox << std::endl;    
+    if (DEBUG) std::cout <<  "#OK bbox "<< sp.bbox << std::endl;    
     sp.useRotAxis=false;
     sp.gsphere->evalMinMax(sp.miniVal,sp.maxiVal);//distance
     // Apply the functor to all active values.
@@ -815,6 +802,8 @@ struct big_grid { // needs 8*n bytes
     std::vector<float> distance;    //the array of closest distances for each point
     unsigned num_empty;         //the number of free point available
     unsigned num_points;        //total number of point in the grid
+    float grid_volume;    
+    float unit_volume;
     float space;                //spacing of the grid (unit depends on user)
     float maxradius;            //the biggest ingredient
     float minradius;            //the biggest ingredient
@@ -894,6 +883,10 @@ struct big_grid { // needs 8*n bytes
                 all[i] = i;
                 empty[i] = i;
             }//distance = new float[nx*ny*nz];
+        unit_volume = pow(stepsize,3.0);
+        grid_volume =  num_points*unit_volume;
+        std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
+        
     }
 
     void setMode(unsigned _mode){
@@ -914,6 +907,9 @@ struct big_grid { // needs 8*n bytes
             if (ingredients[i].minRadius < minradius) 
                 minradius = ingredients[i].minRadius;
             activeIngr[i] = &ingredients[i];
+            //prepare nbMol;
+            setCount(&ingredients[i],grid_volume);//volume ?
+
         }
         numActiveIngr = ingredients.size();
         std::cout << "#min radius " << minradius << " stepsize " << stepsize << std::endl;
@@ -1857,15 +1853,16 @@ openvdb::Vec3f getArray(std::string str){
 
 //use Open Asset Import BSD Licence
 //see here for repo woth xcode project https://bitbucket.org/sherief/open-asset-import/src
-void getMeshs_assimp_node(const struct aiNode* nd,
+void getMeshs_assimp_node(const struct aiScene* scene,const struct aiNode* nd,
                             struct aiMatrix4x4* trafo,
                             std::vector<mesh>* meshs){
+    std::cout << "# getNode " << std::endl;    
     struct aiMatrix4x4 prev;
     unsigned int n = 0, t;
     prev = *trafo;
     *trafo = prev * nd->mTransformation;
     //aiMultiplyMatrix4(trafo,&nd->mTransformation);
-    std::cout << " mNumMeshes is " <<  nd->mNumMeshes << std::endl;
+    std::cout << "# mNumMeshes is " <<  nd->mNumMeshes << std::endl;
     for (; n < nd->mNumMeshes; ++n) {
         mesh mesh3d;  
         std::vector<openvdb::Vec3s> vertices;
@@ -1888,11 +1885,11 @@ void getMeshs_assimp_node(const struct aiNode* nd,
         mesh3d.faces = faces;
         mesh3d.quads = quads;
         meshs->push_back(mesh3d);
-        std::cout << " nmesh is " <<  meshs->size() << std::endl;   
+        std::cout << "# nmesh is " <<  meshs->size() << std::endl;   
    }
-    std::cout << " nchildren is " <<  nd->mNumChildren << std::endl;
+    std::cout << "# nchildren is " <<  nd->mNumChildren << std::endl;
 	for (n = 0; n < nd->mNumChildren; ++n) {
-		getMeshs_assimp_node(nd->mChildren[n],trafo,meshs);
+		getMeshs_assimp_node(scene,nd->mChildren[n],trafo,meshs);
 	}
 	*trafo = prev;
 }
@@ -1900,29 +1897,184 @@ void getMeshs_assimp_node(const struct aiNode* nd,
 std::vector<mesh> getMeshs_assimp(std::string path){
     unsigned int n = 0, t;
     std::vector<mesh> meshs;
-    //const struct aiScene* scene = NULL;
-    std::cout << " scene to load  " <<  path << std::endl; 
+    const aiScene* scene = NULL;
+    std::cout << "# scene to load  " <<  path << std::endl; 
      // Create an instance of the Importer class
-    //Assimp::Importer importer;
+    //Assimp::Importer imp;
+    //importer.SetExtraVerbose(true);
     // And have it read the given file with some example postprocessing
     // Usually - if speed is not the most important aspect for you - you'll
     // propably to request more postprocessing than we do in this example.
-    scene = importer->ReadFile(path.c_str(),aiProcessPreset_TargetRealtime_Fast);
-    //scene = aiImportFile(path.c_str(),aiProcessPreset_TargetRealtime_Fast);//aiProcessPreset_TargetRealtime_Quality);//require const char*
-    std::cout << " scene loaded  and has mesh ? " <<  scene->HasMeshes () << std::endl;    
+    //importer.GetOrphanedScene() ;    
+    //importer.FreeScene( );
+    const unsigned int flags = 
+		aiProcess_Triangulate |
+		//aiProcess_JoinIdenticalVertices |
+		//aiProcess_GenSmoothNormals |
+		//aiProcess_ValidateDataStructure |
+		//aiProcess_RemoveRedundantMaterials |
+		//aiProcess_SortByPType |
+		//aiProcess_FindDegenerates |
+		//aiProcess_FindInvalidData |;
+		aiProcess_GenUVCoords;// |
+		//aiProcess_OptimizeMeshes |
+		//aiProcess_OptimizeGraph;    
+    scene = importer.ReadFile(path.c_str(),flags);
+    scene = importer.GetScene();
+    if( !scene)
+	{
+		std::cout << "#X" << importer.GetErrorString() << "X " << std::endl;
+		return meshs;
+	}
+    //scene = Assimp::aiImportFile(path.c_str(),flags);//aiProcessPreset_TargetRealtime_Quality);//require const char*
+    std::cout << "# scene loaded " << std::endl;
+    //std::cout << " scene loaded  and has mesh ? " <<  scene->HasMeshes() << std::endl;    //segfault ?
     //for every node ?recursively from scene->mRootNode
-    struct aiNode* nd = scene->mRootNode;
+    //struct aiNode* nd = scene->mRootNode;
     struct aiMatrix4x4 trafo;
     //aiIdentityMatrix4(&trafo);
-    getMeshs_assimp_node(scene->mRootNode,&trafo,&meshs);
-    importer->FreeScene( );
+    std::cout << "# scene loaded2 " << std::endl;
+    getMeshs_assimp_node(scene,scene->mRootNode,&trafo,&meshs);
+    //importer.GetOrphanedScene() ;    
+    //importer.FreeScene( );  
+    //delete scene;
     //Assimp::aiReleaseImport(scene); 
     return meshs;
 }
 //
+openvdb::math::Mat4d getNodeTransformation(pugi::xml_node nd){
+    openvdb::math::Transform::Ptr transfo =
+            openvdb::math::Transform::createLinearTransform();
+    if (std::string(nd.name()) == "visual_scene")
+        return transfo->baseMap()->getAffineMap()->getMat4();//should be identity    
+    std::string stringT( nd.child("translate").text().get() );
+    std::vector<float> pos = getBox(stringT);    
+    if (DEBUG) std::cout << "# trans  " <<stringT<< std::endl; 
+    //std::vector<openvdb::Vec3s> translate = getPositionsS(pos);
+    openvdb::math::Mat4d T;
+    T.setIdentity();
+    openvdb::Vec3d trans(pos[0],pos[1],pos[2]);
+    if (trans.length() == 0.0) T.setIdentity();
+    else T.setTranslation(trans);
+    openvdb::math::Mat4d rX;
+    openvdb::math::Mat4d rY;
+    openvdb::math::Mat4d rZ;
+    rX.setIdentity();
+    rY.setIdentity();
+    rZ.setIdentity();
+    //rotation 
+    for (pugi::xml_node rotation = nd.child("rotate"); rotation; rotation = rotation.next_sibling("rotate")){
+        std::string stringR( rotation.text().get() );
+        std::vector<float> r = getBox(stringR);  
+        if (DEBUG) std::cout << "#rotation  " <<stringR<< std::endl;           
+        if (std::string(rotation.attribute("sid").value()) =="rotateY"){
+            rY.setToRotation(openvdb::Vec3d(r[0],r[1],r[2]),(r[3]/180.0)*M_PI);
+        }
+        else if (std::string(rotation.attribute("sid").value()) =="rotateX"){
+            rX.setToRotation(openvdb::Vec3d(r[0],r[1],r[2]),(r[3]/180.0)*M_PI);        
+        }
+        else if (std::string(rotation.attribute("sid").value()) =="rotateZ"){
+            rZ.setToRotation(openvdb::Vec3d(r[0],r[1],r[2]),(r[3]/180.0)*M_PI);
+        }
+    }    
+    //transfo->postTranslate(trans);
+    //transfo->postMult(T*rY*rX*rZ); 
+    transfo->preMult(rZ*rX*rY*T); 
+    return transfo->baseMap()->getAffineMap()->getMat4();
+}
+void getMeshs_nodew(pugi::xml_node nd,
+                            openvdb::math::Mat4d* trafo,
+                            std::map<std::string, mesh> scene_meshs,
+                            std::vector<mesh>* meshs){
+    if (DEBUG) std::cout << "#getNode " <<nd.attribute("id").value()<< std::endl;    
+    openvdb::math::Mat4d prev;
+    unsigned int n = 0, t;
+    prev = *trafo;
+    if (DEBUG) std::cout << "#getNodeTransformation * prev " <<prev<< std::endl;
+    //get node transformation  
+    *trafo = prev * getNodeTransformation(nd) ;
+    //if (DEBUG) std::cout << "trafo= " << *trafo << std::endl;
+    pugi::xml_node igeom_node = nd.child("instance_geometry");
+    if (igeom_node) {
+        if (DEBUG) std::cout << "#geomnode " << std::endl;
+        std::string idsource(igeom_node.attribute("url").value());
+        //remove the #
+        idsource.erase(std::remove(idsource.begin(), idsource.end(), '#'), idsource.end()); 
+        //gett he corresponding mesh and apply the matrice
+        mesh mesh3d;  
+        if (DEBUG) std::cout << "trafo= " << *trafo << std::endl;
+        std::vector<openvdb::Vec3s> vertices;
+        std::vector<openvdb::Vec3I> faces;
+        std::vector<openvdb::Vec4I> quads;
+        mesh m = scene_meshs[idsource];
+        for (t = 0; t < m.vertices.size(); ++t) {
+            //openvdb::Vec3s tmp =  m.vertices[t];//*(*trafo);
+            // tmp=*trafo;
+            //aiTransformVecByMatrix4(&tmp,trafo);
+            vertices.push_back(m.vertices[t]*(*trafo));
+        // get the vertices and fill mesh         
+        }
+        mesh3d.vertices = vertices; 
+        mesh3d.faces = m.faces;
+        mesh3d.quads = m.quads;
+        meshs->push_back(mesh3d);
+        if (DEBUG) std::cout << "#nmesh is " <<  meshs->size() << std::endl;   
+    }
+    for (pugi::xml_node node = nd.child("node"); node; node = node.next_sibling("node")){
+        std::cout << "#" <<nd.attribute("id").value() << "child " << node.attribute("id").value() << std::endl;
+        getMeshs_nodew(node,trafo,scene_meshs,meshs);
+    }
+	trafo = &prev;
+}
 
+void getMeshs_node(pugi::xml_node nd,
+                            openvdb::math::Mat4d trafo,
+                            std::map<std::string, mesh> scene_meshs,
+                            std::vector<mesh>* meshs){
+    if (DEBUG) std::cout << "#getNode " <<nd.attribute("id").value()<< std::endl;    
+    openvdb::math::Mat4d prev;
+    unsigned int n = 0, t;
+    prev = trafo;
+    if (DEBUG) std::cout << "prev =" <<prev<< std::endl;
+    //get node transformation  
+    trafo = prev * getNodeTransformation(nd) ;
+    //if (DEBUG) std::cout << "trafo= " << *trafo << std::endl;
+    pugi::xml_node igeom_node = nd.child("instance_geometry");
+    if (igeom_node) {
+        if (DEBUG) std::cout << "#geomnode " << std::endl;
+        std::string idsource(igeom_node.attribute("url").value());
+        //remove the #
+        idsource.erase(std::remove(idsource.begin(), idsource.end(), '#'), idsource.end()); 
+        //gett he corresponding mesh and apply the matrice
+        mesh mesh3d;  
+        if (DEBUG) std::cout << "trafo= " << trafo << std::endl;
+        std::vector<openvdb::Vec3s> vertices;
+        std::vector<openvdb::Vec3I> faces;
+        std::vector<openvdb::Vec4I> quads;
+        mesh m = scene_meshs[idsource];
+        for (t = 0; t < m.vertices.size(); ++t) {
+            //openvdb::Vec3s tmp =  m.vertices[t];//*(*trafo);
+            // tmp=*trafo;
+            //aiTransformVecByMatrix4(&tmp,trafo);
+            vertices.push_back(m.vertices[t]*trafo);
+        // get the vertices and fill mesh         
+        }
+        mesh3d.vertices = vertices; 
+        mesh3d.faces = m.faces;
+        mesh3d.quads = m.quads;
+        meshs->push_back(mesh3d);
+        if (DEBUG) std::cout << "#nmesh is " <<  meshs->size() << std::endl;   
+    }
+    for (pugi::xml_node node = nd.child("node"); node; node = node.next_sibling("node")){
+        std::cout << "#" <<nd.attribute("id").value() << "child " << node.attribute("id").value() << std::endl;
+        getMeshs_node(node,trafo,scene_meshs,meshs);
+    }
+	trafo = prev;
+}
 std::vector<mesh> getMeshs(std::string path){
     //need a more efficient parser that will get node-transformation-mesh
+    std::map<std::string, mesh> scene_meshes;
+    openvdb::math::Mat4d trafo;
     
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
@@ -1932,7 +2084,8 @@ std::vector<mesh> getMeshs(std::string path){
     for (pugi::xml_node geometry = doc.child("COLLADA").child("library_geometries").first_child(); geometry; geometry = geometry.next_sibling())
     {
         if (std::string(geometry.name()) != "geometry") continue;
-        std::cout << "#geometry: " << nbGeom << std::endl;
+        std::string idgeom(geometry.attribute("id").value());
+        std::cout << "#geometry: " << idgeom << " " << nbGeom << std::endl;
         mesh mesh3d;   
         //find source geom
         pugi::xml_node meshnode = geometry.child("mesh");
@@ -2012,8 +2165,16 @@ std::vector<mesh> getMeshs(std::string path){
         mesh3d.faces = faces;
         mesh3d.quads = quads;
         nbGeom+=1; 
-        meshs.push_back(mesh3d);  
+        //meshs.push_back(mesh3d); 
+        scene_meshes[idgeom] = mesh3d;
     }
+
+    //we have the mesh now create the actual geom with a recursive function that will 
+    //apply the transformation matrices
+    pugi::xml_node scene_node = doc.child("COLLADA").child("library_visual_scenes").first_child();
+    //go through node until finding instance geom
+    trafo.setIdentity();
+    getMeshs_node(scene_node,trafo,scene_meshes,&meshs);
     return meshs;
 }
 
@@ -2152,7 +2313,9 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         std::string straxe(ingredient.attribute("principalVector").value());
         openvdb::Vec3f principalVector =  getArray(straxe);
         if (DEBUG)std::cout << "#principalVector "<< principalVector << std::endl;
-          
+        bool fSphere=forceSphere;
+        if (ingredient.attribute("forceSphere"))
+            fSphere = ingredient.attribute("forceSphere").as_bool(); 
         //also need packingMode,perturbAxisAmplitude
         //mesh file ... should use multiSphere function or makeMesh  
         //sphere ingr = makeSphere(r,_mode,mol,priority,nMol,iname,
@@ -2167,8 +2330,8 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         sphere ingr ;
         if ((!strmeshFile.empty())&&(!forceSphere)){
             //mesh3d = getMesh(strmeshFile);
-            //meshs = getMeshs(strmeshFile);
-            meshs = getMeshs_assimp(strmeshFile);
+            //meshs = getMeshs_assimp(strmeshFile);
+            meshs = getMeshs(strmeshFile);
             std::cout << "# mesh nb " << meshs.size()  << std::endl;
             if (meshs.size()==1) {
                 ingr = makeMeshIngredient(radii,_mode,mol,priority,nMol,iname,
@@ -2202,7 +2365,8 @@ big_grid load_xml(std::string path,int _mode,float _seed){
         //packing mode overwrite from xml file
         ingr.packingMode = std::string(ingredient.attribute("packingMode").value());
         _ingredients.push_back(ingr);
-        if (DEBUG)std::cout << "#ok ingredient "<< std::endl;
+        float volume= 1;
+        std::cout << "#ingredient done!" << std::endl;
     }
     //make the grid and return it
     const openvdb::Vec3d ibotleft(bb[0],bb[1],bb[2]);
@@ -2323,7 +2487,7 @@ void printTheGrid(big_grid g){
 int main(int argc, char* argv[])
 {   
 
-    createAILogger();
+    //createAILogger();
 
     float seed = atof(argv[2]);             //random seed
     forceSphere = (bool) atoi(argv[3]);     //force using sphere level set instead of mesh level set
@@ -2358,6 +2522,7 @@ int main(int argc, char* argv[])
     int counter = 0;
     int PlacedMols=0;
     int emptyList;
+    //g.num_empty = 0;
     openvdb::FloatGrid::Accessor accessor_distance = g.distance_grid->getAccessor();
     while(g.num_empty > 0) {     
     //for(unsigned i = 0; i < 2 ; ++i) {//nx*ny*nz
