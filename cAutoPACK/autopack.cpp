@@ -1290,7 +1290,8 @@ struct big_grid { // needs 8*n bytes
                 //return getU(dim,cc);//return first found
                 allIngrPts.push_back(cc);
                 if (d < mini_d){
-                    //if the point alread visisted and rejected
+                    //if the point alread visisted and rejected 
+                    //should be for this ingredient only
                     if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
                     if (notfound) {
                 		 // not found
@@ -1331,10 +1332,16 @@ struct big_grid { // needs 8*n bytes
             //    ptInd =0;// self.gradients[ingr.gradient].pickPoint(allIngrPts) 
             //else{
             //else cijk = allIngrPts[rand() % allIngrPts.size()]; // is this working correctly?
-            else cijk = allIngrPts[(int)(uniform(generator) * allIngrPts.size())];
+            else {
+                //cijk = allIngrPts[(int)(uniform(generator) * allIngrPts.size())];
+                cijk = allIngrPts[(int)(rand() * allIngrPts.size())];
+                //why this would be on the edge and top. maybe the uniform distribution is not appropriate.
+                //
+            }
             //if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
             //}     
         }else {
+            //ordered ?
             std:sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
             cijk = allIngrPts[0];
         }
@@ -1876,7 +1883,7 @@ void getMeshs_assimp_node(const struct aiScene* scene,const struct aiNode* nd,
         std::vector<openvdb::Vec4I> quads;
         const struct aiMesh* m = scene->mMeshes[nd->mMeshes[n]];
         for (t = 0; t < m->mNumVertices; ++t) {
-            struct aiVector3D tmp = m->mVertices[t];//*(*trafo);
+            struct aiVector3D tmp = m->mVertices[t];//(*trafo);
             tmp*=*trafo;
             //aiTransformVecByMatrix4(&tmp,trafo);
             vertices.push_back(openvdb::Vec3s(tmp.x,tmp.y,tmp.z));
