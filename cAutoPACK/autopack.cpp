@@ -61,7 +61,9 @@ xml parser for collada import, dont forgot the lib in the folder
 
 
 /*assimp include*/
+
 //#include <assimp/assimp.h>// C importer interface
+/* Deprecated use only pugixml
 #include <assimp/assimp.hpp>// C++ importer interface
 #include <assimp/aiPostProcess.h>// Post processing flags
 #include <assimp/aiScene.h>// Output data structure
@@ -72,6 +74,8 @@ xml parser for collada import, dont forgot the lib in the folder
 // Create an instance of the Importer class
 Assimp::Importer importer;
 //const aiScene* scene;
+*/
+
 
 /*some general option for autpoack to run*/
 
@@ -1850,6 +1854,8 @@ openvdb::Vec3f getArray(std::string str){
     openvdb::Vec3f p(v[0],v[1],v[2]);
     return p;
 }
+/* 
+assimp test, but doesnt work for all colldada file
 
 //use Open Asset Import BSD Licence
 //see here for repo woth xcode project https://bitbucket.org/sherief/open-asset-import/src
@@ -1941,6 +1947,7 @@ std::vector<mesh> getMeshs_assimp(std::string path){
     //Assimp::aiReleaseImport(scene); 
     return meshs;
 }
+*/
 //
 openvdb::math::Mat4d getNodeTransformation(pugi::xml_node nd){
     openvdb::math::Transform::Ptr transfo =
@@ -2709,7 +2716,7 @@ int main(int argc, char* argv[])
 //to compile assuming all dependancy present (openvdb, pugixml)
 //sh ./compile_Example
 //to run :
-// time ./autopack <setup.xml> <seed> <forceSphere> <dsIngrG> <dsG> > ~/Dropbox/testCpp.py
+// time ./autopack <setup.xml> <seed> <forceSphere> <dsIngrGrid> <diplaysGrid> > ~/Dropbox/testCpp.py
 //example : sh ./compile_Example;time ./autopack  CellScape1.0.xml 12 0 1 1 > ~/Dropbox/testCpp.py
 //the command to run in python and visualize the result
 //execfile("/Users/ludo/Dropbox/testCpp.py")
