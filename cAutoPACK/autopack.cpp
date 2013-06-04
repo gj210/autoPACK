@@ -827,6 +827,7 @@ struct big_grid { // needs 8*n bytes
     std::default_random_engine generator;
     std::uniform_real_distribution<float> uniform;// (0.0,1.0);
     std::normal_distribution<float> gauss;//(0.0,0.3);
+    std::uniform_real_distribution<double> distribution;
 
     openvdb::FloatGrid::Ptr distance_grid;
     openvdb::CoordBBox bbox;
@@ -843,6 +844,7 @@ struct big_grid { // needs 8*n bytes
         data(nx*ny*nz),
         distance(nx*ny*nz),
         uniform(0.0,1.0),
+        distribution(0.0,1.0),
         gauss(0.0,0.3){
         
         generator.seed (seed);
@@ -1283,9 +1285,25 @@ struct big_grid { // needs 8*n bytes
         std::vector<float> allIngrDist;
         if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
         bool notfound = true;      
+        //only onValue or all value ? 
+/*
+It might surprise you that the Grid class doesn't directly provide access to 
+voxels via their $(i,j,k)$ coordinates. Instead, the recommended procedure is 
+to ask the grid for a "value accessor", which is an accelerator object that 
+performs bottom-up tree traversal using cached information from previous traversals. 
+Caching greatly improves performance, but it is inherently not thread-safe. 
+However, a single grid may have multiple value accessors, so each thread can 
+safely be assigned its own value accessor. Uncached—and therefore slower, 
+but thread-safe—random access is possible through a grid's tree, for example 
+with a call like grid.tree()->getValue(ijk).
+*/
+        //bottom-up tree traversal-> how to get real random after
+        //this loop populate mostly with bottum up coordinate
+        //may need a regular access with the 3 for loop and then grid.tree()->getValue(ijk).     
         for (openvdb::FloatGrid::ValueOnIter  iter = distance_grid->beginValueOn(); iter; ++iter) {
+        //for (openvdb::FloatGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
             d=iter.getValue();
-            if (d>=cut){
+            if (d>=cut){//the grid voxel is available and can receivethe given ingredient
                 openvdb::Coord cc=iter.getCoord();
                 //return getU(dim,cc);//return first found
                 allIngrPts.push_back(cc);
@@ -1315,7 +1333,7 @@ struct big_grid { // needs 8*n bytes
             return openvdb::Coord(0,0,0);                   
         }
         if (pickRandPt){
-            //std::cout << "allIngrPts " <<allIngrPts.size()<<std::endl;
+            std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
             if (ingr->packingMode=="close"){
                 
                 if (mini_d == dmax){
@@ -1333,10 +1351,13 @@ struct big_grid { // needs 8*n bytes
             //else{
             //else cijk = allIngrPts[rand() % allIngrPts.size()]; // is this working correctly?
             else {
-                //cijk = allIngrPts[(int)(uniform(generator) * allIngrPts.size())];
-                cijk = allIngrPts[(int)(rand() * allIngrPts.size())];
+                //or should I use a std::uniform_int_distribution<int> distribution(0,allIngrPts.size());
+                cijk = allIngrPts[(int)(distribution(generator) * allIngrPts.size())];
+                //rand tand to get small number first
+                //cijk = allIngrPts[rand() % allIngrPts.size()];
                 //why this would be on the edge and top. maybe the uniform distribution is not appropriate.
                 //
+            
             }
             //if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
             //}     
