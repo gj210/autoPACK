@@ -57,7 +57,7 @@ general include
 /*
 xml parser for collada import, dont forgot the lib in the folder
 */
-#include "../../cautoPACK/pugixml-1.2/src/pugixml.hpp" 
+#include <pugixml.hpp> 
 
 
 /*assimp include*/
