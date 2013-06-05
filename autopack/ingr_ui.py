@@ -12,7 +12,7 @@ Created on Wed Apr  6 10:21:38 2011
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and AutoFill.
+# This file "Organelle.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -35,16 +35,18 @@ import sys,os
 import random
 import numpy
 from math import sqrt
+import upy
+uiadaptor = upy.getUIClass()
 
 from upy.colors import red, green, blue, cyan, magenta, yellow, \
      pink, brown, orange, burlywood, darkcyan, gainsboro
 from upy import colors as upy_colors
 
 from bhtree import bhtreelib
-import AutoFill
-from AutoFill.Ingredient import SingleSphereIngr, MultiSphereIngr
-from AutoFill.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
-from AutoFill.Ingredient import IOingredientTool
+import autopack
+from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr
+from autopack.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
+from autopack.Ingredient import IOingredientTool
 
 def principal_axes(points,return_eigvals=False):
     """
@@ -96,11 +98,12 @@ class Point:
 
 
 class Cluster:
+    """
     # Instance variables
     # self.points is a list of Points associated with this Cluster
     # self.n is the number of dimensions this Cluster's Points live in
     # self.centroid is the sample mean Point of this Cluster
-
+    """
     def __init__(self, points):
         # We forbid empty Clusters (they don't make mathematical sense!)
         if len(points) == 0: raise Exception("ILLEGAL: EMPTY CLUSTER")
@@ -186,9 +189,6 @@ class Cluster:
 # -- Return Clusters of Points formed by K-means clustering
 
 from time import time
-import upy
-uiadaptor = upy.getUIClass()
-#helperClass = upy.getHelperClass()
 
 class SphereTreeUI(uiadaptor):   
     isSetup = False
@@ -417,11 +417,11 @@ class SphereTreeUI(uiadaptor):
         #get name
 #        name = "default"
 #        initialFile = name+'_%d.sph'%len(self.keptRadii)
-#        self.saveDialog(label='AutoFill Sph files',callback=self.saveSphereModel)
+#        self.saveDialog(label='autopack Sph files',callback=self.saveSphereModel)
         self.saveDialog(label='AutoPACK Ingredient files',callback=self.saveIngredent)
 #        file = tkFileDialog.asksaveasfilename(
 #            parent = master,
-#            filetypes=[ ('AutoFill Sph files', '*.sph'),('All files', '*') ],
+#            filetypes=[ ('autopack Sph files', '*.sph'),('All files', '*') ],
 #            initialdir='.',
 #            initialfile=initialFile,
 #            title='save sphere file')
@@ -530,7 +530,7 @@ class SphereTreeUI(uiadaptor):
                                  rotAxis=rotAxis,useRotAxis = useRotAxis,
                                  resolution_dictionary=resolution_dictionary)
             if recipe_name is not None:
-                self.ingr.sphereFile = AutoFill.autoPACKserver+os.sep+recipe_name+os.sep+"spheres"+os.sep+os.path.basename(sphereFile)
+                self.ingr.sphereFile = autopack.autoPACKserver+os.sep+recipe_name+os.sep+"spheres"+os.sep+os.path.basename(sphereFile)
         else :
             positions=[]
             positions2=[]
@@ -562,7 +562,7 @@ class SphereTreeUI(uiadaptor):
                                  resolution_dictionary=resolution_dictionary)
         #before saving can point meshfile and sphereFile to server
         if recipe_name is not None:
-            self.ingr.meshFile = AutoFill.autoPACKserver+os.sep+recipe_name+os.sep+"geoms"+os.sep+str(resolution)+os.sep+os.path.basename(geomFile)                
+            self.ingr.meshFile = autopack.autoPACKserver+os.sep+recipe_name+os.sep+"geoms"+os.sep+str(resolution)+os.sep+os.path.basename(geomFile)                
         #save the ingredient
         self.io.write(self.ingr,filename,ingr_format="all")
         #should we replace by local directory ?
@@ -869,8 +869,8 @@ class SphereTreeUI(uiadaptor):
         if self.object_target is None :
             self.object_target = self.helper.getCurrentSelection()[0]
         mesh = self.object_target
-        #canwe usethe ogranelle mesh system from autofill
-        from AutoFill.Organelle import Organelle
+        #canwe usethe ogranelle mesh system from autopack
+        from autopack.Organelle import Organelle
         faces,vertices,vnormals,fn = self.helper.DecomposeMesh(mesh,
                                     edit=False,copy=False,tri=True,transform=True,fn=True)
         o1 = Organelle(self.helper.getName(mesh),vertices, faces, vnormals,fnormals=fn)
@@ -940,4 +940,4 @@ class SphereTreeUI(uiadaptor):
 #    #call it
 #    mygui.display()
 
-#execfile('/Library/MGLTools/1.5.6.up/MGLToolsPckgs/AutoFill/scripts/clusterGUIp.py')
+#execfile('/Library/MGLTools/1.5.6.up/MGLToolsPckgs/autopack/scripts/clusterGUIp.py')
