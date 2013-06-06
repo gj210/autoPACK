@@ -34,6 +34,15 @@
 @author: Graham Johnson, Ludovic Autin, & Michel Sanner
 """
 */
+#ifdef _MSC_VER
+	#pragma warning(disable:4146)
+	#pragma warning(disable:4503) // OpenVDB "warning decorated name length exceeded, name was truncated"
+	#define _SCL_SECURE_NO_WARNINGS
+#endif
+
+
+//Disable warnings from openvdb in Visual Studio
+#pragma warning(push, 0)   
 
 /*
 openvdb includes
@@ -45,6 +54,8 @@ openvdb includes
 #include <openvdb/tools/Composite.h>
 #include <openvdb/tree/Tree.h>
 #include <openvdb/tools/GridTransformer.h>
+
+#pragma warning(pop)
 
 /*
 general include
