@@ -1265,7 +1265,7 @@ struct big_grid { // needs 8*n bytes
                 if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
             }     
         }else {
-            std:sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
+            std::sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
             ptInd = allIngrPts[0];
         }
         return ptInd;
@@ -1388,7 +1388,7 @@ with a call like grid.tree()->getValue(ijk).
             //}     
         }else {
             //ordered ?
-            std:sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
+            std::sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
             cijk = allIngrPts[0];
         }
         return cijk;        
@@ -1478,7 +1478,7 @@ with a call like grid.tree()->getValue(ijk).
                 if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
             }     
         }else {
-            std:sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
+            std::sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
             ptInd = allIngrPts[0];
         }
         return ptInd;
