@@ -797,7 +797,13 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
 came from oleg trott code for the bidirectional array swapping.
 extended to do the main autopack loop with ingredient and point picking
 */
-struct big_grid { // needs 8*n bytes 
+struct big_grid { 
+    
+    //Temporarly must be first
+    openvdb::FloatGrid::Ptr distance_grid;
+    unsigned num_points;        //total number of point in the grid
+
+    // needs 8*n bytes 
     //Lot of theses parameteres are deprecated and not used.
     //original wrote in hw.cc file
     std::vector<unsigned> all; //all point indice // should point to ijk
@@ -816,7 +822,7 @@ struct big_grid { // needs 8*n bytes
     //float* distance; 
     std::vector<float> distance;    //the array of closest distances for each point
     unsigned num_empty;         //the number of free point available
-    unsigned num_points;        //total number of point in the grid
+    
     float grid_volume;    
     float unit_volume;
     float space;                //spacing of the grid (unit depends on user)
@@ -826,7 +832,6 @@ struct big_grid { // needs 8*n bytes
     float totalRadii;           //sum of all ingredient radii
     float totalPriorities;
     float vRangeStart;
-    box nxyz;                   //the grid size in x, y and z
     point boundingBox0;         //the grid lower left corner coordinate
     point boundingBox1;         //the grid top right coordinate
     int mode;                   //the packing mode random or distance
@@ -840,63 +845,32 @@ struct big_grid { // needs 8*n bytes
     std::normal_distribution<float> gauss;//(0.0,0.3);
     std::uniform_real_distribution<double> distribution;
 
-    openvdb::FloatGrid::Ptr distance_grid;
+    
     openvdb::CoordBBox bbox;
     openvdb::Coord dim;
     //openvdb::FloatGrid::Accessor accessor_distance;
     std::vector<openvdb::Coord> visited_rejected_coord;
     std::map<int, sphere*> results; 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
-    big_grid(unsigned nx, unsigned ny,unsigned nz, 
-                float step, openvdb::Vec3d bot, openvdb::Vec3d up,float seed) : 
-        all(nx*ny*nz),
-        empty(nx*ny*nz),
-        num_empty(nx*ny*nz),
-        data(nx*ny*nz),
-        distance(nx*ny*nz),
+    big_grid(float step, openvdb::Vec3d bot, openvdb::Vec3d up,float seed) :     
+        distance_grid(initializeDistanceGrid(bot, up)),
+        num_points(initializeNumPointsCount()),    
+        all(num_points),
+        empty(num_points),
+        num_empty(num_points),
+        data(num_points),
+        distance(num_points),
         uniform(0.0,1.0),
         distribution(0.0,1.0),
         gauss(0.0,0.3),
         pickWeightedIngr(true),
         pickRandPt(true) {
-        
-        generator.seed (seed);
-        num_points = nx*ny*nz;      //initialize total number of point
 
-        mode = 1;
-        nxyz.x = nx;//+encapsulatingGrid
-        nxyz.y = ny;//+encapsulatingGrid
-        nxyz.z = nz;//+encapsulatingGrid 
+        generator.seed (seed);
+        
+        mode = 1; 
         space = step;
-        float xl=bot.x();
-        float yl=bot.y();
-        float zl=bot.z();
         
-        distance_grid = openvdb::FloatGrid::create();//the indice ?
-        distance_grid->setTransform(
-            openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));
-        //set active within the given bounding box
-        // Define a coordinate with large signed indices.
-        const openvdb::Vec3d ibotleft = bot;//(0,0,0)
-        const openvdb::Vec3d iupright = up;//(1000,1000,10);
-        openvdb::Vec3d botleft=distance_grid->worldToIndex(ibotleft);
-        openvdb::Vec3d upright=distance_grid->worldToIndex(iupright);
-        
-        openvdb::Coord left(openvdb::tools::local_util::roundVec3(botleft));//(openvdb::Int32)botleft.x(),(openvdb::Int32)botleft.y(),(openvdb::Int32)botleft.z());
-        openvdb::Coord right(openvdb::tools::local_util::roundVec3(upright));//(openvdb::Int32)upright.x(),(openvdb::Int32)upright.y(),(openvdb::Int32)upright.z());
-        //define the active region that will be our boundary. set to max everywhere
-        bbox = openvdb::CoordBBox(left,right);//min and max
-        distance_grid->fill(bbox,dmax,true);//bbox, value, active
-        distance_grid->prune();
-        dim = distance_grid->evalActiveVoxelDim();
-        
-        num_points = dim.x()*dim.y()*dim.z();
-        openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
-        std::cout << "#Testing distance access:" << std::endl;
-        std::cout << "#Grid " << left << " "<< botleft << " = " << accessor_distance.getValue(left) << std::endl;
-        std::cout << "#Grid " << right << " "<< upright << " = " << accessor_distance.getValue(right) << std::endl;
-        std::cout << "#Grid " << bbox << std::endl;
-        std::cout << "#Grid Npoints " << dim << " " << num_points << " "  << distance_grid->activeVoxelCount() << std::endl;
         unsigned i=0;           //counter for u indices             
         for(unsigned i = 0; i < num_points; ++i) { 
                 all[i] = i;
@@ -906,6 +880,43 @@ struct big_grid { // needs 8*n bytes
         grid_volume =  num_points*unit_volume;
         std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
         
+    }
+
+    unsigned int initializeNumPointsCount() 
+    {
+        dim = distance_grid->evalActiveVoxelDim();    
+        if (DEBUG)std::cout << "#box nxyz" << dim.x() << dim.y() << dim.z() << std::endl;
+        return dim.x()*dim.y()*dim.z();
+    }
+
+    openvdb::FloatGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up ) 
+    {
+        openvdb::FloatGrid::Ptr distance_grid;
+        distance_grid = openvdb::FloatGrid::create();//the indice ?
+        distance_grid->setTransform(
+            openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));
+        //set active within the given bounding box
+        // Define a coordinate with large signed indices.
+        const openvdb::Vec3d ibotleft = bot;//(0,0,0)
+        const openvdb::Vec3d iupright = up;//(1000,1000,10);
+        openvdb::Vec3d botleft=distance_grid->worldToIndex(ibotleft);
+        openvdb::Vec3d upright=distance_grid->worldToIndex(iupright);
+
+        openvdb::Coord left(openvdb::tools::local_util::roundVec3(botleft));//(openvdb::Int32)botleft.x(),(openvdb::Int32)botleft.y(),(openvdb::Int32)botleft.z());
+        openvdb::Coord right(openvdb::tools::local_util::roundVec3(upright));//(openvdb::Int32)upright.x(),(openvdb::Int32)upright.y(),(openvdb::Int32)upright.z());
+        //define the active region that will be our boundary. set to max everywhere
+        bbox = openvdb::CoordBBox(left,right);//min and max
+        distance_grid->fill(bbox,dmax,true);//bbox, value, active
+        distance_grid->prune();
+
+        openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
+        std::cout << "#Testing distance access:" << std::endl;
+        std::cout << "#Grid " << left << " "<< botleft << " = " << accessor_distance.getValue(left) << std::endl;
+        std::cout << "#Grid " << right << " "<< upright << " = " << accessor_distance.getValue(right) << std::endl;
+        std::cout << "#Grid " << bbox << std::endl;
+        std::cout << "#Grid Npoints " << dim << " " << num_points << " "  << distance_grid->activeVoxelCount() << std::endl;
+
+        return distance_grid;
     }
 
     void setMode(unsigned _mode){
@@ -2444,15 +2455,11 @@ big_grid load_xml(std::string path,int _mode,float _seed){
     }
     //make the grid and return it
     const openvdb::Vec3d ibotleft(bb[0],bb[1],bb[2]);
-    const openvdb::Vec3d iupright(bb[3],bb[4],bb[5]);
-    box nxyz;   
-    nxyz.x = unsigned(ceil((iupright.x()-ibotleft.x())/stepsize));//+encapsulatingGrid
-    nxyz.y = unsigned(ceil((iupright.y()-ibotleft.y())/stepsize));//+encapsulatingGrid
-    nxyz.z = unsigned(ceil((iupright.z()-ibotleft.z())/stepsize));//+encapsulatingGrid
+    const openvdb::Vec3d iupright(bb[3],bb[4],bb[5]);    
     if (DEBUG)std::cout << "#box "<<ibotleft<<" "<<iupright << std::endl;
-    if (DEBUG)std::cout << "#box nxyz"<<nxyz.x<<" "<<nxyz.y<<" "<<nxyz.z << std::endl;
+
     //should create the grid from a xml file...easier setup
-    big_grid g(nxyz.x,nxyz.y,nxyz.z,stepsize,ibotleft,iupright,seed);
+    big_grid g(stepsize,ibotleft,iupright,seed);
     g.vRangeStart=0.0;
     g.pickWeightedIngr=pickWeightedIngr;
     g.pickRandPt =pickRandPt; 
