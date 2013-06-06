@@ -830,8 +830,8 @@ struct big_grid { // needs 8*n bytes
     point boundingBox0;         //the grid lower left corner coordinate
     point boundingBox1;         //the grid top right coordinate
     int mode;                   //the packing mode random or distance
-    bool pickWeightedIngr = true;
-    bool pickRandPt = true;
+    bool pickWeightedIngr;
+    bool pickRandPt;
     bool use_gradient;
     int numActiveIngr;
 
@@ -856,7 +856,9 @@ struct big_grid { // needs 8*n bytes
         distance(nx*ny*nz),
         uniform(0.0,1.0),
         distribution(0.0,1.0),
-        gauss(0.0,0.3){
+        gauss(0.0,0.3),
+        pickWeightedIngr(true),
+        pickRandPt(true) {
         
         generator.seed (seed);
         num_points = nx*ny*nz;      //initialize total number of point
