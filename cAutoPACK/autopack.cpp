@@ -1302,21 +1302,46 @@ with a call like grid.tree()->getValue(ijk).
         //may need a regular access with the 3 for loop and then grid.tree()->getValue(ijk).     
         for (openvdb::FloatGrid::ValueOnIter  iter = distance_grid->beginValueOn(); iter; ++iter) {
         //for (openvdb::FloatGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
+            //before getting value check if leaf or tile    
             d=iter.getValue();
             if (d>=cut){//the grid voxel is available and can receivethe given ingredient
-                openvdb::Coord cc=iter.getCoord();
-                //return getU(dim,cc);//return first found
-                allIngrPts.push_back(cc);
-                if (d < mini_d){
-                    //if the point alread visisted and rejected 
-                    //should be for this ingredient only
-                    if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
-                    if (notfound) {
-                		 // not found
-                        mini_d = d;
-                        mini_cijk = openvdb::Coord( cc.asVec3i() );
-                    }               
-                }
+                if (iter.isTileValue()){
+                    openvdb::CoordBBox bbox = iter.getBoundingBox();
+                    //iterate through it and add all the coordinates
+                    openvdb::Coord bbmini = bbox.min();
+                    openvdb::Coord bbmaxi = bbox.max();
+                    for (int k=bbmini.z();k<bbmaxi.z();k++){
+                        for (int j=bbmini.y();j<bbmaxi.y();j++){
+                            for (int i=bbmini.x();i<bbmaxi.x();i++){
+                                openvdb::Coord nijk(i,j,k);
+                                allIngrPts.push_back(nijk);
+                                if (d < mini_d){
+                                    if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end());
+                                    if (notfound) {
+                                		 // not found
+                                        mini_d = d;
+                                        mini_cijk = openvdb::Coord( nijk.asVec3i() );
+                                    }               
+                                }   
+                            }
+                        }
+                    }
+                } 
+                else {
+                    openvdb::Coord cc=iter.getCoord();
+                    //return getU(dim,cc);//return first found
+                    allIngrPts.push_back(cc);
+                    if (d < mini_d){
+                        //if the point alread visisted and rejected 
+                        //should be for this ingredient only
+                        if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
+                        if (notfound) {
+                    		 // not found
+                            mini_d = d;
+                            mini_cijk = openvdb::Coord( cc.asVec3i() );
+                        }               
+                    }
+                }           
             }
         }
         
@@ -1736,6 +1761,7 @@ with a call like grid.tree()->getValue(ijk).
         //if intersect
         //should actually go through the sphere bounding box//ie object bounding 
         //value on is the shell...which could be the radius?
+        //can we first test if boudning box hasOverlap ?
         float d;
         for (openvdb::FloatGrid::ValueAllIter iter = sp->gsphere->beginValueAll(); iter; ++iter) {
             spcc = iter.getCoord();//ijk or xyz
