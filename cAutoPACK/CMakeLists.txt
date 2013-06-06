@@ -6,7 +6,7 @@ PROJECT(cAutoPack)
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
-find_path(ILMBASE_INCLUDE_DIR NAMES Half.h OpenEXR/Half.h PATH_SUFFIXES OpenEXR/include/ REQUIRED)
+find_path(ILMBASE_INCLUDE_DIR NAMES Half.h OpenEXR/half.h OpenEXR/Half.h PATH_SUFFIXES OpenEXR/include/ REQUIRED)
 message(STATUS "OpenEXR includes found in: ${ILMBASE_INCLUDE_DIR}")
 find_library(ILMBASE_LIBRARY Half PATH_SUFFIXES OpenEXR/lib REQUIRED)
 message(STATUS "OpenEXR library found in: ${ILMBASE_LIBRARY}")
