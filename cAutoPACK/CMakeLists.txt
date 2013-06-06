@@ -23,7 +23,7 @@ message(STATUS "pugiXML library found in: ${PUGIXML_LIBRARY}")
 
 find_path(OPENVDB_INCLUDE_DIR openvdb/openvdb.h PATH_SUFFIXES OpenVDB/include REQUIRED)
 message(STATUS "OpenVDB includes found in: ${OPENVDB_INCLUDE_DIR}")
-find_library(OPENVDB_LIBRARY NAMES libopenvdb vdb PATH_SUFFIXES OpenVDB/lib REQUIRED)
+find_library(OPENVDB_LIBRARY NAMES openvdb vdb PATH_SUFFIXES OpenVDB/lib REQUIRED)
 message(STATUS "OpenVDB library found in: ${OPENVDB_LIBRARY}")
 
 find_package(Boost REQUIRED)
