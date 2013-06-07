@@ -2564,6 +2564,112 @@ void printTheGrid(big_grid g){
     std::cout << "isph=helper.PointCloudObject(\"background\",vertices = background)\n";
     std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
 }
+
+void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid ) 
+{
+    std::cout << "pts=[" << std::endl;
+    openvdb::Vec3f pos;
+    sphere * ingr;
+    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
+        ingr = g.results[i];
+        openvdb::math::Transform::Ptr targetXform =
+            openvdb::math::Transform::createLinearTransform();
+        // Add the offset.
+        targetXform->preMult(g.rrot[i]);
+        targetXform->postTranslate(g.rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
+        openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+        for(openvdb::Vec3f const & position : g.results[i]->positions ) {        
+            pos = mat.transform(position);
+            std::cout << '[' << pos.x() <<',' << pos.y() << ',' << pos.z() << ']' << ',' <<std::endl; 
+        }        
+    }
+    std::cout << "]" << std::endl; 
+    std::cout << "matrices={}" << std::endl;
+    for(unsigned i = 0; i < g.ingredients.size(); ++i) { 
+        std::cout << "matrices[\"" << g.ingredients[i].name << "\"]=[]\n";
+    }
+    //openvdb::Vec3f pos;
+    //sphere * ingr;
+    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
+        ingr = g.results[i];
+        openvdb::math::Transform::Ptr targetXform =
+            openvdb::math::Transform::createLinearTransform();
+        // Add the offset.
+        targetXform->preMult(g.rrot[i]);
+        targetXform->postTranslate(g.rtrans[i]);
+        openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+        std::cout << "matrices[\""<< ingr->name <<"\"].append( " << mat  <<")"<< std::endl;
+    }
+    //std::cout << "]" << std::endl; 
+
+    std::cout << "r=[" << std::endl  ;  
+    for(std::vector<float>::size_type i = 0; i < radiis.size(); ++i) { 
+        //std::cout << i << ' ' << radiis[i] << std::endl;
+        for (std::vector<float>::size_type j = 0 ; j < g.results[i]->radii.size() ; j ++){
+            std::cout << g.results[i]->radii[j] << ',' <<std::endl; //rot? 
+        }        
+        //std::cout << 3.0 << ',' <<std::endl; 
+        //std::cout << 5.0 << ',' <<std::endl;  
+    }    
+    std::cout << "]" << std::endl;
+
+    std::cout << "color=[" << std::endl  ;  
+    for(std::vector<float>::size_type i = 0; i < colors.size(); ++i) { 
+        //std::cout << i << ' ' << usedPoints[i] << std::endl;
+        for (std::vector<float>::size_type j = 0 ; j < g.results[i]->radii.size() ; j ++){
+            std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl; 
+        }
+        //std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl;  
+    }  
+
+    std::cout << "]" << std::endl;
+    std::cout << "import upy\n" << "helper = upy.getHelperClass()()\n";
+    std::cout << "pesph=helper.newEmpty(\"base_sphere\")\n";
+    std::cout << "bsph=helper.Sphere(\"sphere\",parent=pesph)[0]\n";
+    std::cout << "parent=helper.newEmpty(\"grid parent\")\n";
+    std::cout << "parentHider=helper.newEmpty(\"hider parent\")\n";
+    std::cout << "parentInstance=helper.newEmpty(\"instances parent\")\n";
+    std::cout << "parentdistance=helper.newEmpty(\"grid distance\")\n";
+    std::cout << "isph=helper.instancesSphere(\"cpp\",pts,r,pesph,color,None,parent=parent)\n";
+
+    if (ds_grid) printTheGrid(g);
+
+    std::cout << "#" << g.num_empty << std::endl;
+    std::cout << "#" << g.distance_grid->activeVoxelCount() << std::endl;
+    float mini=0.0;
+    float maxi=0.0;
+    g.distance_grid->evalMinMax(mini,maxi);
+    std::cout << "#" << mini << " " <<maxi << std::endl;
+    //mesh
+    //foreac ingredient load the mesh?
+    //if mesh
+    //for each inredient get the original mesh and create instance for their different poisition in the grid
+    for(unsigned i = 0; i < g.ingredients.size(); ++i) { //segmntaton fault here ?
+        if (ds_ingrgrid) printIngredientGrid(g.ingredients[i]);
+        //this will create the individual ingredient grid for debugging the voxelization
+        //if (g.ingredients[i].filename.empty())
+        //    continue;
+        std::cout << "# ingr " << g.ingredients[i].radius << std::endl;
+        std::cout << "iname = \"" << g.ingredients[i].name << "\"\n";    
+        std::cout << "parent=helper.newEmpty(iname+\"_parent\",parent = parentHider)\n";
+        std::cout << "helper.read(\"" << g.ingredients[i].filename << "\")\n"; 
+        std::cout << "geom = helper.getObject(iname)\n";
+        std::cout << "if geom is not None :\n";
+        std::cout << "\thelper.rotateObj(geom,[0,math.pi/2.0,0.0])\n";//rotate on X in C4D
+        std::cout << "\thelper.reParent(geom,parent)\n";
+        std::cout << "\tiparent=helper.newEmpty(iname+\"_iparent\")\n";
+        std::cout << "\taxis = " << g.ingredients[i].principalVector << "\n";
+        std::cout << "\tipoly = helper.instancePolygon(iname+\"inst\",\n";
+        std::cout << "                      matrices=matrices[iname],\n";
+        std::cout << "                      mesh=parent,parent = iparent,\n";
+        std::cout << "                      transpose= False,colors=["<<g.ingredients[i].color << "],\n";
+        std::cout << "                      axis=axis)\n";
+        //openvdb use convex - hull, art was suggesting decomposing the mesh to compensate
+        //or just use the multisphere as in blood recipe. Using the mesh merging seems difficult because
+        // of the transformation inside the collada file.
+    } 
+}
+
 //main loop is here
 int main(int argc, char* argv[])
 {   
@@ -2586,7 +2692,6 @@ int main(int argc, char* argv[])
     big_grid g = load_xml(filename,0,seed);
     //return 0;
 
-    int pt;
     int i_ijk[3]={0,0,0};
     int counterRej=0;
     int rejection=0;
@@ -2683,108 +2788,8 @@ int main(int argc, char* argv[])
     std::cout << "#distance_grid->activeVoxelCount() " << g.num_empty << " " <<g.distance_grid->activeVoxelCount()<<std::endl;
     std::cout << "#main loop " << g.rtrans.size() << " on " << totalNumMols << std::endl;
 
-    std::cout << "pts=[" << std::endl;
-    openvdb::Vec3f pos;
-    sphere * ingr;
-    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
-        ingr = g.results[i];
-        openvdb::math::Transform::Ptr targetXform =
-            openvdb::math::Transform::createLinearTransform();
-        // Add the offset.
-        targetXform->preMult(g.rrot[i]);
-        targetXform->postTranslate(g.rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
-        openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-        for (int j = 0 ; j < g.results[i]->positions.size() ; j ++){
-            pos = mat.transform(g.results[i]->positions[j]);
-            std::cout << '[' << pos.x() <<',' << pos.y() << ',' << pos.z() << ']' << ',' <<std::endl; //rot? 
-            //std::cout << mat << ',' << std::endl;
-        }        
-    }
-    std::cout << "]" << std::endl; 
-    std::cout << "matrices={}" << std::endl;
-    for(unsigned i = 0; i < g.ingredients.size(); ++i) { 
-        std::cout << "matrices[\"" << g.ingredients[i].name << "\"]=[]\n";
-    }
-    //openvdb::Vec3f pos;
-    //sphere * ingr;
-    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
-        ingr = g.results[i];
-        openvdb::math::Transform::Ptr targetXform =
-            openvdb::math::Transform::createLinearTransform();
-        // Add the offset.
-        targetXform->preMult(g.rrot[i]);
-        targetXform->postTranslate(g.rtrans[i]);
-        openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-        std::cout << "matrices[\""<< ingr->name <<"\"].append( " << mat  <<")"<< std::endl;
-    }
-    //std::cout << "]" << std::endl; 
-    
-    std::cout << "r=[" << std::endl  ;  
-    for(unsigned i = 0; i < radiis.size(); ++i) { 
-        //std::cout << i << ' ' << radiis[i] << std::endl;
-        for (int j = 0 ; j < g.results[i]->radii.size() ; j ++){
-            std::cout << g.results[i]->radii[j] << ',' <<std::endl; //rot? 
-        }        
-        //std::cout << 3.0 << ',' <<std::endl; 
-        //std::cout << 5.0 << ',' <<std::endl;  
-    }    
-    std::cout << "]" << std::endl;
+    generatePythonScript(g, radiis, colors, ds_grid, ds_ingrgrid);
 
-    std::cout << "color=[" << std::endl  ;  
-    for(unsigned i = 0; i < colors.size(); ++i) { 
-        //std::cout << i << ' ' << usedPoints[i] << std::endl;
-        for (int j = 0 ; j < g.results[i]->radii.size() ; j ++){
-            std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl; 
-        }
-        //std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl;  
-    }  
-     
-    std::cout << "]" << std::endl;
-    std::cout << "import upy\n" << "helper = upy.getHelperClass()()\n";
-    std::cout << "pesph=helper.newEmpty(\"base_sphere\")\n";
-    std::cout << "bsph=helper.Sphere(\"sphere\",parent=pesph)[0]\n";
-    std::cout << "parent=helper.newEmpty(\"grid parent\")\n";
-    std::cout << "parentHider=helper.newEmpty(\"hider parent\")\n";
-    std::cout << "parentInstance=helper.newEmpty(\"instances parent\")\n";
-    std::cout << "parentdistance=helper.newEmpty(\"grid distance\")\n";
-    std::cout << "isph=helper.instancesSphere(\"cpp\",pts,r,pesph,color,None,parent=parent)\n";
-
-    if (ds_grid) printTheGrid(g);
-    
-    std::cout << "#" << g.num_empty << std::endl;
-    std::cout << "#" << g.distance_grid->activeVoxelCount() << std::endl;
-    float mini=0.0;
-    float maxi=0.0;
-    g.distance_grid->evalMinMax(mini,maxi);
-    std::cout << "#" << mini << " " <<maxi << std::endl;
-    //mesh
-    //foreac ingredient load the mesh?
-    //if mesh
-    //for each inredient get the original mesh and create instance for their different poisition in the grid
-    for(unsigned i = 0; i < g.ingredients.size(); ++i) { //segmntaton fault here ?
-        if (ds_ingrgrid) printIngredientGrid(g.ingredients[i]);
-        //this will create the individual ingredient grid for debugging the voxelization
-        //if (g.ingredients[i].filename.empty())
-        //    continue;
-        std::cout << "# ingr " << g.ingredients[i].radius << std::endl;
-        std::cout << "iname = \"" << g.ingredients[i].name << "\"\n";    
-        std::cout << "parent=helper.newEmpty(iname+\"_parent\",parent = parentHider)\n";
-        std::cout << "helper.read(\"" << g.ingredients[i].filename << "\")\n"; 
-        std::cout << "geom = helper.getObject(iname)\n";
-        std::cout << "if geom is not None :\n";
-        std::cout << "\thelper.rotateObj(geom,[0,math.pi/2.0,0.0])\n";//rotate on X in C4D
-        std::cout << "\thelper.reParent(geom,parent)\n";
-        std::cout << "\tiparent=helper.newEmpty(iname+\"_iparent\")\n";
-        std::cout << "\taxis = " << g.ingredients[i].principalVector << "\n";
-        std::cout << "\tipoly = helper.instancePolygon(iname+\"inst\",\n";
-        std::cout << "                      matrices=matrices[iname],\n";
-        std::cout << "                      mesh=parent,parent = iparent,\n";
-        std::cout << "                      transpose= False,colors=["<<g.ingredients[i].color << "],\n";
-        std::cout << "                      axis=axis)\n";
-        //openvdb use convex - hull, art was suggesting decomposing the mesh to compensate
-        //or just use the multisphere as in blood recipe. Using the mesh merging seems difficult because
-        // of the transformation inside the collada file.
-    }    
     //stdout the grid
 }
 //to compile assuming all dependancy present (openvdb, pugixml)
