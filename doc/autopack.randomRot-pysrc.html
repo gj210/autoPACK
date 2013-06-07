@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>autopack.randomRot</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="autopack-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >autoPACK</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="autopack-module.html">Package&nbsp;autopack</a> ::
+        Module&nbsp;randomRot
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="autopack.randomRot-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="autopack.randomRot-module.html">Module autopack.randomRot</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">Created 2012</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">###############################################################################</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring"># autoPACK Authors: Graham T. Johnson, Ludovic Autin, Mostafa Al-Alusi, Michel Sanner</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">#   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">#   with assistance from Mostafa Al-Alusi in 2009 and periodic input</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">#   from Arthur Olson's Molecular Graphics Lab</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring"># AFGui.py Authors: Ludovic Autin with minor editing/enhancement from Graham Johnson</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring"># Copyright: Graham Johnson &#169;2010</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring"># This file is part of autoPACK, cellPACK, and AutoFill.</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">#    autoPACK is free software: you can redistribute it and/or modify</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">#    it under the terms of the GNU General Public License as published by</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">#    the Free Software Foundation, either version 3 of the License, or</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">#    (at your option) any later version.</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">#    autoPACK is distributed in the hope that it will be useful,</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">#    GNU General Public License for more details.</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">#    You should have received a copy of the GNU General Public License</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">#    along with autoPACK (See "CopyingGNUGPL" in the installation.</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">###############################################################################</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-docstring">Name: 'randomRot'</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-docstring">@author: Modified from uniform random rotation matrix from http://www.lfd.uci.edu/~gohlke/code/transformations.py.html which is copyrighted as follows:</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-docstring">#    # -*- coding: utf-8 -*-</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring">#    # transformations.py</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring">#    </tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring">#    # Copyright (c) 2006-2012, Christoph Gohlke</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-docstring">#    # Copyright (c) 2006-2012, The Regents of the University of California</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-docstring">#    # Produced at the Laboratory for Fluorescence Dynamics</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring">#    # All rights reserved.</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring">#    #</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring">#    # Redistribution and use in source and binary forms, with or without</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-docstring">#    # modification, are permitted provided that the following conditions are met:</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">#    #</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">#    # * Redistributions of source code must retain the above copyright</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">#    #   notice, this list of conditions and the following disclaimer.</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-docstring">#    # * Redistributions in binary form must reproduce the above copyright</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">#    #   notice, this list of conditions and the following disclaimer in the</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">#    #   documentation and/or other materials provided with the distribution.</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">#    # * Neither the name of the copyright holders nor the names of any</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring">#    #   contributors may be used to endorse or promote products derived</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring">#    #   from this software without specific prior written permission.</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">#    #</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">#    # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">#    # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring">#    # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring">#    # ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">#    # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">#    # CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring">#    # SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">#    # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring">#    # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring">#    # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring">#    # POSSIBILITY OF SUCH DAMAGE.</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">#    </tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">#    Homogeneous Transformation Matrices and Quaternions.</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">#   A library for calculating 4x4 matrices for translating, rotating, reflecting,</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">#   scaling, shearing, projecting, orthogonalizing, and superimposing arrays of</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">#   3D homogeneous coordinates as well as for converting between rotation matrices,</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">#   Euler angles, and quaternions. Also includes an Arcball control object and</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">#   functions to decompose transformation matrices.</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">#   :Authors:</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">#    `Christoph Gohlke &lt;http://www.lfd.uci.edu/~gohlke/&gt;`__,</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring">#    Laboratory for Fluorescence Dynamics, University of California, Irvine</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">#</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">#   :Version: 2012.10.18</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">random</tt> <tt class="py-keyword">import</tt> <tt class="py-name">RandomState</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">random</tt> <tt class="py-keyword">import</tt> <tt class="py-name">uniform</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">math</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-comment"># epsilon for testing whether a number is close to zero</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable autopack.randomRot._EPS=autopack.randomRot-module.html#_EPS"><a title="autopack.randomRot._EPS" class="py-name" href="#" onclick="return doclink('link-0', '_EPS', 'link-0');">_EPS</a></tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">finfo</tt><tt class="py-op">(</tt><tt class="py-name">float</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">eps</tt> <tt class="py-op">*</tt> <tt class="py-number">4.0</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot"></a><div id="RandomRot-def"><a name="L93"></a><tt class="py-lineno"> 93</tt> <a class="py-toggle" href="#" id="RandomRot-toggle" onclick="return toggle('RandomRot');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html">RandomRot</a><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="RandomRot-expanded"><a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.__init__"></a><div id="RandomRot.__init__-def"><a name="L95"></a><tt class="py-lineno"> 95</tt> <a class="py-toggle" href="#" id="RandomRot.__init__-toggle" onclick="return toggle('RandomRot.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">seed</tt><tt class="py-op">=</tt><tt class="py-number">16</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.__init__-expanded"><a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">seedTable</tt><tt class="py-op">=</tt> <tt class="py-name">RandomState</tt><tt class="py-op">(</tt><tt class="py-name">seed</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-comment">#        from .deg06Rot import allRtotations</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-comment">#        self.rot = allRtotations</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-comment">#        self.nbRot = len(allRtotations)-1</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.getOld"></a><div id="RandomRot.getOld-def"><a name="L101"></a><tt class="py-lineno">101</tt> <a class="py-toggle" href="#" id="RandomRot.getOld-toggle" onclick="return toggle('RandomRot.getOld');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#getOld">getOld</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.getOld-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.getOld-expanded"><a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">        <tt class="py-name">n</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">uniform</tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">nbRot</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">rot</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.setSeed"></a><div id="RandomRot.setSeed-def"><a name="L105"></a><tt class="py-lineno">105</tt> <a class="py-toggle" href="#" id="RandomRot.setSeed-toggle" onclick="return toggle('RandomRot.setSeed');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#setSeed">setSeed</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">seed</tt><tt class="py-op">=</tt><tt class="py-number">16</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.setSeed-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.setSeed-expanded"><a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">seedTable</tt><tt class="py-op">=</tt> <tt class="py-name">RandomState</tt><tt class="py-op">(</tt><tt class="py-name">seed</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.get"></a><div id="RandomRot.get-def"><a name="L108"></a><tt class="py-lineno">108</tt> <a class="py-toggle" href="#" id="RandomRot.get-toggle" onclick="return toggle('RandomRot.get');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#get">get</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.get-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.get-expanded"><a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Method autopack.randomRot.RandomRot.random_rotation_matrix()=autopack.randomRot.RandomRot-class.html#random_rotation_matrix"><a title="autopack.randomRot.RandomRot.random_rotation_matrix" class="py-name" href="#" onclick="return doclink('link-1', 'random_rotation_matrix', 'link-1');">random_rotation_matrix</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.random_quaternion"></a><div id="RandomRot.random_quaternion-def"><a name="L111"></a><tt class="py-lineno">111</tt> <a class="py-toggle" href="#" id="RandomRot.random_quaternion-toggle" onclick="return toggle('RandomRot.random_quaternion');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#random_quaternion">random_quaternion</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">rand</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.random_quaternion-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.random_quaternion-expanded"><a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">        <tt class="py-docstring">"""Return uniform random unit quaternion.</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-docstring">        rand: array like or None</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-docstring">            Three independent random variables that are uniformly distributed</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"><tt class="py-docstring">            between 0 and 1.</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; q = random_quaternion()</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; numpy.allclose(1, vector_norm(q))</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-docstring">        True</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; q = random_quaternion(numpy.random.random(3))</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; len(q.shape), q.shape[0]==4</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"><tt class="py-docstring">        (1, True)</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">rand</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">            <tt class="py-name">rand</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">seedTable</tt><tt class="py-op">.</tt><tt class="py-name">rand</tt><tt class="py-op">(</tt><tt class="py-number">3</tt><tt class="py-op">)</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line"><tt class="py-comment">#            rand = numpy.random.rand(3)</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line">            <tt class="py-keyword">assert</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">rand</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-number">3</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">        <tt class="py-name">r1</tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-number">1.0</tt> <tt class="py-op">-</tt> <tt class="py-name">rand</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">        <tt class="py-name">r2</tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-name">rand</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line">        <tt class="py-name">pi2</tt> <tt class="py-op">=</tt> <tt class="py-name">math</tt><tt class="py-op">.</tt><tt class="py-name">pi</tt> <tt class="py-op">*</tt> <tt class="py-number">2.0</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">        <tt class="py-name">t1</tt> <tt class="py-op">=</tt> <tt class="py-name">pi2</tt> <tt class="py-op">*</tt> <tt class="py-name">rand</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">        <tt class="py-name">t2</tt> <tt class="py-op">=</tt> <tt class="py-name">pi2</tt> <tt class="py-op">*</tt> <tt class="py-name">rand</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">]</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">cos</tt><tt class="py-op">(</tt><tt class="py-name">t2</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">r2</tt><tt class="py-op">,</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">sin</tt><tt class="py-op">(</tt><tt class="py-name">t1</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">r1</tt><tt class="py-op">,</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line">                            <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">cos</tt><tt class="py-op">(</tt><tt class="py-name">t1</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">r1</tt><tt class="py-op">,</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">sin</tt><tt class="py-op">(</tt><tt class="py-name">t2</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">r2</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line">                             </tt>
+<a name="RandomRot.quaternion_matrix"></a><div id="RandomRot.quaternion_matrix-def"><a name="L139"></a><tt class="py-lineno">139</tt> <a class="py-toggle" href="#" id="RandomRot.quaternion_matrix-toggle" onclick="return toggle('RandomRot.quaternion_matrix');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#quaternion_matrix">quaternion_matrix</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">quaternion</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.quaternion_matrix-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.quaternion_matrix-expanded"><a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">        <tt class="py-docstring">"""Return homogeneous rotation matrix from quaternion.</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; M = quaternion_matrix([0.99810947, 0.06146124, 0, 0])</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; numpy.allclose(M, rotation_matrix(0.123, [1, 0, 0]))</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line"><tt class="py-docstring">        True</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; M = quaternion_matrix([1, 0, 0, 0])</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; numpy.allclose(M, numpy.identity(4))</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line"><tt class="py-docstring">        True</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; M = quaternion_matrix([0, 1, 0, 0])</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; numpy.allclose(M, numpy.diag([1, -1, -1, 1]))</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-docstring">        True</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">        <tt class="py-name">q</tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">quaternion</tt><tt class="py-op">,</tt> <tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">float64</tt><tt class="py-op">,</tt> <tt class="py-name">copy</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line">        <tt class="py-name">n</tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">dot</tt><tt class="py-op">(</tt><tt class="py-name">q</tt><tt class="py-op">,</tt> <tt class="py-name">q</tt><tt class="py-op">)</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">n</tt> <tt class="py-op">&lt;</tt> <tt id="link-2" class="py-name"><a title="autopack.randomRot._EPS" class="py-name" href="#" onclick="return doclink('link-2', '_EPS', 'link-0');">_EPS</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">identity</tt><tt class="py-op">(</tt><tt class="py-number">4</tt><tt class="py-op">)</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line">        <tt class="py-name">q</tt> <tt class="py-op">*=</tt> <tt class="py-name">math</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-number">2.0</tt> <tt class="py-op">/</tt> <tt class="py-name">n</tt><tt class="py-op">)</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">        <tt class="py-name">q</tt> <tt class="py-op">=</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">outer</tt><tt class="py-op">(</tt><tt class="py-name">q</tt><tt class="py-op">,</tt> <tt class="py-name">q</tt><tt class="py-op">)</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">            <tt class="py-op">[</tt><tt class="py-number">1.0</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">3</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">,</tt>     <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">3</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt>     <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">            <tt class="py-op">[</tt>    <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">3</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-number">1.0</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">3</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">,</tt>     <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">            <tt class="py-op">[</tt>    <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt>     <tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-number">1.0</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">q</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-number">0.0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">            <tt class="py-op">[</tt>                <tt class="py-number">0.0</tt><tt class="py-op">,</tt>                 <tt class="py-number">0.0</tt><tt class="py-op">,</tt>                 <tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-number">1.0</tt><tt class="py-op">]</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line"> </tt>
+<a name="RandomRot.random_rotation_matrix"></a><div id="RandomRot.random_rotation_matrix-def"><a name="L165"></a><tt class="py-lineno">165</tt> <a class="py-toggle" href="#" id="RandomRot.random_rotation_matrix-toggle" onclick="return toggle('RandomRot.random_rotation_matrix');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="autopack.randomRot.RandomRot-class.html#random_rotation_matrix">random_rotation_matrix</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">rand</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomRot.random_rotation_matrix-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomRot.random_rotation_matrix-expanded"><a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">        <tt class="py-docstring">"""Return uniform random rotation matrix.</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line"><tt class="py-docstring">        rand: array like</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line"><tt class="py-docstring">            Three independent random variables that are uniformly distributed</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-docstring">            between 0 and 1 for each returned quaternion.</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; R = random_rotation_matrix()</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line"><tt class="py-docstring">        &gt;&gt;&gt; numpy.allclose(numpy.dot(R.T, R), numpy.identity(4))</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line"><tt class="py-docstring">        True</tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Method autopack.randomRot.RandomRot.quaternion_matrix()=autopack.randomRot.RandomRot-class.html#quaternion_matrix"><a title="autopack.randomRot.RandomRot.quaternion_matrix" class="py-name" href="#" onclick="return doclink('link-3', 'quaternion_matrix', 'link-3');">quaternion_matrix</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-4" class="py-name" targets="Method autopack.randomRot.RandomRot.random_quaternion()=autopack.randomRot.RandomRot-class.html#random_quaternion"><a title="autopack.randomRot.RandomRot.random_quaternion" class="py-name" href="#" onclick="return doclink('link-4', 'random_quaternion', 'link-4');">random_quaternion</a></tt><tt class="py-op">(</tt><tt class="py-name">rand</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"><tt class="py-comment">## def getRotations(filename):</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line"> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line"><tt class="py-comment">##     #read rotations</tt> </tt>
+<a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"><tt class="py-comment">##     f = open(filename)</tt> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line"><tt class="py-comment">##     data = f.readlines()</tt> </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line"><tt class="py-comment">##     f.close()</tt> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line"> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"><tt class="py-comment">##     allRot = []</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line"><tt class="py-comment">##     for line in data:</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line"><tt class="py-comment">##         rotString = line</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"><tt class="py-comment">##         rot = numpy.array( map(float, line.split()))</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"><tt class="py-comment">##         rot.shape = (3,3)</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line"><tt class="py-comment">##         allRot.append( rot )</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line"> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt><tt class="py-op">==</tt><tt class="py-string">'__main__'</tt><tt class="py-op">:</tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line">    <tt class="py-comment">#from time import time</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line">    <tt class="py-comment">#t1 = time()</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">    <tt class="py-comment">#allRot = getRotations('deg06.matrix')</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line">    <tt class="py-comment">#print 'time to read rotation', time()-t1</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line"> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line"><tt class="py-comment">##     t1 = time()</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line"><tt class="py-comment">##     from deg06Rotations import allRtotations</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"><tt class="py-comment">##     print 'time to import rotation', time()-t1</tt> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line"> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line">     </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">    <tt class="py-name">rr</tt> <tt class="py-op">=</tt> <tt id="link-5" class="py-name" targets="Class autopack.randomRot.RandomRot=autopack.randomRot.RandomRot-class.html"><a title="autopack.randomRot.RandomRot" class="py-name" href="#" onclick="return doclink('link-5', 'RandomRot', 'link-5');">RandomRot</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line">    <tt class="py-name">mat</tt> <tt class="py-op">=</tt> <tt class="py-name">rr</tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Method autopack.randomRot.RandomRot.get()=autopack.randomRot.RandomRot-class.html#get"><a title="autopack.randomRot.RandomRot.get" class="py-name" href="#" onclick="return doclink('link-6', 'get', 'link-6');">get</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt><tt class="py-op">(</tt><tt class="py-name">mat</tt><tt class="py-op">)</tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="autopack-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >autoPACK</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1
+    on Wed Jun  5 14:41:56 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

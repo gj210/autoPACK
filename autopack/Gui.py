@@ -9,11 +9,11 @@ Created on Fri Jul 20 23:53:00 2012
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input
 #   from Arthur Olson's Molecular Graphics Lab
 #
-# AFGui.py Authors: Ludovic Autin with minor editing/enhancement from Graham Johnson
+# Gui.py Authors: Ludovic Autin with minor editing/enhancement from Graham Johnson
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "AFGui.py" is part of autoPACK, cellPACK, and autopack.
+# This file "Gui.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -91,6 +91,8 @@ geturl=None
 global OS
 OS = os
 
+
+'''the autopack import '''
 from autopack.ingr_ui import SphereTreeUI
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
@@ -98,13 +100,15 @@ from autopack.Graphics import AutopackViewer
 from autopack import checkURL
 from upy.register_user import Register_User_ui
 
-#need a global Dictionary
-#recipename : {"setupfile":"","resultfile":,}
-
-#import here othergui
-#import HIV gui ? specfic or generic AF gui for setup ?
-#from autopack.af_script_ui_AFLightSpecific import AFScriptUI require helper load ?
+#upy dialog type
+#you can look at the upy documentation and exampl for futher informations
 class SubdialogGradient(uiadaptor):
+    """
+    The SubdialogGradient gui class
+    ==========================
+    This class handle the widget to control/edit and define gradient for the
+    current environment.
+    """
     def CreateLayout(self):
         self._createLayout()
         return 1
@@ -114,49 +118,60 @@ class SubdialogGradient(uiadaptor):
         return 1
 
     def setup(self,**kw):
+        """    
+        setup the windows  
+        
+        @type kw: dictionary
+        @param a:  dictionary of key arguments
+
+        accepted keyword are name,parent,histoVol
+        the mode keyword is required          
+        """
         self.subdialog = True
-#        self.block = True
-#        self.scrolling = False
-        self.mode = kw["mode"]
-        #two mode : Add - Edit
-        self.gname = "newGradient"
+        self.mode = kw["mode"]        #two mode : Add - Edit
+        self.gname = "newGradient"    #unique name should be pass
         if "name" in kw :
             self.gname= kw["name"]
-        self.histoVol = None
+        self.histoVol = None          #the associated environment
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
-        self.parent =None
+        self.parent =None            #the parent dialog if any
         if "parent" in kw :
             self.parent = kw["parent"]
-        self.title = "Gradient "+self.gname
+        self.title = "Gradient "+self.gname#windows title
+        #some default width and height for the widgets      
         witdh=550
         self.h=130
         self.w=300
         self.widget_width  = 50
+        #initialize the dictionary of widget
         self.Widget={}
         self.Widget["options"]={}
         self.Widget["labeloptions"] = {}
 
         self.SetTitle(self.title)
         
-        self.parent = None
-        if "parent" in kw :
-            self.parent = kw["parent"]
-#        print "mode",self.mode
         if self.mode == "Edit":
+            #edit mode we gather the gradient from the environment
             self.gradient =  self.histoVol.gradients[self.gname]
-#            print (self.gname,self.gradient)
+            #setup the windows for edit mode
             self.initWidgetEdit()
             self.setupLayoutEdit()
         elif self.mode == "Add":
+            #add mode we create the gradient and add it to the environment
             from autopack.Environment import Gradient
             self.histoVol.gradients[self.gname] = self.gradient = Gradient(self.gname)
             if self.parent is not None: 
                 self.parent.addItemToPMenu(self.parent.Widget["options"]["gradients"],str(self.gname))
+            #setup the windows for add mode
             self.initWidgetAdd()
             self.setupLayoutAdd()
             
     def gradientWidget(self):
+        """    
+        #widget share with the two modes
+        #general approach that take dictionary of attribute and transform in widget
+        """
         dic={"int":"inputInt","float":"inputFloat","bool":"checkbox","liste":"pullMenu","filename":"inputStr"}
         for option in self.gradient.liste_options  :
             o = self.gradient.OPTIONS[option]
@@ -182,6 +197,7 @@ class SubdialogGradient(uiadaptor):
                                         mini=o["min"],maxi=o["max"],
                                         #variable=self.addVariable("int",1),
                                         type=dic[o["type"]])
+        #define the buttons
         self.BTN={}
         self.BTN["close"]=self._addElemt(name="Close",width=50,height=10,
                          action=self.close,type="button",icon=None,
@@ -191,13 +207,13 @@ class SubdialogGradient(uiadaptor):
                                      variable=self.addVariable("int",0))
  
     def updateWidgetValue(self):
-#        for wname in self.Widget["options"]:
+        """    
+        update all the widget values using the gradient data  
+        """
         for option in self.gradient.liste_options:
             o = self.gradient.OPTIONS[option]
             if o["type"] == "vector" :
-#                print ("update "+option)
                 v = getattr(self.gradient,option)
-#                print ("valuexyz ",v)
                 if v is None :
                     v = [0.,0.,0.]
                 for i,x in enumerate(["x","y","z"]):    
@@ -205,10 +221,12 @@ class SubdialogGradient(uiadaptor):
             else :
                 w = self.Widget["options"][option]
                 v = getattr(self.gradient,option)
-#                print("set w v",w,v)
                 self.setVal(w,v)
 
     def ApplyWidgetValue(self, *args, **kw):
+        """    
+        update all the gradint data values using the widget values (user input)  
+        """
         for option in self.gradient.liste_options:
             o = self.gradient.OPTIONS[option]
             if o["type"] == "vector" :
@@ -218,9 +236,11 @@ class SubdialogGradient(uiadaptor):
                 w = self.Widget["options"][option]
                 v = self.getVal(w)
                 setattr(self.gradient,option,v)
-#                self.setVal(w,v)
 
     def setupLayout(self):
+        """    
+        Arrange the widget in the specified layout
+        """
         self._layout = []
         for wname in self.gradient.liste_options:        
             widget =[self.Widget["labeloptions"][wname],self.Widget["options"][wname]]
@@ -234,9 +254,6 @@ class SubdialogGradient(uiadaptor):
         self.gradientWidget()
         
     def setupLayoutEdit(self,):
-#        self._layout=[]
-#        self._layout.append(self.label)
-#        print self._layout
         self.setupLayout()
         
     def initWidgetAdd(self,):
@@ -244,11 +261,13 @@ class SubdialogGradient(uiadaptor):
         
     def setupLayoutAdd(self,):
         self.setupLayout()
-    
-    #why did the dialog close
-
 
 class SubdialogIngrdient(uiadaptor):
+    """
+    The SubdialogIngrdient gui class
+    ==========================
+    This class handle the widget to edit one ingredient attributes and options.
+    """
     def CreateLayout(self):
         self._createLayout()
         return 1
@@ -258,8 +277,17 @@ class SubdialogIngrdient(uiadaptor):
         return 1
 
     def setup(self,**kw):
+        """    
+        setup the windows  
+        
+        @type kw: dictionary
+        @param a:  dictionary of key arguments
+
+        accepted keyword are 
+        ingr(instance of class Ingredient),
+        histoVol(instance of class Environment),
+        """
         self.subdialog = True
-#        self.block = True
         self.scrolling = False
         self.ingr = kw["ingr"]
         if self.ingr is None :
@@ -267,16 +295,21 @@ class SubdialogIngrdient(uiadaptor):
         self.histoVol = None
         if "histoVol" in kw :
             self.histoVol = kw["histoVol"]
-        self.title = self.ingr.name+" options"#+self.mol.name
+        self.title = self.ingr.name+" options"
         witdh=550
         self.h=130
         self.w=450
         self.SetTitle(self.title)
         self.initWidget()
         self.setupLayout()
-#        self.updateWidget()
 
     def initWidget(self, ):
+        """    
+        #widget initialization
+        #general approach that take dictionary of attribute and transform in widget
+        #we also order and select the ingredient attribute we want to present as a
+        #widget
+        """
         self.Widget={}
         self.Widget["options"]={}
         self.Widget["labeloptions"]={}
@@ -344,9 +377,11 @@ class SubdialogIngrdient(uiadaptor):
                                      variable=self.addVariable("int",0))
         
     def setupLayout(self):
+        """    
+        Arrange the widget in the specified layout
+        """
         self._layout = []
         for wname in self.listAttrOrdered:        
-#        for wname in self.Widget["options"]:
             widget =[self.Widget["labeloptions"][wname],self.Widget["options"][wname],self.Widget["edit"][wname]]
             if type(self.Widget["options"][wname]) == list: 
                 widget =[self.Widget["labeloptions"][wname]]
@@ -356,7 +391,9 @@ class SubdialogIngrdient(uiadaptor):
         self._layout.append([self.Apply_btn,self.Apply_to_All_btn,self.ResetToDefault_btn,self.Close_btn])
 
     def updateWidget(self):
-#        for wname in self.Widget["options"]:
+        """    
+        update all the gradint data values using the widget values (user input)  
+        """
         for option in self.listAttrOrdered:
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector" :
@@ -486,6 +523,9 @@ class SubdialogCustomFiller(uiadaptor):
         self.setupLayout()
 
     def initWidget(self, ):
+        """    
+        #widget initialization ie labels and buttons
+        """
         self.LABELS={}
         self.LABELS["intro"] = self._addElemt(name=self.recipe+"_wizard_intro",label="Setup a custom recipe from the outliner custom_setup object",width=120)
         self.LABELS["sOrga"] = self._addElemt(name=self.recipe+"_sOrga",
@@ -500,6 +540,9 @@ class SubdialogCustomFiller(uiadaptor):
                                      variable=self.addVariable("int",0))
         
     def setupLayout(self):
+        """    
+        Arrange the widget in the specified layout
+        """
         self._layout = []
         self._layout.append([self.LABELS["intro"]])
         self._layout.append([self.LABELS["sOrga"] ])
@@ -762,6 +805,11 @@ class SubdialogFiller(uiadaptor):
     
         
     def initWidget(self, ):
+        """    
+        #widget initialization
+        #general approach that take dictionary of attribute and transform in widget
+        #we also define the file menu bar
+        """
         #the menu for saving the change
         #and also to add it to the available liste of recipe
         self.menuorder = ["File",]
@@ -1107,9 +1155,10 @@ class SubdialogFiller(uiadaptor):
                             variable=self.addVariable("int",1),value=1)
                         
     def setupLayout_tab(self):
-        #can handle the gui mode here actually
+        """    
+        Arrange the widget in the specified layout
+        """
         self._layout = []
-        #one frame for fill option
         elemFrame=[]
         listeoptions=self.listAFo[self.guimode]
         for i in listeoptions: 
@@ -1834,6 +1883,9 @@ class SubdialogIngredientViewer(uiadaptor):
         self.setupLayout()
 
     def initWidget(self):
+        """    
+        #widget initialization
+        """
         a="hfit"
         self.LABELS={}
         self.LABELS["obj"] = self._addElemt(name=self.ingr.name+"_lobj",label="Object (leave empty for using current selection)",width=100,alignement=a)
@@ -1862,6 +1914,9 @@ class SubdialogIngredientViewer(uiadaptor):
         
         
     def setupLayout(self):
+        """    
+        Arrange the widget in the specified layout
+        """
         self._layout = []
         self._layout.append([self.LABELS["obj"],self.ingr_basegeom])
         self._layout.append([self.LABELS["res"],self.ingr_resolution])
@@ -2083,6 +2138,9 @@ class SubdialogViewer(uiadaptor):
         self.afviewer.displayIngrGrows()
         
     def initWidget(self, ):
+        """    
+        #widget initialization and file menu bar
+        """
         self.menuorder = ["File",]
         self._menu = self.MENU_ID = {"File":
                       [self._addElemt(name="Load (.apr)",action=self.LoadNewResult),
@@ -2360,6 +2418,9 @@ class SubdialogViewer(uiadaptor):
         return elemFrame
 
     def setupLayout_frame(self):
+        """    
+        Arrange the widget in a collapsabe frame layout
+        """
         self._layout = []
         #depend on the guimode 
         self._layout.append([self.Widget["clearIng"],self.Widget["clearRec"],self.Widget["remake"]])
@@ -2693,7 +2754,6 @@ class SubdialogViewer(uiadaptor):
         
 
 class AutoPackGui(uiadaptor):
-    #savedialog dont work
     __url__=["http://autopack.org",
              "http://autopack.org/documentation/autofill-api",
              "http://mgldev.scripps.edu/projects/AF/update_notes.txt"
@@ -2801,6 +2861,9 @@ class AutoPackGui(uiadaptor):
         self.drawSubDialog(self.register,255555643)
         
     def initWidget(self):
+        """    
+        #widget initialization and file menubar
+        """
         #define button and other stuff here
         #need widget for viewer, filler, builder
         self.menuorder = ["Help"]#,"Edit"]
@@ -2850,6 +2913,9 @@ class AutoPackGui(uiadaptor):
         self.initWidgetBuilder()
         
     def initWidgetViewer(self, ):
+        """    
+        #widget initialization specific for the viewer Tab
+        """
         self.WidgetViewer={}
         self.WidgetViewer["labelLoad"] = self._addElemt(name="labelLoad",
                                                 label="Load an autoPACK/cellPACK recipe for:",width=120,height=10)
@@ -2899,6 +2965,9 @@ class AutoPackGui(uiadaptor):
                                                 
         
     def initWidgetFiller(self, ):
+        """    
+        #widget initialization specific for the filler tab
+        """
         self.WidgetFiller={}
         self.WidgetFiller["labelLoad"] = self._addElemt(name="labelLoadF",
                                                 label="Build an autoPACK/cellPACK recipe for:",width=120)
@@ -2930,6 +2999,9 @@ class AutoPackGui(uiadaptor):
                                               variable=self.addVariable("int",0),value=0)
 
     def initWidgetBuilder(self, ):
+        """    
+        #widget initialization specific for the builder Tab
+        """
         self.WidgetBuilder={}
         self.WidgetBuilder["CreateIngr"]=self._addElemt(name="SphereIngredient",width=100,height=10,
                          action=self.drawSubsetBuilder,type="button",icon=None,
@@ -2939,6 +3011,9 @@ class AutoPackGui(uiadaptor):
                                      variable=self.addVariable("int",0))
 
     def setupLayout(self):
+        """    
+        Arrange the widget in the specified layout
+        """
         typeframe = "tab"
         if self.helper.host.find("blender") != -1:
             typeframe="frame"

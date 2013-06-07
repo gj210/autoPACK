@@ -1,0 +1,38 @@
+<html><head><title>Epydoc Redirect Page</title>
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="pragma" content="no-cache" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+<!--
+var pages = ["autopack.Ingredient.IngredientDictionary-c", "autopack.Gui.SubdialogIngredientViewer-c", "autopack.Ingredient.MultiCylindersIngr-c", "autopack.Compartment.CompartmentList-c", "autopack.Ingredient.IOingredientTool-c", "autopack.Ingredient.SingleSphereIngr-c", "autopack.Ingredient.ActinIngrediant-c", "autopack.Ingredient.MultiSphereIngr-c", "autopack.Gui.SubdialogCustomFiller-c", "autopack.Ingredient.GrowIngrediant-c", "autopack.Ingredient.SingleCubeIngr-c", "autopack.Compartment.Compartment-c", "autopack.Environment.Environment-c", "autopack.Graphics.AutopackViewer-c", "autopack.Gui.SubdialogIngrdient-c", "autopack.Gui.SubdialogGradient-c", "autopack.Ingredient.Ingredient-c", "autopack.Environment.Gradient-c", "autopack.ingr_ui.SphereTreeUI-c", "autopack.Gui.SubdialogFiller-c", "autopack.Gui.SubdialogViewer-c", "autopack.pandautil.PandaUtil-c", "autopack.randomRot.RandomRot-c", "autopack.Ingredient.Partner-c", "autopack.Environment.Grid-c", "autopack.Ingredient.Agent-c", "autopack.Gui.AutoPackGui-c", "autopack.ingr_ui.Cluster-c", "autopack.Recipe.Recipe-c", "autopack.ingr_ui.Point-c", "autopack.Compartment-m", "autopack.Environment-m", "autopack.Ingredient-m", "autopack.pandautil-m", "autopack.randomRot-m", "autopack.Graphics-m", "autopack.IOutils-m", "autopack.ingr_ui-m", "autopack.Recipe-m", "autopack.Gui-m", "autopack-m"];
+var dottedName = get_anchor();
+if (dottedName) {
+    var target = redirect_url(dottedName);
+    if (target) window.location.replace(target);
+}
+// -->
+</script>
+
+<h3>Epydoc Auto-redirect page</h3>
+
+<p>When javascript is enabled, this page will redirect URLs of
+the form <tt>redirect.html#<i>dotted.name</i></tt> to the
+documentation for the object with the given fully-qualified
+dotted name.</p>
+<p><a id="message"> &nbsp; </a></p>
+
+<script type="text/javascript">
+<!--
+if (dottedName) {
+    var msg = document.getElementById("message");
+    msg.innerHTML = "No documentation found for <tt>"+
+                    dottedName+"</tt>";
+}
+// -->
+</script>
+
+</body>
+</html>
