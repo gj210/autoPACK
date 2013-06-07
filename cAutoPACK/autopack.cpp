@@ -35,9 +35,9 @@
 """
 */
 #ifdef _MSC_VER
-	#pragma warning(disable:4146)
-	#pragma warning(disable:4503) // OpenVDB "warning decorated name length exceeded, name was truncated"
-	#define _SCL_SECURE_NO_WARNINGS
+    #pragma warning(disable:4146)
+    #pragma warning(disable:4503) // OpenVDB "warning decorated name length exceeded, name was truncated"
+    #define _SCL_SECURE_NO_WARNINGS
 #endif
 
 
@@ -93,7 +93,7 @@ Assimp::Importer importer;
 float stepsize = 15*1.1547;         //grid step size ie smallest ingredients radius
 const float dmax = 999999.0;        //maximum value assign to the grid for intialisation
 const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
-const bool DEBUG = false;                   //DEBUG mode for prining some information
+const bool DEBUG = true;                   //DEBUG mode for prining some information
 const float MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
 const float spherewidth = 10.0;             //default or more ? close packing need to increase this number
 const std::string packing = "random";       //packing mode, can be random or close
@@ -1342,7 +1342,7 @@ with a call like grid.tree()->getValue(ijk).
                                 if (d < mini_d){
                                     if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end());
                                     if (notfound) {
-                                		 // not found
+                                         // not found
                                         mini_d = d;
                                         mini_cijk = openvdb::Coord( nijk.asVec3i() );
                                     }               
@@ -1360,7 +1360,7 @@ with a call like grid.tree()->getValue(ijk).
                         //should be for this ingredient only
                         if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
                         if (notfound) {
-                    		 // not found
+                             // not found
                             mini_d = d;
                             mini_cijk = openvdb::Coord( cc.asVec3i() );
                         }               
@@ -1972,10 +1972,10 @@ void getMeshs_assimp_node(const struct aiScene* scene,const struct aiNode* nd,
         std::cout << "# nmesh is " <<  meshs->size() << std::endl;   
    }
     std::cout << "# nchildren is " <<  nd->mNumChildren << std::endl;
-	for (n = 0; n < nd->mNumChildren; ++n) {
-		getMeshs_assimp_node(scene,nd->mChildren[n],trafo,meshs);
-	}
-	*trafo = prev;
+    for (n = 0; n < nd->mNumChildren; ++n) {
+        getMeshs_assimp_node(scene,nd->mChildren[n],trafo,meshs);
+    }
+    *trafo = prev;
 }
 
 std::vector<mesh> getMeshs_assimp(std::string path){
@@ -1992,24 +1992,24 @@ std::vector<mesh> getMeshs_assimp(std::string path){
     //importer.GetOrphanedScene() ;    
     //importer.FreeScene( );
     const unsigned int flags = 
-		aiProcess_Triangulate |
-		//aiProcess_JoinIdenticalVertices |
-		//aiProcess_GenSmoothNormals |
-		//aiProcess_ValidateDataStructure |
-		//aiProcess_RemoveRedundantMaterials |
-		//aiProcess_SortByPType |
-		//aiProcess_FindDegenerates |
-		//aiProcess_FindInvalidData |;
-		aiProcess_GenUVCoords;// |
-		//aiProcess_OptimizeMeshes |
-		//aiProcess_OptimizeGraph;    
+        aiProcess_Triangulate |
+        //aiProcess_JoinIdenticalVertices |
+        //aiProcess_GenSmoothNormals |
+        //aiProcess_ValidateDataStructure |
+        //aiProcess_RemoveRedundantMaterials |
+        //aiProcess_SortByPType |
+        //aiProcess_FindDegenerates |
+        //aiProcess_FindInvalidData |;
+        aiProcess_GenUVCoords;// |
+        //aiProcess_OptimizeMeshes |
+        //aiProcess_OptimizeGraph;    
     scene = importer.ReadFile(path.c_str(),flags);
     scene = importer.GetScene();
     if( !scene)
-	{
-		std::cout << "#X" << importer.GetErrorString() << "X " << std::endl;
-		return meshs;
-	}
+    {
+        std::cout << "#X" << importer.GetErrorString() << "X " << std::endl;
+        return meshs;
+    }
     //scene = Assimp::aiImportFile(path.c_str(),flags);//aiProcessPreset_TargetRealtime_Quality);//require const char*
     std::cout << "# scene loaded " << std::endl;
     //std::cout << " scene loaded  and has mesh ? " <<  scene->HasMeshes() << std::endl;    //segfault ?
@@ -2109,7 +2109,7 @@ void getMeshs_nodew(pugi::xml_node nd,
         std::cout << "#" <<nd.attribute("id").value() << "child " << node.attribute("id").value() << std::endl;
         getMeshs_nodew(node,trafo,scene_meshs,meshs);
     }
-	trafo = &prev;
+    trafo = &prev;
 }
 
 void getMeshs_node(pugi::xml_node nd,
@@ -2154,7 +2154,7 @@ void getMeshs_node(pugi::xml_node nd,
         std::cout << "#" <<nd.attribute("id").value() << "child " << node.attribute("id").value() << std::endl;
         getMeshs_node(node,trafo,scene_meshs,meshs);
     }
-	trafo = prev;
+    trafo = prev;
 }
 std::vector<mesh> getMeshs(std::string path){
     //need a more efficient parser that will get node-transformation-mesh
