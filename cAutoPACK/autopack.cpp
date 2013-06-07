@@ -340,17 +340,18 @@ struct SetMaxToDefault {
 };
 
 void setCount(sphere* ingr, float volume){
-    float nbr = ingr->molarity * volume * .000602;// #Mod by Graham 8/18/11
+    double nbr = ingr->molarity * volume * .000602;// #Mod by Graham 8/18/11
     int nbi = (int) nbr; //ceil, floor ?              #Mod by Graham 8/18/11
-    float nbmod;    
+    double nbmod;    
     if (nbi == 0) 
         nbmod = nbr;
     else 
-        nbmod = fmodf(nbr,(float) nbi);  //#Mod by Graham 8/18/11 ??
-    float randval = float(rand());                 //#Mod by Graham 8/18/11
+        nbmod = fmod(nbr, nbi);  //#Mod by Graham 8/18/11 ??
+    double randval = rand();                 //#Mod by Graham 8/18/11
     if (nbmod >= randval)             //   #Mod by Graham 8/18/11
         nbi = (int)nbi+1;              //#Mod by Graham 8/18/11
     int nb = nbi;                        //#Mod by Graham 8/18/11
+
     std::cout << "#ingredient " << ingr->name << " nbMol " << ingr->nbMol << " nb "<< nb << " total " << nb + ingr->nbMol << std::endl;
     ingr->nbMol = nb + ingr->nbMol;
 }
@@ -830,7 +831,6 @@ struct big_grid {
     float maxradius;            //the biggest ingredient
     float minradius;            //the biggest ingredient
     float lowestPriority;       //priority the lowest after sorting
-    float totalRadii;           //sum of all ingredient radii
     float totalPriorities;
     float vRangeStart;
     point boundingBox0;         //the grid lower left corner coordinate
@@ -853,7 +853,7 @@ struct big_grid {
     std::vector<openvdb::Coord> visited_rejected_coord;
     std::map<int, sphere*> results; 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
-    big_grid(float step, openvdb::Vec3d bot, openvdb::Vec3d up,unsigned seed) :     
+    big_grid(float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed) :     
         distance_grid(initializeDistanceGrid(bot, up)),
         num_points(initializeNumPointsCount()),    
         all(num_points),
@@ -861,9 +861,9 @@ struct big_grid {
         num_empty(num_points),
         data(num_points),
         distance(num_points),
-        uniform(0.0,1.0),
+        uniform(0.0f,1.0f),
         distribution(0.0,1.0),
-        gauss(0.0,0.3),
+        gauss(0.0f,0.3f),
         pickWeightedIngr(true),
         pickRandPt(true) {
 
@@ -998,7 +998,7 @@ struct big_grid {
         }else 
             lowestPriority = 1.0;
 
-        totalRadii = 0.0;
+        double totalRadii = 0.0;
         for(unsigned i = 0; i < ingr2.size(); ++i) {
             ing = ingr2[i];
             r = ing->minRadius;
@@ -1559,7 +1559,7 @@ with a call like grid.tree()->getValue(ijk).
         // The offset to cell-center points
         openvdb::math::Vec3f offset;//(delta/2., delta/2., delta/2.);
         openvdb::math::Mat4d rotMatj;
-        rotMatj.setToRotation(openvdb::math::Vec3f(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
+        rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
         //setTranslation>?
         
         //rotMatj=histoVol.randomRot.get() 
@@ -1841,7 +1841,7 @@ with a call like grid.tree()->getValue(ijk).
 parsing information from the autopack setup file as well as the collada mesh file 
 */
 
-float getRadii(std::string str){
+double getRadii(std::string str){
     //std::string str(input);  
     std::replace(str.begin(), str.end(), '[', ' ');  
     std::replace(str.begin(), str.end(), ']', ' ');  
@@ -2353,7 +2353,7 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
     //std::cout << path << std::endl;
     std::cout << "#Load result: " << result.description() << ", AutoFillSetup name: " << doc.child("AutoFillSetup").attribute("name").value() << std::endl;
     //get the option
-    const float smallestObjectSize = atof(doc.child("AutoFillSetup").child("options").attribute("smallestProteinSize").value());
+    const double smallestObjectSize = atof(doc.child("AutoFillSetup").child("options").attribute("smallestProteinSize").value());
     const unsigned seed = _seed;
     const int mode = _mode;
     stepsize = smallestObjectSize * 1.1547;
@@ -2469,7 +2469,6 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
     //g.setMode(0);//1-close packing 0-random
     g.setIngredients(_ingredients);
     return g; 
-    //test<big_grid>(bb0,bb1,smallestObjectSize,_ingredients,_mode,_seed,pickWeightedIngr,pickRandPt); // runs in 0.22 s test<big_grid>(n); // runs in 0.06 s
 }
 
 
