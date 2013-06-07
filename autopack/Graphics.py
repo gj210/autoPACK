@@ -113,7 +113,8 @@ class AutopackViewer:
         self.doOrder = False
         self.renderDistance = False
         self._timer = False
-        self.fbb = None   
+        self.fbb = None
+        self.counter = 0
         self.meshGeoms={}
         self.OPTIONS = {
                     "doPoints":{"name":"doPoints","value":True,"default":True,"type":"bool"},
@@ -1049,17 +1050,26 @@ class AutopackViewer:
                     parent = None
                 if ingr not in meshGeoms:
                     continue
+                axis = numpy.array(ingr.principalVector[:])
+                if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
+                    if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                        axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+                        print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                 ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.name,
                                             matrices=meshGeoms[ingr],
                                             mesh=polygon,parent = parent,
                                             transpose= True,colors=[ingr.color],
-                                            axis=ingr.principalVector)
+                                            axis=axis)
 #                if self.doOrder :
                 #print ingr.ipoly
                 if self.vi.host.find("blender") != -1 :
                     self.orgaToMasterGeom[ingr] = polygon
                     if not self.vi.dupliVert :
                         self.vi.setLayers(polygon,[1])#and do it for child too.
+#                    else :    
+#                        if ingr.coordsystem == "left":
+#                            self.vi.rotateObj(polygon,[0.0,-math.pi/2.0,0.0])
+
                 elif self.vi.host == "dejavu" or self.vi.host == "softimage":
                     self.orgaToMasterGeom[ingr] = ingr.mesh
                 if self.helper.host != 'dejavu':
@@ -1180,16 +1190,25 @@ class AutopackViewer:
                         if self.helper.host == 'dejavu':
                             parent = None                           
                         print("ri instanciation of polygon",polygon)
+                        axis = numpy.array(ingr.principalVector[:])
+                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
+                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,
                                                     parent = parent,
                                                     transpose=True,colors=[ingr.color],
-                                                    axis=ingr.principalVector)
+                                                    axis=axis)
+                        #principal vector rotate by 90degree for blender dupliVert?
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
                             if not self.vi.dupliVert : 
                                 self.vi.setLayers(polygon,[1])#and do it for child too.
+#                            else :    
+#                                if ingr.coordsystem == "left":
+#                                    self.vi.rotateObj(polygon,[0.0,-math.pi/2.0,0.0])
                         elif self.vi.host == "dejavu":
                             self.orgaToMasterGeom[ingr] = ingr.mesh
                         elif self.vi.host == "softimage":
@@ -1220,16 +1239,24 @@ class AutopackViewer:
                         if self.helper.host == 'dejavu':
                             parent = None                           
                         print("rs instanciation of polygon",polygon)
+                        axis = numpy.array(ingr.principalVector[:])
+                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
+                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,
                                                     parent = parent,
                                                     transpose= True,colors=[ingr.color],
-                                                    axis=ingr.principalVector)            
+                                                    axis=axis)            
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
                             if not self.vi.dupliVert :
                                 self.vi.setLayers(polygon,[1])#and do it for child too.
+#                            else :    
+#                                if ingr.coordsystem == "left":
+#                                    self.vi.rotateObj(polygon,[0.0,-math.pi/2.0,0.0])
                         elif self.vi.host == "dejavu":
                             self.orgaToMasterGeom[ingr] = ingr.mesh
                     j+=1
@@ -1714,27 +1741,31 @@ class AutopackViewer:
         maxi=None
         useMaterial = False
         useObjectColors = False
+        listeObjs = objects
         if "mini" in options:
             mini = options["mini"]
         if "maxi" in options:
             maxi = options["maxi"]
         if "useMaterial" in options:
             useMaterial = options["useMaterial"]
+            if useMaterial : useObjectColors = False
         if "useObjectColors" in options:
             useObjectColors = options["useObjectColors"]
-        ramp = c.getRamp(colors)
-        datas = None
-        listeObjs = None
-        if mode == "distance":            
-            listeObjs,datas = self.colorByDistanceFrom(target,
-                            parents=parents,distances=data, 
-                            objects=objects,ramp=ramp,
-                            colors=colors,**options)
-        elif mode == "order":
-            #the order is in the name
-            listeObjs,datas = self.colorByOrder(parents=parents,orders=data, 
-                            objects=objects,ramp=ramp,
-                            colors=colors,**options)
+            if useObjectColors : useMaterial = False
+        ramp = col.getRamp(colors)
+#        datas = None
+#        listeObjs = None
+        if datas is None :      
+            if mode == "distance":            
+                listeObjs,datas = self.colorByDistanceFrom(target,
+                                parents=parents,distances=data, 
+                                objects=objects,ramp=ramp,
+                                colors=colors,**options)
+            elif mode == "order":
+                #the order is in the name
+                listeObjs,datas = self.colorByOrder(parents=parents,orders=data, 
+                                objects=objects,ramp=ramp,
+                                colors=colors,**options)
         print("datas",len(datas))
         print("objs",len(listeObjs))
         if datas and datas is not None :
@@ -1752,11 +1783,13 @@ class AutopackViewer:
                     io[c4d.ID_BASEOBJECT_COLOR] = self.vi.FromVec(lcol[i],pos=False) #get a vector 0,0,0
         return datas,listeObjs
         
+    #export distance ...    
     def colorByDistanceFrom(self,target,parents=None,distances=None, objects=None,
                             ramp=None,
                             colors=[red,black],**options):
         """
         target : name or host object target
+        Deprecated, need to use new name rule
         """
         #get distance from object to the target.
         #all object are in h.molecules and orga.molecules
@@ -1768,13 +1801,14 @@ class AutopackViewer:
         if "threshold" in options:
             threshold = options["threshold"]
         if ramp is None :
-            ramp = c.getRamp(colors)
+            ramp = col.getRamp(colors)
             if ramp is None :
-                return
+                return [[],[]]
         o = self.vi.getObject(target)
 #        print "target",o
         if o is None :
-            return
+            print ("target is none",target)
+            return [[],[]]
         targetPos = self.vi.ToVec(self.vi.getTranslation(o)) #hostForm
         listeObjs=[]
         listeDistances = []
@@ -1782,8 +1816,8 @@ class AutopackViewer:
             #get all object except itself,use hierarchy from host
             #cytoplasme,compartmentname
             if parents is None :
-                listeParent = ["cytoplasme"]
-                for o in self.histo.compartments :
+                listeParent = [self.histo.name+"_cytoplasm"]
+                for o in self.histo.organelles :
                     listeParent.append(o.name+"_Matrix")
                     listeParent.append(o.name+"_surface")
             else :
@@ -1800,8 +1834,12 @@ class AutopackViewer:
                     #for all instance get the position and measure the distance to target
 #                    print "meshi",meshp
                     if meshp is None :
-                        continue #should get sphere/cylnder parent ?
-                    meshpchilds = self.vi.getChilds(meshp)
+                        c = self.vi.getChilds(ch)
+                        if not len(c) :
+                            continue                        
+                        meshpchilds = self.vi.getChilds(c[0])#continue #should get sphere/cylnder parent ?
+                    else :
+                        meshpchilds = self.vi.getChilds(meshp)
                     for cc in meshpchilds:
 #                        print "child",cc
                         pos = self.vi.ToVec(self.vi.getTranslation(cc))
@@ -1834,7 +1872,7 @@ class AutopackViewer:
         if "threshold" in options:
             threshold = options["threshold"]
         if ramp is None :
-            ramp = c.getRamp(colors)
+            ramp = col.getRamp(colors)
             if ramp is None :
                 return
         listeObjs=[]
@@ -1942,18 +1980,19 @@ class AutopackViewer:
         list(map(PS.SetAge,ids,ages))#should avoid map
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
-        
-        rd = doc.GetActiveRenderData().GetData()
-        bmp = c4d.bitmaps.BaseBitmap()
-        #Initialize the bitmap with the result size.
-        #The resolution must match with the output size of the render settings.
-        bmp.Init(x=640, y=480, depth=32)
-#        fps = doc.GetFps()
-#        next = c4d.BaseTime(self.i/fps)
-#        doc.SetTime(bc2)
-        c4d.documents.RenderDocument(doc, rd, bmp, c4d.RENDERFLAGS_EXTERNAL)
-        c4d.CallCommand(12414)                 
+#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
+        render = False
+        if render :
+            rd = doc.GetActiveRenderData().GetData()
+            bmp = c4d.bitmaps.BaseBitmap()
+            #Initialize the bitmap with the result size.
+            #The resolution must match with the output size of the render settings.
+            bmp.Init(x=640, y=480, depth=32)
+            #        fps = doc.GetFps()
+            #        next = c4d.BaseTime(self.i/fps)
+            #        doc.SetTime(bc2)
+            c4d.documents.RenderDocument(doc, rd, bmp, c4d.RENDERFLAGS_EXTERNAL)
+            c4d.CallCommand(12414)                 
 
     def displayFreePointsAsPS(self):
         #self.histo.freePointsAfterFill[:self.histo.nbFreePointsAfterFill]
@@ -1974,7 +2013,7 @@ class AutopackViewer:
 #        map(PS.SetAge,ids,ages)
 #        #render ?
 #        #render("md%.4d" % i,640,480)
-#        name = "/Users/ludo/DEV/autopack/TestSnake/render/renderdistance"
+#        name = "/Users/ludo/DEV/AutoFill/TestSnake/render/renderdistance"
         
 #        rd = doc.GetActiveRenderData().GetData()
 #        bmp = c4d.bitmaps.BaseBitmap()
@@ -1986,7 +2025,67 @@ class AutopackViewer:
 #        doc.SetTime(bc2)
 #        c4d.documents.RenderDocument(doc, rd, bmp, c4d.RENDERFLAGS_EXTERNAL)
 #        c4d.CallCommand(12414)                 
-    
+
+    def displayLeafOctree(self,name,node,ind,parent):
+        if node is None :
+            return
+        if node.isLeafNode :
+            onode = self.helper.box(name,center=numpy.array(node.position),
+                                size=[node.size,node.size,node.size],
+                                parent =parent)[0]
+            return
+        else  :
+            #go throuhg all node and do a box
+            for i,cnode in enumerate(node.branches):
+                self.counter+=1
+                self.displayLeafOctree("node"+str(self.counter),node,ind+i,onode)
+ 
+    def displayOneNodeOctree(self,name,node,ind,parent):
+        if node is None :
+            return
+        onode = self.helper.box(name,center=numpy.array(node.position),
+                                size=[node.size,node.size,node.size],
+                                parent =parent)[0]
+        if node.isLeafNode :
+            return
+        else :
+            if self.counter >= 10:
+                return
+            #go throuhg all node and do a box
+            for i,cnode in enumerate(node.branches):
+                self.counter+=1
+                self.displayOneNodeOctree("node"+str(self.counter),node,ind+i,onode)
+        
+    def displayOctree(self,):
+        #display the octree if any
+        self.counter=0
+        if self.histo.octree is None :
+            return
+        #box(self,name,center=[0.,0.,0.],size=[1.,1.,1.]
+        root = self.histo.octree.root
+        oroot = self.helper.box("octreeRoot",center=numpy.array(root.position),
+                                size=[root.size,root.size,root.size])[0]
+        #go throuhg all node and do a box
+        for i,node in enumerate(root.branches):
+            self.counter+=1
+            self.displayOneNodeOctree("node"+str(i),node,i,oroot)
+
+    def displayOctreeLeaf(self,):
+        #display the octree if any
+        self.counter=0
+        if self.histo.octree is None :
+            return
+        #box(self,name,center=[0.,0.,0.],size=[1.,1.,1.]
+        root = self.histo.octree.root
+        oroot = self.helper.box("octreeRoot",center=numpy.array(root.position),
+                                size=[root.size,root.size,root.size])[0]
+        #go throuhg all node and do a box only for leaf
+        for i,node in enumerate(root.branches):
+            self.counter+=1
+            self.displayLeafOctree("node"+str(i),node,i,oroot)
+                                
+            
+
     def delIngr(self,ingr):
         ingrname=ingr.name
         parentname =  "Meshs_"+ingrname.replace(" ","_")
@@ -2059,4 +2158,20 @@ class AutopackViewer:
         if parent is not None :
             point = self.helper.getChilds(parent)
             [self.helper.deleteObject(o) for o in point]
-                        
+
+    def displayRoot(self,root):
+        rooto = self.helper.box("octreeroot",center=root.position,size=[root.size,]*3)
+        print ("root",len(root.objects))
+        for io in root.objects :
+            print (self.helper.getName(io))
+        
+    def displaysubnode(self,parentnode,i):        
+        if not parentnode.hasSubnodes and not parentnode.hasSubdivided: return
+        for subnode in parentnode.subnodes:
+            if subnode is None : continue
+            b=self.helper.box("node"+str(i),center=subnode.position,size=[subnode.size,]*3)
+#            print "node"+str(i),len(subnode.objects)
+#            for io in subnode.objects :
+#                print self.helper.getName(io)
+            self.displaysubnode(subnode,i)
+            i+=1                        

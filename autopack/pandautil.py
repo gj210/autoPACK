@@ -64,10 +64,64 @@ try :
     from pandac.PandaModules import InternalName
 except :
     panda3d = None
+if panda3d is not None :
+    from panda3d.ode import OdeWorld, OdeSimpleSpace, OdeJointGroup
+    from panda3d.ode import OdeBody, OdeMass, OdeBoxGeom, OdePlaneGeom
+    from panda3d.core import BitMask32, CardMaker, Vec4, Quat
+    from random import randint, random
 
 
 class PandaUtil:
     def __init__(self,*args,**kw):
+        self.solver="bullet"
+        if "solver" in kw :
+            self.solver = kw["solver"]
+        self.rb_func_dic={"bullet":{
+            "SingleSphere":self.addSingleSphereRB,
+            "SingleCube":self.addSingleCubeRB,
+            "MultiSphere":self.addMultiSphereRB,
+            "MultiCylinder":self.addMultiCylinderRB,
+            "Mesh":self.addMeshRB,
+            },
+            "ode":{
+            "SingleSphere":self.addSingleSphereRBODE,
+#            "SingleCube":self.addSingleCubeRBODE,
+#            "MultiSphere":self.addMultiSphereRBODE,
+#            "MultiCylinder":self.addMultiCylinderRBODE,
+#            "Mesh":self.addMeshRBODE,
+            },
+            }
+    def setup(self):
+        if self.solver == "bullet":
+            self.setupPanda()
+        elif self.solver == "ode" :
+            self.setupODE()
+
+    def setupODE(self,*args,**kw):
+        if self.world is None :
+            if panda3d is None :
+                return
+            from panda3d.core import loadPrcFileData            
+            loadPrcFileData("", "window-type none" ) 
+            # Make sure we don't need a graphics engine 
+            #(Will also prevent X errors / Display errors when starting on linux without X server)
+            loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
+#            loadPrcFileData('', 'bullet-enable-contact-events true')
+#            loadPrcFileData('', 'bullet-max-objects 50')#10240
+            
+            import direct.directbase.DirectStart 
+#            bullet.bullet-max-objects = 1024 * 10#sum of all predicted n Ingredient ?
+#            self.worldNP = render.attachNewNode('World')            
+            self.world = OdeWorld()
+            self.world.setGravity(Vec3(0, 0, 0))
+            self.static=[]
+            self.moving = None
+            self.rb_panda = []
+            return self.world
+
+    def addSingleSphereRBODE()  :
+        pass          
+    def setupPanda(self,*args,**kw):
         if panda3d is None :
             return
         from panda3d.core import loadPrcFileData
@@ -88,13 +142,6 @@ class PandaUtil:
         self.static=[]
         self.moving = None
         self.rb_panda = []
-        self.rb_func_dic={
-        "SingleSphere":self.addSingleSphereRB,
-        "SingleCube":self.addSingleCubeRB,
-        "MultiSphere":self.addMultiSphereRB,
-        "MultiCylinder":self.addMultiCylinderRB,
-
-        }        
 
     def delRB(self, node):
         if panda3d is None :

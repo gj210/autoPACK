@@ -650,6 +650,85 @@ class SubdialogCustomFiller(uiadaptor):
         self.drawSubDialog(dlg,555555556)
         dlg.updateWidget()
 
+class AnalysisTab:
+    widget = {}
+    layout = None
+    
+    def __init__(self,afgui=None):
+        self.afgui = afgui #used for callback
+        from AutoFill.analysis import AnalyseAP
+        self.aap = AnalyseAP(env=self.afgui.histoVol,
+                             viewer=self.afgui.afviewer)
+                             
+    def getWidget(self,):
+        self.widget["title"] = self.afgui._addElemt(label="Analysis Tools",
+                                            width=50, height=5)
+        #check box if use closest vertices (slower..bhtree) or object position
+        self.widget["usePoint"]=self.afgui._addElemt(name="usePoint",
+                            width=80,height=10,label="Compute distance using closet vertices / using object position",
+                            action=None,type="checkbox",icon=None,
+                            variable=self.afgui.addVariable("int",0),value=0)
+        self.widget["colordist"] = self.afgui._addElemt(label="Color by distance from given object/position of every object.",
+                                width=120, height=5)
+        self.widget["btn_color_dist"]=self.afgui._addElemt(name="colordist",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.colordist,label="Color From",
+                                     variable=self.afgui.addVariable("int",0)) 
+        self.widget["savedist"] = self.afgui._addElemt(label="Distance from given object/position of every object.",
+                                width=120, height=5)
+        self.widget["btn_save_dist"]=self.afgui._addElemt(name="savedist",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.savedist,label="Compute and Save (.csv)",
+                                     variable=self.afgui.addVariable("int",0)) 
+        self.widget["input_from"]=self.afgui._addElemt(name="input_from",action=None,width=100,
+                          value="None",type="inputStr",variable=self.afgui.addVariable("str","None"))         
+
+        self.widget["saveclosestdist"] = self.afgui._addElemt(label="Shortest distance from every object to every other object.",
+                                width=120, height=5)
+        self.widget["btn_save_closest_dist"]=self.afgui._addElemt(name="savecdist",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.saveclosestdist,label="Compute and Save (.csv)",
+                                     variable=self.afgui.addVariable("int",0)) 
+        #could save here the different grid as csv ?
+        #self.afgui.histo.distToClosestSurf
+        #if volume rendering support could display a volume for distance array
+        return self.widget
+        
+    def getLayout(self,):
+        elemframe = []
+        elemframe.append([self.widget["title"],])
+        elemframe.append([self.widget["usePoint"],])
+        elemframe.append([self.widget["input_from"],])
+        elemframe.append([self.widget["colordist"], self.widget["btn_color_dist"],])
+        elemframe.append([self.widget["savedist"], self.widget["btn_save_dist"],])
+        elemframe.append([self.widget["saveclosestdist"], self.widget["btn_save_closest_dist"],])
+        return elemframe
+
+    def colordist(self,):
+        #use afviewer
+        target = "Sphere"
+        o = self.afgui.getVal(self.widget["input_from"])
+        if o != "None" :
+            target = o
+        self.afgui.afviewer.color(mode="distance",target=target,
+                                  useMaterial=True,
+                                  usePoint=self.afgui.getVal(self.widget["usePoint"]))
+    
+    def savedist(self,):
+        p=[0,0,0]
+        o = self.afgui.getVal(self.widget["input_from"])
+        if o != "None" :
+            o = self.helper.getObject(o)
+            if o != None:
+                p=self.helper.ToVec(self.helper.getTranslation(o))
+        d=self.aap.getDistanceFrom([0,0,0],
+                    usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
+        self.aap.save_csv(d,"/Users/ludo/distance.csv")
+
+    def saveclosestdist(self,):
+        d=self.aap.getClosestDistance(usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
+        self.aap.save_csv(d,"/Users/ludo/closest_distance.csv")
+        
 #create subdialog here
 #could be in different file
 class SubdialogFiller(uiadaptor):
@@ -881,6 +960,16 @@ class SubdialogFiller(uiadaptor):
         self.LABELSINGR={}
         self.LABELS["Time"] = self._addElemt(label="",width=100, height=10)
 #        print ("widget inted with mode ",self.guimode)
+
+    def getAnalysisTab(self,):
+        #we need widget and layout
+        atab = AnalysisTab(afgui=self)
+        self.Widget["analysis"]=atab.getWidget()
+        elemFrame=atab.getLayout() 
+        frame = self._addLayout(id=250,name="Analysis tools",
+                                elems=elemFrame,collapse=False,
+                                scrolling=True, type="tab")
+        return frame
 
     def getLabelIngr1(self,rname):
         self.LABELSINGR[rname]=[]
@@ -1157,6 +1246,11 @@ class SubdialogFiller(uiadaptor):
 #        elemFrame.append([self.BTN["updateNMol"],])
         frame = self._addLayout(id=196,name="Recipe options",elems=elemFrame,collapse=False,scrolling=True, type="tab")
         self._layout.append(frame)    
+        
+        #should add here an analysis tab
+        if self.guimode != "Simple" and self.guimode != "Intermediate":
+            frame = self.getAnalysisTab()
+            self._layout.append(frame)                    
         
         self._layout.append([self.LABELS["RecipeColumnsEmptySpace50"],
                              self.LABELS["RandomSeed"],

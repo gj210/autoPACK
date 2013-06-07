@@ -49,7 +49,7 @@ autoPACKserver="http://autofill.googlecode.com/svn/data/"
 #except:
 #    LISTPLACEMETHOD =  ["jitter","spring","rigid-body"]
 
-LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax"]
+LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev"]
 afdir = os.path.abspath(__path__[0])
 
 forceFetch = False
