@@ -246,7 +246,7 @@ bool ingredient_compare1(sphere* x, sphere* y){
        else if (r1==r2){ //# r1 == r2
            float c1 = x->completion;
            float c2 = y->completion;
-           if (c1 >= c2) //# c1 > c2
+           if (c1 > c2) //# c1 > c2
                return true;
            else
                return false;
@@ -277,7 +277,7 @@ bool ingredient_compare0(sphere* x, sphere* y){
        else if (r1==r2){ //# r1 == r2
            float c1 = x->completion;
            float c2 = y->completion;
-           if (c1 >= c2) //# c1 > c2
+           if (c1 > c2) //# c1 > c2
                return true;
            else
                return false;
@@ -303,7 +303,7 @@ bool ingredient_compare2(sphere* x, sphere* y){
    else if (r1==r2){ //# r1 == r2
        float c1 = x->completion;
        float c2 = y->completion;
-       if (c1 >= c2) //# c1 > c2
+       if (c1 > c2) //# c1 > c2
            return true;
        else
            return false;
