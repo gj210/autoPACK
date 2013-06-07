@@ -60,8 +60,12 @@
     </td>
   </tr>
 </table>
-<!-- ==================== CLASSOBJ DESCRIPTION ==================== -->
-<h1 class="epydoc">classobj Gradient</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient">source&nbsp;code</a></span></p>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Gradient</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient">source&nbsp;code</a></span></p>
+<p>The Gradient class ========================== This class handle the 
+  use of gradient to control the packing. The class define different and 
+  setup type of gradient, as well as the sampling function</p>
+
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
 <table class="summary" border="1" cellpadding="3"
@@ -107,7 +111,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the center of the gradient grid</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getCenter">source&nbsp;code</a></span>
             
@@ -123,7 +128,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="computeStartEnd"></a><span class="summary-sig-name">computeStartEnd</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="computeStartEnd"></a><span class="summary-sig-name">computeStartEnd</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the overal direction of the gradient</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.computeStartEnd">source&nbsp;code</a></span>
             
@@ -140,7 +146,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="defaultFunction"></a><span class="summary-sig-name">defaultFunction</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">xyz</span>)</span></td>
+        <span class="summary-sig-arg">xyz</span>)</span><br />
+      #linear function 0-&gt;0.1 #project xyz on direction</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.defaultFunction">source&nbsp;code</a></span>
             
@@ -157,7 +164,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="pickPoint"></a><span class="summary-sig-name">pickPoint</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">listPts</span>)</span></td>
+        <span class="summary-sig-arg">listPts</span>)</span><br />
+      pick next random point according to the choosen function</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.pickPoint">source&nbsp;code</a></span>
             
@@ -175,7 +183,8 @@
         <tr>
           <td><span class="summary-sig"><a name="buildWeigthMap"></a><span class="summary-sig-name">buildWeigthMap</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">bb</span>,
-        <span class="summary-sig-arg">MasterPosition</span>)</span></td>
+        <span class="summary-sig-arg">MasterPosition</span>)</span><br />
+      build the actual gradient value according the gradint mode</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.buildWeigthMap">source&nbsp;code</a></span>
             
@@ -193,9 +202,29 @@
         <tr>
           <td><span class="summary-sig"><a name="get_gauss_weights"></a><span class="summary-sig-name">get_gauss_weights</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">N</span>,
-        <span class="summary-sig-arg">degree</span>=<span class="summary-sig-default">5</span>)</span></td>
+        <span class="summary-sig-arg">degree</span>=<span class="summary-sig-default">5</span>)</span><br />
+      given a number of point compute the gaussian weight for each</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.get_gauss_weights">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_gauss_weights1"></a><span class="summary-sig-name">get_gauss_weights1</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">N</span>)</span><br />
+      given a number of point compute the gaussian weight for each 
+      (alternative function)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.get_gauss_weights1">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -227,26 +256,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="get_gauss_weights1"></a><span class="summary-sig-name">get_gauss_weights1</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">N</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.get_gauss_weights1">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
           <td><span class="summary-sig"><a name="buildWeigthMapRadial"></a><span class="summary-sig-name">buildWeigthMapRadial</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">bb</span>,
-        <span class="summary-sig-arg">MasterPosition</span>)</span></td>
+        <span class="summary-sig-arg">MasterPosition</span>)</span><br />
+      from a given point (self.direction) build a radial weigth according 
+      the choosen mode (linear, gauss, etc...)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.buildWeigthMapRadial">source&nbsp;code</a></span>
             
@@ -264,7 +278,9 @@
         <tr>
           <td><span class="summary-sig"><a name="buildWeigthMapDirection"></a><span class="summary-sig-name">buildWeigthMapDirection</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">bb</span>,
-        <span class="summary-sig-arg">MasterPosition</span>)</span></td>
+        <span class="summary-sig-arg">MasterPosition</span>)</span><br />
+      from a given direction build a linear weigth according the choosen 
+      mode (linear, gauss, etc...)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.buildWeigthMapDirection">source&nbsp;code</a></span>
             
@@ -283,7 +299,9 @@
           <td><span class="summary-sig"><a name="buildWeigthMapAxe"></a><span class="summary-sig-name">buildWeigthMapAxe</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">bb</span>,
         <span class="summary-sig-arg">MasterPosition</span>,
-        <span class="summary-sig-arg">Axe</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">X</code><code class="variable-quote">'</code></span>)</span></td>
+        <span class="summary-sig-arg">Axe</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">X</code><code class="variable-quote">'</code></span>)</span><br />
+      from a given axe (X,Y,Z) build a linear weigth according the choosen 
+      mode (linear, gauss, etc...)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.buildWeigthMapAxe">source&nbsp;code</a></span>
             
@@ -300,7 +318,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="getMaxWeight"></a><span class="summary-sig-name">getMaxWeight</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">listPts</span>)</span></td>
+        <span class="summary-sig-arg">listPts</span>)</span><br />
+      from the given list of grid point indice, get the point with the 
+      maximum weight</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getMaxWeight">source&nbsp;code</a></span>
             
@@ -317,7 +337,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="getMinWeight"></a><span class="summary-sig-name">getMinWeight</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">listPts</span>)</span></td>
+        <span class="summary-sig-arg">listPts</span>)</span><br />
+      from the given list of grid point indice, get the point with the 
+      minimum weight</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getMinWeight">source&nbsp;code</a></span>
             
@@ -567,7 +589,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 11:26:47 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

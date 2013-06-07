@@ -60,8 +60,8 @@
     </td>
   </tr>
 </table>
-<!-- ==================== CLASSOBJ DESCRIPTION ==================== -->
-<h1 class="epydoc">classobj AutopackViewer</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer">source&nbsp;code</a></span></p>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class AutopackViewer</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer">source&nbsp;code</a></span></p>
 <p>the base class for viewing/displaying autopack result in a specified 
   viewer ie DejaVu, Cinema4D, Maya or Blender (which are supported hostApp 
   by ePMV)</p>
@@ -979,7 +979,8 @@
         <span class="summary-sig-arg">ramp</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">(</code>1.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-op">, </code><code class="variable-group">(</code>0.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-group">]</code></span>,
         <span class="summary-sig-arg">**options</span>)</span><br />
-      target : name or host object target</td>
+      target : name or host object target Deprecated, need to use new name 
+      rule</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.colorByDistanceFrom">source&nbsp;code</a></span>
             
@@ -1102,6 +1103,78 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="displayLeafOctree"></a><span class="summary-sig-name">displayLeafOctree</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">node</span>,
+        <span class="summary-sig-arg">ind</span>,
+        <span class="summary-sig-arg">parent</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayLeafOctree">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayOneNodeOctree"></a><span class="summary-sig-name">displayOneNodeOctree</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">node</span>,
+        <span class="summary-sig-arg">ind</span>,
+        <span class="summary-sig-arg">parent</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayOneNodeOctree">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayOctree"></a><span class="summary-sig-name">displayOctree</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayOctree">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayOctreeLeaf"></a><span class="summary-sig-name">displayOctreeLeaf</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayOctreeLeaf">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="delIngr"></a><span class="summary-sig-name">delIngr</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>)</span></td>
           <td align="right" valign="top">
@@ -1178,6 +1251,41 @@
         <span class="summary-sig-arg">recipe</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.clearFill">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayRoot"></a><span class="summary-sig-name">displayRoot</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">root</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayRoot">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displaysubnode"></a><span class="summary-sig-name">displaysubnode</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">parentnode</span>,
+        <span class="summary-sig-arg">i</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displaysubnode">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -1491,7 +1599,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 11:26:47 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
