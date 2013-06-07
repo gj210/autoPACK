@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-###############################################################################
-#
 # autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin, Michel Sanner
 #   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010 
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input 

@@ -102,7 +102,6 @@ autopack.Compartment.Compartment.getSurfaceInnerPoints_jordan	autopack.Compartme
 autopack.Compartment.Compartment.BuildGrid_multisdf	autopack.Compartment.Compartment-class.html#BuildGrid_multisdf
 autopack.Compartment.Compartment.BuildGrid_OrthogonalBox	autopack.Compartment.Compartment-class.html#BuildGrid_OrthogonalBox
 autopack.Compartment.Compartment.printFillInfo	autopack.Compartment.Compartment-class.html#printFillInfo
-autopack.Compartment.Compartment.checkPointInsideBBold	autopack.Compartment.Compartment-class.html#checkPointInsideBBold
 autopack.Compartment.Compartment.getCenter	autopack.Compartment.Compartment-class.html#getCenter
 autopack.Compartment.Compartment.find_nearest	autopack.Compartment.Compartment-class.html#find_nearest
 autopack.Compartment.Compartment.setSurfaceRecipe	autopack.Compartment.Compartment-class.html#setSurfaceRecipe
@@ -120,7 +119,6 @@ autopack.Compartment.Compartment.BuildGrid	autopack.Compartment.Compartment-clas
 autopack.Compartment.Compartment.BuildGrid_utsdf	autopack.Compartment.Compartment-class.html#BuildGrid_utsdf
 autopack.Compartment.Compartment.getSurfaceInnerPoints_sdf_interpolate	autopack.Compartment.Compartment-class.html#getSurfaceInnerPoints_sdf_interpolate
 autopack.Compartment.Compartment.extendGridArrays	autopack.Compartment.Compartment-class.html#extendGridArrays
-autopack.Compartment.Compartment.BuildGrid_break	autopack.Compartment.Compartment-class.html#BuildGrid_break
 autopack.Compartment.Compartment.getDejaVuMesh	autopack.Compartment.Compartment-class.html#getDejaVuMesh
 autopack.Compartment.Compartment.getSizeXYZ	autopack.Compartment.Compartment-class.html#getSizeXYZ
 autopack.Compartment.CompartmentList	autopack.Compartment.CompartmentList-class.html
