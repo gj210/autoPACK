@@ -28,19 +28,35 @@ message(STATUS "OpenVDB library found in: ${OPENVDB_LIBRARY}")
 
 find_package(Boost REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
-	
-add_executable(autoPack autopack.cpp)
+    
+SET(AUTOPACK_SOURCE_FILES
+    autopack.cpp 
+    IngradientsFactory.cpp
+    BigGrid.cpp
+    Sphere.cpp
+    XMLLoader.cpp
+    )
+
+SET(AUTOPACK_HEADER_FILES
+    Types.h 
+    BigGrid.h
+    IngradientsFactory.h
+    Sphere.h
+    XMLLoader)
+
+
+add_executable(autoPack ${AUTOPACK_SOURCE_FILES} ${AUTOPACK_HEADER_FILES})
 
 include_directories(${Boost_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS}
-	${ILMBASE_INCLUDE_DIR} ${TBB_INCLUDE_DIR}
-	${PUGIXML_INCLUDE_DIR} ${OPENVDB_INCLUDE_DIR})
+    ${ILMBASE_INCLUDE_DIR} ${TBB_INCLUDE_DIR}
+    ${PUGIXML_INCLUDE_DIR} ${OPENVDB_INCLUDE_DIR})
 
 target_link_libraries(autoPack ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PUGIXML_LIBRARY} ${OPENVDB_LIBRARY})
 
 if(MSVC)
-	ADD_DEFINITIONS(-DNOMINMAX)	
-	ADD_DEFINITIONS(-DZLIB_WINAPI)
-	ADD_DEFINITIONS(-D__TBB_NO_IMPLICIT_LINKAGE)
+    ADD_DEFINITIONS(-DNOMINMAX)	
+    ADD_DEFINITIONS(-DZLIB_WINAPI)
+    ADD_DEFINITIONS(-D__TBB_NO_IMPLICIT_LINKAGE)
 endif()
 if (UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -std=c++11")
