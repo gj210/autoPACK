@@ -41,9 +41,9 @@ include_directories(${Boost_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS}
     ${ILMBASE_INCLUDE_DIR} ${TBB_INCLUDE_DIR}
     ${PUGIXML_INCLUDE_DIR} ${OPENVDB_INCLUDE_DIR})
 
-set( EXTERNAL_LIBRARIES ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PUGIXML_LIBRARY} ${OPENVDB_LIBRARY} )	
+set( EXTERNAL_LIBRARIES ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PUGIXML_LIBRARY} ${OPENVDB_LIBRARY} )	
 
-target_link_libraries(autoPack ${EXTERNAL_LIBRARIES})
+target_link_libraries(autoPack ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
 if(MSVC)
     ADD_DEFINITIONS(-DNOMINMAX)	
@@ -64,7 +64,7 @@ if(Boost_FOUND)
 FILE(GLOB AUTOPACK_TESTS_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
 	add_executable(UnitTests  ${AUTOPACK_TESTS_FILES})
-	target_link_libraries(UnitTests ${EXTERNAL_LIBRARIES})
+	target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
 	enable_testing()
 	add_test(UniTests UnitTests)
