@@ -1,3 +1,0 @@
-c++ -O3 -stdlib=libc++ -std=c++11 -pthread -DNDEBUG -I . -I .. -I /usr/local/include -I /usr/local/include -I /usr/local/include -o autopack autopack.cpp -I . \
-	    -ldl -lm -lz -Wl,-rpath,/usr/local -L/usr/local -lHalf -Wl,-rpath,/usr/local -L/usr/local -ltbb  -Wl,-rpath,/usr/local -L/usr/local -ljemalloc \
-	    -Wl,-rpath,/tmp/OpenVDB/lib -L/Users/ludo/DEV/cautoPACK/openvdb -lpugixml libopenvdb.so.1.1 -L. -lassimp

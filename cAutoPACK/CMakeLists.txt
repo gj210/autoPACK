@@ -29,21 +29,11 @@ message(STATUS "OpenVDB library found in: ${OPENVDB_LIBRARY}")
 find_package(Boost REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
     
-SET(AUTOPACK_SOURCE_FILES
-    autopack.cpp 
-    IngradientsFactory.cpp
-    BigGrid.cpp
-    Sphere.cpp
-    XMLLoader.cpp
-    )
-
-SET(AUTOPACK_HEADER_FILES
-    Types.h 
-    BigGrid.h
-    IngradientsFactory.h
-    Sphere.h
-    XMLLoader)
-
+FILE(GLOB AUTOPACK_SOURCE_FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)	
+	
+FILE(GLOB AUTOPACK_HEADER_FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)	
 
 add_executable(autoPack ${AUTOPACK_SOURCE_FILES} ${AUTOPACK_HEADER_FILES})
 
@@ -51,7 +41,9 @@ include_directories(${Boost_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS}
     ${ILMBASE_INCLUDE_DIR} ${TBB_INCLUDE_DIR}
     ${PUGIXML_INCLUDE_DIR} ${OPENVDB_INCLUDE_DIR})
 
-target_link_libraries(autoPack ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PUGIXML_LIBRARY} ${OPENVDB_LIBRARY})
+set( EXTERNAL_LIBRARIES ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PUGIXML_LIBRARY} ${OPENVDB_LIBRARY} )	
+
+target_link_libraries(autoPack ${EXTERNAL_LIBRARIES})
 
 if(MSVC)
     ADD_DEFINITIONS(-DNOMINMAX)	
@@ -64,3 +56,19 @@ if (UNIX)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     endif()
 endif()
+
+
+set(Boost_USE_STATIC_LIBS        ON)
+find_package(Boost COMPONENTS system filesystem unit_test_framework)
+if(Boost_FOUND)
+FILE(GLOB AUTOPACK_TESTS_FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
+	add_executable(UnitTests  ${AUTOPACK_TESTS_FILES})
+	target_link_libraries(UnitTests ${EXTERNAL_LIBRARIES})
+
+	enable_testing()
+	add_test(UniTests UnitTests)
+endif()
+
+
+
