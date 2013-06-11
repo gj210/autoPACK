@@ -363,25 +363,7 @@ int big_grid::prepareIngredient()
     
     calculateThresholdAndNormalizedPriorities();
 
-    int nls=0;
-    int totalNumMols = 0;
-    if (thresholdPriorities.size() == 0){
-        for(unsigned i = 0; i < ingredients.size(); ++i) {
-            totalNumMols += ingredients[i].nbMol;
-            std::cout << "#nmol Fill5if is  for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
-        }
-        std::cout << "#totalNumMols Fill5if = " << totalNumMols << std::endl;
-    }else {                
-        for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
-            float threshProb = thresholdPriorities[i];
-            sphere* ing = activeIngr[nls];
-            std::cout << "#nmol Fill5else is for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
-            totalNumMols += ing->nbMol;
-            nls++;
-        }
-        std::cout << "#totalNumMols Fill5else = " << totalNumMols << std::endl;
-    } 
-    return totalNumMols;
+    return calculateTotalNumberMols();
 }
 
 void big_grid::updatePriorities( sphere *ingr )
@@ -1113,4 +1095,27 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
     }
     activeIngr = activeIngr0;// + self.activeIngr12
     activeIngr.insert(activeIngr.end(), activeIngr12.begin(), activeIngr12.end());
+}
+
+int big_grid::calculateTotalNumberMols()
+{
+    int nls=0;
+    int totalNumMols = 0;
+    if (thresholdPriorities.size() == 0){
+        for(unsigned i = 0; i < ingredients.size(); ++i) {
+            totalNumMols += ingredients[i].nbMol;
+            std::cout << "#nmol Fill5if is  for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
+        }
+        std::cout << "#totalNumMols Fill5if = " << totalNumMols << std::endl;
+    }else {                
+        for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
+            float threshProb = thresholdPriorities[i];
+            sphere* ing = activeIngr[nls];
+            std::cout << "#nmol Fill5else is for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
+            totalNumMols += ing->nbMol;
+            nls++;
+        }
+        std::cout << "#totalNumMols Fill5else = " << totalNumMols << std::endl;
+    }
+    return totalNumMols;
 }
