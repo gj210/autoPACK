@@ -274,14 +274,11 @@ void big_grid::setIngredients( std::vector<sphere> _ingredients )
 
 void big_grid::getMaxRadius()
 {
-    maxradius = 0.0;
-    //minradius = 9999.9;
-    for(int i = 0; i < numActiveIngr; ++i) { 
-        if (activeIngr[i]->maxRadius > maxradius) 
-            maxradius = activeIngr[i]->maxRadius;
-        //if (activeIngr[i].minRadius < minradius) 
-        //    minradius = activeIngr[i].minRadius;
-    }
+    maxradius = 0.0;    
+    const auto maxIter = std::max_element(std::begin(activeIngr), std::end(activeIngr), 
+        [](sphere* sp1, sphere* sp2) { return sp1->maxRadius < sp2->maxRadius; } );
+    if (maxIter != activeIngr.end())
+        maxradius = (*maxIter)->maxRadius;
 }
 
 void big_grid::getSortedActiveIngredients()
@@ -352,8 +349,6 @@ void big_grid::getSortedActiveIngredients()
 
 int big_grid::prepareIngredient()
 {
-    
-    float np;    
     getSortedActiveIngredients();
     std::cout << "#len(allIngredients) " << ingredients.size() << std::endl;
     std::cout << "#len(activeIngr0) " << activeIngr0.size() << std::endl;
@@ -370,8 +365,6 @@ void big_grid::updatePriorities( sphere *ingr )
 {
     vRangeStart = vRangeStart + normalizedPriorities[0];
                 
-    activeIngr.erase(std::remove_if(activeIngr.begin(), activeIngr.end(), [&](sphere * sp) { return ingr->name == sp->name; }), activeIngr.end());
-    
     //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
     //#this function also depend on the ingr.completiion that can be restored ?
     getSortedActiveIngredients();            
@@ -395,21 +388,11 @@ void big_grid::dropIngredient( sphere *ingr )
             return;
         }
     }  
-    for(int i = 0; i < numActiveIngr; ++i) { 
-        if (ingr->name == activeIngr[i]->name){ 
-            ingr_ind = i;
-            found = true;
-            break;             
-        }
-    }
-    if (found) {
-        //swap  
-        numActiveIngr--;
-        std::swap(activeIngr[ingr_ind], activeIngr[numActiveIngr]);  
-        //swap also the ingredient ? active Ingredient should be unsign int ? 
-        //ingr->active = false;   
-    }
-    ingr->active = false; 
+
+    const auto firstToDeleteIter = std::remove_if(activeIngr.begin(), activeIngr.end(), [&ingr](sphere * sp) { return ingr->name == sp->name; });
+    std::for_each(firstToDeleteIter, std::end(activeIngr), [] (sphere* sp) { sp->active = false;} );
+    activeIngr.erase(firstToDeleteIter, activeIngr.end());
+
     getMaxRadius();
     //update thresholdproperties
     updatePriorities(ingr);
