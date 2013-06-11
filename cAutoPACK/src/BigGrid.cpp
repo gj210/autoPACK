@@ -360,33 +360,8 @@ int big_grid::prepareIngredient()
     std::cout << "#len(activeIngr12) " << activeIngr12.size() << std::endl;
     
     countTotalPriorities();
-
-    float pp;
-    float previousThresh = 0.0;
-    //# Graham- Once negatives are used, if picked random# 
-    //# is below a number in this list, that item becomes 
-    //# the active ingredient in the while loop below
-    for(unsigned i = 0; i < activeIngr0.size(); ++i) {
-        //for priors in self.activeIngr0:
-        normalizedPriorities.push_back(0.0);
-        if (pickWeightedIngr)// #why ?
-            thresholdPriorities.push_back(2);
-    }        
-    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
-        //for priors in self.activeIngr12:
-        //#pp1 = 0
-        pp = activeIngr12[i]->packingPriority;
-        if (totalPriorities != 0)
-            np = float(pp)/float(totalPriorities);
-        else
-            np=0.0;
-        normalizedPriorities.push_back(np);
-        std::cout << "#np is "<< np << " pp is "<< pp << " tp is " << np + previousThresh << std::endl;
-        thresholdPriorities.push_back(np + previousThresh);
-        previousThresh = np + float(previousThresh);
-    }
-    activeIngr = activeIngr0;// + self.activeIngr12
-    activeIngr.insert(activeIngr.end(), activeIngr12.begin(), activeIngr12.end());
+    
+    calculateThresholdAndNormalizedPriorities();
 
     int nls=0;
     int totalNumMols = 0;
@@ -415,42 +390,14 @@ void big_grid::updatePriorities( sphere *ingr )
                 
     activeIngr.erase(std::remove_if(activeIngr.begin(), activeIngr.end(), [&](sphere * sp) { return ingr->name == sp->name; }), activeIngr.end());
     
-
     //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
     //#this function also depend on the ingr.completiion that can be restored ?
     getSortedActiveIngredients();            
 
     countTotalPriorities();
 
-    float np;
+    calculateThresholdAndNormalizedPriorities();
 
-    float previousThresh = 0;
-    normalizedPriorities.clear();
-    thresholdPriorities.clear();
-    //# Graham- Once negatives are used, if picked random# 
-    //# is below a number in this list, that item becomes 
-    //#the active ingredient in the while loop below
-    for(unsigned i = 0; i < activeIngr0.size(); ++i) {
-        normalizedPriorities.push_back(0.0);
-        if (pickWeightedIngr)
-            thresholdPriorities.push_back(2.0);   
-    } 
-    float pp;
-    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
-        //for priors in self.activeIngr12:
-        //#pp1 = 0
-        pp = activeIngr12[i]->packingPriority;
-        if (totalPriorities != 0)
-            np = float(pp)/float(totalPriorities);
-        else
-            np=0.0;
-        normalizedPriorities.push_back(np);
-        if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< pp << " tp is " << np + previousThresh << std::endl;
-        thresholdPriorities.push_back(np + previousThresh);
-        previousThresh = np + float(previousThresh);
-    }
-    activeIngr = activeIngr0;// + self.activeIngr12
-    activeIngr.insert(activeIngr.end(), activeIngr12.begin(), activeIngr12.end());
 }
 
 void big_grid::dropIngredient( sphere *ingr )
@@ -1134,4 +1081,36 @@ void big_grid::countTotalPriorities()
         totalPriorities = totalPriorities + pp;
         std::cout << "#totalPriorities " << totalPriorities << ' ' << ingr->packingPriority <<std::endl;
     }
+}
+
+void big_grid::calculateThresholdAndNormalizedPriorities()
+{
+    float np;
+    float previousThresh = 0;
+    normalizedPriorities.clear();
+    thresholdPriorities.clear();
+    //# Graham- Once negatives are used, if picked random# 
+    //# is below a number in this list, that item becomes 
+    //#the active ingredient in the while loop below
+    for(unsigned i = 0; i < activeIngr0.size(); ++i) {
+        normalizedPriorities.push_back(0.0);
+        if (pickWeightedIngr)
+            thresholdPriorities.push_back(2.0);   
+    } 
+    float pp;
+    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
+        //for priors in self.activeIngr12:
+        //#pp1 = 0
+        pp = activeIngr12[i]->packingPriority;
+        if (totalPriorities != 0)
+            np = float(pp)/float(totalPriorities);
+        else
+            np=0.0;
+        normalizedPriorities.push_back(np);
+        if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< pp << " tp is " << np + previousThresh << std::endl;
+        thresholdPriorities.push_back(np + previousThresh);
+        previousThresh = np + float(previousThresh);
+    }
+    activeIngr = activeIngr0;// + self.activeIngr12
+    activeIngr.insert(activeIngr.end(), activeIngr12.begin(), activeIngr12.end());
 }

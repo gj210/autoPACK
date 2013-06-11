@@ -144,4 +144,5 @@ struct big_grid {
 
 private:
     void countTotalPriorities();
+    void calculateThresholdAndNormalizedPriorities();
 };
