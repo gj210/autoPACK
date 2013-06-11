@@ -420,17 +420,10 @@ int big_grid::prepareIngredient()
 void big_grid::updatePriorities( sphere *ingr )
 {
     vRangeStart = vRangeStart + normalizedPriorities[0];
-    //ingr->completion = 1.0;
-    int ind = 0 ;
-    for (std::vector<sphere*>::size_type i=0; i < activeIngr.size() ; i++){
-        if (ingr->name == activeIngr[0]->name){
-            ind = i;
-            break;            
-        }        
-    }
+                
+    activeIngr.erase(std::remove_if(activeIngr.begin(), activeIngr.end(), [&](sphere * sp) { return ingr->name == sp->name; }), activeIngr.end());
+    
 
-    //remove ingredetien fomr activeIngr
-    activeIngr.erase( activeIngr.begin()+ind );
     //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
     //#this function also depend on the ingr.completiion that can be restored ?
     getSortedActiveIngredients();        
