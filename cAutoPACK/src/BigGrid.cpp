@@ -429,11 +429,6 @@ void big_grid::updatePriorities( sphere *ingr )
         }        
     }
 
-    if (ind > 0){
-        for (int j=0; j < ind;j++){         
-            thresholdPriorities[j] = thresholdPriorities[j] + normalizedPriorities[ind];
-        }
-    }
     //remove ingredetien fomr activeIngr
     activeIngr.erase( activeIngr.begin()+ind );
     //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
