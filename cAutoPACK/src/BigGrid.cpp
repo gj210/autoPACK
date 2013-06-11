@@ -352,24 +352,16 @@ void big_grid::getSortedActiveIngredients()
 
 int big_grid::prepareIngredient()
 {
-    float pp;
-    float np;
-    sphere* ingr;
+    
+    float np;    
     getSortedActiveIngredients();
     std::cout << "#len(allIngredients) " << ingredients.size() << std::endl;
     std::cout << "#len(activeIngr0) " << activeIngr0.size() << std::endl;
     std::cout << "#len(activeIngr12) " << activeIngr12.size() << std::endl;
-    //self.activeIngre_saved = self.activeIngr[:]
-    totalPriorities = 0.0;// # 0.00001
-    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
-        ingr = activeIngr12[i];
-        //for priors in self.activeIngr12:
-        pp = ingr->packingPriority;
-        totalPriorities = totalPriorities + pp;
-        std::cout << "#totalPriorities " << totalPriorities << ' ' << ingr->packingPriority <<std::endl;
-    }
+    
+    countTotalPriorities();
 
-
+    float pp;
     float previousThresh = 0.0;
     //# Graham- Once negatives are used, if picked random# 
     //# is below a number in this list, that item becomes 
@@ -426,14 +418,12 @@ void big_grid::updatePriorities( sphere *ingr )
 
     //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
     //#this function also depend on the ingr.completiion that can be restored ?
-    getSortedActiveIngredients();        
-    totalPriorities = 0; // 0.00001
-    float pp;
+    getSortedActiveIngredients();            
+
+    countTotalPriorities();
+
     float np;
-    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
-        pp = activeIngr12[i]->packingPriority;
-        totalPriorities = totalPriorities + pp;
-    }
+
     float previousThresh = 0;
     normalizedPriorities.clear();
     thresholdPriorities.clear();
@@ -445,6 +435,7 @@ void big_grid::updatePriorities( sphere *ingr )
         if (pickWeightedIngr)
             thresholdPriorities.push_back(2.0);   
     } 
+    float pp;
     for(unsigned i = 0; i < activeIngr12.size(); ++i) {
         //for priors in self.activeIngr12:
         //#pp1 = 0
@@ -1129,4 +1120,18 @@ bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float
         }
     }
     return collide;
+}
+
+void big_grid::countTotalPriorities()
+{
+    float pp;
+    sphere* ingr;
+    totalPriorities = 0.0;// # 0.00001
+    for(unsigned i = 0; i < activeIngr12.size(); ++i) {
+        ingr = activeIngr12[i];
+        //for priors in self.activeIngr12:
+        pp = ingr->packingPriority;
+        totalPriorities = totalPriorities + pp;
+        std::cout << "#totalPriorities " << totalPriorities << ' ' << ingr->packingPriority <<std::endl;
+    }
 }

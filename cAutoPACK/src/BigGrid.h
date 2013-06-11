@@ -141,4 +141,7 @@ struct big_grid {
     bool is_empty(unsigned i) const;
 
     bool checkSphCollisions(point pos,openvdb::math::Mat4d rotMatj, float radii, sphere* sp);
+
+private:
+    void countTotalPriorities();
 };
