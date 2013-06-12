@@ -328,31 +328,22 @@ void big_grid::getSortedActiveIngredients()
     //packingPriorities = priorities0;//+priorities1+priorities2
 }
 
-int big_grid::prepareIngredient()
+void big_grid::prepareIngredient()
 {
     getSortedActiveIngredients();
     std::cout << "#len(allIngredients) " << ingredients.size() << std::endl;
     std::cout << "#len(activeIngr0) " << activeIngr0.size() << std::endl;
     std::cout << "#len(activeIngr12) " << activeIngr12.size() << std::endl;
-    
-    countTotalPriorities();
-    
-    calculateThresholdAndNormalizedPriorities();
 
-    return calculateTotalNumberMols();
+    calculateThresholdAndNormalizedPriorities();
 }
 
-void big_grid::updatePriorities( sphere *ingr )
+void big_grid::updatePriorities()
 {
     vRangeStart = vRangeStart + normalizedPriorities[0];
                 
-    //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012
-    //#this function also depend on the ingr.completiion that can be restored ?
-    getSortedActiveIngredients();            
-
-    countTotalPriorities();
-
-    calculateThresholdAndNormalizedPriorities();
+    //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012    
+    prepareIngredient();
 
 }
 
@@ -365,7 +356,7 @@ void big_grid::dropIngredient( sphere *ingr )
     activeIngr.erase(firstToDeleteIter, activeIngr.end());
 
     //update thresholdproperties
-    updatePriorities(ingr);
+    updatePriorities();
 }
 
 sphere* big_grid::pickIngredient()
@@ -1031,6 +1022,9 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
         if (pickWeightedIngr)
             thresholdPriorities.push_back(2.0);   
     } 
+
+    countTotalPriorities();
+
     float pp;
     for(unsigned i = 0; i < activeIngr12.size(); ++i) {
         //for priors in self.activeIngr12:

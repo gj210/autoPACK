@@ -470,8 +470,10 @@ int main(int argc, char* argv[])
     std::vector<openvdb::Vec3f> usedPoints;
     std::vector<float> radiis;
     std::vector<openvdb::Vec3f> colors;
+    
+    grid.prepareIngredient();
 
-    int totalNumMols = grid.prepareIngredient();
+    int totalNumMols = grid.calculateTotalNumberMols();
     std::cout << "#prepare ingredient complete\n";
 
     int counter = 0;
@@ -554,7 +556,7 @@ int main(int argc, char* argv[])
     }
     //The packing is done, we will generate a python script executed in a 3d Host for the vizualisation
     //this can be replace by any output.
-
+    
     std::cout << "#distance_grid->activeVoxelCount() " << grid.num_empty << " " <<grid.distance_grid->activeVoxelCount()<<std::endl;
     std::cout << "#main loop " << grid.rtrans.size() << " on " << totalNumMols << std::endl;
 

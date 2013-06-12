@@ -112,9 +112,9 @@ struct big_grid {
     
     void getSortedActiveIngredients();
 
-    int prepareIngredient();
+    void prepareIngredient();
 
-    void updatePriorities(sphere *ingr);
+    void updatePriorities();
 
     void dropIngredient(sphere *ingr);
 
@@ -135,9 +135,11 @@ struct big_grid {
     bool is_empty(unsigned i) const;
 
     bool checkSphCollisions(point pos,openvdb::math::Mat4d rotMatj, float radii, sphere* sp);
+    
+    int calculateTotalNumberMols();
 
 private:
     void countTotalPriorities();
     void calculateThresholdAndNormalizedPriorities();
-    int calculateTotalNumberMols();
+    
 };
