@@ -266,8 +266,7 @@ void big_grid::setIngredients( std::vector<sphere> _ingredients )
         activeIngr[i] = &ingredients[i];
         //prepare nbMol;
         ingredients[i].setCount(grid_volume);
-    }
-    numActiveIngr = ingredients.size();
+    }    
     std::cout << "#min radius " << minradius << " stepsize " << stepsize << std::endl;
     //activeIngr = &ingredients;
 }
@@ -425,17 +424,17 @@ sphere* big_grid::pickIngredient()
             }
             //std::cout << "pick Ingredient "  << ingrInd << ' ' << prob <<' ' <<threshProb << std::endl;
 
-            if (ingrInd <  numActiveIngr)
+            if (ingrInd <  activeIngr.size())
                 ingr = activeIngr[ingrInd];
             else {
-                std::cout << "#error in histoVol pick Ingredient "  << ingrInd << ' ' <<numActiveIngr << std::endl;
+                std::cout << "#error in histoVol pick Ingredient "  << ingrInd << ' ' <<activeIngr.size() << std::endl;
                 ingr = activeIngr[0];
             }
         }
     }else {
         //pick random
         //ingr = activeIngr[rand() % numActiveIngr];
-        ingr = activeIngr[(int) (uniform(generator) * numActiveIngr)];
+        ingr = activeIngr[(int) (uniform(generator) * activeIngr.size())];
         //uniform(generator)
     }
     return ingr;

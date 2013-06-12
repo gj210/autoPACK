@@ -484,7 +484,7 @@ int main(int argc, char* argv[])
     //for(unsigned i = 0; i < 2 ; ++i) {//nx*ny*nz
         //pick the object to drop
         if (DEBUG) std::cout << "#begin loop\n";
-        if (grid.numActiveIngr == 0) {
+        if (grid.activeIngr.size() == 0) {
                 std::cout << "#broken by no more ingredient Done!!!****\n";
                 break;
         }

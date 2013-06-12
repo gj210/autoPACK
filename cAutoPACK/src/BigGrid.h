@@ -86,7 +86,6 @@ struct big_grid {
     bool pickWeightedIngr;
     bool pickRandPt;
     bool use_gradient;
-    int numActiveIngr;
 
     std::default_random_engine generator;
     std::uniform_real_distribution<float> uniform;// (0.0,1.0);
