@@ -255,29 +255,11 @@ void big_grid::setIngredients( std::vector<sphere> _ingredients )
     //set the ingredients list to pack in the grid
     //retrieve the biggest one
     ingredients = _ingredients;
-    maxradius = 0.0;
-    minradius = 9999999.9;
     activeIngr.resize(ingredients.size());
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
-        if (ingredients[i].maxRadius > maxradius) 
-            maxradius = ingredients[i].maxRadius;
-        if (ingredients[i].minRadius < minradius) 
-            minradius = ingredients[i].minRadius;
         activeIngr[i] = &ingredients[i];
-        //prepare nbMol;
         ingredients[i].setCount(grid_volume);
     }    
-    std::cout << "#min radius " << minradius << " stepsize " << stepsize << std::endl;
-    //activeIngr = &ingredients;
-}
-
-void big_grid::getMaxRadius()
-{
-    maxradius = 0.0;    
-    const auto maxIter = std::max_element(std::begin(activeIngr), std::end(activeIngr), 
-        [](sphere* sp1, sphere* sp2) { return sp1->maxRadius < sp2->maxRadius; } );
-    if (maxIter != activeIngr.end())
-        maxradius = (*maxIter)->maxRadius;
 }
 
 void big_grid::getSortedActiveIngredients()
@@ -392,7 +374,6 @@ void big_grid::dropIngredient( sphere *ingr )
     std::for_each(firstToDeleteIter, activeIngr.end(), [] (sphere* sp) { sp->active = false;} );
     activeIngr.erase(firstToDeleteIter, activeIngr.end());
 
-    getMaxRadius();
     //update thresholdproperties
     updatePriorities(ingr);
     droped_ingredient.push_back(ingr);

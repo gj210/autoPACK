@@ -75,8 +75,6 @@ struct big_grid {
     float grid_volume;    
     float unit_volume;
     float space;                //spacing of the grid (unit depends on user)
-    float maxradius;            //the biggest ingredient
-    float minradius;            //the biggest ingredient
     float lowestPriority;       //priority the lowest after sorting
     float totalPriorities;
     float vRangeStart;
@@ -113,8 +111,6 @@ struct big_grid {
 
     void setIngredients(std::vector<sphere> _ingredients);
     
-    void getMaxRadius();
-
     void getSortedActiveIngredients();
 
     int prepareIngredient();
