@@ -250,7 +250,7 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
     return distance_grid;
 }
 
-void big_grid::setIngredients( std::vector<sphere> _ingredients )
+void big_grid::setIngredients( std::vector<sphere> const & _ingredients )
 {
     //set the ingredients list to pack in the grid
     //retrieve the biggest one

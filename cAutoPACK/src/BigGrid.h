@@ -109,7 +109,7 @@ struct big_grid {
         mode = _mode;
     }
 
-    void setIngredients(std::vector<sphere> _ingredients);
+    void setIngredients(std::vector<sphere> const & _ingredients);
     
     void getSortedActiveIngredients();
 
