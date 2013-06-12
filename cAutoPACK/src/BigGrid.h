@@ -62,7 +62,6 @@ struct big_grid {
     std::vector<sphere*> activeIngr;
     std::vector<sphere*> activeIngr0;
     std::vector<sphere*> activeIngr12;
-    std::vector<sphere*> droped_ingredient;
     std::vector<float> normalizedPriorities0;
     std::vector<float> normalizedPriorities;
     std::vector<float> thresholdPriorities; 

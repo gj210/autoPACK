@@ -359,16 +359,6 @@ void big_grid::updatePriorities( sphere *ingr )
 void big_grid::dropIngredient( sphere *ingr )
 {
     std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
-    int ingr_ind;
-    bool found = false;
-    for(std::vector<sphere*>::size_type i = 0; i < droped_ingredient.size(); ++i) {
-        if (ingr->name == droped_ingredient[i]->name){
-            ingr->active = false;
-            ingr->completion = 1.0;
-            std::cout << "#already drop ? \n";
-            return;
-        }
-    }  
 
     const auto firstToDeleteIter = std::remove_if(activeIngr.begin(), activeIngr.end(), [&ingr](sphere * sp) { return ingr->name == sp->name; });
     std::for_each(firstToDeleteIter, activeIngr.end(), [] (sphere* sp) { sp->active = false;} );
@@ -376,7 +366,6 @@ void big_grid::dropIngredient( sphere *ingr )
 
     //update thresholdproperties
     updatePriorities(ingr);
-    droped_ingredient.push_back(ingr);
 }
 
 sphere* big_grid::pickIngredient()
