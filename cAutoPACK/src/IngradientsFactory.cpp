@@ -59,7 +59,6 @@ sphere makeMeshIngredient(std::vector<float> radii, int mode, float concentratio
     sp.counter = 0;
     sp.rejectionCounter = 0;
     sp.rejectionThreshold  = rejectionThresholdIngredient;
-    sp.active = true;
     sp.color = color;
     sp.nbJitter = nbJitter;
     sp.trans = openvdb::Vec3f(0,0,0);
@@ -130,7 +129,6 @@ sphere makeMeshesIngredient(std::vector<float> radii, int mode, float concentrat
     sp.counter = 0;
     sp.rejectionCounter = 0;
     sp.rejectionThreshold  = rejectionThresholdIngredient;
-    sp.active = true;
     sp.color = color;
     sp.nbJitter = nbJitter;
     sp.trans = openvdb::Vec3f(0,0,0);
@@ -202,7 +200,6 @@ sphere makeSphere(float radius, int mode, float concentration,
     sp.counter = 0;
     sp.rejectionCounter = 0;
     sp.rejectionThreshold  = rejectionThresholdIngredient;
-    sp.active = true;
     sp.color = color;
     sp.nbJitter = nbJitter;
     sp.trans = openvdb::Vec3f(0,0,0);
@@ -264,7 +261,6 @@ sphere makeMultiSpheres(std::vector<float> radii, int mode, float concentration,
     sp.counter = 0;
     sp.rejectionCounter = 0;
     sp.rejectionThreshold  = rejectionThresholdIngredient;
-    sp.active = true;
     sp.color = color;
     sp.nbJitter = nbJitter;
     sp.trans = openvdb::Vec3f(0,0,0);

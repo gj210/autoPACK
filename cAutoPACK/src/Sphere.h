@@ -62,7 +62,6 @@ public:
     int rejectionCounter;
     int rejectionThreshold;
     unsigned nbJitter;
-    bool active;
     openvdb::Vec3f color;
     openvdb::Vec3f trans;
     openvdb::Vec3f jitterMax;
@@ -80,5 +79,6 @@ public:
     float perturbAxisAmplitude;
 
 public:
+    bool isActive() { return completion < 1.0; }
     void setCount(float volume);
 };

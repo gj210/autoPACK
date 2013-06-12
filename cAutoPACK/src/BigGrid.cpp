@@ -350,12 +350,9 @@ void big_grid::updatePriorities()
 void big_grid::dropIngredient( sphere *ingr )
 {
     std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
-
-    const auto firstToDeleteIter = std::remove_if(activeIngr.begin(), activeIngr.end(), [&ingr](sphere * sp) { return ingr->name == sp->name; });
-    std::for_each(firstToDeleteIter, activeIngr.end(), [] (sphere* sp) { sp->active = false;} );
-    activeIngr.erase(firstToDeleteIter, activeIngr.end());
-
-    //update thresholdproperties
+    
+    ingr->completion = 1.0;
+    //update priorities will regenerate activeIngr based on completion field
     updatePriorities();
 }
 
@@ -435,7 +432,6 @@ int big_grid::getPointToDrop_i( sphere ingr, float radius,float jitter )
     //std::cout << "allIngrPts " <<allIngrPts.size()<<std::endl;
     if (allIngrPts.size()==0){
         sphere tmp[] = {ingr}; 
-        ingr.completion = 1.0;
         vRangeStart = vRangeStart + normalizedPriorities[0];
         std::cout << "#drop ingredent no more point for it " << std::endl;
         dropIngredient(&ingr);
@@ -536,7 +532,6 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
     if (DEBUG) std::cout << "#allIngrPts size " <<allIngrPts.size() << " nempty " << num_empty << " cutoff " << cut << " minid " << mini_d<<std::endl;
     if (allIngrPts.size()==0){
         //sphere* tmp[] = {ingr}; 
-        ingr->completion = 1.0;
         vRangeStart = vRangeStart + normalizedPriorities[0];
         std::cout << "# drop no more point \n" ;
         dropIngredient(ingr); 
@@ -647,7 +642,6 @@ int big_grid::getPointToDrop( sphere* ingr, float radius,float jitter )
     if (DEBUG) std::cout << "#allIngrPts " <<allIngrPts.size() << " " << num_empty << " " << cut << " " << dim <<std::endl;
     if (allIngrPts.size()==0){
         //sphere* tmp[] = {ingr}; 
-        ingr->completion = 1.0;
         vRangeStart = vRangeStart + normalizedPriorities[0];
         std::cout << "# drop no more point \n" ; 
         dropIngredient(ingr); 

@@ -495,18 +495,13 @@ int main(int argc, char* argv[])
                 break;
         }
         sphere* ingr = grid.pickIngredient();
-        //sphere ingr= g.sample_ingredient();//sampl using distance information as well ?
-        if (!ingr->active) 
-        {
-                std::cout << "#inactive ingredient continue\n";
-                //continue;        
-        }
-        if (ingr->completion >= 1.0) {
-            std::cout << "#ingredient complete 1.0 \n";
+        //sphere ingr= g.sample_ingredient();//sampl using distance information as well ?        
+        if (!ingr->isActive()) {
+            std::cout << "#ingredient not active, complete >= 1.0 \n";
             //g.dropIngredient(ingr);            
             //continue;
         }
-        if (DEBUG) std::cout  << "#" << ingr->name << " c " << ingr->completion << " counter " << ingr->counter<<" nbmol " << ingr->nbMol <<  " active " << ingr->active <<std::endl;
+        if (DEBUG) std::cout  << "#" << ingr->name << " c " << ingr->completion << " counter " << ingr->counter<<" nbmol " << ingr->nbMol <<std::endl;
         //unsigned s = g.sample_empty(); //get the next available point randomly
         //int s = g.getPointToDrop(ingr, ingr->radius,1.0);
         openvdb::Coord s = grid.getPointToDropCoord(ingr, ingr->minRadius,1.0,&emptyList);
