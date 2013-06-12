@@ -389,7 +389,7 @@ void big_grid::dropIngredient( sphere *ingr )
     }  
 
     const auto firstToDeleteIter = std::remove_if(activeIngr.begin(), activeIngr.end(), [&ingr](sphere * sp) { return ingr->name == sp->name; });
-    std::for_each(firstToDeleteIter, std::end(activeIngr), [] (sphere* sp) { sp->active = false;} );
+    std::for_each(firstToDeleteIter, activeIngr.end(), [] (sphere* sp) { sp->active = false;} );
     activeIngr.erase(firstToDeleteIter, activeIngr.end());
 
     getMaxRadius();
