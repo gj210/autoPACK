@@ -398,63 +398,6 @@ sphere* big_grid::pickIngredient()
     return ingr;
 }
 
-int big_grid::getPointToDrop_i( sphere ingr, float radius,float jitter )
-{
-    //#should we take in account a layer? cuttof_boundary and cutoff_surface?
-    unsigned ptInd;
-    float cut = radius-jitter;
-    float d;
-    std::vector<unsigned> allIngrPts;
-    std::vector<float> allIngrDist;
-    if (ingr.packingMode=="close"){
-        //for all inactive in the grid ?
-        //get the value
-        for(unsigned i = 0; i < num_empty; ++i) {
-            //for pt in freePoints:#[:nbFreePoints]:
-            d = distance[empty[i]];//#look up the distance
-            if (d>=cut)//problem distance == max are actually spread along the grid...should be 999999
-                allIngrPts.push_back(empty[i]);
-            allIngrDist.push_back(d);
-        }
-    }
-    else{
-        if (mode == 1) {//distance
-            for(unsigned i = 0; i < num_empty; ++i) { 
-                d=distance[empty[i]];
-                if (d>=cut) allIngrPts.push_back(empty[i]);
-            }       
-
-        }
-        else if (mode == 0) {//pure random
-            allIngrPts = empty;
-        }
-    }
-    //std::cout << "allIngrPts " <<allIngrPts.size()<<std::endl;
-    if (allIngrPts.size()==0){
-        sphere tmp[] = {ingr}; 
-        vRangeStart = vRangeStart + normalizedPriorities[0];
-        std::cout << "#drop ingredent no more point for it " << std::endl;
-        dropIngredient(&ingr);
-        totalPriorities = 0; //# 0.00001
-        return -1;                   
-    }
-    if (pickRandPt){
-        //std::cout << "allIngrPts " <<allIngrPts.size()<<std::endl;
-        if (ingr.packingMode=="close")
-            ptInd = 0;//sample_closest_empty(allIngrDist,allIngrPts);
-        else if (ingr.packingMode=="gradient") //&& (use_gradient)  
-            ptInd =0;// self.gradients[ingr.gradient].pickPoint(allIngrPts) 
-        else{
-            ptInd = allIngrPts[rand() % allIngrPts.size()];
-            if (ptInd > allIngrPts.size()) ptInd = allIngrPts[0];            
-        }     
-    }else {
-        std::sort(allIngrPts.begin(),allIngrPts.end());//-(allIngrPts.size()-numActiveIngr)
-        ptInd = allIngrPts[0];
-    }
-    return ptInd;
-}
-
 openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float jitter,int *emptyList )
 {
     float cut = radius-jitter;//why - jitter ?
