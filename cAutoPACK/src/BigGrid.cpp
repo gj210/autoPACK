@@ -364,7 +364,7 @@ sphere* big_grid::pickIngredient()
     //std::default_random_engine generator(seed);
     //std::uniform_real_distribution<float> distribution(0.0,1.0);
     //std::normal_distribution<float> distribution(0.0,1.0);        
-    int ingrInd;
+    unsigned int ingrInd;
     float threshProb;
     if (pickWeightedIngr){ 
         if (thresholdPriorities[0] == 2){
@@ -531,11 +531,9 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
 
     if (DEBUG) std::cout << "#allIngrPts size " <<allIngrPts.size() << " nempty " << num_empty << " cutoff " << cut << " minid " << mini_d<<std::endl;
     if (allIngrPts.size()==0){
-        //sphere* tmp[] = {ingr}; 
         vRangeStart = vRangeStart + normalizedPriorities[0];
         std::cout << "# drop no more point \n" ;
         dropIngredient(ingr); 
-        //getSortedActiveIngredients();
         totalPriorities = 0; //# 0.00001
         *emptyList = 1;
         return openvdb::Coord(0,0,0);                   

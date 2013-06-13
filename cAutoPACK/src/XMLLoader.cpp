@@ -34,13 +34,15 @@
 @author: Graham Johnson, Ludovic Autin, & Michel Sanner
 */
 
+#include "Types.h"
+
 #include <vector>
 #include <map>
 #include <pugixml.hpp>
 
 #include "BigGrid.h"
 #include "Sphere.h"
-#include "Types.h"
+
 #include "IngradientsFactory.h"
 
 /* XML CODE */

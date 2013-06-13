@@ -36,11 +36,13 @@
 
 
 #pragma once
+#include "Types.h"
+
 #include <vector>
 #include <random>
 
 #include "Sphere.h"
-#include "Types.h"
+
 
 /* the main class that handle the packing
 came from oleg trott code for the bidirectional array swapping.

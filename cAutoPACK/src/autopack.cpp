@@ -43,28 +43,8 @@ the command to run in python and visualize the result:
     > execfile("/Users/ludo/Dropbox/testCpp.py")
 """
 */
-#ifdef _MSC_VER
-    #pragma warning(disable:4146)
-    #pragma warning(disable:4503) // OpenVDB "warning decorated name length exceeded, name was truncated"
-    #define _SCL_SECURE_NO_WARNINGS
-#endif
 
-
-//Disable warnings from openvdb in Visual Studio
-#pragma warning(push, 0)   
-
-/*
-openvdb includes
-*/
-#include <openvdb/openvdb.h>
-#include <openvdb/Types.h>
-#include <openvdb/tools/Interpolation.h>
-#include <openvdb/tools/LevelSetSphere.h>
-#include <openvdb/tools/Composite.h>
-#include <openvdb/tree/Tree.h>
-#include <openvdb/tools/GridTransformer.h>
-
-#pragma warning(pop)
+#include "Types.h"
 
 /*
 general include
@@ -79,7 +59,7 @@ xml parser for collada import, dont forgot the lib in the folder
 */
 #include <pugixml.hpp> 
 
-#include "Types.h"
+
 #include "Sphere.h"
 #include "BigGrid.h"
 #include "XMLLoader.h"
