@@ -517,7 +517,11 @@ int main(int argc, char* argv[])
                 ingr->completion =1.0;//erase from list ingredient /
                 grid.dropIngredient(ingr); 
             }
+            
             grid.visited_rejected_coord.push_back(s);
+            std::sort(grid.visited_rejected_coord.begin(), grid.visited_rejected_coord.end());
+
+            if (DEBUG) std::cout << "# grid.visited_rejected_coord.size() :" << grid.visited_rejected_coord.size() << std::endl;            
             rejection++;  
             counterRej++; 
             if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid.num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
