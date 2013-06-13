@@ -187,30 +187,15 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
 big_grid::big_grid( float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
     distance_grid(initializeDistanceGrid(bot, up)),
     num_points(initializeNumPointsCount()),    
-    all(num_points),
-    empty(num_points),
     num_empty(num_points),
-    data(num_points),
-    distance(num_points),
     uniform(0.0f,1.0f),
     distribution(0.0,1.0),
     gauss(0.0f,0.3f),
-    pickWeightedIngr(true),
+    pickWeightedIngr(true),    
     pickRandPt(true)
 {
-    generator.seed (seed);
-
-    mode = 1; 
+    generator.seed(seed);
     space = step;
-
-    unsigned i=0;           //counter for u indices             
-    for(unsigned i = 0; i < num_points; ++i) { 
-        all[i] = i;
-        empty[i] = i;
-    }//distance = new float[nx*ny*nz];
-    unit_volume = pow(stepsize,3.0);
-    grid_volume =  num_points*unit_volume;
-    std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
 }
 
 unsigned int big_grid::initializeNumPointsCount()
@@ -256,6 +241,9 @@ void big_grid::setIngredients( std::vector<sphere> const & _ingredients )
     //retrieve the biggest one
     ingredients = _ingredients;
     activeIngr.resize(ingredients.size());
+    float unit_volume = pow(stepsize,3.0);
+    float grid_volume =  num_points*unit_volume;
+    std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
         activeIngr[i] = &ingredients[i];
         ingredients[i].setCount(grid_volume);
@@ -849,24 +837,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,sphere *ingr )
     return collision;
 }
 
-void big_grid::set_filled( unsigned i )
-{
-    //marke the given indice as occupide and remove it by swapping
-    //Oleg contribution
-    unsigned empty_index = all[i];
-    if(empty_index < num_empty) { // really is empty
-        --num_empty;
-        unsigned filled_index = empty[num_empty]; 
-        std::swap(empty[empty_index], empty[num_empty]); 
-        std::swap(all[i], all[filled_index]);
-    }
-}
-
-bool big_grid::is_empty( unsigned i ) const
-{
-    //check the statut of this point
-    return all[i] < num_empty;
-}
 
 bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, sphere* sp )
 {

@@ -57,9 +57,6 @@ struct big_grid {
     // needs 8*n bytes 
     //Lot of theses parameteres are deprecated and not used.
     //original wrote in hw.cc file
-    std::vector<unsigned> all; //all point indice // should point to ijk
-    std::vector<unsigned> empty;//available point indice 
-    std::vector<point> data;    //the grid 3d coordintates
     std::vector<sphere> ingredients;//the list of sphere ingredient to pack
     std::vector<sphere*> activeIngr;
     std::vector<sphere*> activeIngr0;
@@ -69,28 +66,19 @@ struct big_grid {
     std::vector<float> thresholdPriorities; 
     std::vector<openvdb::Vec3f> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
-    //float* distance; 
-    std::vector<float> distance;    //the array of closest distances for each point
     unsigned num_empty;         //the number of free point available
     
-    float grid_volume;    
-    float unit_volume;
     float space;                //spacing of the grid (unit depends on user)
     float lowestPriority;       //priority the lowest after sorting
     float totalPriorities;
     float vRangeStart;
-    point boundingBox0;         //the grid lower left corner coordinate
-    point boundingBox1;         //the grid top right coordinate
-    int mode;                   //the packing mode random or distance
     bool pickWeightedIngr;
     bool pickRandPt;
-    bool use_gradient;
 
     std::default_random_engine generator;
     std::uniform_real_distribution<float> uniform;// (0.0,1.0);
     std::normal_distribution<float> gauss;//(0.0,0.3);
     std::uniform_real_distribution<double> distribution;
-
     
     openvdb::CoordBBox bbox;
     openvdb::Coord dim;
@@ -104,11 +92,6 @@ struct big_grid {
     unsigned int initializeNumPointsCount();
 
     openvdb::FloatGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
-
-    void setMode(unsigned _mode){
-        //set the packing mode, random or distance
-        mode = _mode;
-    }
 
     void setIngredients(std::vector<sphere> const & _ingredients);
     
