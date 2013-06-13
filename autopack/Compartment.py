@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-###############################################################################
-#
 # autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin, Michel Sanner
 #   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010 
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
@@ -95,6 +93,11 @@ if sys.version > "3.0.0":
     xrange = range
     
 class CompartmentList:
+    """
+    The CompartmentList class
+    ==========================
+    Handle a list of compartments.
+    """
     
     def __init__(self):
         # list of compartments inside this compartment
@@ -103,13 +106,8 @@ class CompartmentList:
         # point to parent compartment or Environment
         self.parent = None
 
-#    def addOrganelle(self, compartment):
-#        assert compartment.parent == None
-#        assert isinstance(compartment, Organelle)
-#        self.compartments.append(compartment)
-#        compartment.parent = self
-
     def addCompartment(self, compartment):
+        """get the center of the gradient grid"""
         assert compartment.parent == None
         assert isinstance(compartment, Compartment)
         self.compartments.append(compartment)
@@ -117,8 +115,10 @@ class CompartmentList:
 
 class  Compartment(CompartmentList):
     """
-    This class represents a sub-cellular volume delimited by a polyhedral
-    surface. Organelles can be nested
+    The Compartment class
+    ==========================
+    This class represents a sub volume delimited by a polyhedral
+    surface. Compartment can be nested
     """
 
     def __init__(self, name, vertices, faces, vnormals, **kw):
@@ -191,6 +191,7 @@ class  Compartment(CompartmentList):
             self.isOrthogonalBoudingBox = kw["isOrthogonalBoudingBox"]
 
     def reset(self):
+        """reset the inner compartment data, surface and inner points"""
         # list of grid point indices inside compartment
         self.insidePoints = None
         # list of grid point indices on compartment surface
@@ -221,6 +222,14 @@ class  Compartment(CompartmentList):
         return geom
         
     def getMesh(self,filename=None,rep=None,**kw):
+        """
+        Retrieve the compartment 3d representaton from the given filename
+        
+        @type  filename: string
+        @param filename: the name of the input file
+        @type  rep: string
+        @param rep: the name of the input file for the representation
+        """
         geom = None
         gname = self.name
         helper = autopack.helper
@@ -360,6 +369,18 @@ class  Compartment(CompartmentList):
         
     def setMesh(self, filename=None,vertices=None, 
                 faces=None, vnormals=None, **kw )   :
+        """
+        Set the 3d mesh from the given filename or the given mesh data (v,f,n)
+        
+        @type  filename: string
+        @param filename: the name of the input file
+        @type  vertices: array
+        @param vertices: mesh vertices or None
+        @type  faces: array
+        @param faces: mesh faces or None
+        @type  vnormals: array
+        @param vnormals: mesh vnormals or None
+        """                    
         if vertices is None and filename is not None:
             self.faces,self.vertices,self.vnormals = self.getMesh(filename)
         else :
@@ -393,9 +414,11 @@ class  Compartment(CompartmentList):
         #       surfacePointscoords
         
     def setNumber(self, num):
+        """set compartment uniq id"""
         self.number = num
 
     def setInnerRecipe(self, recipe):
+        """set the inner recipe that define the ingredient to pack inside"""
         assert self.number is not None
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
@@ -405,6 +428,7 @@ class  Compartment(CompartmentList):
             ingr.compNum = -self.number
 
     def setSurfaceRecipe(self, recipe):
+        """set the inner recipe that define the ingredient to pack at the surface"""
         assert self.number is not None
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
@@ -414,6 +438,7 @@ class  Compartment(CompartmentList):
             ingr.compNum = self.number
 
     def getCenter(self):
+        """get the center of the mesh (vertices barycenter)"""
         coords = numpy.array(self.vertices)#self.allAtoms.coords
         center = sum(coords)/(len(coords)*1.0)
         center = list(center)
@@ -423,43 +448,47 @@ class  Compartment(CompartmentList):
         self.center = center
     
     def getRadius(self):
-        #should be mini - center ?
+        """get the radius as the distance between vertices center and bottom left bouding box"""
         import math
         d = self.center - self.bb[0]
         s = numpy.sum(d*d)
         return math.sqrt(s)
         
     def getBoundingBox(self):
+        """get the bounding box"""
         mini = numpy.min(self.vertices, 0)
         maxi = numpy.max(self.vertices, 0)
         return (mini, maxi)
 
     def getSizeXYZ(self):
+        """get the size per axe"""
         sizexyz=[0,0,0]
         for i in range(3):
             sizexyz[i] = self.bb[1][i] - self.bb[0][i]
         return sizexyz
         
-    def checkPointInsideBBold(self,pt3d,dist=None):
-        O = numpy.array(self.bb[0])
-        E = numpy.array(self.bb[1])
-        P = numpy.array(pt3d)
-        test1 = P < O 
-        test2 =  P > E
-        if True in test1 or True in test2:
-            #outside
-            return False
-        else :
-            if dist is not None:
-                d1 = P - O
-                s1 = numpy.sum(d1*d1)
-                d2 = E - P
-                s2 = numpy.sum(d2*d2)
-                if s1 <= dist or s2 <=dist:
-                    return False 
-            return True
+#    def checkPointInsideBBold(self,pt3d,dist=None):
+#        """check if the given 3d coordinate is inside the compartment bouding box"""        
+#        O = numpy.array(self.bb[0])
+#        E = numpy.array(self.bb[1])
+#        P = numpy.array(pt3d)
+#        test1 = P < O 
+#        test2 =  P > E
+#        if True in test1 or True in test2:
+#            #outside
+#            return False
+#        else :
+#            if dist is not None:
+#                d1 = P - O
+#                s1 = numpy.sum(d1*d1)
+#                d2 = E - P
+#                s2 = numpy.sum(d2*d2)
+#                if s1 <= dist or s2 <=dist:
+#                    return False 
+#            return True
  
     def checkPointInsideBB(self,pt3d,dist=None):
+        """check if the given 3d coordinate is inside the compartment bouding box"""
         O = numpy.array(self.bb[0])
         E = numpy.array(self.bb[1])
         P = numpy.array(pt3d)
@@ -539,6 +568,7 @@ class  Compartment(CompartmentList):
             return False
 
     def getMinMaxProteinSize(self):
+        """retrieve minimum and maximum ingredient size for inner and surface recipe ingredients"""
         #for compartment in self.compartments:
         #    mini, maxi = compartment.getSmallestProteinSize(size)
         mini1 = mini2 = 9999999.
@@ -550,6 +580,7 @@ class  Compartment(CompartmentList):
         return min(mini1, mini2), max(maxi1, maxi2)
 
     def getFaceNormals(self, vertices, faces,fillBB=None):
+        """compute the face normal of the compartment mesh"""
         normals = []
         areas = [] #added by Graham
         face = [[0,0,0],[0,0,0],[0,0,0]]
@@ -560,11 +591,6 @@ class  Compartment(CompartmentList):
             for i in range(3) :
                 v[0][i] = face[1][i]-face[0][i]
                 v[1][i] = face[2][i]-face[0][i]                
-#            face [0] =  = vertices[f[0]]#x1,y1,z1
-#            face [1] = = vertices[f[1]]# x2,y2,z2
-#            face [2] =  = vertices[f[2]]#x3,y3,z3
-#            v1 = (x2-x1, y2-y1, z2-z1)
-#            v2 = (x3-x1, y3-y1, z3-z1)
             normal = vcross(v[0],v[1])
             n = vlen(normal)
             if n == 0. :
@@ -574,12 +600,12 @@ class  Compartment(CompartmentList):
             normals.append( (normal[0]*n1, normal[1]*n1, normal[2]*n1) )
             if fillBB is not None:
                 if self.inGrid(vertices[f[0]],fillBB) and self.inGrid(vertices[f[0]],fillBB) and self.inGrid(vertices[f[0]],fillBB):
-#                    area =  #added by Graham
                     areas.append(0.5*vlen(normal)) #added by Graham
         return normals, areas #areas added by Graham
 
 
     def getInterpolatedNormal(self, pt, tri):
+        """compute an interpolated normal for te given triangle at the given point"""
         v1,v2,v3 = self.faces[tri]
         verts = self.vertices
         d1 = vlen(vdiff(pt, verts[v1]))
@@ -598,16 +624,11 @@ class  Compartment(CompartmentList):
         l1 = 1./vlen(norm)
         return ( norm[0]*l1, norm[1]*l1, norm[2]*l1 )
 
-
-
-
-
     def createSurfacePoints(self, maxl=20):
         """
         create points inside edges and faces with max distance between then maxl
         creates self.surfacePoints and self.surfacePointsNormals
         """
-
         vertices = self.vertices
         faces = self.faces
         vnormals = self.vnormals
@@ -761,6 +782,7 @@ class  Compartment(CompartmentList):
 
     #Jordan Curve Theorem
     def BuildGridJordan(self, histoVol,ray=1):
+        """Build the compartment grid ie surface and inside point using jordan theorem and host raycast"""
         # create surface points 
         if self.ghost : return
         t0 = t1 = time()        
@@ -951,6 +973,7 @@ class  Compartment(CompartmentList):
         return self.insidePoints, self.surfacePoints
         
     def BuildGrid(self, histoVol):
+        """Build the compartment grid ie surface and inside point using bhtree"""
         # create surface points 
         if self.ghost : return
         t0 = t1 = time()        
@@ -1126,6 +1149,7 @@ class  Compartment(CompartmentList):
         return self.insidePoints, self.surfacePoints
 
     def extendGridArrays(self,nbGridPoints,srfPts,surfPtsBBNorms,histoVol,extended=True):
+        """Extend the environment grd using the compartment point"""
         if extended  :      
             length = len(srfPts)
             pointArrayRaw = numpy.zeros( (nbGridPoints + length, 3), 'f')
@@ -1155,6 +1179,7 @@ class  Compartment(CompartmentList):
         return surfacePoints,surfacePointsNormals
     
     def getSurfaceBB(self,srfPts,histoVol):
+        """get the bounding box from the environment grid that encapsulated the mesh"""
         surfPtsBB = []
         surfPtsBBNorms  = []
         mini, maxi = histoVol.fillBB
@@ -1177,47 +1202,72 @@ class  Compartment(CompartmentList):
         srfPts = surfPtsBB
         return surfPtsBB,surfPtsBBNorms
 
-    def BuildGrid_break(self, histoVol):
-        # create surface points
-        t0 = t1 = time()
-        self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
-        print("Creating surface points and preparing to sum the surface area, TODO- limit to selection box")
-        # Graham Sum the SurfaceArea for each polyhedron
-        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
-        faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
-        normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
-        vSurfaceArea = sum(areas)
-        #for gnum in range(len(normalList2)):
-        #    vSurfaceArea = vSurfaceArea + areas[gnum]
-        print('Graham says Surface Area is %d' %(vSurfaceArea))
-        print('Graham says the last triangle area is is %d' %(areas[-1]))
-        #print '%d surface points %.2f unitVol'%(len(surfacePoints), unitVol)
-        
-        # build a BHTree for the vertices
-        
-        print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
-        
-        distances = histoVol.grid.distToClosestSurf
-        idarray = histoVol.grid.gridPtId
-        diag = histoVol.grid.diag
-
-        t1 = time()
-
-        #build BHTree for off grid surface points
-        from bhtree import bhtreelib
-        srfPts = self.ogsurfacePoints
-        bht = self.OGsrfPtsBht = bhtreelib.BHtree( srfPts, None, 10)
-
-        number = self.number
-        ogNormals = self.ogsurfacePointsNormals
-        insidePoints = []
-        #self.vnormals = ogNormals = normalList2
-        # find closest off grid surface point for each grid point 
-        #FIXME sould be diag of compartment BB inside fillBB
-        grdPos = histoVol.grid.masterGridPositions
-        returnNullIfFail = 0
-        closest = bht.closestPointsArray(grdPos, diag, returnNullIfFail)
-#        def distanceLoop(ptInd,distances,grdPos,closest,srfPts,ogNormals,idarray,insidePoints,number):
+#    def BuildGrid_break(self, histoVol):
+#        # create surface points
+#        t0 = t1 = time()
+#        self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
+#        print("Creating surface points and preparing to sum the surface area, TODO- limit to selection box")
+#        # Graham Sum the SurfaceArea for each polyhedron
+#        vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
+#        faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
+#        normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
+#        vSurfaceArea = sum(areas)
+#        #for gnum in range(len(normalList2)):
+#        #    vSurfaceArea = vSurfaceArea + areas[gnum]
+#        print('Graham says Surface Area is %d' %(vSurfaceArea))
+#        print('Graham says the last triangle area is is %d' %(areas[-1]))
+#        #print '%d surface points %.2f unitVol'%(len(surfacePoints), unitVol)
+#        
+#        # build a BHTree for the vertices
+#        
+#        print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
+#        
+#        distances = histoVol.grid.distToClosestSurf
+#        idarray = histoVol.grid.gridPtId
+#        diag = histoVol.grid.diag
+#
+#        t1 = time()
+#
+#        #build BHTree for off grid surface points
+#        from bhtree import bhtreelib
+#        srfPts = self.ogsurfacePoints
+#        bht = self.OGsrfPtsBht = bhtreelib.BHtree( srfPts, None, 10)
+#
+#        number = self.number
+#        ogNormals = self.ogsurfacePointsNormals
+#        insidePoints = []
+#        #self.vnormals = ogNormals = normalList2
+#        # find closest off grid surface point for each grid point 
+#        #FIXME sould be diag of compartment BB inside fillBB
+#        grdPos = histoVol.grid.masterGridPositions
+#        returnNullIfFail = 0
+#        closest = bht.closestPointsArray(grdPos, diag, returnNullIfFail)
+##        def distanceLoop(ptInd,distances,grdPos,closest,srfPts,ogNormals,idarray,insidePoints,number):
+##            # find closest OGsurfacepoint
+##            gx, gy, gz = grdPos[ptInd]
+##            sptInd = closest[ptInd]
+##            if closest[ptInd]==-1:
+##                pdb.set_trace()
+##            sx, sy, sz = srfPts[sptInd]
+##
+##            # update distance field
+##            d = sqrt( (gx-sx)*(gx-sx) + (gy-sy)*(gy-sy) +
+##                      (gz-sz)*(gz-sz))
+##            if distances[ptInd]>d: distances[ptInd] = d
+##
+##            # check if ptInd in inside
+##            nx, ny, nz = ogNormals[sptInd]
+##            # check on what side of the surface point the grid point is
+##            vx,vy,vz = (gx-sx, gy-sy, gz-sz)
+##            dot = vx*nx + vy*ny + vz*nz
+##            if dot < 0: # inside
+##                idarray[ptInd] = -number
+##                insidePoints.append(ptInd)
+#            
+#        
+#        #[distanceLoop(x,distances,grdPos,closest,srfPts,ogNormals,idarray,insidePoints,number) for x in xrange(len(grdPos))]
+#        for ptInd in range(len(grdPos)):
+#
 #            # find closest OGsurfacepoint
 #            gx, gy, gz = grdPos[ptInd]
 #            sptInd = closest[ptInd]
@@ -1226,11 +1276,13 @@ class  Compartment(CompartmentList):
 #            sx, sy, sz = srfPts[sptInd]
 #
 #            # update distance field
+#            #measure distance between the grid Point and the surface point
 #            d = sqrt( (gx-sx)*(gx-sx) + (gy-sy)*(gy-sy) +
 #                      (gz-sz)*(gz-sz))
-#            if distances[ptInd]>d: distances[ptInd] = d
+#            if distances[ptInd] > d : 
+#                distances[ptInd] = d
 #
-#            # check if ptInd in inside
+#            # check if ptInd in inside, and look at the normal at this points
 #            nx, ny, nz = ogNormals[sptInd]
 #            # check on what side of the surface point the grid point is
 #            vx,vy,vz = (gx-sx, gy-sy, gz-sz)
@@ -1238,90 +1290,64 @@ class  Compartment(CompartmentList):
 #            if dot < 0: # inside
 #                idarray[ptInd] = -number
 #                insidePoints.append(ptInd)
-            
-        
-        #[distanceLoop(x,distances,grdPos,closest,srfPts,ogNormals,idarray,insidePoints,number) for x in xrange(len(grdPos))]
-        for ptInd in range(len(grdPos)):
-
-            # find closest OGsurfacepoint
-            gx, gy, gz = grdPos[ptInd]
-            sptInd = closest[ptInd]
-            if closest[ptInd]==-1:
-                pdb.set_trace()
-            sx, sy, sz = srfPts[sptInd]
-
-            # update distance field
-            #measure distance between the grid Point and the surface point
-            d = sqrt( (gx-sx)*(gx-sx) + (gy-sy)*(gy-sy) +
-                      (gz-sz)*(gz-sz))
-            if distances[ptInd] > d : 
-                distances[ptInd] = d
-
-            # check if ptInd in inside, and look at the normal at this points
-            nx, ny, nz = ogNormals[sptInd]
-            # check on what side of the surface point the grid point is
-            vx,vy,vz = (gx-sx, gy-sy, gz-sz)
-            dot = vx*nx + vy*ny + vz*nz
-            if dot < 0: # inside
-                idarray[ptInd] = -number
-                insidePoints.append(ptInd)
-
-        print('time to update distance field and idarray', time()-t1)
-
-        t1 = time()
-        nbGridPoints = len(histoVol.grid.masterGridPositions)
-
-        surfPtsBB = []
-        surfPtsBBNorms  = []
-        mini, maxi = histoVol.fillBB
-        mx, my, mz = mini
-        Mx, My, Mz = maxi
-        ogNorms = self.ogsurfacePointsNormals
-        for i,p in enumerate(srfPts):
-            x,y,z = p
-            if (x>=mx and x<=Mx and y>=my and y<=My and z>=mz and z<=Mz):
-                surfPtsBB.append(p)
-                surfPtsBBNorms.append(ogNorms[i])
-
-        print('surf points going from to', len(srfPts), len(surfPtsBB))
-        srfPts = surfPtsBB
-        length = len(srfPts)
-
-        pointArrayRaw = numpy.zeros( (nbGridPoints + length, 3), 'f')
-        pointArrayRaw[:nbGridPoints] = histoVol.grid.masterGridPositions
-        pointArrayRaw[nbGridPoints:] = srfPts
-        self.surfacePointsCoords = srfPts #surfacePointscoords ?
-        histoVol.grid.nbSurfacePoints += length
-        histoVol.grid.masterGridPositions = pointArrayRaw
-        histoVol.grid.distToClosestSurf.extend( [histoVol.grid.diag]*length )
-        
-        histoVol.grid.gridPtId.extend( [number]*length )
-        surfacePoints = list(range(nbGridPoints, nbGridPoints+length))
-        histoVol.grid.freePoints.extend(surfacePoints)
-
-        surfacePointsNormals = {}
-        for i, n in enumerate(surfPtsBBNorms):
-            surfacePointsNormals[nbGridPoints + i] = n
-
-        insidePoints = insidePoints
-        print('time to extend arrays', time()-t1)
-
-        print('Total time', time()-t0)
-
-        self.insidePoints = insidePoints
-        self.surfacePoints = surfacePoints
-        self.surfacePointsCoords = surfPtsBB
-        self.surfacePointsNormals = surfacePointsNormals
-        print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
-            len(self.surfacePoints), len(self.insidePoints),
-            nbGridPoints, len(histoVol.grid.masterGridPositions)))
-
-        self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
-                                      self.insidePoints,areas=vSurfaceArea)
-        return self.insidePoints, self.surfacePoints
+#
+#        print('time to update distance field and idarray', time()-t1)
+#
+#        t1 = time()
+#        nbGridPoints = len(histoVol.grid.masterGridPositions)
+#
+#        surfPtsBB = []
+#        surfPtsBBNorms  = []
+#        mini, maxi = histoVol.fillBB
+#        mx, my, mz = mini
+#        Mx, My, Mz = maxi
+#        ogNorms = self.ogsurfacePointsNormals
+#        for i,p in enumerate(srfPts):
+#            x,y,z = p
+#            if (x>=mx and x<=Mx and y>=my and y<=My and z>=mz and z<=Mz):
+#                surfPtsBB.append(p)
+#                surfPtsBBNorms.append(ogNorms[i])
+#
+#        print('surf points going from to', len(srfPts), len(surfPtsBB))
+#        srfPts = surfPtsBB
+#        length = len(srfPts)
+#
+#        pointArrayRaw = numpy.zeros( (nbGridPoints + length, 3), 'f')
+#        pointArrayRaw[:nbGridPoints] = histoVol.grid.masterGridPositions
+#        pointArrayRaw[nbGridPoints:] = srfPts
+#        self.surfacePointsCoords = srfPts #surfacePointscoords ?
+#        histoVol.grid.nbSurfacePoints += length
+#        histoVol.grid.masterGridPositions = pointArrayRaw
+#        histoVol.grid.distToClosestSurf.extend( [histoVol.grid.diag]*length )
+#        
+#        histoVol.grid.gridPtId.extend( [number]*length )
+#        surfacePoints = list(range(nbGridPoints, nbGridPoints+length))
+#        histoVol.grid.freePoints.extend(surfacePoints)
+#
+#        surfacePointsNormals = {}
+#        for i, n in enumerate(surfPtsBBNorms):
+#            surfacePointsNormals[nbGridPoints + i] = n
+#
+#        insidePoints = insidePoints
+#        print('time to extend arrays', time()-t1)
+#
+#        print('Total time', time()-t0)
+#
+#        self.insidePoints = insidePoints
+#        self.surfacePoints = surfacePoints
+#        self.surfacePointsCoords = surfPtsBB
+#        self.surfacePointsNormals = surfacePointsNormals
+#        print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+#            len(self.surfacePoints), len(self.insidePoints),
+#            nbGridPoints, len(histoVol.grid.masterGridPositions)))
+#
+#        self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
+#                                      self.insidePoints,areas=vSurfaceArea)
+#        return self.insidePoints, self.surfacePoints
 
     
     def BuildGridEnviroOnly(self, histoVol, location=None):
+        """Build the compartment grid ie surface and inside only environment"""
         # create surface points
         t0 = t1 = time()
         self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
@@ -1472,6 +1498,7 @@ class  Compartment(CompartmentList):
         return self.insidePoints, self.surfacePoints
 
     def BuildGrid_OrthogonalBox(self, histoVol):
+        """Build the compartment grid ie surface and inside point using a box"""
         t0 = time()
         self.ogsurfacePoints = None
         self.ogsurfacePointsNormals = None
@@ -1578,7 +1605,11 @@ class  Compartment(CompartmentList):
 
 
 
-    def BuildGrid_utsdf(self, histoVol):
+    def BuildGrid_utsdf(self, histoVol):        
+        """
+        Build the compartment grid ie surface and inside point using signed distance fields
+        from the UT package
+        """
         t0 = time()
         self.ogsurfacePoints = self.vertices[:]
         self.ogsurfacePointsNormals = self.vnormals[:]
@@ -1687,6 +1718,7 @@ class  Compartment(CompartmentList):
         return insidePoints, surfacePoints
         
     def get_bbox(self, vert_list, BB_SCALE = 0.0):
+        """get bounding box for the given list of vertices"""
         from multisdf import multisdf
         multisdf.cvar.BB_SCALE = BB_SCALE
         HUGE = 999999
@@ -1724,7 +1756,7 @@ class  Compartment(CompartmentList):
 
         
     def BuildGrid_multisdf(self, histoVol):
-#        t1 = time()
+        """Build the compartment grid ie surface and inside point using multisdf"""
         vertices = self.vertices
         faces = self.faces
         labels = numpy.ones(len(faces), 'i')
@@ -1816,7 +1848,7 @@ class  Compartment(CompartmentList):
 
 
     def getSurfacePoint( self, p1, p2, w1, w2):
-        # compute point between p1 and p2 with weight w1 and w2
+        """compute point between p1 and p2 with weight w1 and w2"""
         x1,y1,z1 = p1
         x2,y2,z2 = p2
 #        totalWeight = w1+w2
@@ -1825,7 +1857,9 @@ class  Compartment(CompartmentList):
         return x1 + ratio*vec[0], y1 + ratio*vec[1], z1 + ratio*vec[2]
 
     def estimateVolume(self,unitVol=None,hBB=None):
-        """ v: A pointer to the array of vertices
+        """ 
+        get the volume of the compartment
+        v: A pointer to the array of vertices
         // i: A pointer to the array of indices
         // n: The number of indices (multiple of 3)
         // This function uses Gauss's Theorem to calculate the volume of a body
@@ -1852,13 +1886,13 @@ class  Compartment(CompartmentList):
                 self.surfaceVolume =  sum(areas)            
             elif unitVol != None :
                 self.surfaceVolume = len(self.vertices) * unitVol
-        
-
 
     def computeVolumeAndSetNbMol(self, histoVol, surfacePoints, insidePoints,
                                  areas=None):
-        # compute volume of surface and interior
-        # set 'nbMol' in each ingredient of both recipes
+        """
+        Compute volume of surface and interior
+        set 'nbMol' in each ingredient of both recipes
+        """        
         unitVol = histoVol.grid.gridSpacing**3
         if surfacePoints !=None:
             print('%d surface points %.2f unitVol'%(len(surfacePoints), unitVol))
@@ -1887,6 +1921,9 @@ class  Compartment(CompartmentList):
             print ("number of molecules for Special Cube = ", a, ", because interiorVolume = ", volume)
 
     def getFacesNfromV(self,vindice,ext=0):
+        """
+        Retrieve the face normal from the indice of a vertice
+        """                
         f=[]        
         for i,af in enumerate(self.faces) :
             if vindice in af :
@@ -1900,6 +1937,9 @@ class  Compartment(CompartmentList):
         return f
 
     def getVNfromF(self,i):
+        """
+        Retrieve the vertice normal from the indice of a vertice
+        """                
         self.normals
         fi=[]        
         for k,af in enumerate(self.faces) :
@@ -1913,9 +1953,10 @@ class  Compartment(CompartmentList):
         return n
 
     def create3DPointLookup(self, nbGridPoints,gridSpacing,dim,boundingBox=None):
-        #pFinalNumberOfPoints, pGridSpacing, pArrayOfTwoTotalCorners):
-        # Fill the orthogonal bounding box described by two global corners
-        # with an array of points spaces pGridSpacing apart.
+        """ 
+        Fill the orthogonal bounding box described by two global corners
+         with an array of points spaces pGridSpacing apart. Duplicate from grid class
+        """
         if boundingBox is None :
             boundingBox= self.bb
         xl,yl,zl = boundingBox[0]
@@ -1937,11 +1978,16 @@ class  Compartment(CompartmentList):
         return ijkPtIndice,pointArrayRaw
 
     def find_nearest(self,array,value):
+        """find nearest point indice of value in array using numpy"""
         idx=(numpy.abs(array-value)).argmin()
         return array[idx]
 
 
     def getSurfaceInnerPoints_sdf(self,boundingBox,spacing,display = True,useFix=False):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         print ("beforea import" )        
         print ("ok1" )
         from UTpackages.UTsdf import utsdf
@@ -1994,6 +2040,10 @@ class  Compartment(CompartmentList):
         return pointinside[0],self.vertices
 
     def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
@@ -2079,6 +2129,10 @@ class  Compartment(CompartmentList):
 
          
     def getSurfaceInnerPoints_sdf_interpolate(self,boundingBox,spacing,display = True,useFix=False):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
@@ -2140,6 +2194,10 @@ class  Compartment(CompartmentList):
              
          
     def getSurfaceInnerPoints(self,boundingBox,spacing,display = True,useFix=False):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         from autopack.Environment import Grid        
         grid = Grid()
         grid.boundingBox = boundingBox
@@ -2319,6 +2377,10 @@ class  Compartment(CompartmentList):
         return insidePoints, surfacePoints
 
     def getSurfaceInnerPointsPandaRay(self,boundingBox,spacing,display = True,useFix=False):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         #should use the ray and see if it gave better reslt
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
@@ -2438,6 +2500,10 @@ class  Compartment(CompartmentList):
         return insidePoints, surfacePoints
         
     def getSurfaceInnerPointsPanda(self,boundingBox,spacing,display = True,useFix=False):
+        """
+        Only compute the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation 
+        """                
         #work for small object
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
@@ -2496,6 +2562,7 @@ class  Compartment(CompartmentList):
         return insidePoints, surfacePoints
 
     def printFillInfo(self):
+        """ print som info about the compartment and its recipe"""
         print('compartment %d'%self.number)
         r = self.surfaceRecipe
         if r is not None:

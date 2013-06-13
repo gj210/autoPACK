@@ -112,17 +112,24 @@
 </tr>
 <tr>
     <td class="summary" colspan="2">
-        <a href="autopack.Environment.Gradient-class.html" class="summary-name">Gradient</a>
+        <a href="autopack.Environment.Gradient-class.html" class="summary-name">Gradient</a><br />
+      The Gradient class ========================== This class handle the
+        use of gradient to control the packing.
     </td>
   </tr>
 <tr>
     <td class="summary" colspan="2">
-        <a href="autopack.Environment.Grid-class.html" class="summary-name">Grid</a>
+        <a href="autopack.Environment.Grid-class.html" class="summary-name">Grid</a><br />
+      The Grid class ========================== This class handle the use
+        of grid to control the packing.
     </td>
   </tr>
 <tr>
     <td class="summary" colspan="2">
-        <a href="autopack.Environment.Environment-class.html" class="summary-name">Environment</a>
+        <a href="autopack.Environment.Environment-class.html" class="summary-name">Environment</a><br />
+      The Environment class
+==========================
+This class is main class in autopack.
     </td>
   </tr>
 </table>
@@ -262,7 +269,8 @@
         <tr>
           <td><span class="summary-sig"><a name="vector_norm"></a><span class="summary-sig-name">vector_norm</span>(<span class="summary-sig-arg">data</span>,
         <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">out</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">out</span>=<span class="summary-sig-default">None</span>)</span><br />
+      get the norm of a vector data</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#vector_norm">source&nbsp;code</a></span>
             
@@ -281,7 +289,8 @@
           <td><span class="summary-sig"><a name="angleVector"></a><span class="summary-sig-name">angleVector</span>(<span class="summary-sig-arg">v0</span>,
         <span class="summary-sig-arg">v1</span>,
         <span class="summary-sig-arg">directed</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">0</span>)</span></td>
+        <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">0</span>)</span><br />
+      get the angle between two vector v0 and v1</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#angleVector">source&nbsp;code</a></span>
             
@@ -298,7 +307,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="vdistance"></a><span class="summary-sig-name">vdistance</span>(<span class="summary-sig-arg">c0</span>,
-        <span class="summary-sig-arg">c1</span>)</span></td>
+        <span class="summary-sig-arg">c1</span>)</span><br />
+      get the distance between two points c0 and c1</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#vdistance">source&nbsp;code</a></span>
             
@@ -326,6 +336,13 @@
     </table>
   </td>
 </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="SEED"></a><span class="summary-name">SEED</span> = <code title="14">14</code>
+    </td>
+  </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
@@ -358,7 +375,12 @@
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="autopack.Environment-module.html#LISTPLACEMETHOD" class="summary-name">LISTPLACEMETHOD</a> = <code title="['jitter', 'spring', 'rigid-body', 'pandaBullet', 'pandaBulletRelax']"><code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBul</code><code class="variable-ellipsis">...</code></code>
+        <a href="autopack.Environment-module.html#LISTPLACEMETHOD" class="summary-name">LISTPLACEMETHOD</a> = <code title="['jitter',
+ 'spring',
+ 'rigid-body',
+ 'pandaBullet',
+ 'pandaBulletRelax',
+ 'pandaDev']"><code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBul</code><code class="variable-ellipsis">...</code></code>
     </td>
   </tr>
 <tr>
@@ -444,7 +466,12 @@
   <dl class="fields">
     <dt>Value:</dt>
       <dd><table><tr><td><pre class="variable">
-<code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBullet</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBulletRelax</code><code class="variable-quote">'</code><code class="variable-group">]</code>
+<code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">pandaBullet</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">pandaBulletRelax</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">pandaDev</code><code class="variable-quote">'</code><code class="variable-group">]</code>
 </pre></td></tr></table>
 </dd>
   </dl>
@@ -483,7 +510,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 12:04:46 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

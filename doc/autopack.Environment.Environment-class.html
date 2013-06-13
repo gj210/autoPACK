@@ -60,8 +60,8 @@
     </td>
   </tr>
 </table>
-<!-- ==================== CLASSOBJ DESCRIPTION ==================== -->
-<h1 class="epydoc">classobj Environment</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment">source&nbsp;code</a></span></p>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Environment</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment">source&nbsp;code</a></span></p>
 <pre class="base-tree">
 <a href="autopack.Compartment.CompartmentList-class.html">Compartment.CompartmentList</a> --+
                               |
@@ -69,6 +69,20 @@
 </pre>
 
 <hr />
+<pre class="literalblock">
+
+The Environment class
+==========================
+This class is main class in autopack. The class handle all the setup, initialisation
+and process of the packing. We use xml or python for the setup.
+A environments is made of :
+    a grid and the gradients if any
+    a list of compartment and their recipes (surface and interior)
+    a exterior recipe
+    each recipe are made of a list of ingredients
+
+</pre>
+
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
 <table class="summary" border="1" cellpadding="3"
@@ -110,7 +124,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="Setup"></a><span class="summary-sig-name">Setup</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">setupfile</span>)</span></td>
+        <span class="summary-sig-arg">setupfile</span>)</span><br />
+      TODO</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.Setup">source&nbsp;code</a></span>
             
@@ -127,7 +142,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="makeIngredient"></a><span class="summary-sig-name">makeIngredient</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      Helper function to make an ingredient, pass all arguments as 
+      keywords.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.makeIngredient">source&nbsp;code</a></span>
             
@@ -144,7 +161,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="load_XML"></a><span class="summary-sig-name">load_XML</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">setupfile</span>)</span></td>
+        <span class="summary-sig-arg">setupfile</span>)</span><br />
+      Setup the environment according the given xml file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.load_XML">source&nbsp;code</a></span>
             
@@ -163,9 +181,31 @@
           <td><span class="summary-sig"><a name="getValueToXMLNode"></a><span class="summary-sig-name">getValueToXMLNode</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">vtype</span>,
         <span class="summary-sig-arg">node</span>,
-        <span class="summary-sig-arg">attrname</span>)</span></td>
+        <span class="summary-sig-arg">attrname</span>)</span><br />
+      Helper function to get the value from a given xml node attribute of a
+      given type</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getValueToXMLNode">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getStringValueOptions"></a><span class="summary-sig-name">getStringValueOptions</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">value</span>,
+        <span class="summary-sig-arg">attrname</span>)</span><br />
+      Helper function to return the given environment option as a string to
+      be write in the xml file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getStringValueOptions">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -182,7 +222,9 @@
           <td><span class="summary-sig"><a name="setValueToXMLNode"></a><span class="summary-sig-name">setValueToXMLNode</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">value</span>,
         <span class="summary-sig-arg">node</span>,
-        <span class="summary-sig-arg">attrname</span>)</span></td>
+        <span class="summary-sig-arg">attrname</span>)</span><br />
+      Helper function to apply the given environment option value to the 
+      given xml node.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setValueToXMLNode">source&nbsp;code</a></span>
             
@@ -200,7 +242,8 @@
         <tr>
           <td><span class="summary-sig"><a name="save_asXML"></a><span class="summary-sig-name">save_asXML</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">setupfile</span>,
-        <span class="summary-sig-arg">useXref</span>=<span class="summary-sig-default">True</span>)</span></td>
+        <span class="summary-sig-arg">useXref</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Save the current environment setup as an xml file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.save_asXML">source&nbsp;code</a></span>
             
@@ -216,9 +259,29 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="includeIngrRecipes"></a><span class="summary-sig-name">includeIngrRecipes</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="save_asPython"></a><span class="summary-sig-name">save_asPython</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">setupfile</span>,
+        <span class="summary-sig-arg">useXref</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Save the current environment setup as a python script file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.save_asPython">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#includeIngrRecipes" class="summary-sig-name">includeIngrRecipes</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingrname</span>,
-        <span class="summary-sig-arg">include</span>)</span></td>
+        <span class="summary-sig-arg">include</span>)</span><br />
+      Include or Exclude the given ingredient from the recipe.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngrRecipes">source&nbsp;code</a></span>
             
@@ -234,10 +297,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="includeIngrRecipe"></a><span class="summary-sig-name">includeIngrRecipe</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#includeIngrRecipe" class="summary-sig-name">includeIngrRecipe</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingrname</span>,
         <span class="summary-sig-arg">include</span>,
-        <span class="summary-sig-arg">rs</span>)</span></td>
+        <span class="summary-sig-arg">rs</span>)</span><br />
+      Include or Exclude the given ingredient from the given recipe.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngrRecipe">source&nbsp;code</a></span>
             
@@ -253,9 +317,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="includeIngredientRecipe"></a><span class="summary-sig-name">includeIngredientRecipe</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#includeIngredientRecipe" class="summary-sig-name">includeIngredientRecipe</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>,
-        <span class="summary-sig-arg">include</span>)</span></td>
+        <span class="summary-sig-arg">include</span>)</span><br />
+      Include or Exclude the given ingredient from the recipe.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngredientRecipe">source&nbsp;code</a></span>
             
@@ -272,7 +337,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="setGradient"></a><span class="summary-sig-name">setGradient</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      create a grdaient assign weight to point listorganelle influenced 
+      listingredient influenced</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setGradient">source&nbsp;code</a></span>
             
@@ -288,7 +355,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setDefaultOptions"></a><span class="summary-sig-name">setDefaultOptions</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="setDefaultOptions"></a><span class="summary-sig-name">setDefaultOptions</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      reset all the options to their default values</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setDefaultOptions">source&nbsp;code</a></span>
             
@@ -304,10 +372,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="callFunction"></a><span class="summary-sig-name">callFunction</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#callFunction" class="summary-sig-name">callFunction</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">function</span>,
         <span class="summary-sig-arg">args</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
-        <span class="summary-sig-arg">kw</span>=<span class="summary-sig-default"><code class="variable-group">{</code><code class="variable-group">}</code></span>)</span></td>
+        <span class="summary-sig-arg">kw</span>=<span class="summary-sig-default"><code class="variable-group">{</code><code class="variable-group">}</code></span>)</span><br />
+      helper function to callback another function with the give arguments 
+      and keywords.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.callFunction">source&nbsp;code</a></span>
             
@@ -345,7 +415,8 @@
         <tr>
           <td><span class="summary-sig"><a name="SetRBOptions"></a><span class="summary-sig-name">SetRBOptions</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">obj</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">moving</code><code class="variable-quote">'</code></span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      Change the rigid body options</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.SetRBOptions">source&nbsp;code</a></span>
             
@@ -362,7 +433,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="SetSpringOptions"></a><span class="summary-sig-name">SetSpringOptions</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      Change the spring options, mainly used by C4D.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.SetSpringOptions">source&nbsp;code</a></span>
             
@@ -378,7 +450,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setupRBOptions"></a><span class="summary-sig-name">setupRBOptions</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="setupRBOptions"></a><span class="summary-sig-name">setupRBOptions</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Set default value for rigid body options</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setupRBOptions">source&nbsp;code</a></span>
             
@@ -394,9 +467,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="writeArraysToFile"></a><span class="summary-sig-name">writeArraysToFile</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#writeArraysToFile" class="summary-sig-name">writeArraysToFile</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">f</span>)</span><br />
-      write self.gridPtId and self.distToClosestSurf to file</td>
+      write self.gridPtId and self.distToClosestSurf to file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.writeArraysToFile">source&nbsp;code</a></span>
             
@@ -412,9 +485,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="readArraysFromFile"></a><span class="summary-sig-name">readArraysFromFile</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#readArraysFromFile" class="summary-sig-name">readArraysFromFile</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">f</span>)</span><br />
-      write self.gridPtId and self.distToClosestSurf to file</td>
+      write self.gridPtId and self.distToClosestSurf to file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.readArraysFromFile">source&nbsp;code</a></span>
             
@@ -430,8 +503,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="saveGridToFile"></a><span class="summary-sig-name">saveGridToFile</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">gridFileOut</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#saveGridToFile" class="summary-sig-name">saveGridToFile</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">gridFileOut</span>)</span><br />
+      Save the current grid and the compartment grid information in a file.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.saveGridToFile">source&nbsp;code</a></span>
             
@@ -447,8 +521,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="restoreGridFromFile"></a><span class="summary-sig-name">restoreGridFromFile</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">gridFileName</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#restoreGridFromFile" class="summary-sig-name">restoreGridFromFile</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">gridFileName</span>)</span><br />
+      Read and setup the grid from the given filename.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.restoreGridFromFile">source&nbsp;code</a></span>
             
@@ -464,7 +539,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setMinMaxProteinSize"></a><span class="summary-sig-name">setMinMaxProteinSize</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="setMinMaxProteinSize"></a><span class="summary-sig-name">setMinMaxProteinSize</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Retrieve and store mini and maxi ingredient size</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setMinMaxProteinSize">source&nbsp;code</a></span>
             
@@ -480,8 +556,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="extractMeshComponent"></a><span class="summary-sig-name">extractMeshComponent</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">obj</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#extractMeshComponent" class="summary-sig-name">extractMeshComponent</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">obj</span>)</span><br />
+      Require host helper.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.extractMeshComponent">source&nbsp;code</a></span>
             
@@ -497,9 +574,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setCompartmentMesh"></a><span class="summary-sig-name">setCompartmentMesh</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#setCompartmentMesh" class="summary-sig-name">setCompartmentMesh</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">compartment</span>,
-        <span class="summary-sig-arg">ref_obj</span>)</span></td>
+        <span class="summary-sig-arg">ref_obj</span>)</span><br />
+      Require host helper.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setCompartmentMesh">source&nbsp;code</a></span>
             
@@ -516,7 +594,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#addCompartment" class="summary-sig-name">addCompartment</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">compartment</span>)</span></td>
+        <span class="summary-sig-arg">compartment</span>)</span><br />
+      Add the given compartment to the environment.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.addCompartment">source&nbsp;code</a></span>
             
@@ -532,7 +611,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="longestIngrdientName"></a><span class="summary-sig-name">longestIngrdientName</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#longestIngrdientName" class="summary-sig-name">longestIngrdientName</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Helper function for gui.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.longestIngrdientName">source&nbsp;code</a></span>
             
@@ -549,7 +629,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="loopThroughIngr"></a><span class="summary-sig-name">loopThroughIngr</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">cb_function</span>)</span></td>
+        <span class="summary-sig-arg">cb_function</span>)</span><br />
+      Helper function that loop through all ingredients of all recipe and 
+      apply the give callback functio on each ingredients.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.loopThroughIngr">source&nbsp;code</a></span>
             
@@ -567,7 +649,9 @@
         <tr>
           <td><span class="summary-sig"><a name="getIngrFromNameInRecipe"></a><span class="summary-sig-name">getIngrFromNameInRecipe</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">name</span>,
-        <span class="summary-sig-arg">r</span>)</span></td>
+        <span class="summary-sig-arg">r</span>)</span><br />
+      Given an ingredient name and a recipe, retrieve the ingredient object
+      instance</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getIngrFromNameInRecipe">source&nbsp;code</a></span>
             
@@ -585,7 +669,9 @@
         <tr>
           <td><span class="summary-sig"><a name="getIngrFromName"></a><span class="summary-sig-name">getIngrFromName</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">name</span>,
-        <span class="summary-sig-arg">compNum</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">compNum</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Given an ingredient name and optionally the compartment number, 
+      retrieve the ingredient object instance</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getIngrFromName">source&nbsp;code</a></span>
             
@@ -601,8 +687,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setExteriorRecipe"></a><span class="summary-sig-name">setExteriorRecipe</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">recipe</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#setExteriorRecipe" class="summary-sig-name">setExteriorRecipe</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">recipe</span>)</span><br />
+      Set the exterior recipe with the given one.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setExteriorRecipe">source&nbsp;code</a></span>
             
@@ -618,7 +705,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="BuildGrids"></a><span class="summary-sig-name">BuildGrids</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="BuildGrids"></a><span class="summary-sig-name">BuildGrids</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Build the comparmtents grid (intrior and surface points) to be merged
+      with the main grid Note : #New version allows for orthogonal box to 
+      be used as an organelle requireing no expensive InsidePoints test # 
+      FIXME make recursive?</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.BuildGrids">source&nbsp;code</a></span>
             
@@ -634,12 +725,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getPointFrom3D"></a><span class="summary-sig-name">getPointFrom3D</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#getPointFrom3D" class="summary-sig-name">getPointFrom3D</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">pt3d</span>,
         <span class="summary-sig-arg">bb</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">nb</span>)</span><br />
-      get point number from 3d coordinates</td>
+      get point number from 3d coordinates.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointFrom3D">source&nbsp;code</a></span>
             
@@ -657,7 +748,9 @@
         <tr>
           <td><span class="summary-sig"><a name="computeGridNumberOfPoint"></a><span class="summary-sig-name">computeGridNumberOfPoint</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
-        <span class="summary-sig-arg">space</span>)</span></td>
+        <span class="summary-sig-arg">space</span>)</span><br />
+      Return the grid size : total number of point and number of point per 
+      axes Note : Duplicate from the grid class.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.computeGridNumberOfPoint">source&nbsp;code</a></span>
             
@@ -673,13 +766,14 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="buildGrid"></a><span class="summary-sig-name">buildGrid</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#buildGrid" class="summary-sig-name">buildGrid</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">gridFileIn</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">rebuild</span>=<span class="summary-sig-default">True</span>,
         <span class="summary-sig-arg">gridFileOut</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">previousFill</span>=<span class="summary-sig-default">False</span>,
-        <span class="summary-sig-arg">previousfreePoint</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">previousfreePoint</span>=<span class="summary-sig-default">None</span>)</span><br />
+      The main build grid function.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.buildGrid">source&nbsp;code</a></span>
             
@@ -695,11 +789,36 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="checkPtIndIngr"></a><span class="summary-sig-name">checkPtIndIngr</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a name="onePrevIngredient"></a><span class="summary-sig-name">onePrevIngredient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">i</span>,
+        <span class="summary-sig-arg">mingrs</span>,
+        <span class="summary-sig-arg">distance</span>,
+        <span class="summary-sig-arg">nbFreePoints</span>,
+        <span class="summary-sig-arg">marray</span>)</span><br />
+      Unused</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.onePrevIngredient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#checkPtIndIngr" class="summary-sig-name">checkPtIndIngr</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">insidePoints</span>,
         <span class="summary-sig-arg">i</span>,
-        <span class="summary-sig-arg">ptInd</span>)</span></td>
+        <span class="summary-sig-arg">ptInd</span>,
+        <span class="summary-sig-arg">marray</span>)</span><br />
+      We need to check if the point indice is correct in the case of panda 
+      packing.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.checkPtIndIngr">source&nbsp;code</a></span>
             
@@ -715,7 +834,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setCompatibility"></a><span class="summary-sig-name">setCompatibility</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#setCompatibility" class="summary-sig-name">setCompatibility</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      in earlier version the grid was part of the environment class.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setCompatibility">source&nbsp;code</a></span>
             
@@ -731,9 +851,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSortedActiveIngredients"></a><span class="summary-sig-name">getSortedActiveIngredients</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#getSortedActiveIngredients" class="summary-sig-name">getSortedActiveIngredients</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">allIngredients</span>,
-        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">0</span>)</span></td>
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Sort the active ingredient according their pirority and radius.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getSortedActiveIngredients">source&nbsp;code</a></span>
             
@@ -753,7 +874,9 @@
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">completion</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">nbMol</span>=<span class="summary-sig-default">0</span>,
-        <span class="summary-sig-arg">counter</span>=<span class="summary-sig-default">0</span>)</span></td>
+        <span class="summary-sig-arg">counter</span>=<span class="summary-sig-default">0</span>)</span><br />
+      helper function for updating the ingredient completion, nbmol and 
+      counter</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.updateIngr">source&nbsp;code</a></span>
             
@@ -769,7 +892,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Reset everything to empty and not done</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.reset">source&nbsp;code</a></span>
             
@@ -786,7 +910,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="resetIngrRecip"></a><span class="summary-sig-name">resetIngrRecip</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">recip</span>)</span></td>
+        <span class="summary-sig-arg">recip</span>)</span><br />
+      Reset all ingredient of the given recipe</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.resetIngrRecip">source&nbsp;code</a></span>
             
@@ -803,7 +928,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="resetIngr"></a><span class="summary-sig-name">resetIngr</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">ingr</span>)</span></td>
+        <span class="summary-sig-arg">ingr</span>)</span><br />
+      Reset the given ingredient (count, completion, nmol)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.resetIngr">source&nbsp;code</a></span>
             
@@ -819,7 +945,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getActiveIng"></a><span class="summary-sig-name">getActiveIng</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getActiveIng"></a><span class="summary-sig-name">getActiveIng</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Return all remaining active ingredients</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getActiveIng">source&nbsp;code</a></span>
             
@@ -835,9 +962,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="pickIngredient"></a><span class="summary-sig-name">pickIngredient</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#pickIngredient" class="summary-sig-name">pickIngredient</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">vThreshStart</span>,
-        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">0</span>)</span></td>
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Main function that decide the next ingredient the packing will try to
+      drop.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.pickIngredient">source&nbsp;code</a></span>
             
@@ -854,7 +983,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="get_dpad"></a><span class="summary-sig-name">get_dpad</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">compNum</span>)</span></td>
+        <span class="summary-sig-arg">compNum</span>)</span><br />
+      Return the largest encapsulatingRadius and use it for padding</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.get_dpad">source&nbsp;code</a></span>
             
@@ -870,10 +1000,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="checkIfUpdate"></a><span class="summary-sig-name">checkIfUpdate</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#checkIfUpdate" class="summary-sig-name">checkIfUpdate</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">nbFreePoints</span>,
-        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Check if we need to update the distance array.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.checkIfUpdate">source&nbsp;code</a></span>
             
@@ -889,7 +1020,7 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getPointToDrop"></a><span class="summary-sig-name">getPointToDrop</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#getPointToDrop" class="summary-sig-name">getPointToDrop</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">radius</span>,
         <span class="summary-sig-arg">jitter</span>,
@@ -900,28 +1031,10 @@
         <span class="summary-sig-arg">compNum</span>,
         <span class="summary-sig-arg">vRangeStart</span>,
         <span class="summary-sig-arg">vThreshStart</span>,
-        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Decide next point to use for dropping a given ingredent.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointToDrop">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="removeOnePoint"></a><span class="summary-sig-name">removeOnePoint</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">pt</span>,
-        <span class="summary-sig-arg">freePoints</span>,
-        <span class="summary-sig-arg">nbFreePoints</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.removeOnePoint">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -945,7 +1058,11 @@
         <span class="summary-sig-arg">name</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">vTestid</span>=<span class="summary-sig-default">3</span>,
         <span class="summary-sig-arg">vAnalysis</span>=<span class="summary-sig-default">0</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      the latest packing loop ## Fill the grid by picking an ingredient 
+      first and then ## this packing should be able to continue from a 
+      previous one ## find a suitable point using the ingredient's placer 
+      object</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.fill5">source&nbsp;code</a></span>
             
@@ -1272,6 +1389,22 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="setupOctree"></a><span class="summary-sig-name">setupOctree</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setupOctree">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="setupPanda"></a><span class="summary-sig-name">setupPanda</span>(<span class="summary-sig-arg">self</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setupPanda">source&nbsp;code</a></span>
@@ -1292,6 +1425,26 @@
         <span class="summary-sig-arg">node</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.delRB">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="addSingleSphereRBODE"></a><span class="summary-sig-name">addSingleSphereRBODE</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ingr</span>,
+        <span class="summary-sig-arg">pMat</span>,
+        <span class="summary-sig-arg">jtrans</span>,
+        <span class="summary-sig-arg">rotMat</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.addSingleSphereRBODE">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -1648,6 +1801,96 @@
   </dl>
 </td></tr></table>
 </div>
+<a name="includeIngrRecipes"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">includeIngrRecipes</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingrname</span>,
+        <span class="sig-arg">include</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngrRecipes">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Include or Exclude the given ingredient from the recipe. (similar to 
+  an active state toggle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="includeIngrRecipe"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">includeIngrRecipe</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingrname</span>,
+        <span class="sig-arg">include</span>,
+        <span class="sig-arg">rs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngrRecipe">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Include or Exclude the given ingredient from the given recipe. 
+  (similar to an active state toggle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="includeIngredientRecipe"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">includeIngredientRecipe</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingr</span>,
+        <span class="sig-arg">include</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.includeIngredientRecipe">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Include or Exclude the given ingredient from the recipe. (similar to 
+  an active state toggle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="callFunction"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">callFunction</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">function</span>,
+        <span class="sig-arg">args</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="sig-arg">kw</span>=<span class="sig-default"><code class="variable-group">{</code><code class="variable-group">}</code></span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.callFunction">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>helper function to callback another function with the give arguments 
+  and keywords. Optionally time stamp it.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
 <a name="timeFunction"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -1677,6 +1920,129 @@
   </dl>
 </td></tr></table>
 </div>
+<a name="writeArraysToFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">writeArraysToFile</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">f</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.writeArraysToFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>write self.gridPtId and self.distToClosestSurf to file. (pickle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="readArraysFromFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">readArraysFromFile</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">f</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.readArraysFromFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>write self.gridPtId and self.distToClosestSurf to file. (pickle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="saveGridToFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">saveGridToFile</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">gridFileOut</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.saveGridToFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Save the current grid and the compartment grid information in a file. 
+  (pickle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="restoreGridFromFile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">restoreGridFromFile</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">gridFileName</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.restoreGridFromFile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read and setup the grid from the given filename. (pickle)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="extractMeshComponent"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">extractMeshComponent</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">obj</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.extractMeshComponent">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Require host helper. Return the v,f,n of the given object</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="setCompartmentMesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setCompartmentMesh</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">compartment</span>,
+        <span class="sig-arg">ref_obj</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setCompartmentMesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Require host helper. Change the mesh of the given compartment and 
+  recompute inside and surface point.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
 <a name="addCompartment"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -1692,11 +2058,277 @@
     </td>
   </tr></table>
   
-  
+  <p>Add the given compartment to the environment. Extend the main bounding
+  box if need</p>
   <dl class="fields">
     <dt>Overrides:
         <a href="autopack.Compartment.CompartmentList-class.html#addCompartment">Compartment.CompartmentList.addCompartment</a>
     </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="longestIngrdientName"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">longestIngrdientName</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.longestIngrdientName">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Helper function for gui. Return the size of the longest ingredient 
+  name</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="setExteriorRecipe"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setExteriorRecipe</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">recipe</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setExteriorRecipe">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set the exterior recipe with the given one. Create the weakref.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getPointFrom3D"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getPointFrom3D</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">pt3d</span>,
+        <span class="sig-arg">bb</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">nb</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointFrom3D">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>get point number from 3d coordinates. Note : Duplicate from the grid 
+  class.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="buildGrid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">buildGrid</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">gridFileIn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">rebuild</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">gridFileOut</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">previousFill</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">previousfreePoint</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.buildGrid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>The main build grid function. Setup the main grid and merge the 
+  compartment grid. The setup is  de novo or restored using given file. Can
+  also used information from a previous packing. This funcion should be 
+  split in smaller function for clarity.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="checkPtIndIngr"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">checkPtIndIngr</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingr</span>,
+        <span class="sig-arg">insidePoints</span>,
+        <span class="sig-arg">i</span>,
+        <span class="sig-arg">ptInd</span>,
+        <span class="sig-arg">marray</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.checkPtIndIngr">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>We need to check if the point indice is correct in the case of panda 
+  packing. as the pt indice in the result array have a different 
+  meaning.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="setCompatibility"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setCompatibility</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.setCompatibility">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>in earlier version the grid was part of the environment class. Since 
+  we split the grid in her own class, to avoid some error during the 
+  transition we alias all the function and attribute.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSortedActiveIngredients"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSortedActiveIngredients</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">allIngredients</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getSortedActiveIngredients">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Sort the active ingredient according their pirority and radius. # 
+  first get the ones with a packing priority # Graham- This now works in 
+  concert with ingredient picking</p>
+  <p># Graham here- In the new setup, priority is infinite with 
+  abs[priority] increasing (+) # An ingredients with (-) priority will pack
+  from greatest abs[-priority] one at a time #     to lease 
+  abs[-priority]... each ingredient will attempt to reach its molarity #
+  before moving on to the next ingredient, and all (-) ingredients will try
+  to #     deposit before other ingredients are tested. # An ingredient 
+  with (+) priority will recieve a weighted value based on its 
+  abs[priority] #     e.g. an ingredient with a priority=10 will be 10x 
+  more likely to be picked than #     an ingredient with a priority=1. # An
+  ingredient with the default priority=0 will recieve a weighted value 
+  based on its #     complexity. (currently complexity = minRadius), thus a
+  more 'complex' ingredient #     will more likely try to pack before a 
+  less 'complex' ingredient. #     IMPORTANT: the +priority list does not 
+  fully mix with the priority=0 list, but this #     should be an option...
+  currently, the priority=0 list is normalized against a range #     up to 
+  the smallest +priority ingredient and appended to the (+) list # TODO: 
+  Add an option to allow + ingredients to be weighted by assigned priority 
+  AND complexity #     Add an option to allow priority=0 ingredients to fit
+  into the (+) ingredient list #       rather than appending to the end. #
+  Even better, add an option to set the max priority for the 0list and then
+  plug the results #       into the (+) ingredient list. #     Get rid of 
+  the (-), 0, (+) system and recreate this as a new flag and a class 
+  function #        so we can add multiple styles of sorting and weighting 
+  systems. #     Make normalizedPriorities and thresholdPriorities members 
+  of Ingredient class to avoid #        building these arrays.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="pickIngredient"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pickIngredient</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">vThreshStart</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.pickIngredient">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Main function that decide the next ingredient the packing will try to 
+  drop. The picking is weighted or random</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="checkIfUpdate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">checkIfUpdate</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingr</span>,
+        <span class="sig-arg">nbFreePoints</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.checkIfUpdate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Check if we need to update the distance array. Part of the hack free 
+  points</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getPointToDrop"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getPointToDrop</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ingr</span>,
+        <span class="sig-arg">radius</span>,
+        <span class="sig-arg">jitter</span>,
+        <span class="sig-arg">freePoints</span>,
+        <span class="sig-arg">nbFreePoints</span>,
+        <span class="sig-arg">distance</span>,
+        <span class="sig-arg">compId</span>,
+        <span class="sig-arg">compNum</span>,
+        <span class="sig-arg">vRangeStart</span>,
+        <span class="sig-arg">vThreshStart</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointToDrop">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Decide next point to use for dropping a given ingredent. The picking 
+  can be random, based on closest distance, based on gradients, ordered. 
+  This function also update the available free point except when hack is 
+  on.</p>
+  <dl class="fields">
   </dl>
 </td></tr></table>
 </div>
@@ -1733,7 +2365,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 12:04:46 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

@@ -60,8 +60,13 @@
     </td>
   </tr>
 </table>
-<!-- ==================== CLASSOBJ DESCRIPTION ==================== -->
-<h1 class="epydoc">classobj Grid</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Grid">source&nbsp;code</a></span></p>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Grid</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Environment-pysrc.html#Grid">source&nbsp;code</a></span></p>
+<p>The Grid class ========================== This class handle the use of
+  grid to control the packing. The grid keep information of 3d positions, 
+  distances, freePoints and inside/surface points from organelles. NOTE : 
+  thi class could be completly replace if openvdb is wrapped to python.</p>
+
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
 <table class="summary" border="1" cellpadding="3"
@@ -101,42 +106,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="removeFreePoint"></a><span class="summary-sig-name">removeFreePoint</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">pti</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.removeFreePoint">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="removeFreePointdeque"></a><span class="summary-sig-name">removeFreePointdeque</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">pti</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.removeFreePointdeque">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
           <td><span class="summary-sig"><a name="create3DPointLookup"></a><span class="summary-sig-name">create3DPointLookup</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Fill the orthogonal bounding box described by two global corners with
+      an array of points spaces pGridSpacing apart.:</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.create3DPointLookup">source&nbsp;code</a></span>
             
@@ -171,7 +144,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="getIJK"></a><span class="summary-sig-name">getIJK</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">ptInd</span>)</span></td>
+        <span class="summary-sig-arg">ptInd</span>)</span><br />
+      get i,j,k (3d) indices from u (1d)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.getIJK">source&nbsp;code</a></span>
             
@@ -189,7 +163,8 @@
         <tr>
           <td><span class="summary-sig"><a name="checkPointInside"></a><span class="summary-sig-name">checkPointInside</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">pt3d</span>,
-        <span class="summary-sig-arg">dist</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">dist</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Check if the given 3d points is inside the grid</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.checkPointInside">source&nbsp;code</a></span>
             
@@ -205,7 +180,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Get the center of the grid</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.getCenter">source&nbsp;code</a></span>
             
@@ -221,7 +197,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getRadius"></a><span class="summary-sig-name">getRadius</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getRadius"></a><span class="summary-sig-name">getRadius</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Get the radius the grid</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.getRadius">source&nbsp;code</a></span>
             
@@ -242,7 +219,8 @@
         <span class="summary-sig-arg">pt</span>,
         <span class="summary-sig-arg">radius</span>,
         <span class="summary-sig-arg">addSP</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">info</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">info</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Return all grid points indicesinside the given bouding box.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.getPointsInCube">source&nbsp;code</a></span>
             
@@ -260,7 +238,9 @@
         <tr>
           <td><span class="summary-sig"><a name="computeGridNumberOfPoint"></a><span class="summary-sig-name">computeGridNumberOfPoint</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
-        <span class="summary-sig-arg">space</span>)</span></td>
+        <span class="summary-sig-arg">space</span>)</span><br />
+      Return the grid size : total number of point and number of point per 
+      axes</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Grid.computeGridNumberOfPoint">source&nbsp;code</a></span>
             
@@ -335,7 +315,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 12:04:46 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

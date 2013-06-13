@@ -60,8 +60,8 @@
     </td>
   </tr>
 </table>
-<!-- ==================== CLASSOBJ DESCRIPTION ==================== -->
-<h1 class="epydoc">classobj Compartment</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment">source&nbsp;code</a></span></p>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Compartment</h1><p class="nomargin-top"><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment">source&nbsp;code</a></span></p>
 <pre class="base-tree">
 <a href="autopack.Compartment.CompartmentList-class.html">CompartmentList</a> --+
                   |
@@ -69,8 +69,9 @@
 </pre>
 
 <hr />
-<p>This class represents a sub-cellular volume delimited by a polyhedral 
-  surface. Organelles can be nested</p>
+<p>The Compartment class ========================== This class represents
+  a sub volume delimited by a polyhedral surface. Compartment can be 
+  nested</p>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
 <a name="section-InstanceMethods"></a>
@@ -116,7 +117,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="reset"></a><span class="summary-sig-name">reset</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      reset the inner compartment data, surface and inner points</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.reset">source&nbsp;code</a></span>
             
@@ -151,10 +153,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getMesh"></a><span class="summary-sig-name">getMesh</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getMesh" class="summary-sig-name">getMesh</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">rep</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      Retrieve the compartment 3d representaton from the given filename</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getMesh">source&nbsp;code</a></span>
             
@@ -170,12 +173,14 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="setMesh"></a><span class="summary-sig-name">setMesh</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#setMesh" class="summary-sig-name">setMesh</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">vertices</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">faces</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">vnormals</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">**kw</span>)</span></td>
+        <span class="summary-sig-arg">**kw</span>)</span><br />
+      Set the 3d mesh from the given filename or the given mesh data 
+      (v,f,n)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.setMesh">source&nbsp;code</a></span>
             
@@ -228,7 +233,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="setNumber"></a><span class="summary-sig-name">setNumber</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">num</span>)</span></td>
+        <span class="summary-sig-arg">num</span>)</span><br />
+      set compartment uniq id</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.setNumber">source&nbsp;code</a></span>
             
@@ -245,7 +251,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="setInnerRecipe"></a><span class="summary-sig-name">setInnerRecipe</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">recipe</span>)</span></td>
+        <span class="summary-sig-arg">recipe</span>)</span><br />
+      set the inner recipe that define the ingredient to pack inside</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.setInnerRecipe">source&nbsp;code</a></span>
             
@@ -262,7 +269,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="setSurfaceRecipe"></a><span class="summary-sig-name">setSurfaceRecipe</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">recipe</span>)</span></td>
+        <span class="summary-sig-arg">recipe</span>)</span><br />
+      set the inner recipe that define the ingredient to pack at the 
+      surface</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.setSurfaceRecipe">source&nbsp;code</a></span>
             
@@ -278,7 +287,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getCenter"></a><span class="summary-sig-name">getCenter</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the center of the mesh (vertices barycenter)</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getCenter">source&nbsp;code</a></span>
             
@@ -294,7 +304,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getRadius"></a><span class="summary-sig-name">getRadius</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getRadius"></a><span class="summary-sig-name">getRadius</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the radius as the distance between vertices center and bottom 
+      left bouding box</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getRadius">source&nbsp;code</a></span>
             
@@ -310,7 +322,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getBoundingBox"></a><span class="summary-sig-name">getBoundingBox</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getBoundingBox"></a><span class="summary-sig-name">getBoundingBox</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the bounding box</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getBoundingBox">source&nbsp;code</a></span>
             
@@ -326,7 +339,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSizeXYZ"></a><span class="summary-sig-name">getSizeXYZ</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getSizeXYZ"></a><span class="summary-sig-name">getSizeXYZ</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      get the size per axe</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSizeXYZ">source&nbsp;code</a></span>
             
@@ -342,27 +356,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="checkPointInsideBBold"></a><span class="summary-sig-name">checkPointInsideBBold</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">pt3d</span>,
-        <span class="summary-sig-arg">dist</span>=<span class="summary-sig-default">None</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.checkPointInsideBBold">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
           <td><span class="summary-sig"><a name="checkPointInsideBB"></a><span class="summary-sig-name">checkPointInsideBB</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">pt3d</span>,
-        <span class="summary-sig-arg">dist</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">dist</span>=<span class="summary-sig-default">None</span>)</span><br />
+      check if the given 3d coordinate is inside the compartment bouding 
+      box</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.checkPointInsideBB">source&nbsp;code</a></span>
             
@@ -419,7 +417,9 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getMinMaxProteinSize"></a><span class="summary-sig-name">getMinMaxProteinSize</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="getMinMaxProteinSize"></a><span class="summary-sig-name">getMinMaxProteinSize</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      retrieve minimum and maximum ingredient size for inner and surface 
+      recipe ingredients</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getMinMaxProteinSize">source&nbsp;code</a></span>
             
@@ -438,7 +438,8 @@
           <td><span class="summary-sig"><a name="getFaceNormals"></a><span class="summary-sig-name">getFaceNormals</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">vertices</span>,
         <span class="summary-sig-arg">faces</span>,
-        <span class="summary-sig-arg">fillBB</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">fillBB</span>=<span class="summary-sig-default">None</span>)</span><br />
+      compute the face normal of the compartment mesh</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getFaceNormals">source&nbsp;code</a></span>
             
@@ -456,7 +457,9 @@
         <tr>
           <td><span class="summary-sig"><a name="getInterpolatedNormal"></a><span class="summary-sig-name">getInterpolatedNormal</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">pt</span>,
-        <span class="summary-sig-arg">tri</span>)</span></td>
+        <span class="summary-sig-arg">tri</span>)</span><br />
+      compute an interpolated normal for te given triangle at the given 
+      point</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getInterpolatedNormal">source&nbsp;code</a></span>
             
@@ -493,7 +496,9 @@
         <tr>
           <td><span class="summary-sig"><a name="BuildGridJordan"></a><span class="summary-sig-name">BuildGridJordan</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">histoVol</span>,
-        <span class="summary-sig-arg">ray</span>=<span class="summary-sig-default">1</span>)</span></td>
+        <span class="summary-sig-arg">ray</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Build the compartment grid ie surface and inside point using jordan 
+      theorem and host raycast</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGridJordan">source&nbsp;code</a></span>
             
@@ -510,7 +515,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="BuildGrid"></a><span class="summary-sig-name">BuildGrid</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
+        <span class="summary-sig-arg">histoVol</span>)</span><br />
+      Build the compartment grid ie surface and inside point using bhtree</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGrid">source&nbsp;code</a></span>
             
@@ -531,7 +537,8 @@
         <span class="summary-sig-arg">srfPts</span>,
         <span class="summary-sig-arg">surfPtsBBNorms</span>,
         <span class="summary-sig-arg">histoVol</span>,
-        <span class="summary-sig-arg">extended</span>=<span class="summary-sig-default">True</span>)</span></td>
+        <span class="summary-sig-arg">extended</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Extend the environment grd using the compartment point</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.extendGridArrays">source&nbsp;code</a></span>
             
@@ -549,7 +556,9 @@
         <tr>
           <td><span class="summary-sig"><a name="getSurfaceBB"></a><span class="summary-sig-name">getSurfaceBB</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">srfPts</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
+        <span class="summary-sig-arg">histoVol</span>)</span><br />
+      get the bounding box from the environment grid that encapsulated the 
+      mesh</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceBB">source&nbsp;code</a></span>
             
@@ -565,26 +574,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="BuildGrid_break"></a><span class="summary-sig-name">BuildGrid_break</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGrid_break">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
           <td><span class="summary-sig"><a name="BuildGridEnviroOnly"></a><span class="summary-sig-name">BuildGridEnviroOnly</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">histoVol</span>,
-        <span class="summary-sig-arg">location</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">location</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Build the compartment grid ie surface and inside only environment</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGridEnviroOnly">source&nbsp;code</a></span>
             
@@ -601,7 +594,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="BuildGrid_OrthogonalBox"></a><span class="summary-sig-name">BuildGrid_OrthogonalBox</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
+        <span class="summary-sig-arg">histoVol</span>)</span><br />
+      Build the compartment grid ie surface and inside point using a box</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGrid_OrthogonalBox">source&nbsp;code</a></span>
             
@@ -618,7 +612,9 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="BuildGrid_utsdf"></a><span class="summary-sig-name">BuildGrid_utsdf</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
+        <span class="summary-sig-arg">histoVol</span>)</span><br />
+      Build the compartment grid ie surface and inside point using signed 
+      distance fields from the UT package</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGrid_utsdf">source&nbsp;code</a></span>
             
@@ -636,7 +632,8 @@
         <tr>
           <td><span class="summary-sig"><a name="get_bbox"></a><span class="summary-sig-name">get_bbox</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">vert_list</span>,
-        <span class="summary-sig-arg">BB_SCALE</span>=<span class="summary-sig-default">0.0</span>)</span></td>
+        <span class="summary-sig-arg">BB_SCALE</span>=<span class="summary-sig-default">0.0</span>)</span><br />
+      get bounding box for the given list of vertices</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.get_bbox">source&nbsp;code</a></span>
             
@@ -653,7 +650,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="BuildGrid_multisdf"></a><span class="summary-sig-name">BuildGrid_multisdf</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>)</span></td>
+        <span class="summary-sig-arg">histoVol</span>)</span><br />
+      Build the compartment grid ie surface and inside point using multisdf</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.BuildGrid_multisdf">source&nbsp;code</a></span>
             
@@ -673,7 +671,8 @@
         <span class="summary-sig-arg">p1</span>,
         <span class="summary-sig-arg">p2</span>,
         <span class="summary-sig-arg">w1</span>,
-        <span class="summary-sig-arg">w2</span>)</span></td>
+        <span class="summary-sig-arg">w2</span>)</span><br />
+      compute point between p1 and p2 with weight w1 and w2</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfacePoint">source&nbsp;code</a></span>
             
@@ -692,10 +691,10 @@
           <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#estimateVolume" class="summary-sig-name">estimateVolume</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">unitVol</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">hBB</span>=<span class="summary-sig-default">None</span>)</span><br />
-      v: A pointer to the array of vertices // i: A pointer to the array of
-      indices // n: The number of indices (multiple of 3) // This function 
-      uses Gauss's Theorem to calculate the volume of a body // enclosed by
-      a set of triangles.</td>
+      get the volume of the compartment v: A pointer to the array of 
+      vertices // i: A pointer to the array of indices // n: The number of 
+      indices (multiple of 3) // This function uses Gauss's Theorem to 
+      calculate the volume of a body // enclosed by a set of triangles.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.estimateVolume">source&nbsp;code</a></span>
             
@@ -715,7 +714,9 @@
         <span class="summary-sig-arg">histoVol</span>,
         <span class="summary-sig-arg">surfacePoints</span>,
         <span class="summary-sig-arg">insidePoints</span>,
-        <span class="summary-sig-arg">areas</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">areas</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Compute volume of surface and interior set 'nbMol' in each ingredient
+      of both recipes</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.computeVolumeAndSetNbMol">source&nbsp;code</a></span>
             
@@ -733,7 +734,8 @@
         <tr>
           <td><span class="summary-sig"><a name="getFacesNfromV"></a><span class="summary-sig-name">getFacesNfromV</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">vindice</span>,
-        <span class="summary-sig-arg">ext</span>=<span class="summary-sig-default">0</span>)</span></td>
+        <span class="summary-sig-arg">ext</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Retrieve the face normal from the indice of a vertice</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getFacesNfromV">source&nbsp;code</a></span>
             
@@ -750,7 +752,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="getVNfromF"></a><span class="summary-sig-name">getVNfromF</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">i</span>)</span></td>
+        <span class="summary-sig-arg">i</span>)</span><br />
+      Retrieve the vertice normal from the indice of a vertice</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getVNfromF">source&nbsp;code</a></span>
             
@@ -766,11 +769,13 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="create3DPointLookup"></a><span class="summary-sig-name">create3DPointLookup</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#create3DPointLookup" class="summary-sig-name">create3DPointLookup</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">nbGridPoints</span>,
         <span class="summary-sig-arg">gridSpacing</span>,
         <span class="summary-sig-arg">dim</span>,
-        <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Fill the orthogonal bounding box described by two global corners
+ with an array of points spaces pGridSpacing apart.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.create3DPointLookup">source&nbsp;code</a></span>
             
@@ -788,7 +793,8 @@
         <tr>
           <td><span class="summary-sig"><a name="find_nearest"></a><span class="summary-sig-name">find_nearest</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">array</span>,
-        <span class="summary-sig-arg">value</span>)</span></td>
+        <span class="summary-sig-arg">value</span>)</span><br />
+      find nearest point indice of value in array using numpy</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.find_nearest">source&nbsp;code</a></span>
             
@@ -804,11 +810,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPoints_sdf"></a><span class="summary-sig-name">getSurfaceInnerPoints_sdf</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPoints_sdf" class="summary-sig-name">getSurfaceInnerPoints_sdf</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_sdf">source&nbsp;code</a></span>
             
@@ -824,12 +831,13 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPoints_jordan"></a><span class="summary-sig-name">getSurfaceInnerPoints_jordan</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPoints_jordan" class="summary-sig-name">getSurfaceInnerPoints_jordan</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
         <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>,
-        <span class="summary-sig-arg">ray</span>=<span class="summary-sig-default">1</span>)</span></td>
+        <span class="summary-sig-arg">ray</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_jordan">source&nbsp;code</a></span>
             
@@ -845,11 +853,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPoints_sdf_interpolate"></a><span class="summary-sig-name">getSurfaceInnerPoints_sdf_interpolate</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPoints_sdf_interpolate" class="summary-sig-name">getSurfaceInnerPoints_sdf_interpolate</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_sdf_interpolate">source&nbsp;code</a></span>
             
@@ -865,11 +874,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPoints"></a><span class="summary-sig-name">getSurfaceInnerPoints</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPoints" class="summary-sig-name">getSurfaceInnerPoints</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints">source&nbsp;code</a></span>
             
@@ -885,11 +895,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPointsPandaRay"></a><span class="summary-sig-name">getSurfaceInnerPointsPandaRay</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPointsPandaRay" class="summary-sig-name">getSurfaceInnerPointsPandaRay</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPointsPandaRay">source&nbsp;code</a></span>
             
@@ -905,11 +916,12 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getSurfaceInnerPointsPanda"></a><span class="summary-sig-name">getSurfaceInnerPointsPanda</span>(<span class="summary-sig-arg">self</span>,
+          <td><span class="summary-sig"><a href="autopack.Compartment.Compartment-class.html#getSurfaceInnerPointsPanda" class="summary-sig-name">getSurfaceInnerPointsPanda</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">boundingBox</span>,
         <span class="summary-sig-arg">spacing</span>,
         <span class="summary-sig-arg">display</span>=<span class="summary-sig-default">True</span>,
-        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">useFix</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Only compute the inner point.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPointsPanda">source&nbsp;code</a></span>
             
@@ -925,7 +937,8 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="printFillInfo"></a><span class="summary-sig-name">printFillInfo</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="printFillInfo"></a><span class="summary-sig-name">printFillInfo</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      print som info about the compartment and its recipe</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.printFillInfo">source&nbsp;code</a></span>
             
@@ -945,7 +958,8 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="addCompartment"></a><span class="summary-sig-name">addCompartment</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">compartment</span>)</span></td>
+        <span class="summary-sig-arg">compartment</span>)</span><br />
+      get the center of the gradient grid</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Compartment-pysrc.html#CompartmentList.addCompartment">source&nbsp;code</a></span>
             
@@ -1030,6 +1044,65 @@
   </dl>
 </td></tr></table>
 </div>
+<a name="getMesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getMesh</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">rep</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kw</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getMesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the compartment 3d representaton from the given filename</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (string) - the name of the input file</li>
+        <li><strong class="pname"><code>rep</code></strong> (string) - the name of the input file for the representation</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="setMesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setMesh</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vertices</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">faces</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vnormals</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kw</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.setMesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set the 3d mesh from the given filename or the given mesh data 
+  (v,f,n)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (string) - the name of the input file</li>
+        <li><strong class="pname"><code>vertices</code></strong> (array) - mesh vertices or None</li>
+        <li><strong class="pname"><code>faces</code></strong> (array) - mesh faces or None</li>
+        <li><strong class="pname"><code>vnormals</code></strong> (array) - mesh vnormals or None</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
 <a name="estimateVolume"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -1046,14 +1119,188 @@
     </td>
   </tr></table>
   
-  <p>v: A pointer to the array of vertices // i: A pointer to the array of 
-  indices // n: The number of indices (multiple of 3) // This function uses
-  Gauss's Theorem to calculate the volume of a body // enclosed by a set of
-  triangles. The triangle set must form a closed // surface in R3 and be 
-  outward facing. Outward facing triangles index // their vertices in a 
-  counterclockwise order where the x-axis points // left, the y-axis point 
-  up and the z-axis points toward you (rhs). // from 
+  <p>get the volume of the compartment v: A pointer to the array of 
+  vertices // i: A pointer to the array of indices // n: The number of 
+  indices (multiple of 3) // This function uses Gauss's Theorem to 
+  calculate the volume of a body // enclosed by a set of triangles. The 
+  triangle set must form a closed // surface in R3 and be outward facing. 
+  Outward facing triangles index // their vertices in a counterclockwise 
+  order where the x-axis points // left, the y-axis point up and the z-axis
+  points toward you (rhs). // from 
   http://www.gamedev.net/page/resources/_/technical/game-programming/area-and-volume-calculations-r2247</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="create3DPointLookup"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">create3DPointLookup</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">nbGridPoints</span>,
+        <span class="sig-arg">gridSpacing</span>,
+        <span class="sig-arg">dim</span>,
+        <span class="sig-arg">boundingBox</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.create3DPointLookup">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Fill the orthogonal bounding box described by two global corners
+ with an array of points spaces pGridSpacing apart. Duplicate from grid class
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPoints_sdf"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPoints_sdf</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_sdf">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPoints_jordan"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPoints_jordan</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">ray</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_jordan">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPoints_sdf_interpolate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPoints_sdf_interpolate</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints_sdf_interpolate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPoints"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPoints</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPoints">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPointsPandaRay"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPointsPandaRay</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPointsPandaRay">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSurfaceInnerPointsPanda"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSurfaceInnerPointsPanda</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>,
+        <span class="sig-arg">spacing</span>,
+        <span class="sig-arg">display</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">useFix</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Compartment-pysrc.html#Compartment.getSurfaceInnerPointsPanda">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Only compute the inner point. No grid. This is independant from the 
+  packing. Help build ingredient sphere tree and representation</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -1091,7 +1338,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Wed Jun  5 14:41:53 2013
+    on Fri Jun  7 12:04:46 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
