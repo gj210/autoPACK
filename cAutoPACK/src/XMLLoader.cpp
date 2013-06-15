@@ -41,7 +41,7 @@
 #include <pugixml.hpp>
 
 #include "BigGrid.h"
-#include "Sphere.h"
+#include "Ingradient.h"
 
 #include "IngradientsFactory.h"
 
@@ -576,7 +576,7 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
 
     //only cytoplsme for now, should parse, organelle and gradient as well
     //could we use openvdb do compute compute/prepare the gradient?
-    std::vector<sphere> _ingredients;
+    std::vector<Ingradient> _ingredients;
     //need to add organelle as well...organelle ingredient are inside organelle levelSet.
     pugi::xml_node cytoplasme = doc.child("AutoFillSetup").child("cytoplasme");
     //float radius, int mode, float concentration, 
@@ -624,7 +624,7 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
         //can be none
         mesh mesh3d;
         std::vector<mesh> meshs;
-        sphere ingr ;
+        Ingradient ingr ;
         if ((!strmeshFile.empty())&&(!forceSphere)){
             //mesh3d = getMesh(strmeshFile);
             //meshs = getMeshs_assimp(strmeshFile);

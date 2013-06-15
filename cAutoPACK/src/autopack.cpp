@@ -60,7 +60,7 @@ xml parser for collada import, dont forgot the lib in the folder
 #include <pugixml.hpp> 
 
 
-#include "Sphere.h"
+#include "Ingradient.h"
 #include "BigGrid.h"
 #include "XMLLoader.h"
 
@@ -222,7 +222,7 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
     return openvdb::Coord(i_ijk[0],i_ijk[1],i_ijk[2]);   
 }
 
-void printIngredientGrid(sphere ingr){
+void printIngredientGrid(Ingradient ingr){
     std::cout << "iname = \"" << ingr.name << "\"\n"; 
     std::cout << "inside=[]\n";
     int counter=0;
@@ -321,7 +321,7 @@ void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<
 {
     std::cout << "pts=[" << std::endl;
     openvdb::Vec3f pos;
-    sphere * ingr;
+    Ingradient * ingr;
     for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
         ingr = g.results[i];
         openvdb::math::Transform::Ptr targetXform =
@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
                 std::cout << "#broken by vRange and hence Done!!!****\n";
                 break;
         }
-        sphere* ingr = grid.pickIngredient();
+        Ingradient* ingr = grid.pickIngredient();
         //sphere ingr= g.sample_ingredient();//sampl using distance information as well ?        
         if (!ingr->isActive()) {
             std::cout << "#ingredient not active, complete >= 1.0 \n";

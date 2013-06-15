@@ -37,12 +37,9 @@
 #pragma once
 #include "Types.h"
 #include <vector>
-/* 
-a SingleSphere ingredient with the radius and the packing mode
-Need to  be rename to Ingredient
-Should it bea class instead of a struct ?
-*/
-class sphere {
+
+
+class Ingradient {
 public:
     float radius;
     std::vector<float> radii;

@@ -41,7 +41,7 @@
 #include <vector>
 #include <random>
 
-#include "Sphere.h"
+#include "Ingradient.h"
 
 
 /* the main class that handle the packing
@@ -57,10 +57,10 @@ struct big_grid {
     // needs 8*n bytes 
     //Lot of theses parameteres are deprecated and not used.
     //original wrote in hw.cc file
-    std::vector<sphere> ingredients;//the list of sphere ingredient to pack
-    std::vector<sphere*> activeIngr;
-    std::vector<sphere*> activeIngr0;
-    std::vector<sphere*> activeIngr12;
+    std::vector<Ingradient> ingredients;//the list of sphere ingredient to pack
+    std::vector<Ingradient*> activeIngr;
+    std::vector<Ingradient*> activeIngr0;
+    std::vector<Ingradient*> activeIngr12;
     std::vector<float> normalizedPriorities0;
     std::vector<float> normalizedPriorities;
     std::vector<float> thresholdPriorities; 
@@ -84,7 +84,7 @@ struct big_grid {
     openvdb::Coord dim;
     //openvdb::FloatGrid::Accessor accessor_distance;
     std::vector<openvdb::Coord> visited_rejected_coord;
-    std::map<int, sphere*> results; 
+    std::map<int, Ingradient*> results; 
 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
     big_grid(float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
@@ -93,7 +93,7 @@ struct big_grid {
 
     openvdb::FloatGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
 
-    void setIngredients(std::vector<sphere> const & _ingredients);
+    void setIngredients(std::vector<Ingradient> const & _ingredients);
     
     void getSortedActiveIngredients();
 
@@ -101,23 +101,23 @@ struct big_grid {
 
     void updatePriorities();
 
-    void dropIngredient(sphere *ingr);
+    void dropIngredient(Ingradient *ingr);
 
-    sphere* pickIngredient();
+    Ingradient* pickIngredient();
   
-    int getPointToDrop_i(sphere ingr, float radius,float jitter);
+    int getPointToDrop_i(Ingradient ingr, float radius,float jitter);
     
-    openvdb::Coord getPointToDropCoord(sphere* ingr, float radius,float jitter,int *emptyList);
+    openvdb::Coord getPointToDropCoord(Ingradient* ingr, float radius,float jitter,int *emptyList);
 
-    bool try_drop(unsigned pid,sphere *ingr);
+    bool try_drop(unsigned pid,Ingradient *ingr);
 
-    bool try_dropCoord(openvdb::Coord cijk,sphere *ingr);
+    bool try_dropCoord(openvdb::Coord cijk,Ingradient *ingr);
 
     void set_filled(unsigned i);
 
     bool is_empty(unsigned i) const;
 
-    bool checkSphCollisions(point pos,openvdb::math::Mat4d rotMatj, float radii, sphere* sp);
+    bool checkSphCollisions(point pos,openvdb::math::Mat4d rotMatj, float radii, Ingradient* sp);
     
     int calculateTotalNumberMols();
 

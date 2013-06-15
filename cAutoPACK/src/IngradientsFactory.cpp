@@ -38,10 +38,10 @@
 
 
 //helper to create an ingredient given a 3d mesh triangles or quads
-sphere makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
                                  float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                  unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d){
-    sphere sp;
+    Ingradient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
@@ -108,10 +108,10 @@ sphere makeMeshIngredient(std::vector<float> radii, int mode, float concentratio
 }
 
 //helper to create an ingredient given a different 3d mesh triangles or quads
-sphere makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
                                    float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                    unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs){
-    sphere sp;
+    Ingradient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
@@ -183,10 +183,10 @@ sphere makeMeshesIngredient(std::vector<float> radii, int mode, float concentrat
 
 
 //helper to create a singleSphere ingredient given a radius, and some options
-sphere makeSphere(float radius, int mode, float concentration, 
+Ingradient makeSphere(float radius, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax){
-    sphere sp;
+    Ingradient sp;
     sp.radius = radius;
     sp.molarity=concentration;
     sp.mode = mode;
@@ -238,10 +238,10 @@ sphere makeSphere(float radius, int mode, float concentration,
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
-sphere makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions){
-    sphere sp;
+    Ingradient sp;
     sp.radii = radii;
     sp.positions = positions;
     sp.radius = radii[0];

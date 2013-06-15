@@ -45,7 +45,7 @@ namespace {
 //The value returned indicates whether the element passed as first argument 
 //is considered to go before the second in the specific strict weak ordering it defines.
 //can weuse template here ? so ca accept any ingredient type..
-bool ingredient_compare1(sphere* x, sphere* y){
+bool ingredient_compare1(Ingradient* x, Ingradient* y){
     /*
     """
     sort ingredients using decreasing priority and decreasing radii for
@@ -76,7 +76,7 @@ bool ingredient_compare1(sphere* x, sphere* y){
        return false;
 }
 
-bool ingredient_compare0(sphere* x, sphere* y){
+bool ingredient_compare0(Ingradient* x, Ingradient* y){
     /*
     """
     sort ingredients using decreasing priority and decreasing radii for
@@ -107,7 +107,7 @@ bool ingredient_compare0(sphere* x, sphere* y){
        return false;
 }
 
-bool ingredient_compare2(sphere* x, sphere* y){
+bool ingredient_compare2(Ingradient* x, Ingradient* y){
     /*
     """
     sort ingredients using decreasing radii and decresing completion
@@ -236,7 +236,7 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
     return distance_grid;
 }
 
-void big_grid::setIngredients( std::vector<sphere> const & _ingredients )
+void big_grid::setIngredients( std::vector<Ingradient> const & _ingredients )
 {
     //set the ingredients list to pack in the grid
     //retrieve the biggest one
@@ -254,14 +254,14 @@ void big_grid::setIngredients( std::vector<sphere> const & _ingredients )
 void big_grid::getSortedActiveIngredients()
 {
     //pirorities120 is ot used ??
-    std::vector<sphere*> ingr1;  // given priorities pass ptr ?
+    std::vector<Ingradient*> ingr1;  // given priorities pass ptr ?
     std::vector<float> priorities1;
-    std::vector<sphere*> ingr2;  // priority = 0 or none and will be assigned based on complexity
+    std::vector<Ingradient*> ingr2;  // priority = 0 or none and will be assigned based on complexity
     std::vector<float> priorities2;
-    std::vector<sphere*> ingr0;  // negative values will pack first in order of abs[packingPriority]
+    std::vector<Ingradient*> ingr0;  // negative values will pack first in order of abs[packingPriority]
     std::vector<float> priorities0;
-    sphere* lowestIng; 
-    sphere* ing; 
+    Ingradient* lowestIng; 
+    Ingradient* ing; 
     float r=0.0;
     float np=0.0;      
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
@@ -336,7 +336,7 @@ void big_grid::updatePriorities()
 
 }
 
-void big_grid::dropIngredient( sphere *ingr )
+void big_grid::dropIngredient( Ingradient *ingr )
 {
     std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
     
@@ -345,9 +345,9 @@ void big_grid::dropIngredient( sphere *ingr )
     updatePriorities();
 }
 
-sphere* big_grid::pickIngredient()
+Ingradient* big_grid::pickIngredient()
 {
-    sphere* ingr;
+    Ingradient* ingr;
     //float prob;
     //std::default_random_engine generator (seed);
     //std::default_random_engine generator(seed);
@@ -387,7 +387,7 @@ sphere* big_grid::pickIngredient()
     return ingr;
 }
 
-openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float jitter,int *emptyList )
+openvdb::Coord big_grid::getPointToDropCoord( Ingradient* ingr, float radius,float jitter,int *emptyList )
 {
     float cut = radius-jitter;//why - jitter ?
     float d;
@@ -507,7 +507,7 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
     return cijk;
 }
 
-bool big_grid::try_drop( unsigned pid,sphere *ingr )
+bool big_grid::try_drop( unsigned pid,Ingradient *ingr )
 {
     //main function that decide to drop an ingredient or not
     //std::cout  <<"test_data "<< ingr.name << ' ' << pid << std::endl;        
@@ -520,7 +520,7 @@ bool big_grid::try_drop( unsigned pid,sphere *ingr )
     return try_dropCoord(cijk,ingr);
 }
 
-bool big_grid::try_dropCoord( openvdb::Coord cijk,sphere *ingr )
+bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingradient *ingr )
 {
     float rad = ingr->radius;        
     openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor(); 
@@ -747,7 +747,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,sphere *ingr )
 }
 
 
-bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, sphere* sp )
+bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, Ingradient* sp )
 {
     openvdb::math::Vec3f offset(pos.x,pos.y,pos.z);//where the sphere should be.
     openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
@@ -823,7 +823,7 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
             thresholdPriorities.resize(activeIngr0.size(), 2.0);   
 
     float totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0, 
-        [](float accumulator , sphere* ingr) { return accumulator + ingr->packingPriority; });
+        [](float accumulator , Ingradient* ingr) { return accumulator + ingr->packingPriority; });
     std::cout << "#totalPriorities " << totalPriorities << std::endl;
     
     if (totalPriorities == 0)
@@ -834,7 +834,7 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
     else
     {
         float previousThresh = 0;                
-        for(sphere * ingr : activeIngr12) {
+        for(Ingradient * ingr : activeIngr12) {
             const float np = ingr->packingPriority/totalPriorities;            
             if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< ingr->packingPriority << " tp is " << np + previousThresh << std::endl;
 
@@ -861,7 +861,7 @@ int big_grid::calculateTotalNumberMols()
     }else {                
         for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
             float threshProb = thresholdPriorities[i];
-            sphere* ing = activeIngr[nls];
+            Ingradient* ing = activeIngr[nls];
             std::cout << "#nmol Fill5else is for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
             totalNumMols += ing->nbMol;
             nls++;

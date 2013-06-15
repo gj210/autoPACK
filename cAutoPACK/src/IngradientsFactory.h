@@ -37,26 +37,26 @@
 #pragma once
 
 #include "Types.h"
-#include "Sphere.h"
+#include "Ingradient.h"
 
 //helper to create an ingredient given a 3d mesh triangles or quads
-sphere makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
                                  float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                  unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d);
 
 //helper to create an ingredient given a different 3d mesh triangles or quads
-sphere makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
                                    float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                    unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs);
 
 
 //helper to create a singleSphere ingredient given a radius, and some options
-sphere makeSphere(float radius, int mode, float concentration, 
+Ingradient makeSphere(float radius, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax);
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
-sphere makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
+Ingradient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions);

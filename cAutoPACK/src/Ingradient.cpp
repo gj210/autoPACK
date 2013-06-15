@@ -34,9 +34,9 @@
 @author: Graham Johnson, Ludovic Autin, & Michel Sanner
 */
 
-#include "Sphere.h"
+#include "Ingradient.h"
 
-void sphere::setCount(float volume) {
+void Ingradient::setCount(float volume) {
     double nbr = this->molarity * volume * .000602;// #Mod by Graham 8/18/11
     int nbi = (int) nbr; //ceil, floor ?              #Mod by Graham 8/18/11
     double nbmod;    
