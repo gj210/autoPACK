@@ -399,7 +399,7 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
     std::vector<openvdb::Coord> allIngrPts;
     std::vector<float> allIngrDist;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
-    bool found = true;      
+    bool notfound = true;      
     //only onValue or all value ? 
     /*
     It might surprise you that the Grid class doesn't directly provide access to 
@@ -431,10 +431,8 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
                             openvdb::Coord nijk(i,j,k);
                             allIngrPts.push_back(nijk);
                             if (d < mini_d){
-                                //TODO: This is O(n) complexity search.
-                                if (!visited_rejected_coord.empty())
-                                    found =  std::binary_search (visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk);
-                                if (!found) {
+                                if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end());
+                                if (notfound) {
                                     // not found
                                     mini_d = d;
                                     mini_cijk = openvdb::Coord( nijk.asVec3i() );
@@ -451,9 +449,8 @@ openvdb::Coord big_grid::getPointToDropCoord( sphere* ingr, float radius,float j
                 if (d < mini_d){
                     //if the point alread visisted and rejected 
                     //should be for this ingredient only
-                    if (!visited_rejected_coord.empty()) 
-                        found =  std::binary_search (visited_rejected_coord.begin(), visited_rejected_coord.end(), cc);
-                    if (!found) {
+                    if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
+                    if (notfound) {
                         // not found
                         mini_d = d;
                         mini_cijk = openvdb::Coord( cc.asVec3i() );
