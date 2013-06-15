@@ -425,6 +425,7 @@ void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<
 //main loop is here
 int main(int argc, char* argv[])
 {   
+    clock_t beginRun = clock();
     const unsigned int seed = atoi(argv[2]);             //random seed
     forceSphere = atoi(argv[3])>0;          //force using sphere level set instead of mesh level set
     std::string filename = argv[1];         //xml setuo file
@@ -535,7 +536,10 @@ int main(int argc, char* argv[])
     std::cout << "#distance_grid->activeVoxelCount() " << grid.num_empty << " " <<grid.distance_grid->activeVoxelCount()<<std::endl;
     std::cout << "#main loop " << grid.rtrans.size() << " on " << totalNumMols << std::endl;
 
+    clock_t endRun = clock();
+    std::cout << "#Running time: " << std::fixed << double(endRun-beginRun)/(60*1000) << std::defaultfloat << std::endl;
     generatePythonScript(grid, radiis, colors, ds_grid, ds_ingrgrid);
+
 
     //stdout the grid
 }
