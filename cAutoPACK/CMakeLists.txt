@@ -63,7 +63,7 @@ find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
 FILE(GLOB AUTOPACK_TESTS_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
-	add_executable(UnitTests  ${AUTOPACK_TESTS_FILES})
+	add_executable(UnitTests  src/BigGrid.cpp src/Ingradient.cpp ${AUTOPACK_TESTS_FILES})
 	target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
 	enable_testing()
