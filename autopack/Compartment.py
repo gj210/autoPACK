@@ -940,6 +940,7 @@ class  Compartment(CompartmentList):
                 inside = True
                 if inside :
                     insidePoints.append(ptInd)
+                    idarray[ptInd] = -number
             p=(ptInd/float(len(grdPos)))*100.0
             helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
         print('time to update distance field and idarray', time()-t1)

@@ -288,6 +288,7 @@ class Gradient:
                                "linear":self.getLinearWeighted,
                                "binary":self.getBinaryWeighted,
                                "sub":self.getSubWeighted,
+                               "reg":self.getForwWeight,
                                }    
         self.liste_weigth_mode = self.pick_functions.keys()
         self.liste_options = ["mode","weight_mode","pick_mode","direction","radius"]
@@ -295,7 +296,7 @@ class Gradient:
                     "mode":{"name":"mode","values":self.liste_mode,"default":"X",
                                            "type":"liste","description":"gradient direction",
                                            "min":0,"max":0},
-                    "weight_mode":{"name":"weight_mode","values":["linear","gauss"],"default":"linear","type":"liste",
+                    "weight_mode":{"name":"weight_mode","values":["linear","square","cube","gauss","half-gauss"],"default":"linear","type":"liste",
                                            "description":"calcul of the weight method","min":0,"max":0},
                     "pick_mode":{"name":"weight_mode","values":self.liste_weigth_mode,"default":"linear","type":"liste",
                                            "description":"picking random weighted method","min":0,"max":0},
@@ -413,19 +414,32 @@ class Gradient:
         xl,yl,zl = bb[0]
         xr,yr,zr = bb[1]
 
-        if self.weight_mode == "gauss" :
+        if self.weight_mode == "gauss" :#0-1-0
             d = self.get_gauss_weights(NW)#numpy.random.normal(0.5, 0.1, NW) #one dimension 
+        elif self.weight_mode == "half-gauss" :#0-1
+            d = self.get_gauss_weights(NW*2)[NW:]
         print (self.name,self.radius)
         for ptid in range(N) :
             dist=vdistance(MasterPosition[ptid],radial_point)
             if self.weight_mode == "linear" :
                 w = (1.0-(abs(dist)/self.radius)) if abs(dist) < self.radius else 0.0
                 self.weight.append( w )#
+            elif self.weight_mode == "square" :
+                w = math.pow((1.0-(abs(dist)/self.radius)),2) if abs(dist) < self.radius else 0.0  
+                self.weight.append( w )#
+            elif self.weight_mode == "cube" :
+                w = math.pow((1.0-(abs(dist)/self.radius)),3) if abs(dist) < self.radius else 0.0  
+                self.weight.append( w )#
             elif self.weight_mode == "gauss" :
                 w = abs(dist)/self.radius if abs(dist) < self.radius else 1.0
                 i = int(w*N/3) if int(w*N/3) < len(d) else len(d)-1
-#                print i,vax,(vax*N/3),int(vax*N/3),len(d)
                 self.weight.append( d[i] )
+            elif self.weight_mode == "half-gauss":
+                w = abs(dist)/self.radius if abs(dist) < self.radius else 1.0
+#                w = (1.0-(abs(dist)/self.radius)) if abs(dist) < self.radius else 0.0
+                i = int(w*N/3) if int(w*N/3) < len(d) else len(d)-1
+                self.weight.append( d[i] )
+                
        
     def buildWeigthMapDirection(self,bb,MasterPosition):
         """
@@ -441,18 +455,24 @@ class Gradient:
         L,maxinmini = self.getDirectionLength(bb)
         if self.weight_mode == "gauss" :
             d = self.get_gauss_weights(NW)#numpy.random.normal(0.5, 0.1, NW) #one dimension 
+        elif self.weight_mode == "half-gauss" :#0-1
+            d = self.get_gauss_weights(NW*2)[NW:]
         for ptid in range(N) :
             pt = numpy.array(MasterPosition[ptid])-numpy.array(center)#[maxinmini[0][0],maxinmini[1][0],maxinmini[2][0]])
             vdot = numpy.dot(pt,numpy.array(axe))
             p = ((L/2.0)+vdot)/L
             if self.weight_mode == "linear" :
                 self.weight.append( p )#-0.5->0.5 axe value normalized?
+            elif self.weight_mode == "square" :
+                self.weight.append( math.pow(p,2) )#
+            elif self.weight_mode == "cube" :
+                self.weight.append( math.pow(p,3) )#
             elif self.weight_mode == "gauss" :
 #                p goes from 0.0 to 1.0
-#                if p < 0.1 : p = 0.0
-#                i = int(p*NW) if int(p*NW) < len(d) else len(d)-1
-#                w = d[i] if d[i] > 0.9 else 0.0
-                self.weight.append(1.0)# d[i] )
+                if p < 0.1 : p = 0.0
+                i = int(p*NW) if int(p*NW) < len(d) else len(d)-1
+                #w = d[i] if d[i] > 0.9 else 0.0
+                self.weight.append( d[i] )
 
     def buildWeigthMapAxe(self,bb,MasterPosition,Axe="X"):
         """
@@ -469,12 +489,24 @@ class Gradient:
         self.weight =[]
         if self.weight_mode == "gauss" :
             d = self.get_gauss_weights(N/3)#d = numpy.random.normal(0.5, 0.1, N/3) #one dimension 
+        elif self.weight_mode == "half-gauss" :#0-1
+            d = self.get_gauss_weights(NW*2)[NW:]
         for ptid in range(N) :
+            p=(MasterPosition[ptid][ind]-mini)/(maxi-mini)
             if self.weight_mode == "linear" :
-                self.weight.append( (MasterPosition[ptid][ind]-mini)/(maxi-mini) )#-0.5->0.5 axe value normalized?
+                self.weight.append( p )#-0.5->0.5 axe value normalized?
+            elif self.weight_mode == "square" :
+                self.weight.append( math.pow(p,2) )#
+            elif self.weight_mode == "cube" :
+                self.weight.append( math.pow(p,3) )#
             elif self.weight_mode == "gauss" :
-                vax=(MasterPosition[ptid][ind]-mini)/(maxi-mini) #0-1 on the axes
+                vax=p#(MasterPosition[ptid][ind]-mini)/(maxi-mini) #0-1 on the axes
                 i = int(vax*N/3) if int(vax*N/3) < len(d) else len(d)-1
+                self.weight.append( d[i] )
+            elif self.weight_mode == "half-gauss":
+                #w = abs(dist)/self.radius if abs(dist) < self.radius else 1.0
+#                w = (1.0-(abs(dist)/self.radius)) if abs(dist) < self.radius else 0.0
+                i = int(p*N/3) if int(p*N/3) < len(d) else len(d)-1
                 self.weight.append( d[i] )
                 
     def getMaxWeight(self,listPts):
@@ -499,7 +531,7 @@ class Gradient:
         ptInd = listPts[0]
         m=1.1         
         for pi in  listPts :
-            if self.weight[pi] < m :
+            if self.weight[pi] < m and self.weight[pi] != 0:
                 m=self.weight[pi]
                 ptInd = pi
         if self.weight[ptInd] < self.weight_threshold:
@@ -561,6 +593,13 @@ class Gradient:
         rnd = random() * running_total
         i = bisect.bisect_right(totals, rnd)
         return listPts[i]
+
+    def getForwWeight(self,listPts):
+        dice = random()
+        #sorted ?
+        for i in listPts :
+            if self.weight[i] > dice and self.weight[i] != 0 :
+                return i
 
     def getSubWeighted(self,listPts):
         """
@@ -1075,7 +1114,7 @@ class Environment(CompartmentList):
             #setup recipe
             self.setExteriorRecipe(rCyto)
             
-        onodes = root.getElementsByTagName("organelle")#Change to Compartment
+        onodes = root.getElementsByTagName("compartment")#Change to Compartment
         from autopack.Compartment import Compartment
         for onode in onodes:
             name = str(onode.getAttribute("name"))
@@ -2522,7 +2561,7 @@ h1 = Environment()
         random, based on closest distance, based on gradients, ordered.
         This function also update the available free point except when hack is on.
         """
-        verbose = False
+        verbose = True
         if ingr.packingMode=='close':
             t1 = time()
             allIngrPts = []
@@ -2569,9 +2608,9 @@ h1 = Environment()
 #                        print("in i range of update loop")
                         pt = freePoints[i]
                         d = distance[pt]
+#                        print("in update for/if")
+#                        print pt,compId[pt], d,cut,compNum,(compId[pt]==compNum and d>=cut)
                         if compId[pt]==compNum and d>=cut:
-#                            print("in update for/if")
-#                            print pt,compId[pt], d,cut,compNum
                             allIngrPts.append(pt)
                     #allIngrDist.append(d)
                     ingr.allIngrPts = allIngrPts
@@ -2591,11 +2630,9 @@ h1 = Environment()
 #        print(("time to filter ",nbFreePoints," using lambda ", time()-t1))
         # no point left capable of accomodating this ingredient
 #        print("allIngrPts = ", allIngrPts)
-#        print("len (allIngrPts) = ", len(allIngrPts))
+        print("len (allIngrPts) = ", len(allIngrPts))
         if len(allIngrPts)==0:
             t=time()
-#            print('No point left for ingredient %s %f minRad %.2f jitter %.3f in component %d'%(
-#                ingr.name, ingr.molarity, radius, jitter, compNum))
             ingr.completion = 1.0
             ind = self.activeIngr.index(ingr)
             #if ind == 0:
@@ -2609,6 +2646,8 @@ h1 = Environment()
             #this function also depend on the ingr.completiion that can be restored ?
             self.activeIngr0, self.activeIngr12 = self.callFunction(self.getSortedActiveIngredients, (self.activeIngr,False))
             if verbose:
+                print('No point left for ingredient %s %f minRad %.2f jitter %.3f in component %d'%(
+                ingr.name, ingr.molarity, radius, jitter, compNum))
                 print ('len(allIngredients', len(self.activeIngr))
                 print ('len(self.activeIngr0)', len(self.activeIngr0))
                 print ('len(self.activeIngr12)', len(self.activeIngr12))
@@ -2731,7 +2770,7 @@ h1 = Environment()
 #                pass
 #        return nbFreePoints
     
-    def fill5(self, seedNum=14, stepByStep=False, verbose=False, sphGeom=None,
+    def fill5(self, seedNum=14, stepByStep=False, verbose=5, sphGeom=None,
               labDistGeom=None, debugFunc=None,name = None, vTestid = 3,vAnalysis = 0,**kw):
         """
         the latest packing loop 
@@ -2917,7 +2956,7 @@ h1 = Environment()
             dpad = ingr.minRadius + mr + jitter
 
             if verbose > 2:
-                print('picked Ingr radius compNum dpad',ingr.name,radius,compNum,dpad)
+                print('picked Ingr radius compNum dpad',ingr.name,radius,jitter,compNum,dpad)
             
             ## find the points that can be used for this ingredients
             ##
@@ -2933,7 +2972,8 @@ h1 = Environment()
             else :
                 vRangeStart = res[1]
                 continue
-#            print ("picked ",ptInd)
+            if verbose > 2:
+                print ("picked ",ptInd)
             #place the ingrediant
             if self.overwritePlaceMethod :
                 ingr.placeType = self.placeMethod
@@ -2941,7 +2981,8 @@ h1 = Environment()
                                 freePoints, nbFreePoints, distance, dpad,
                                 stepByStep, verbose),
                                 {"debugFunc":debugFunc})
-#            print("nbFreePoints after PLACE ",nbFreePoints)
+            if verbose > 2:
+                print("nbFreePoints after PLACE ",nbFreePoints)
             if success:
                 PlacedMols+=1
 #                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.

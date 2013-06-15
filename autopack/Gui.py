@@ -566,7 +566,9 @@ class SubdialogCustomFiller(uiadaptor):
             orga = self.afviewer.addCompartmentFromGeom(name,ob)
             self.histoVol.addCompartment(orga)
             self.rSurf[name] = Recipe()
+            orga.setSurfaceRecipe(self.rSurf[orga.name])
             self.rMatrix[name] = Recipe()
+            orga.setInnerRecipe(self.rMatrix[orga.name])
             self.afviewer.createTemplateCompartment(name)            
 
     def SetupFill (self, *args, **kw):
@@ -692,7 +694,19 @@ class AnalysisTab:
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
         #if volume rendering support could display a volume for distance array
+        self.getGradientWidget()
         return self.widget
+
+    def getGradientWidget(self,):
+        v = list(self.afgui.histoVol.gradients.keys())
+        self.widget["gradients"] = self.afgui._addElemt(name="gradients",value=v,
+                                    width=120,height=10,action=None,
+                                    variable=self.afgui.addVariable("int",0),
+                                    type="pullMenu")
+        self.widget["btn_ds_gradient"]=self.afgui._addElemt(name="ds_gradient",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.displayGradient,label="Display the selected gradient",
+                                     variable=self.afgui.addVariable("int",0))                             
         
     def getLayout(self,):
         elemframe = []
@@ -702,6 +716,7 @@ class AnalysisTab:
         elemframe.append([self.widget["colordist"], self.widget["btn_color_dist"],])
         elemframe.append([self.widget["savedist"], self.widget["btn_save_dist"],])
         elemframe.append([self.widget["saveclosestdist"], self.widget["btn_save_closest_dist"],])
+        elemframe.append([self.widget["gradients"], self.widget["btn_ds_gradient"],])        
         return elemframe
 
     def colordist(self,):
@@ -713,6 +728,13 @@ class AnalysisTab:
         self.afgui.afviewer.color(mode="distance",target=target,
                                   useMaterial=True,
                                   usePoint=self.afgui.getVal(self.widget["usePoint"]))
+
+    def displayGradient(self,):
+        """
+        Display the given gradient as sphere at each grid position with radius = weight        
+        """
+        gname = self.afgui.getVal(self.widget["gradients"])
+        self.afgui.afviewer.displayGradient(self.afgui.histoVol.gradients[gname],self.afgui.histoVol.grid.masterGridPositions)
     
     def savedist(self,):
         p=[0,0,0]

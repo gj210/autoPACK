@@ -55,7 +55,7 @@ class Recipe:
         
         self.ingredients = []
         self.activeIngredients = []
-        self.compartment = None 
+        self.compartment = None #the weeek ref ?
         # will be set when recipe is added to compartment
         self.exclude = []
         self.number=0

@@ -39,7 +39,7 @@ import math
 
 from time import time
      
-from upy import colors as c
+from upy import colors as col
 
 #===============================================================================
 # to do :
@@ -2175,3 +2175,12 @@ class AutopackViewer:
 #                print self.helper.getName(io)
             self.displaysubnode(subnode,i)
             i+=1                        
+
+    def displayGradient(self,gradient,positions):
+        """
+        Display the given gradient as sphere at each grid position with radius = weight
+        """
+        parent = self.vi.newEmpty("gradient")
+        self.vi.instancesSphere("gradientSphere",positions,numpy.array(gradient.weight)*100.0,
+                                    self.pesph,[[1,0,0]],self.sc,parent=parent)
+        

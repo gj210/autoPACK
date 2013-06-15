@@ -379,25 +379,7 @@ class Partner:
         else :
             val= self.weight*1/d
         return val
-
-class IngredientInstanceDrop:
-    def __init__(self, ptId, position, rotation, ingredient,rb=None):
-        self.ptId = ptId
-        self.position = position
-        self.rotation = rotation
-        self.ingredient = ingredient
-        self.rigid_body = rb
-        self.name = ingredient.name+str(ptId)
-        x,y,z=position
-        rad = ingredient.encapsulatingRadius
-        self.bb=( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
-        #maybe get bb from mesh if any ?
-        if self.ingredient.mesh is not None :
-            self.bb = AutoFill.helper.getBoundingBox(self.ingredient.mesh)
-            for i in range(3):
-                self.bb[0][i]=self.bb[0][i]+self.position[i]
-                self.bb[1][i]=self.bb[1][i]+self.position[i]
-                
+        
 class Agent:
     def __init__(self, name, concentration, packingMode='close', 
                  placeType="jitter", **kw):
@@ -1003,10 +985,10 @@ class Ingredient(Agent):
                     #m = geom.GetNodeTM()
                     #m.PreRotateY(-math.pi/2.0)
                     #geom.SetNodeTM(m)
-                if helper.host != "c4d" and self.coordsystem == "left" and helper.host != "softimage":
+                if helper.host != "c4d" and self.coordsystem == "left":
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.,-math.pi/2.0,0.0])
-                if helper.host =="softimage" and self.coordsystem == "left" :
+                if helper.host =="softimage" and self.coordsystem == "left" and helper.host != "softimage":
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0],primitive=True)#need to rotate the primitive                    
 #                if helper.host == "c4d" and self.coordsystem == "left":
 #
@@ -1629,7 +1611,7 @@ class Ingredient(Agent):
         """
         Check spheres for collision
         """
-        #wouldnt be faster to do sphere-sphere distance test ? than points/points from the grid
+
         self.centT = centT = self.transformPoints(jtrans, rotMat, centers)#this should be jtrans
 #        print "sphCollision",centT,radii
         sphNum = 0
@@ -1687,7 +1669,7 @@ class Ingredient(Agent):
                 pt = pointsInCube[pti]
                 dist = distA[pti]
                 d = dist-radc
-                #print dist,d,radc,distance[pt]
+                print dist,d,radc,distance[pt]
 #                if dist < radc:  # point is inside dropped sphere
 #                if self.compareCompartment:
 #                    if not self.isInGoodComp(pt):
@@ -2045,8 +2027,7 @@ class Ingredient(Agent):
             insidePoints,newDistPoints = self.getDistancesCube(jtrans, rotMatj,gridPointsCoords, distance, grid)
         return insidePoints,newDistPoints
 
-    def getNeighboursInBox(self,histoVol,jtrans,rotMat,organelle,afvi,rb=False):
-        #should use an octree here to get the list of neighboors faster.
+    def getNeighboursInBox(self,histoVol,jtrans,rotMat,compartment,afvi,rb=False):
         if histoVol.windowsSize_overwrite :
             rad = histoVol.windowsSize
         else :
@@ -2201,6 +2182,7 @@ class Ingredient(Agent):
         success = False
         #print self.placeType
         self.vi = None
+        
         if hasattr(histoVol,"afviewer") and histoVol.afviewer is not None:
             self.vi = histoVol.afviewer.vi
         self.histoVol=histoVol        
@@ -2211,11 +2193,6 @@ class Ingredient(Agent):
               sphCenters=None,  sphRadii=None, sphColors=None)
         elif self.placeType == "spring" or self.placeType == "rigid-body":
             success, nbFreePoints = self.rigid_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
-              sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
-        elif self.placeType == "pandaDev":
-            success, nbFreePoints = self.pandaBullet_place_dev(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None)
@@ -2899,456 +2876,7 @@ class Ingredient(Agent):
         """
         drop the ingredient on grid point ptInd
         """
-        histoVol.setupPanda()
-        afvi = histoVol.afviewer
-        rejectionCount = 0
-        spacing = histoVol.smallestProteinSize
-        jx, jy, jz = self.jitterMax
-        jitter = histoVol.callFunction(self.getMaxJitter,(spacing,))
-        jitter2 = jitter * jitter
-        
-        if self.compNum == 0 :
-            organelle = histoVol
-        else :
-            organelle = histoVol.organelles[abs(self.compNum)-1]
-        compNum = self.compNum
-        radius = self.minRadius
-        runTimeDisplay = histoVol.runTimeDisplay
-        
-        gridPointsCoords = histoVol.masterGridPositions
-
-        # compute rotation matrix rotMat
-        if compNum>0 :
-            # for surface points we compute the rotation which
-            # aligns the principalVector with the surface normal
-            vx, vy, vz = v1 = self.principalVector
-            v2 = organelle.surfacePointsNormals[ptInd]#1000 and it is a dictionary ?
-            try :
-                rotMat = numpy.array( rotVectToVect(v1, v2 ), 'f')
-            except :
-                print('PROBLEM ', self.name)
-                rotMat = numpy.identity(4)
-        else:
-            if self.useRotAxis :
-#                angle = random()*6.2831#math.radians(random()*360.)#random()*pi*2.
-#                print "angle",angle,math.degrees(angle)
-#                direction = self.rotAxis
-                if sum(self.rotAxis) == 0.0 :
-                    rotMat=numpy.identity(4)
-                else :
-                    rotMat=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
-            # for other points we get a random rotation
-            else :
-                rotMat=histoVol.randomRot.get()
-
-#        if verbose :
-#            pass#print('%s nbs:%2d'%(self.pdb, len(self.positions[0])), end=' ')
-
-        # jitter position loop
-        jitterList = []
-        collD1 = []
-        collD2 = []
-
-        trans = gridPointsCoords[ptInd] # drop point, surface points.
-        targetPoint = trans
-        moving = None
-        if runTimeDisplay and self.mesh:
-            if hasattr(self,"mesh_3d"):
-                #create an instance of mesh3d and place it
-                name = self.name + str(ptInd)
-                moving = afvi.vi.getObject(name)
-                if moving is None :
-                    if self.mesh_3d is None :
-                        moving = afvi.vi.Sphere(name,radius=self.radii[0][0],
-                                                        parent=afvi.staticMesh)[0]
-                        afvi.vi.setTranslation(moving,pos=targetPoint)
-                    else :
-                        moving=  afvi.vi.newInstance(name,self.mesh_3d,#.GetDown(),
-                                                    matrice=rotMat,
-                                                    location=targetPoint, parent = afvi.staticMesh)
-                else :   
-                    #afvi.vi.setTranslation(moving,pos=targetPoint)#rot?
-                    mat = rotMat.copy()
-                    mat[:3, 3] = targetPoint
-                    afvi.vi.setObjectMatrix(moving,mat,transpose=True)
-#                afvi.vi.update()  #Graham Killed this unneccesarry redraw
-#            print ('Must check for collision here before accepting final position')
-        #do we get the list of neighbours first > and give a different trans...closer to the partner
-        #we should look up for an available ptID around the picked partner if any
-        #getListPartner
-        if histoVol.ingrLookForNeighbours:
-            mingrs,listePartner=self.getListePartners(histoVol,trans,rotMat,organelle,afvi)
-            #if liste:pickPartner
-            if listePartner : #self.packingMode=="closePartner":
-#                print "ok partner",len(listePartner)
-                if not self.force_random:
-                    targetPoint,weight = self.pickPartner(mingrs,listePartner,currentPos=trans)
-                    if targetPoint is None :
-                        targetPoint = trans
-                    else :#maybe get the ptid that can have it
-                        #find a newpoint here?
-                        x,y,z = targetPoint
-                        rad = self.radii[0][0]*2.
-                        bb = ( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
-                        pointsInCube = histoVol.getPointsInCube(bb, targetPoint,rad )
-                        #is one of this point can receive the current ingredient
-                        cut  = rad-jitter
-                        for pt in pointsInCube:
-                            d = distance[pt]
-                            if d>=cut:
-                                #lets just take the first one
-                                targetPoint = gridPointsCoords[pt]
-                                break
-                else :
-                    targetPoint = trans
-            #if partner:pickNewPoit like in fill3
-        tx, ty, tz = jtrans = targetPoint
-        gridDropPoint = targetPoint        
-        #we may increase the jitter, or pick from xyz->Id free for its radius
-        #create the rb only once and not at ever jitter
-        rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMat,),{"rtype":self.Type},)
-        #jitter loop
-        t1 = time()
-        for jitterPos in range(self.nbJitter):  #  This expensive Gauusian rejection system should not be the default should it?
-            # jitter points location
-            if jitter2 > 0.0:
-                found = False
-                while not found:
-                    dx = jx*jitter*gauss(0., 0.3)
-                    dy = jy*jitter*gauss(0., 0.3)
-                    dz = jz*jitter*gauss(0., 0.3)
-                    d2 = dx*dx + dy*dy + dz*dz
-                    if d2 < jitter2:
-                        if compNum > 0: # jitter less among normal
-                            #if self.name=='2uuh C4 SYNTHASE':
-                            #    import pdb
-                            #    pdb.set_trace()
-                            dx, dy, dz, dum = numpy.dot(rotMat, (dx,dy,dz,0))
-                        jtrans = (tx+dx, ty+dy, tz+dz)
-                        found = True
-#                    else:  #Graham Killed thse unnecessary updates
-#                        if verbose :  #Graham Killed thse unnecessary updates
-#                            print('JITTER REJECTED', d2, jitter2)  #Graham Killed thse unnecessary updates
-#                    if runTimeDisplay and moving is not None :  #Graham Killed thse unnecessary updates
-#                        afvi.vi.setTranslation(moving,pos=jtrans)   
-#                        afvi.vi.update()  
-#                        print "ok moving"
-            else:
-                jtrans = targetPoint
-                dx = dy = dz = 0.0
-           
-            histoVol.totnbJitter += 1
-            histoVol.jitterLength += dx*dx + dy*dy + dz*dz
-            jitterList.append( (dx,dy,dz) )
-            
-            #print 'j%d %.2f,%.2f,%.2f,'%(jitterPos,tx, ty, tz),
-#            if verbose :
-#                print('j%d'%jitterPos)# end=' '
-            
-            # loop over all spheres representing ingredient
-            modSphNum = 1
-            if sphGeom is not None:
-                modCent = []
-                modRad = []
-
-            ## check for collisions 
-            ## 
-            level = self.collisionLevel
-
-            # randomize rotation about axis
-            if compNum>0:
-                rotMatj = self.getAxisRotation(rotMat)
-            else:
-                if self.useRotAxis :
-                    if sum(self.rotAxis) == 0.0 :
-                        rotMatj=numpy.identity(4)
-                    else :
-                        rotMatj=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
-                else :
-                    rotMatj=histoVol.randomRot.get()  #Graham turned this back on to replace rotMat.copy() so ing rotate each time
-#                    rotMatj = rotMat.copy()
-            if runTimeDisplay and moving is not None :
-#                print "ok rot copy"
-                mat = rotMatj.copy()
-                mat[:3, 3] = jtrans
-                afvi.vi.setObjectMatrix(moving,mat,transpose=True)
-#                afvi.vi.setTranslation(moving,pos=jtrans)
-                afvi.vi.update()
-                
-#            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
-            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
-            t=time()              
-            #       checkif rb collide 
-#            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
-            result2 = self.histoVol.world.contactTest(rbnode)
-            r = [( result2.getNumContacts() > 0),]    
-            print ("contact All ",(True in r), time()-t, len(r))                 
-#            t=time()     
-            collision2=( True in r)
-            collisionComp = False
-
-#            print ("contactTestPair",collision2,time()-t)
-#            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
-            #need to check compartment too
-            if not collision2 :# and not collision2:
-                if self.compareCompartment:
-                    if self.modelType=='Spheres':
-        #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
-        #                print("jtrans = ", jtrans)
-                        collisionComp = histoVol.callFunction(self.checkSphCompart,(
-                            self.positions[level], self.radii[level], jtrans, rotMatj,
-                            level, gridPointsCoords, distance, histoVol))
-        #                print("jitter collision = ", collision, " for pt = ", ptInd, " with jtrans = ", jtrans)
-                    elif self.modelType=='Cylinders':
-                        collisionComp = histoVol.callFunction(self.checkCylCompart,(
-                            self.positions[level], self.positions2[level],
-                            self.radii[level], jtrans, rotMatj, gridPointsCoords,
-                            distance, histoVol))
-                    elif self.modelType=='Cube':
-                        collisionComp = histoVol.callFunction(self.checkCubeCompart,(
-                            self.positions[0], self.positions2[0], self.radii,
-                            jtrans, rotMatj, gridPointsCoords,
-                            distance, histoVol))
-                if not collisionComp :
-                    self.histoVol.static.append(rbnode)
-                    self.histoVol.moving = None
-                    break # break out of jitter pos loop
-                else :
-                    collision2 = collisionComp
-#            else :
-#                histoVol.callFunction(self.histoVol.delRB,(rbnode,))
-                #remove the node
-#        if verbose: 
-#        print("jitter loop ",time()-t1)
-        if not collision2 :# and not collision2:
-#            print("jtrans for NotCollision= ", jtrans)
-            
-            ## get inside points and update distance
-            ##
-            # use best sperical approcimation   
-
-            insidePoints = {}
-            newDistPoints = {}
-            t3=time()
-            #should be replace by self.getPointInside
-            if self.modelType=='Spheres':
-                self.centT = centT = self.transformPoints(jtrans, rotMatj, self.positions[level])
-                centT = self.centT#self.transformPoints(jtrans, rotMatj, self.positions[-1])
-#                for pointsInCube,ptsInSphere in self.distances_temp:
-                for radc, posc in zip(self.radii[-1], centT):
-#                for i,radc in enumerate(self.radii[-1]):
-#                    pointsInCube,ptsInSphere,distA = self.distances_temp[i]
-#                 
-                    rad = radc + dpad
-                    x,y,z = posc
-#                    #this have already be done in the checkCollision why doing it again
-                    bb = ( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
-                    pointsInCube = histoVol.callFunction(histoVol.getPointsInCube,
-                                                         (bb, posc, rad))
-#
-                    delta = numpy.take(gridPointsCoords,pointsInCube,0)-posc
-                    delta *= delta
-                    distA = numpy.sqrt( delta.sum(1) )
-                    ptsInSphere = numpy.nonzero(numpy.less_equal(distA, rad))[0]
-
-                    for pti in ptsInSphere:
-                        pt = pointsInCube[pti]
-                        if pt in insidePoints: continue
-                        dist = distA[pti]
-                        d = dist-radc
-                        if dist < radc:  # point is inside dropped sphere
-                            if pt in insidePoints:
-                                if d < insidePoints[pt]:
-                                    insidePoints[pt] = d
-                            else:
-                                insidePoints[pt] = d
-                        elif d < distance[pt]: # point in region of influence
-                            if pt in newDistPoints:
-                                if d < newDistPoints[pt]:
-                                    newDistPoints[pt] = d
-                            else:
-                                newDistPoints[pt] = d
-
-            elif self.modelType=='Cylinders':
-                cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
-                cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-
-                for radc, p1, p2 in zip(self.radii[-1], cent1T, cent2T):
-
-                    x1, y1, z1 = p1
-                    x2, y2, z2 = p2
-                    vx, vy, vz = vect = (x2-x1, y2-y1, z2-z1)
-                    lengthsq = vx*vx + vy*vy + vz*vz
-                    l = sqrt( lengthsq )
-                    cx, cy, cz = posc = x1+vx*.5, y1+vy*.5, z1+vz*.5
-                    radt = l + radc + dpad
-                    bb = ( [cx-radt, cy-radt, cz-radt], [cx+radt, cy+radt, cz+radt] )
-                    pointsInCube = histoVol.callFunction(histoVol.getPointsInCube,
-                                                         (bb, posc, radt))
-
-                    pd = numpy.take(gridPointsCoords,pointsInCube,0) - p1
-                    dotp = numpy.dot(pd, vect)
-                    rad2 = radc*radc
-                    d2toP1 = numpy.sum(pd*pd, 1)
-                    dsq = d2toP1 - dotp*dotp/lengthsq
-
-                    pd2 = numpy.take(gridPointsCoords,pointsInCube,0) - p2
-                    d2toP2 = numpy.sum(pd2*pd2, 1)
-
-                    for pti, pt in enumerate(pointsInCube):
-                        if pt in insidePoints: continue
-
-                        if dotp[pti] < 0.0: # outside 1st cap
-                            d = sqrt(d2toP1[pti])
-                            if d < distance[pt]: # point in region of influence
-                                if pt in newDistPoints:
-                                    if d < newDistPoints[pt]:
-                                        newDistPoints[pt] = d
-                                else:
-                                    newDistPoints[pt] = d
-                        elif dotp[pti] > lengthsq:
-                            d = sqrt(d2toP2[pti])
-                            if d < distance[pt]: # point in region of influence
-                                if pt in newDistPoints:
-                                    if d < newDistPoints[pt]:
-                                        newDistPoints[pt] = d
-                                else:
-                                    newDistPoints[pt] = d
-                        else:
-                            d = sqrt(dsq[pti])-radc
-                            if d < 0.:  # point is inside dropped sphere
-                                if pt in insidePoints:
-                                    if d < insidePoints[pt]:
-                                        insidePoints[pt] = d
-                                else:
-                                    insidePoints[pt] = d
-            elif self.modelType=='Cube':
-                insidePoints,newDistPoints=self.getDistancesCube(jtrans, rotMatj,gridPointsCoords, distance, histoVol)
-                
-            # save dropped ingredient
-            if verbose:
-                print("compute distance loop ",time()-t3)
-            if drop:
-                #print "ok drop",organelle.name,self.name
-                organelle.molecules.append([ jtrans, rotMatj, self, ptInd ])
-                histoVol.order[ptInd]=histoVol.lastrank
-                histoVol.lastrank+=1
-            # update free points
-            nbFreePoints = histoVol.callFunction(self.updateDistances,(histoVol,insidePoints,
-                                                            newDistPoints,
-                                                freePoints,nbFreePoints, distance,
-                                                histoVol.masterGridPositions, verbose))
-            
-#            distChanges = {}
-#            for pt,dist in insidePoints.items():
-#                # swap point at ptIndr with last free one
-#                try:
-#                    ind = freePoints.index(pt)
-#                    tmp = freePoints[nbFreePoints] #last one
-#                    freePoints[nbFreePoints] = pt
-#                    freePoints[ind] = tmp
-#                    nbFreePoints -= 1
-#                except ValueError: # pt not in list of free points
-#                    pass
-#                distChanges[pt] = (histoVol.masterGridPositions[pt],
-#                                   distance[pt], dist)
-#                distance[pt] = dist
-#            print "update freepoints loop ",time()-t4
-#            t5=time()
-#            # update distances
-#            for pt,dist in newDistPoints.items():
-#                if not insidePoints.has_key(pt):
-#                    distChanges[pt] = (histoVol.masterGridPositions[pt],
-#                                       distance[pt], dist)
-#                    distance[pt] = dist
-#            print "update distances loop ",time()-t5
-            
-            if sphGeom is not None:
-                for po1, ra1 in zip(modCent, modRad):
-                    sphCenters.append(po1)
-                    sphRadii.append(ra1)
-                    sphColors.append(self.color)
-
-            if labDistGeom is not None:
-                verts = []
-                labels = []
-                colors = []
-                #for po1, d1,d2 in distChanges.values():
-                fpts = freePoints
-                for i in range(nbFreePoints):
-                    pt = fpts[i]
-                    verts.append(histoVol.masterGridPositions[pt])
-                    labels.append( "%.2f"%distance[pt])                    
-#                for pt in freePoints[:nbFreePoints]:
-#                    verts.append(histoVol.masterGridPositions[pt])
-#                    labels.append( "%.2f"%distance[pt])
-                labDistGeom.Set(vertices=verts, labels=labels)
-                #materials=colors, inheritMaterial=0)
-
-            # add one to molecule counter for this ingredient
-            self.counter += 1
-            self.completion = float(self.counter)/float(self.nbMol)
-
-            if jitterPos>0:
-                histoVol.successfullJitter.append(
-                    (self, jitterList, collD1, collD2) )
-               
-            if verbose :
-                print('Success nbfp:%d %d/%d dpad %.2f'%(
-                nbFreePoints, self.counter, self.nbMol, dpad))
-            if self.name=='in  inside':
-                histoVol.jitterVectors.append( (trans, jtrans) )
-
-            success = True
-            self.rejectionCounter = 0
-            
-        else: # got rejected
-            histoVol.callFunction(histoVol.delRB,(rbnode,))
-            if runTimeDisplay and moving is not None :
-                afvi.vi.deleteObject(moving)
-            success = False
-            self.haveBeenRejected = True
-            histoVol.failedJitter.append(
-                (self, jitterList, collD1, collD2) )
-
-            distance[ptInd] = max(0, distance[ptInd]*0.9)# ???
-            self.rejectionCounter += 1
-            if verbose :
-                print('Failed ingr:%s rejections:%d'%(
-                self.name, self.rejectionCounter))
-            if self.rejectionCounter >= self.rejectionThreshold: #Graham set this to 6000 for figure 13b (Results Fig 3 Test1) otehrwise it fails to fill small guys
-                #if verbose :
-                print('PREMATURE ENDING of ingredient', self.name)
-                self.completion = 1.0
-
-        if sphGeom is not None:
-            sphGeom.Set(vertices=sphCenters, radii=sphRadii,
-                        materials=sphColors)
-            sphGeom.viewer.OneRedraw()
-            sphGeom.viewer.update()
-
-        if drop :
-            return success, nbFreePoints
-        else :
-            return success, nbFreePoints,jtrans, rotMatj
-
-
-            
-    def pandaBullet_place_dev(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
-              sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None,drop=True):
-        """
-        drop the ingredient on grid point ptInd
-        """
         histoVol.setupPanda()#do I need this everytime?
-        histoVol.setupOctree()#do I need this everytime?
-        
-        if histoVol.panda_solver == "bullet":
-            collideFunc = self.histoVol.world.contactTestPair
-        elif histoVol.panda_solver == "ode":
-            from panda3d.ode import OdeUtil
-            collideFunc = OdeUtil.collide
         afvi = histoVol.afviewer
         rejectionCount = 0
         spacing = histoVol.smallestProteinSize
@@ -3456,16 +2984,8 @@ class Ingredient(Agent):
         #we may increase the jitter, or pick from xyz->Id free for its radius
         #create the rb only once and not at ever jitter
         rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMat,),{"rtype":self.Type},)
-        #should I create the rbnode on the fly ?
-        #ningr_rb = histoVol.callFunction(self.getNeighboursInBox,(histoVol,trans,rotMat,organelle,afvi),{"rb":True})
-#        x,y,z=jtrans
-#        rad = self.encapsulatingRadius
-#        bb=( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
-        dropedObject = IngredientInstanceDrop(ptInd, jtrans, 
-                                                      rotMat, self,rb=rbnode)
-        nodes = histoVol.octree.findContainingNodes(dropedObject, histoVol.octree.root)
-        ningr_rb = nodes[0].objects
-  
+        ningr_rb = self.getNeighboursInBox(histoVol,trans,rotMat,compartment,afvi,rb=True)
+        print ("we get ",len(ningr_rb))
         #jitter loop
         t1 = time()
         for jitterPos in range(self.nbJitter):  #  This expensive Gauusian rejection system should not be the default should it?
@@ -3542,21 +3062,11 @@ class Ingredient(Agent):
 #            collision = ( result2.getNumContacts() > 0)    
 #            print ("contact All ",collision, time()-t, result2.getNumContacts())                 
 #            t=time()     
-#            ningr_rb = self.getNeighboursInBox(histoVol,trans,rotMat,organelle,afvi,rb=True)
+#            ningr_rb = self.getNeighboursInBox(histoVol,trans,rotMat,compartment,afvi,rb=True)
             r=[False]
-#            result = self.histoVol.world.contactTest(rbnode).getNumContacts() > 0
-#            print ("contactTest find ",result)
-#            if not result :
-            t1=time()
-            #ningr_rb = histoVol.octree.findPosition(histoVol.octree.root, jtrans)
-            #ningr_rb = histoVol.octree.findPosition(histoVol.octree.root, jtrans)
             if ningr_rb is not None and len(ningr_rb):
-                #ode is just contact
-#                print ("get ",len(ningr_rb))
-                r=[ (collideFunc(rbnode, n.rigid_body).getNumContacts() > 0 ) for n in ningr_rb]
+                r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in ningr_rb]
             #r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
-#                print ("contactTestPair find ",len(r),( True in r))
-            #print(("time contactPair", time()-t1))
             collision2=( True in r)
             collisionComp = False
             
@@ -3708,16 +3218,8 @@ class Ingredient(Agent):
             if verbose:
                 print("compute distance loop ",time()-t3)
             if drop:
-                dropedObject = IngredientInstanceDrop(ptInd, jtrans, 
-                                                      rotMatj, self,rb=rbnode)
-                #r= self.encapsulatingRadius
-                r = self.minRadius + histoVol.largestProteinSize + \
-                        histoVol.smallestProteinSize + histoVol.windowsSize
-#                histoVol.octree.insertNode(histoVol.octree.root, r, 
-#                                           histoVol.octree.root, dropedObject) 
-                histoVol.octree.insertNode(dropedObject,[histoVol.octree.root]) 
-                #print "ok drop",organelle.name,self.name
-                organelle.molecules.append([ jtrans, rotMatj, self, ptInd ])
+                #print "ok drop",compartment.name,self.name
+                compartment.molecules.append([ jtrans, rotMatj, self, ptInd ])
                 histoVol.order[ptInd]=histoVol.lastrank
                 histoVol.lastrank+=1
             # update free points
@@ -5303,9 +4805,6 @@ class IOingredientTool:
             f.close()
         elif ingr_format == "python" :
             ingrnode = self.ingrPythonNode(ingr)
-            f = open(filename+".py","w")        
-            f.write(ingrnode)
-            f.close()            
         elif ingr_format == "all" :
             ingdic = self.ingrJsonNode(ingr)
             with open(filename+".json", 'w') as fp :#doesnt work with symbol link ?
@@ -5405,7 +4904,7 @@ class IOingredientTool:
                 ingdic["curve"+str(i)] = ingr.listePtLinear[i]
         return ingdic
 
-    def ingrPythonNode(self,ingr,recipe="recipe"):
+    def ingrPythonNode(self,ingr):
         inrStr="#include as follow : execfile('pathto/"+ingr.name+".py',globals(),{'recipe':recipe_variable_name})\n"
         if ingr.Type == "MultiSphere":
             inrStr+="from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr\n"
