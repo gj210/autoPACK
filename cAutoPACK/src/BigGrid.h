@@ -109,8 +109,6 @@ struct big_grid {
     
     openvdb::Coord getPointToDropCoord(sphere* ingr, float radius,float jitter,int *emptyList);
 
-    int getPointToDrop(sphere* ingr, float radius,float jitter);
-
     bool try_drop(unsigned pid,sphere *ingr);
 
     bool try_dropCoord(openvdb::Coord cijk,sphere *ingr);
