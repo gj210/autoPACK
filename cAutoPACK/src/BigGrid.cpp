@@ -119,7 +119,7 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
     float r1 = x->minRadius;
     float r2 = y->minRadius;
     //ask graham about this issue
-   if (r1 > r2) //# is r1 > r2 - this should be r1 > r2
+   if (r1 < r2) //# is r1 < r2 - this should be r1 > r2
        return true;
    else if (r1==r2){ //# r1 == r2
        float c1 = x->completion;
@@ -136,9 +136,12 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
 
 //some expermental functions for the IJK<->U grid index convertion
 //currently unused
+/* 
+unused but keep in case
 inline unsigned getU(openvdb::Coord dim,openvdb::Coord ijk){
     return (int)(ijk.x()*dim.x()*dim.y() + ijk.y()*dim.x() + ijk.z());
 }
+*/
 
 inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
     // = {0,0,0};    
@@ -270,6 +273,7 @@ void big_grid::getSortedActiveIngredients()
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
         ing = &ingredients[i];
         if (ing->completion >= 1.0) continue;// # ignore completed ingredients
+        //std::cout << "ingr " << ing->name << " " << ing->completion << std::endl;
         if (ing->packingPriority == 0.0){
             ingr2.push_back(ing);
             priorities2.push_back(ing->packingPriority);
@@ -341,9 +345,9 @@ void big_grid::updatePriorities()
 
 void big_grid::dropIngredient( Ingredient *ingr )
 {
-    std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
     
     ingr->completion = 1.0;
+    std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->completion << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
     //update priorities will regenerate activeIngr based on completion field
     updatePriorities();
 }
