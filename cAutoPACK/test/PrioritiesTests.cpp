@@ -53,33 +53,33 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     
     std::vector<Ingredient> ingredients;    
 
-    ingradients.push_back(makeIngredient("r1p0.1c0" , 1,  0.1, 0));
-    ingradients.push_back(makeIngredient("r1p0.2c0" , 1,  0.2, 0));
-    ingradients.push_back(makeIngredient("r1p0c0"   , 1,    0, 0));
-    ingradients.push_back(makeIngredient("r1p-0.1c0", 1, -0.1, 0));
-    ingradients.push_back(makeIngredient("r1p-0.2c0", 1, -0.2, 0));
+    ingredients.push_back(makeIngredient("r1p0.1c0" , 1,  0.1, 0));
+    ingredients.push_back(makeIngredient("r1p0.2c0" , 1,  0.2, 0));
+    ingredients.push_back(makeIngredient("r1p0c0"   , 1,    0, 0));
+    ingredients.push_back(makeIngredient("r1p-0.1c0", 1, -0.1, 0));
+    ingredients.push_back(makeIngredient("r1p-0.2c0", 1, -0.2, 0));
     
-    ingradients.push_back(makeIngredient("r1p0.1c0.1" , 1,  0.1, 0.1));
-    ingradients.push_back(makeIngredient("r1p0.2c0.1" , 1,  0.2, 0.1));
-    ingradients.push_back(makeIngredient("r1p0c0.1"   , 1,    0, 0.1));
-    ingradients.push_back(makeIngredient("r1p-0.1c0.1", 1, -0.1, 0.1));
-    ingradients.push_back(makeIngredient("r1p-0.2c0.1", 1, -0.2, 0.1));
+    ingredients.push_back(makeIngredient("r1p0.1c0.1" , 1,  0.1, 0.1));
+    ingredients.push_back(makeIngredient("r1p0.2c0.1" , 1,  0.2, 0.1));
+    ingredients.push_back(makeIngredient("r1p0c0.1"   , 1,    0, 0.1));
+    ingredients.push_back(makeIngredient("r1p-0.1c0.1", 1, -0.1, 0.1));
+    ingredients.push_back(makeIngredient("r1p-0.2c0.1", 1, -0.2, 0.1));
     
-    ingradients.push_back(makeIngredient("r2p0.1c0" , 2,  0.1, 0));
-    ingradients.push_back(makeIngredient("r2p0.2c0" , 2,  0.2, 0));
-    ingradients.push_back(makeIngredient("r2p0c0"   , 2,    0, 0));
-    ingradients.push_back(makeIngredient("r2p-0.1c0", 2, -0.1, 0));
-    ingradients.push_back(makeIngredient("r2p-0.2c0", 2, -0.2, 0));
+    ingredients.push_back(makeIngredient("r2p0.1c0" , 2,  0.1, 0));
+    ingredients.push_back(makeIngredient("r2p0.2c0" , 2,  0.2, 0));
+    ingredients.push_back(makeIngredient("r2p0c0"   , 2,    0, 0));
+    ingredients.push_back(makeIngredient("r2p-0.1c0", 2, -0.1, 0));
+    ingredients.push_back(makeIngredient("r2p-0.2c0", 2, -0.2, 0));
 
-    grid.setIngredients(ingradients);
+    grid.setIngredients(ingredients);
     grid.prepareIngredient();
     //assertion for active inrgedent size
     BOOST_CHECK_EQUAL(grid.ingredients.size(),ingredients.size());
-    BOOST_CHECK_EQUAL(grid.activeIngr0.size(),6)     //negative packingPriority
-    BOOST_CHECK_EQUAL(grid.activeIngr12.size(),9)    //zero or positive packingPriority
-    BOOST_CHECK_EQUAL(grid.activeIngr.size,ingredients.size())//initially all ingredient should be active
+    BOOST_CHECK_EQUAL(grid.activeIngr0.size(),6) ;    //negative packingPriority
+    BOOST_CHECK_EQUAL(grid.activeIngr12.size(),9) ;   //zero or positive packingPriority
+    BOOST_CHECK_EQUAL(grid.activeIngr.size(),ingredients.size());//initially all ingredient should be active
 
-    std::vector<Ingradient> expected;
+    std::vector<Ingredient> expected;
 
     expected.push_back(makeIngredient("r2p-0.1c0"  , 2,-0.1 ,   0));
     expected.push_back(makeIngredient("r1p-0.1c0.1", 1,-0.1 , 0.1));
