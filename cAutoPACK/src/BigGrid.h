@@ -52,6 +52,7 @@ extended to do the main autopack loop with ingredient and point picking
 struct big_grid { 
     
     //Temporarly must be first
+    openvdb::CoordBBox bbox;
     openvdb::FloatGrid::Ptr distance_grid;
     openvdb::Index64 num_points;        //total number of point in the grid
 
@@ -72,7 +73,7 @@ struct big_grid {
     std::normal_distribution<float> gauss;//(0.0,0.3);
     std::uniform_real_distribution<double> distribution;
     
-    openvdb::CoordBBox bbox;
+    
     openvdb::Coord dim;
     //openvdb::FloatGrid::Accessor accessor_distance;
     std::vector<openvdb::Coord> visited_rejected_coord;
