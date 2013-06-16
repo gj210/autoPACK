@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -34,14 +34,14 @@
 @author: Graham Johnson, Ludovic Autin, & Michel Sanner
 */
 
-#include "IngradientsFactory.h"
+#include "IngredientsFactory.h"
 
 
 //helper to create an ingredient given a 3d mesh triangles or quads
-Ingradient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingredient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
                                  float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                  unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d){
-    Ingradient sp;
+    Ingredient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
@@ -108,10 +108,10 @@ Ingradient makeMeshIngredient(std::vector<float> radii, int mode, float concentr
 }
 
 //helper to create an ingredient given a different 3d mesh triangles or quads
-Ingradient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
+Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
                                    float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
                                    unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs){
-    Ingradient sp;
+    Ingredient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
@@ -183,10 +183,10 @@ Ingradient makeMeshesIngredient(std::vector<float> radii, int mode, float concen
 
 
 //helper to create a singleSphere ingredient given a radius, and some options
-Ingradient makeSphere(float radius, int mode, float concentration, 
+Ingredient makeSphere(float radius, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax){
-    Ingradient sp;
+    Ingredient sp;
     sp.radius = radius;
     sp.molarity=concentration;
     sp.mode = mode;
@@ -238,10 +238,10 @@ Ingradient makeSphere(float radius, int mode, float concentration,
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
-Ingradient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
+Ingredient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
          float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
         unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions){
-    Ingradient sp;
+    Ingredient sp;
     sp.radii = radii;
     sp.positions = positions;
     sp.radius = radii[0];

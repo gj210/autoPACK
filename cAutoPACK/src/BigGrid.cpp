@@ -40,7 +40,7 @@
 namespace {
 
 
-/* the comparison function are strict translatio from the python code */
+/* the comparison function are strict translation from the python code */
 //sort function for ingredient//
 //The value returned indicates whether the element passed as first argument 
 //is considered to go before the second in the specific strict weak ordering it defines.
@@ -50,7 +50,7 @@ bool ingredient_compare1(Ingredient* x, Ingredient* y){
     """
     sort ingredients using decreasing priority and decreasing radii for
     priority ties and decreasing completion for radii ties
-    
+    used for initial priority > 0
     """
     */
     
@@ -81,7 +81,7 @@ bool ingredient_compare0(Ingredient* x, Ingredient* y){
     """
     sort ingredients using decreasing priority and decreasing radii for
     priority ties and decreasing completion for radii ties
-    
+    used for initial priority < 0
     """
     */
     
@@ -112,13 +112,14 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
     """
     sort ingredients using decreasing radii and decresing completion
     for radii matches
-    
+    used for initial priority == 0
     """
     */
     
     float r1 = x->minRadius;
     float r2 = y->minRadius;
-   if (r1 < r2) //# r1 < r2
+    //ask graham about this issue
+   if (r1 > r2) //# is r1 > r2 - this should be r1 > r2
        return true;
    else if (r1==r2){ //# r1 == r2
        float c1 = x->completion;

@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -34,9 +34,9 @@
 @author: Graham Johnson, Ludovic Autin, & Michel Sanner
 */
 
-#include "Ingradient.h"
+#include "Ingredient.h"
 
-void Ingradient::setCount(float volume) {
+void Ingredient::setCount(float volume) {
     double nbr = this->molarity * volume * .000602;// #Mod by Graham 8/18/11
     int nbi = (int) nbr; //ceil, floor ?              #Mod by Graham 8/18/11
     double nbmod;    
