@@ -40,7 +40,6 @@
 #ifdef _MSC_VER
     #pragma warning(disable:4146)
     #pragma warning(disable:4503) // OpenVDB "warning decorated name length exceeded, name was truncated"
-    #define _SCL_SECURE_NO_WARNINGS
 #endif
 
 #include <vector>

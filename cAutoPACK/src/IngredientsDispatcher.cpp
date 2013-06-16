@@ -98,7 +98,7 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
 
 }
 
-IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _ingredients,  unsigned num_points, unsigned int seed) 
+IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _ingredients, openvdb::Index64 num_points, unsigned int seed) 
     :uniform(0.0f, 1.0f)
     , vRangeStart(0.0)
     , generator(std::default_random_engine(seed))
@@ -108,7 +108,7 @@ IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _i
     //retrieve the biggest one
     ingredients = _ingredients;
     activeIngr.resize(ingredients.size());
-    float unit_volume = pow(stepsize,3.0);
+    float unit_volume = pow(stepsize,3.0f);
     float grid_volume =  num_points*unit_volume;
     std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
@@ -209,7 +209,7 @@ void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
     if (pickWeightedIngr)
         thresholdPriorities.resize(activeIngr0.size(), 2.0);   
 
-    float totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0, 
+    float totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0f, 
         [](float accumulator , Ingredient* ingr) { return accumulator + ingr->packingPriority; });
     std::cout << "#totalPriorities " << totalPriorities << std::endl;
 

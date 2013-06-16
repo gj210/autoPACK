@@ -113,7 +113,6 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, float step, op
 unsigned int big_grid::initializeNumPointsCount()
 {
     dim = distance_grid->evalActiveVoxelDim();    
-    int num_points = dim.x()*dim.y()*dim.z();
     std::cout << "#Grid Npoints " << dim << distance_grid->activeVoxelCount() << std::endl;
     return distance_grid->activeVoxelCount();
 }

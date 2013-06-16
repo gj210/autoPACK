@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Types.h"
 #include "Ingredient.h"
 #include <random>
 #include <numeric>
@@ -23,10 +24,10 @@ public: //Temporary public, should be private
 
 
     std::uniform_real_distribution<float> uniform;
-    std::default_random_engine & generator;
+    std::default_random_engine generator;
 
 public:
-    IngradientsDispatcher(std::vector<Ingredient> const & _ingredients,  unsigned num_points, unsigned int seed);    
+    IngradientsDispatcher(std::vector<Ingredient> const & _ingredients,  openvdb::Index64 num_points, unsigned int seed);    
 
     Ingredient* pickIngredient();
 

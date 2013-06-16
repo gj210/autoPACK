@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     //after negative droppin the inrdent picking is based on the weight.
     //r2p0.2c0 should be the mot probable
     dispatcher.dropIngredient(dispatcher.activeIngr[6]);//
-    dispatcher.activeIngr[1]->completion = 0.6;
+    dispatcher.activeIngr[1]->completion = 0.6f;
 
     std::vector<Ingredient> expected_after_drop_and_completion;
     expected_after_drop_and_completion.push_back(makeIngredient("r1p0c0.1"   , 1, 0.05, 0.1));//shouldn't be r1p0c0 here ? verify with Graham if behaviour is correct here

@@ -53,13 +53,13 @@ struct big_grid {
     
     //Temporarly must be first
     openvdb::FloatGrid::Ptr distance_grid;
-    unsigned num_points;        //total number of point in the grid
+    openvdb::Index64 num_points;        //total number of point in the grid
 
     IngradientsDispatcher ingredientsDipatcher;
    
     std::vector<openvdb::Vec3f> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
-    unsigned num_empty;         //the number of free point available
+    openvdb::Index64 num_empty;         //the number of free point available
     
     float space;                //spacing of the grid (unit depends on user)
     
