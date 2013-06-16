@@ -9,7 +9,9 @@
 
 #include <vector>
 //Disable warnings from openvdb in Visual Studio
-#pragma warning(push, 0)   
+#ifdef _MSC_VER
+    #pragma warning(push, 0)   
+#endif
 
 /*
 openvdb includes
@@ -22,4 +24,7 @@ openvdb includes
 #include <openvdb/tree/Tree.h>
 #include <openvdb/tools/GridTransformer.h>
 
-#pragma warning(pop)
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
+

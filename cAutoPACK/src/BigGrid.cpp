@@ -45,7 +45,7 @@ namespace {
 //The value returned indicates whether the element passed as first argument 
 //is considered to go before the second in the specific strict weak ordering it defines.
 //can weuse template here ? so ca accept any ingredient type..
-bool ingredient_compare1(Ingradient* x, Ingradient* y){
+bool ingredient_compare1(Ingredient* x, Ingredient* y){
     /*
     """
     sort ingredients using decreasing priority and decreasing radii for
@@ -76,7 +76,7 @@ bool ingredient_compare1(Ingradient* x, Ingradient* y){
        return false;
 }
 
-bool ingredient_compare0(Ingradient* x, Ingradient* y){
+bool ingredient_compare0(Ingredient* x, Ingredient* y){
     /*
     """
     sort ingredients using decreasing priority and decreasing radii for
@@ -107,7 +107,7 @@ bool ingredient_compare0(Ingradient* x, Ingradient* y){
        return false;
 }
 
-bool ingredient_compare2(Ingradient* x, Ingradient* y){
+bool ingredient_compare2(Ingredient* x, Ingredient* y){
     /*
     """
     sort ingredients using decreasing radii and decresing completion
@@ -238,7 +238,7 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
     return distance_grid;
 }
 
-void big_grid::setIngredients( std::vector<Ingradient> const & _ingredients )
+void big_grid::setIngredients( std::vector<Ingredient> const & _ingredients )
 {
     //set the ingredients list to pack in the grid
     //retrieve the biggest one
@@ -256,14 +256,14 @@ void big_grid::setIngredients( std::vector<Ingradient> const & _ingredients )
 void big_grid::getSortedActiveIngredients()
 {
     //pirorities120 is ot used ??
-    std::vector<Ingradient*> ingr1;  // given priorities pass ptr ?
+    std::vector<Ingredient*> ingr1;  // given priorities pass ptr ?
     std::vector<float> priorities1;
-    std::vector<Ingradient*> ingr2;  // priority = 0 or none and will be assigned based on complexity
+    std::vector<Ingredient*> ingr2;  // priority = 0 or none and will be assigned based on complexity
     std::vector<float> priorities2;
-    std::vector<Ingradient*> ingr0;  // negative values will pack first in order of abs[packingPriority]
+    std::vector<Ingredient*> ingr0;  // negative values will pack first in order of abs[packingPriority]
     std::vector<float> priorities0;
-    Ingradient* lowestIng; 
-    Ingradient* ing; 
+    Ingredient* lowestIng; 
+    Ingredient* ing; 
     float r=0.0;
     float np=0.0;      
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
@@ -338,7 +338,7 @@ void big_grid::updatePriorities()
 
 }
 
-void big_grid::dropIngredient( Ingradient *ingr )
+void big_grid::dropIngredient( Ingredient *ingr )
 {
     std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
     
@@ -347,9 +347,9 @@ void big_grid::dropIngredient( Ingradient *ingr )
     updatePriorities();
 }
 
-Ingradient* big_grid::pickIngredient()
+Ingredient* big_grid::pickIngredient()
 {
-    Ingradient* ingr;
+    Ingredient* ingr;
     //float prob;
     //std::default_random_engine generator (seed);
     //std::default_random_engine generator(seed);
@@ -389,7 +389,7 @@ Ingradient* big_grid::pickIngredient()
     return ingr;
 }
 
-openvdb::Coord big_grid::getPointToDropCoord( Ingradient* ingr, float radius,float jitter,int *emptyList )
+openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,float jitter,int *emptyList )
 {
     float cut = radius-jitter;//why - jitter ?
     float d;
@@ -509,7 +509,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingradient* ingr, float radius,flo
     return cijk;
 }
 
-bool big_grid::try_drop( unsigned pid,Ingradient *ingr )
+bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
 {
     //main function that decide to drop an ingredient or not
     //std::cout  <<"test_data "<< ingr.name << ' ' << pid << std::endl;        
@@ -522,7 +522,7 @@ bool big_grid::try_drop( unsigned pid,Ingradient *ingr )
     return try_dropCoord(cijk,ingr);
 }
 
-bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingradient *ingr )
+bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     float rad = ingr->radius;        
     openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor(); 
@@ -751,7 +751,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingradient *ingr )
 }
 
 
-bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, Ingradient* sp )
+bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
 {
     openvdb::math::Vec3f offset(pos.x,pos.y,pos.z);//where the sphere should be.
     openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
@@ -827,7 +827,7 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
             thresholdPriorities.resize(activeIngr0.size(), 2.0);   
 
     float totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0, 
-        [](float accumulator , Ingradient* ingr) { return accumulator + ingr->packingPriority; });
+        [](float accumulator , Ingredient* ingr) { return accumulator + ingr->packingPriority; });
     std::cout << "#totalPriorities " << totalPriorities << std::endl;
     
     if (totalPriorities == 0)
@@ -838,7 +838,7 @@ void big_grid::calculateThresholdAndNormalizedPriorities()
     else
     {
         float previousThresh = 0;                
-        for(Ingradient * ingr : activeIngr12) {
+        for(Ingredient * ingr : activeIngr12) {
             const float np = ingr->packingPriority/totalPriorities;            
             if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< ingr->packingPriority << " tp is " << np + previousThresh << std::endl;
 
@@ -865,7 +865,7 @@ int big_grid::calculateTotalNumberMols()
     }else {                
         for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
             //float threshProb = thresholdPriorities[i];
-            Ingradient* ing = activeIngr[nls];
+            Ingredient* ing = activeIngr[nls];
             std::cout << "#nmol Fill5else is for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
             totalNumMols += ing->nbMol;
             nls++;

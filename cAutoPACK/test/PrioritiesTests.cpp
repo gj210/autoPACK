@@ -1,3 +1,29 @@
+/*
+        # Graham here- In the new setup, priority is infinite with abs[priority] increasing (+)
+        # An ingredients with (-) priority will pack from greatest abs[-priority] one at a time
+        #     to lease abs[-priority]... each ingredient will attempt to reach its molarity
+        #     before moving on to the next ingredient, and all (-) ingredients will try to
+        #     deposit before other ingredients are tested.
+        # An ingredient with (+) priority will recieve a weighted value based on its abs[priority]
+        #     e.g. an ingredient with a priority=10 will be 10x more likely to be picked than
+        #     an ingredient with a priority=1.
+        # An ingredient with the default priority=0 will recieve a weighted value based on its
+        #     complexity. (currently complexity = minRadius), thus a more 'complex' ingredient
+        #     will more likely try to pack before a less 'complex' ingredient.
+        #     IMPORTANT: the +priority list does not fully mix with the priority=0 list, but this
+        #     should be an option... currently, the priority=0 list is normalized against a range
+        #     up to the smallest +priority ingredient and appended to the (+) list
+        # TODO: Add an option to allow + ingredients to be weighted by assigned priority AND complexity
+        #     Add an option to allow priority=0 ingredients to fit into the (+) ingredient list
+        #       rather than appending to the end.
+        #     Even better, add an option to set the max priority for the 0list and then plug the results
+        #       into the (+) ingredient list.
+        #     Get rid of the (-), 0, (+) system and recreate this as a new flag and a class function
+        #        so we can add multiple styles of sorting and weighting systems.
+        #     Make normalizedPriorities and thresholdPriorities members of Ingredient class to avoid
+        #        building these arrays.
+
+*/
 #define BOOST_TEST_MODULE PrioritiesTesting
 
 #if !defined( WIN32 )
@@ -11,8 +37,8 @@
 
 float stepsize = float(15*1.1547); 
 
-static Ingradient makeIngradient(std::string name, float minRadius, float packingPriority, float completition) {
-    Ingradient ing1;    
+static Ingredient makeIngredient(std::string name, float minRadius, float packingPriority, float completition) {
+    Ingredient ing1;    
     ing1.minRadius=minRadius;
     ing1.packingPriority=packingPriority;
     ing1.completion=completition;
@@ -21,55 +47,64 @@ static Ingradient makeIngradient(std::string name, float minRadius, float packin
 };
 
 BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
-    const openvdb::Vec3d ibotleft(-3,-3,-3);
-    const openvdb::Vec3d iupright(3,3,3);
-    big_grid grid(2,ibotleft,iupright,123);    
+    const openvdb::Vec3d ibotleft(-13,-13,-13);
+    const openvdb::Vec3d iupright(13,13,13);
+    big_grid grid(/* stepsize */ 1,ibotleft,iupright,/* seed */ 123);    
     
-    std::vector<Ingradient> ingradients;    
-    ingradients.push_back(makeIngradient("r1p0.1c0" , 1,  0.1, 0));
-    ingradients.push_back(makeIngradient("r1p0.2c0" , 1,  0.2, 0));
-    ingradients.push_back(makeIngradient("r1p0c0"   , 1,    0, 0));
-    ingradients.push_back(makeIngradient("r1p-0.1c0", 1, -0.1, 0));
-    ingradients.push_back(makeIngradient("r1p-0.2c0", 1, -0.2, 0));
+    std::vector<Ingredient> ingredients;    
+
+    ingradients.push_back(makeIngredient("r1p0.1c0" , 1,  0.1, 0));
+    ingradients.push_back(makeIngredient("r1p0.2c0" , 1,  0.2, 0));
+    ingradients.push_back(makeIngredient("r1p0c0"   , 1,    0, 0));
+    ingradients.push_back(makeIngredient("r1p-0.1c0", 1, -0.1, 0));
+    ingradients.push_back(makeIngredient("r1p-0.2c0", 1, -0.2, 0));
     
-    ingradients.push_back(makeIngradient("r1p0.1c0.1" , 1,  0.1, 0.1));
-    ingradients.push_back(makeIngradient("r1p0.2c0.1" , 1,  0.2, 0.1));
-    ingradients.push_back(makeIngradient("r1p0c0.1"   , 1,    0, 0.1));
-    ingradients.push_back(makeIngradient("r1p-0.1c0.1", 1, -0.1, 0.1));
-    ingradients.push_back(makeIngradient("r1p-0.2c0.1", 1, -0.2, 0.1));
+    ingradients.push_back(makeIngredient("r1p0.1c0.1" , 1,  0.1, 0.1));
+    ingradients.push_back(makeIngredient("r1p0.2c0.1" , 1,  0.2, 0.1));
+    ingradients.push_back(makeIngredient("r1p0c0.1"   , 1,    0, 0.1));
+    ingradients.push_back(makeIngredient("r1p-0.1c0.1", 1, -0.1, 0.1));
+    ingradients.push_back(makeIngredient("r1p-0.2c0.1", 1, -0.2, 0.1));
     
-    ingradients.push_back(makeIngradient("r2p0.1c0" , 2,  0.1, 0));
-    ingradients.push_back(makeIngradient("r2p0.2c0" , 2,  0.2, 0));
-    ingradients.push_back(makeIngradient("r2p0c0"   , 2,    0, 0));
-    ingradients.push_back(makeIngradient("r2p-0.1c0", 2, -0.1, 0));
-    ingradients.push_back(makeIngradient("r2p-0.2c0", 2, -0.2, 0));
-    
+    ingradients.push_back(makeIngredient("r2p0.1c0" , 2,  0.1, 0));
+    ingradients.push_back(makeIngredient("r2p0.2c0" , 2,  0.2, 0));
+    ingradients.push_back(makeIngredient("r2p0c0"   , 2,    0, 0));
+    ingradients.push_back(makeIngredient("r2p-0.1c0", 2, -0.1, 0));
+    ingradients.push_back(makeIngredient("r2p-0.2c0", 2, -0.2, 0));
+
     grid.setIngredients(ingradients);
     grid.prepareIngredient();
+    //assertion for active inrgedent size
+    BOOST_CHECK_EQUAL(grid.ingredients.size(),ingredients.size());
+    BOOST_CHECK_EQUAL(grid.activeIngr0.size(),6)     //negative packingPriority
+    BOOST_CHECK_EQUAL(grid.activeIngr12.size(),9)    //zero or positive packingPriority
+    BOOST_CHECK_EQUAL(grid.activeIngr.size,ingredients.size())//initially all ingredient should be active
 
     std::vector<Ingradient> expected;
-    expected.push_back(makeIngradient("r2p-0.1c0"  , 2,-0.1 ,   0));
-    expected.push_back(makeIngradient("r1p-0.1c0.1", 1,-0.1 , 0.1));
-    expected.push_back(makeIngradient("r1p-0.1c0"  , 1,-0.1 ,   0));
-    expected.push_back(makeIngradient("r2p-0.2c0"  , 2,-0.2 ,   0));
-    expected.push_back(makeIngradient("r1p-0.2c0.1", 1,-0.2 , 0.1));
-    expected.push_back(makeIngradient("r1p-0.2c0"  , 1,-0.2 ,   0));
-    expected.push_back(makeIngradient("r2p0.1c0"   , 2, 0.1 ,   0));
-    expected.push_back(makeIngradient("r1p0.1c0.1" , 1, 0.1 , 0.1));
-    expected.push_back(makeIngradient("r1p0.1c0"   , 1, 0.1 ,   0));
-    expected.push_back(makeIngradient("r2p0.2c0"   , 2, 0.2 ,   0));
-    expected.push_back(makeIngradient("r1p0.2c0.1" , 1, 0.2 , 0.1));
-    expected.push_back(makeIngradient("r1p0.2c0"   , 1, 0.2 ,   0));
-    expected.push_back(makeIngradient("r1p0c0.1"   , 1, 0.05, 0.1));
-    expected.push_back(makeIngradient("r1p0c0"     , 1, 0.05,   0));
-    expected.push_back(makeIngradient("r2p0c0"     , 2, 0.1 ,   0));
 
+    expected.push_back(makeIngredient("r2p-0.1c0"  , 2,-0.1 ,   0));
+    expected.push_back(makeIngredient("r1p-0.1c0.1", 1,-0.1 , 0.1));
+    expected.push_back(makeIngredient("r1p-0.1c0"  , 1,-0.1 ,   0));
+    expected.push_back(makeIngredient("r2p-0.2c0"  , 2,-0.2 ,   0));
+    expected.push_back(makeIngredient("r1p-0.2c0.1", 1,-0.2 , 0.1));
+    expected.push_back(makeIngredient("r1p-0.2c0"  , 1,-0.2 ,   0));
+    expected.push_back(makeIngredient("r2p0.1c0"   , 2, 0.1 ,   0));
+    expected.push_back(makeIngredient("r1p0.1c0.1" , 1, 0.1 , 0.1));
+    expected.push_back(makeIngredient("r1p0.1c0"   , 1, 0.1 ,   0));
+    expected.push_back(makeIngredient("r2p0.2c0"   , 2, 0.2 ,   0));
+    expected.push_back(makeIngredient("r1p0.2c0.1" , 1, 0.2 , 0.1));
+    expected.push_back(makeIngredient("r1p0.2c0"   , 1, 0.2 ,   0));
+    expected.push_back(makeIngredient("r1p0c0.1"   , 1, 0.05, 0.1));
+    expected.push_back(makeIngredient("r1p0c0"     , 1, 0.05,   0));
+    expected.push_back(makeIngredient("r2p0c0"     , 2, 0.1 ,   0));
+
+    //test the order and the new packing priority computed for priority of 0 ->radius based
     for(int i=0; i<grid.activeIngr.size(); ++i) {
+            std::cout << grid.activeIngr[i]->name << std::endl;
             BOOST_CHECK_EQUAL(expected[i].name, grid.activeIngr[i]->name);
             BOOST_CHECK_EQUAL(expected[i].packingPriority, grid.activeIngr[i]->packingPriority);
     }
     
     //for( Ingradient * ing : grid.activeIngr) {
-        //std::cout << "expected.push_back(makeIngradient(\"" << ing->name << "\", " << ing->minRadius << "," << ing->packingPriority << "," << ing->completion << "));" << std::endl;
+        //std::cout << "expected.push_back(makeIngredient(\"" << ing->name << "\", " << ing->minRadius << "," << ing->packingPriority << "," << ing->completion << "));" << std::endl;
     //}
 }

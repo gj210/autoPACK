@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -39,7 +39,7 @@
 #include <vector>
 
 
-class Ingradient {
+class Ingredient {
 public:
     float radius;
     std::vector<float> radii;
