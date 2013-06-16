@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
             BOOST_CHECK_EQUAL(expected[i].packingPriority, grid.activeIngr[i]->packingPriority);
     }
     //Now drop ingredient. Negative ingredient should be pack first
-    for (int i = 0 ; i<6;i++ ) grid.dropIngredient(grid.activeIngr[i]);
+    for (int i = 0 ; i< 6;i++ ) grid.dropIngredient(grid.activeIngr[0]);
 
     std::vector<Ingredient> expected_after_drop;
     expected_after_drop.push_back(makeIngredient("r2p0.1c0"   , 2, 0.1 ,   0));
