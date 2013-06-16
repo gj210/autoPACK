@@ -181,7 +181,7 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
     //openvdb::Coord ijk(0,0,0);
     int nxnynz = dim.x()*dim.y()*dim.z();
     int nynz = dim.z()*dim.y();
-    int nx = dim.x();
+    //int nx = dim.x();
     int ny = dim.y();
     int nz = dim.z();
     int integer;
@@ -234,7 +234,7 @@ void printIngredientGrid(Ingradient ingr){
         if (ingr.bbox.isInside(cc)){
             counter++;
             float d = iter.getValue();
-            float dv = d;
+            //float dv = d;
             openvdb::Vec3f pos=ingr.gsphere->indexToWorld(cc); //getValue? 
             /*if (iter.getValue() > 0.0 ){
                 float d = iter.getValue();
@@ -284,7 +284,7 @@ void printTheGrid(big_grid g){
         //if (g.ingredients[1].bbox.isInside(cc)){
             counter++;
             float d = iter.getValue();
-            float dv = d;
+            //float dv = d;
             openvdb::Vec3f pos=g.distance_grid->indexToWorld(cc); //getValue? 
             /*if (iter.getValue() > 0.0 ){
                 float d = iter.getValue();
@@ -442,10 +442,8 @@ int main(int argc, char* argv[])
     //load and setup the pack
     big_grid grid = load_xml(filename,0,seed);
     
-    int i_ijk[3]={0,0,0};
     int counterRej=0;
     int rejection=0;
-    bool accepted = true;
 
     openvdb::Coord cc;
     std::vector<openvdb::Vec3f> usedPoints;

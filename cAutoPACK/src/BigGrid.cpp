@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -134,15 +134,17 @@ bool ingredient_compare2(Ingradient* x, Ingradient* y){
 
 
 //some expermental functions for the IJK<->U grid index convertion
+//currently unused
 inline unsigned getU(openvdb::Coord dim,openvdb::Coord ijk){
     return (int)(ijk.x()*dim.x()*dim.y() + ijk.y()*dim.x() + ijk.z());
 }
+
 inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
     // = {0,0,0};    
     //openvdb::Coord ijk(0,0,0);
     int nxnynz = dim.x()*dim.y()*dim.z();
     int nynz = dim.z()*dim.y();
-    int nx = dim.x();
+    //int nx = dim.x();
     int ny = dim.y();
     int nz = dim.z();
     int integer;
@@ -409,8 +411,8 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingradient* ingr, float radius,flo
     performs bottom-up tree traversal using cached information from previous traversals. 
     Caching greatly improves performance, but it is inherently not thread-safe. 
     However, a single grid may have multiple value accessors, so each thread can 
-    safely be assigned its own value accessor. Uncached—and therefore slower, 
-    but thread-safe—random access is possible through a grid's tree, for example 
+    safely be assigned its own value accessor. UncachedÂ—and therefore slower, 
+    but thread-safeÂ—random access is possible through a grid's tree, for example 
     with a call like grid.tree()->getValue(ijk).
     */
     //bottom-up tree traversal-> how to get real random after
@@ -641,7 +643,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingradient *ingr )
             openvdb::Coord spcc;
             openvdb::Coord ci;
             openvdb::Vec3f spxyz;
-            bool accepted = true;
+
             // Save copies of the two grids; compositing operations always
             // modify the A grid and leave the B grid empty.
             if (DEBUG) std::cout << "#duplicate ingredient grid "<< std::endl;
@@ -649,9 +651,11 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingradient *ingr )
             //openvdb::FloatGrid::Ptr copyOfGridSphere = ingr.gsphere->deepCopy();
             copyOfGridSphere->setTransform(targetXform);
 
+            /*
             openvdb::Mat4R xform =
                 sourceXform->baseMap()->getAffineMap()->getMat4() *
                 targetXform->baseMap()->getAffineMap()->getMat4().inverse();
+            */
 
             // Create the transformer.
             openvdb::tools::GridTransformer transformer(targetXform->baseMap()->getAffineMap()->getMat4());
@@ -860,7 +864,7 @@ int big_grid::calculateTotalNumberMols()
         std::cout << "#totalNumMols Fill5if = " << totalNumMols << std::endl;
     }else {                
         for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
-            float threshProb = thresholdPriorities[i];
+            //float threshProb = thresholdPriorities[i];
             Ingradient* ing = activeIngr[nls];
             std::cout << "#nmol Fill5else is for ingredient : "<< ingredients[i].name<< ' '  << ingredients[i].nbMol<< std::endl ;
             totalNumMols += ing->nbMol;

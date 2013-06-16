@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -285,7 +285,7 @@ void getMeshs_nodew(pugi::xml_node nd,
                             std::vector<mesh>* meshs){
     if (DEBUG) std::cout << "#getNode " <<nd.attribute("id").value()<< std::endl;    
     openvdb::math::Mat4d prev;
-    unsigned int n = 0, t;
+    unsigned int t;
     prev = *trafo;
     if (DEBUG) std::cout << "#getNodeTransformation * prev " <<prev<< std::endl;
     //get node transformation  
@@ -330,7 +330,7 @@ void getMeshs_node(pugi::xml_node nd,
                             std::vector<mesh>* meshs){
     if (DEBUG) std::cout << "#getNode " <<nd.attribute("id").value()<< std::endl;    
     openvdb::math::Mat4d prev;
-    unsigned int n = 0, t;
+    unsigned int t;
     prev = trafo;
     if (DEBUG) std::cout << "prev =" <<prev<< std::endl;
     //get node transformation  
@@ -564,7 +564,7 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
     //get the option
     const double smallestObjectSize = atof(doc.child("AutoFillSetup").child("options").attribute("smallestProteinSize").value());
     const unsigned seed = _seed;
-    const int mode = _mode;
+    //const int mode = _mode; 
     stepsize = smallestObjectSize * 1.1547;
     std::cout <<"#step " << stepsize <<std::endl;
     std::cout <<"#seed " <<seed<<std::endl;
@@ -600,7 +600,7 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
         openvdb::Vec3f color(1,0,0);
         if (ingredient.attribute("color")){        
             std::string strcol(ingredient.attribute("color").value());
-            openvdb::Vec3f color = getArray(strcol);
+            openvdb::Vec3f color = getArray(strcol);//TODO : pass to inredient
         }
         unsigned nbJitter = ingredient.attribute("nbJitter").as_int();
         if (DEBUG)std::cout << "#color "<< color << std::endl;
@@ -662,7 +662,6 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
         //packing mode overwrite from xml file
         ingr.packingMode = std::string(ingredient.attribute("packingMode").value());
         _ingredients.push_back(ingr);
-        float volume= 1;
         std::cout << "#ingredient done!" << std::endl;
     }
     //make the grid and return it

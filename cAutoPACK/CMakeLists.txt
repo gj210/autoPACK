@@ -57,8 +57,11 @@ if (UNIX)
     endif()
 endif()
 
-
 set(Boost_USE_STATIC_LIBS        ON)
+if (UNIX)
+  set(Boost_USE_STATIC_LIBS        OFF)
+endif()
+
 find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
 FILE(GLOB AUTOPACK_TESTS_FILES

@@ -11,7 +11,7 @@
 # Translation from Python initiated March 15, 2010 by Ludovic Autin
 #
 #
-# Copyright: Graham Johnson Ludovic Autin ©2010
+# Copyright: Graham Johnson Ludovic Autin Â©2010
 #
 # This file "autopack.cpp" is part of autoPACK, cellPACK.
 #    
@@ -44,8 +44,11 @@
 #endif
 
 #include <vector>
-//Disable warnings from openvdb in Visual Studio
-#pragma warning(push, 0)   
+
+#ifdef _MSC_VER
+    //Disable warnings from openvdb in Visual Studio
+    #pragma warning(push, 0)   
+#endif
 
 /*
 openvdb includes
@@ -58,7 +61,10 @@ openvdb includes
 #include <openvdb/tree/Tree.h>
 #include <openvdb/tools/GridTransformer.h>
 
-#pragma warning(pop)
+#ifdef _MSC_VER
+    //Disable warnings from openvdb in Visual Studio
+    #pragma warning(pop)
+#endif
 
 static const float dmax = 999999.0f;        //maximum value assign to the grid for intialisation
 static const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
