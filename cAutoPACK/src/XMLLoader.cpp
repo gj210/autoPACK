@@ -556,7 +556,7 @@ mesh getMesh(std::string path){
 
 
 //we load the autopack xml setup and create the grid class object
-big_grid load_xml(std::string path,int _mode,unsigned _seed){
+std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
     //std::cout << path << std::endl;
@@ -669,12 +669,10 @@ big_grid load_xml(std::string path,int _mode,unsigned _seed){
     const openvdb::Vec3d iupright(bb[3],bb[4],bb[5]);    
     if (DEBUG)std::cout << "#box "<<ibotleft<<" "<<iupright << std::endl;
 
-    //should create the grid from a xml file...easier setup
-    big_grid g(stepsize,ibotleft,iupright,seed);
-    g.vRangeStart=0.0;
-    g.pickWeightedIngr=pickWeightedIngr;
-    g.pickRandPt =pickRandPt; 
-    //g.setMode(0);//1-close packing 0-random
-    g.setIngredients(_ingredients);
-    return g; 
+    //should create the grid from a xml file...easier setup    
+    std::shared_ptr<big_grid> grid(new big_grid(_ingredients,stepsize,ibotleft,iupright,seed));
+    grid->ingredientsDipatcher.pickWeightedIngr=pickWeightedIngr;
+    grid->pickRandPt =pickRandPt; 
+    //g.setMode(0);//1-close packing 0-random    
+    return grid;
 }

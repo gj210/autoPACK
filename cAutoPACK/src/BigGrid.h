@@ -42,6 +42,7 @@
 #include <random>
 
 #include "Ingredient.h"
+#include "IngredientsDispatcher.h"
 
 
 /* the main class that handle the packing
@@ -54,25 +55,16 @@ struct big_grid {
     openvdb::FloatGrid::Ptr distance_grid;
     unsigned num_points;        //total number of point in the grid
 
-    // needs 8*n bytes 
-    //Lot of theses parameteres are deprecated and not used.
-    //original wrote in hw.cc file
-    std::vector<Ingredient> ingredients;//the list of sphere ingredient to pack
-    std::vector<Ingredient*> activeIngr;
-    std::vector<Ingredient*> activeIngr0;
-    std::vector<Ingredient*> activeIngr12;
-    std::vector<float> normalizedPriorities0;
-    std::vector<float> normalizedPriorities;
-    std::vector<float> thresholdPriorities; 
+    IngradientsDispatcher ingredientsDipatcher;
+   
     std::vector<openvdb::Vec3f> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
     unsigned num_empty;         //the number of free point available
     
     float space;                //spacing of the grid (unit depends on user)
-    float lowestPriority;       //priority the lowest after sorting
+    
     float totalPriorities;
-    float vRangeStart;
-    bool pickWeightedIngr;
+
     bool pickRandPt;
 
     std::default_random_engine generator;
@@ -87,26 +79,12 @@ struct big_grid {
     std::map<int, Ingredient*> results; 
 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
-    big_grid(float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
+    big_grid(std::vector<Ingredient> const & _ingredients, float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
 
     unsigned int initializeNumPointsCount();
 
     openvdb::FloatGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
 
-    void setIngredients(std::vector<Ingredient> const & _ingredients);
-    
-    void getSortedActiveIngredients();
-
-    void prepareIngredient();
-
-    void updatePriorities();
-
-    void dropIngredient(Ingredient *ingr);
-
-    Ingredient* pickIngredient();
-  
-    int getPointToDrop_i(Ingredient ingr, float radius,float jitter);
-    
     openvdb::Coord getPointToDropCoord(Ingredient* ingr, float radius,float jitter,int *emptyList);
 
     bool try_drop(unsigned pid,Ingredient *ingr);
@@ -122,7 +100,6 @@ struct big_grid {
     int calculateTotalNumberMols();
 
 private:
-    void countTotalPriorities();
-    void calculateThresholdAndNormalizedPriorities();
+        
     
 };

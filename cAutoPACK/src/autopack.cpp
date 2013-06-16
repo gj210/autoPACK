@@ -222,7 +222,7 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
     return openvdb::Coord(i_ijk[0],i_ijk[1],i_ijk[2]);   
 }
 
-void printIngredientGrid(Ingredient ingr){
+void printIngredientGrid(Ingredient const& ingr){
     std::cout << "iname = \"" << ingr.name << "\"\n"; 
     std::cout << "inside=[]\n";
     int counter=0;
@@ -243,7 +243,7 @@ void printIngredientGrid(Ingredient ingr){
                 std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
             }*/
             //if (iter.getValue() > 0.0 ){
-            //    if (d == dmax) dv=g.maxradius;
+            //    if (d == dmax) dv=g->maxradius;
             //    std::cout << "Distances.append( "<< dv <<")\n";
             //    std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
            // }
@@ -266,7 +266,7 @@ void printIngredientGrid(Ingredient ingr){
     std::cout << "isph=helper.PointCloudObject(iname+\"_inside\",vertices = inside,materials=[[0,0,1]],parent = parentHider)\n";
 }
 
-void printTheGrid(big_grid g){
+void printTheGrid(std::shared_ptr<big_grid> g){
     std::cout << "inside=[]\n";
     std::cout << "outside=[]\n";
     std::cout << "background=[]\n";
@@ -276,16 +276,16 @@ void printTheGrid(big_grid g){
     int counter=0;
     openvdb::Coord cc;
     //the main grid, extract some distance information from it
-    for (openvdb::FloatGrid::ValueAllIter  iter = g.distance_grid->beginValueAll(); iter; ++iter) {//g.distance_grid
-    //for (openvdb::FloatGrid::ValueAllIter  iter = g.ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
+    for (openvdb::FloatGrid::ValueAllIter  iter = g->distance_grid->beginValueAll(); iter; ++iter) {//g->distance_grid
+    //for (openvdb::FloatGrid::ValueAllIter  iter = g->ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
         //create a sphere with color or radius dependant of value ?
         cc=iter.getCoord();
-        if (g.bbox.isInside(cc)){
-        //if (g.ingredients[1].bbox.isInside(cc)){
+        if (g->bbox.isInside(cc)){
+        //if (g->ingredients[1].bbox.isInside(cc)){
             counter++;
             float d = iter.getValue();
             //float dv = d;
-            openvdb::Vec3f pos=g.distance_grid->indexToWorld(cc); //getValue? 
+            openvdb::Vec3f pos=g->distance_grid->indexToWorld(cc); //getValue? 
             /*if (iter.getValue() > 0.0 ){
                 float d = iter.getValue();
                 if (d == dmax) d=90.0;
@@ -293,7 +293,7 @@ void printTheGrid(big_grid g){
                 std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
             }*/
             //if (iter.getValue() > 0.0 ){
-            //    if (d == dmax) dv=g.maxradius;
+            //    if (d == dmax) dv=g->maxradius;
             //    std::cout << "Distances.append( "<< dv <<")\n";
             //    std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
            // }
@@ -317,38 +317,38 @@ void printTheGrid(big_grid g){
     std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
 }
 
-void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid ) 
+void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid ) 
 {
     std::cout << "pts=[" << std::endl;
     openvdb::Vec3f pos;
     Ingredient * ingr;
-    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
-        ingr = g.results[i];
+    for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+        ingr = g->results[i];
         openvdb::math::Transform::Ptr targetXform =
             openvdb::math::Transform::createLinearTransform();
         // Add the offset.
-        targetXform->preMult(g.rrot[i]);
-        targetXform->postTranslate(g.rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
+        targetXform->preMult(g->rrot[i]);
+        targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-        for(openvdb::Vec3f const & position : g.results[i]->positions ) {        
+        for(openvdb::Vec3f const & position : g->results[i]->positions ) {        
             pos = mat.transform(position);
             std::cout << '[' << pos.x() <<',' << pos.y() << ',' << pos.z() << ']' << ',' <<std::endl; 
         }        
     }
     std::cout << "]" << std::endl; 
     std::cout << "matrices={}" << std::endl;
-    for(unsigned i = 0; i < g.ingredients.size(); ++i) { 
-        std::cout << "matrices[\"" << g.ingredients[i].name << "\"]=[]\n";
+    for(Ingredient const & ingr: g->ingredientsDipatcher) { 
+        std::cout << "matrices[\"" << ingr.name << "\"]=[]\n";
     }
     //openvdb::Vec3f pos;
     //sphere * ingr;
-    for(unsigned i = 0; i < g.rtrans.size(); ++i) { 
-        ingr = g.results[i];
+    for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+        ingr = g->results[i];
         openvdb::math::Transform::Ptr targetXform =
             openvdb::math::Transform::createLinearTransform();
         // Add the offset.
-        targetXform->preMult(g.rrot[i]);
-        targetXform->postTranslate(g.rtrans[i]);
+        targetXform->preMult(g->rrot[i]);
+        targetXform->postTranslate(g->rtrans[i]);
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
         std::cout << "matrices[\""<< ingr->name <<"\"].append( " << mat  <<")"<< std::endl;
     }
@@ -357,8 +357,8 @@ void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<
     std::cout << "r=[" << std::endl  ;  
     for(std::vector<float>::size_type i = 0; i < radiis.size(); ++i) { 
         //std::cout << i << ' ' << radiis[i] << std::endl;
-        for (std::vector<float>::size_type j = 0 ; j < g.results[i]->radii.size() ; j ++){
-            std::cout << g.results[i]->radii[j] << ',' <<std::endl; //rot? 
+        for (std::vector<float>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
+            std::cout << g->results[i]->radii[j] << ',' <<std::endl; //rot? 
         }        
         //std::cout << 3.0 << ',' <<std::endl; 
         //std::cout << 5.0 << ',' <<std::endl;  
@@ -368,7 +368,7 @@ void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<
     std::cout << "color=[" << std::endl  ;  
     for(std::vector<float>::size_type i = 0; i < colors.size(); ++i) { 
         //std::cout << i << ' ' << usedPoints[i] << std::endl;
-        for (std::vector<float>::size_type j = 0 ; j < g.results[i]->radii.size() ; j ++){
+        for (std::vector<float>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
             std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl; 
         }
         //std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl;  
@@ -386,35 +386,35 @@ void generatePythonScript( big_grid &g, std::vector<float> &radiis, std::vector<
 
     if (ds_grid) printTheGrid(g);
 
-    std::cout << "#" << g.num_empty << std::endl;
-    std::cout << "#" << g.distance_grid->activeVoxelCount() << std::endl;
+    std::cout << "#" << g->num_empty << std::endl;
+    std::cout << "#" << g->distance_grid->activeVoxelCount() << std::endl;
     float mini=0.0;
     float maxi=0.0;
-    g.distance_grid->evalMinMax(mini,maxi);
+    g->distance_grid->evalMinMax(mini,maxi);
     std::cout << "#" << mini << " " <<maxi << std::endl;
     //mesh
     //foreac ingredient load the mesh?
     //if mesh
     //for each inredient get the original mesh and create instance for their different poisition in the grid
-    for(unsigned i = 0; i < g.ingredients.size(); ++i) { //segmntaton fault here ?
-        if (ds_ingrgrid) printIngredientGrid(g.ingredients[i]);
+    for(Ingredient const & ingr: g->ingredientsDipatcher) {
+        if (ds_ingrgrid) printIngredientGrid(ingr);
         //this will create the individual ingredient grid for debugging the voxelization
-        //if (g.ingredients[i].filename.empty())
+        //if (g->ingredients[i].filename.empty())
         //    continue;
-        std::cout << "# ingr " << g.ingredients[i].radius << std::endl;
-        std::cout << "iname = \"" << g.ingredients[i].name << "\"\n";    
+        std::cout << "# ingr " << ingr.radius << std::endl;
+        std::cout << "iname = \"" << ingr.name << "\"\n";    
         std::cout << "parent=helper.newEmpty(iname+\"_parent\",parent = parentHider)\n";
-        std::cout << "helper.read(\"" << g.ingredients[i].filename << "\")\n"; 
+        std::cout << "helper.read(\"" << ingr.filename << "\")\n"; 
         std::cout << "geom = helper.getObject(iname)\n";
         std::cout << "if geom is not None :\n";
         std::cout << "\thelper.rotateObj(geom,[0,math.pi/2.0,0.0])\n";//rotate on X in C4D
         std::cout << "\thelper.reParent(geom,parent)\n";
         std::cout << "\tiparent=helper.newEmpty(iname+\"_iparent\")\n";
-        std::cout << "\taxis = " << g.ingredients[i].principalVector << "\n";
+        std::cout << "\taxis = " << ingr.principalVector << "\n";
         std::cout << "\tipoly = helper.instancePolygon(iname+\"inst\",\n";
         std::cout << "                      matrices=matrices[iname],\n";
         std::cout << "                      mesh=parent,parent = iparent,\n";
-        std::cout << "                      transpose= False,colors=["<<g.ingredients[i].color << "],\n";
+        std::cout << "                      transpose= False,colors=["<<ingr.color << "],\n";
         std::cout << "                      axis=axis)\n";
         //openvdb use convex - hull, art was suggesting decomposing the mesh to compensate
         //or just use the multisphere as in blood recipe. Using the mesh merging seems difficult because
@@ -440,61 +440,39 @@ int main(int argc, char* argv[])
     openvdb::initialize();
     
     //load and setup the pack
-    big_grid grid = load_xml(filename,0,seed);
+    std::shared_ptr<big_grid> grid = load_xml(filename,0,seed);
     
-    int counterRej=0;
     int rejection=0;
 
     openvdb::Coord cc;
     std::vector<openvdb::Vec3f> usedPoints;
     std::vector<float> radiis;
     std::vector<openvdb::Vec3f> colors;
-    
-    grid.prepareIngredient();
 
-    int totalNumMols = grid.calculateTotalNumberMols();
     std::cout << "#prepare ingredient complete\n";
 
-    int counter = 0;
     int PlacedMols=0;
     int emptyList;
 
-    openvdb::FloatGrid::Accessor accessor_distance = grid.distance_grid->getAccessor();
+    openvdb::FloatGrid::Accessor accessor_distance = grid->distance_grid->getAccessor();
 
-    while(grid.num_empty > 0) {     
-    //for(unsigned i = 0; i < 2 ; ++i) {//nx*ny*nz
-        //pick the object to drop
+    while(grid->num_empty > 0 && grid->ingredientsDipatcher.hasNextIngradient()) {     
         if (DEBUG) std::cout << "#begin loop\n";
-        if (grid.activeIngr.size() == 0) {
-                std::cout << "#broken by no more ingredient Done!!!****\n";
-                break;
-        }
-        if (grid.vRangeStart>1.0){
-                std::cout << "#broken by vRange and hence Done!!!****\n";
-                break;
-        }
-        Ingredient* ingr = grid.pickIngredient();
-        //sphere ingr= g.sample_ingredient();//sampl using distance information as well ?        
+
+        Ingredient* ingr = grid->ingredientsDipatcher.pickIngredient();
         if (!ingr->isActive()) {
             std::cout << "#ingredient not active, complete >= 1.0 \n";
-            //g.dropIngredient(ingr);            
-            //continue;
         }
+
         if (DEBUG) std::cout  << "#" << ingr->name << " c " << ingr->completion << " counter " << ingr->counter<<" nbmol " << ingr->nbMol <<std::endl;
-        //unsigned s = g.sample_empty(); //get the next available point randomly
-        //int s = g.getPointToDrop(ingr, ingr->radius,1.0);
-        openvdb::Coord s = grid.getPointToDropCoord(ingr, ingr->minRadius,1.0,&emptyList);
+
+        openvdb::Coord s = grid->getPointToDropCoord(ingr, ingr->minRadius,1.0,&emptyList);
         if (DEBUG) std::cout  << "#" << s << " " <<emptyList << " " << accessor_distance.getValue(s) << " " << ingr->radius <<std::endl;
         if ( emptyList == -1 ){
             continue;
         }
-        //unsigned s = g.sample_empty(); 
-        
-        //if (mode == 1) s=g.sample_empty_distance(ingr.radius); //get the next available point randomly  
-        //else if (mode == 0)  s=g.sample_empty();    
-        //unsigned s = g.sample_closest_empty(); 
-        //bool collision = g.try_drop(s,ingr);
-        bool collision = grid.try_dropCoord(s,ingr);
+
+        bool collision = grid->try_dropCoord(s,ingr);
         if (!collision){
             PlacedMols++;
             radiis.push_back(ingr->radius);
@@ -502,37 +480,31 @@ int main(int argc, char* argv[])
             rejection=0;  
             ingr->counter++;
             ingr->completion = (float)ingr->counter/(float)ingr->nbMol;
-            if (DEBUG) std::cout << "# main loop accepted c " <<ingr->completion<< " " << ingr->name << " counter " << ingr->counter << " ijk " << s << " nempty " << grid.num_empty << " r " << rejection <<  " collide " << collision << std::endl;          
+            if (DEBUG) std::cout << "# main loop accepted c " <<ingr->completion<< " " << ingr->name << " counter " << ingr->counter << " ijk " << s << " nempty " << grid->num_empty << " r " << rejection <<  " collide " << collision << std::endl;          
             if (ingr->completion >= 1.0) {
                 std::cout << "#ingredient completion no more nmol to place "<< ingr->counter << std::endl;
-                grid.dropIngredient(ingr);            
-            //continue;
+                grid->ingredientsDipatcher.dropIngredient(ingr);            
                 }
             }
         else {
             ingr->rejectionCounter++;
             if (ingr->rejectionCounter > ingr->rejectionThreshold){
                 std::cout << "#ingredient completion too many rejection "<< ingr->rejectionCounter << std::endl;
-                ingr->completion =1.0;//erase from list ingredient /
-                grid.dropIngredient(ingr); 
+                grid->ingredientsDipatcher.dropIngredient(ingr); 
             }
-            grid.visited_rejected_coord.push_back(s);
+            grid->visited_rejected_coord.push_back(s);
             rejection++;  
-            counterRej++; 
-            if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid.num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
+            if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid->num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
                  
         }  
-        counter++;
-        //g.set_filled(s); 
         if   (rejection > 2000) break; 
-        //if   (counterRej > 100) break; 
-        //if   (counter > 10) break;        
     }
+    
     //The packing is done, we will generate a python script executed in a 3d Host for the vizualisation
     //this can be replace by any output.
     
-    std::cout << "#distance_grid->activeVoxelCount() " << grid.num_empty << " " <<grid.distance_grid->activeVoxelCount()<<std::endl;
-    std::cout << "#main loop " << grid.rtrans.size() << " on " << totalNumMols << std::endl;
+    std::cout << "#distance_grid->activeVoxelCount() " << grid->num_empty << " " <<grid->distance_grid->activeVoxelCount()<<std::endl;
+    std::cout << "#main loop " << grid->rtrans.size() << std::endl;
 
     clock_t endRun = clock();
     std::cout << "#Running time: " << std::fixed << double(endRun-beginRun)/(60*1000) << std::defaultfloat << std::endl;

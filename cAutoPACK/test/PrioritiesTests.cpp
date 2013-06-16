@@ -32,7 +32,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
-#include "../src/BigGrid.h"
+#include "../src/IngredientsDispatcher.h"
 #include "../src/Types.h"
 
 float stepsize = float(15*1.1547); 
@@ -47,12 +47,8 @@ static Ingredient makeIngredient(std::string name, float minRadius, float packin
 };
 
 BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
-    const openvdb::Vec3d ibotleft(-13,-13,-13);
-    const openvdb::Vec3d iupright(13,13,13);
-    big_grid grid(/* stepsize */ 1,ibotleft,iupright,/* seed */ 123);    
-    
+        
     std::vector<Ingredient> ingredients;    
-
     ingredients.push_back(makeIngredient("r1p0.1c0" , 1,  0.1, 0));
     ingredients.push_back(makeIngredient("r1p0.2c0" , 1,  0.2, 0));
     ingredients.push_back(makeIngredient("r1p0c0"   , 1,    0, 0));
@@ -71,13 +67,13 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     ingredients.push_back(makeIngredient("r2p-0.1c0", 2, -0.1, 0));
     ingredients.push_back(makeIngredient("r2p-0.2c0", 2, -0.2, 0));
 
-    grid.setIngredients(ingredients);
-    grid.prepareIngredient();
+    IngradientsDispatcher dispatcher(ingredients, 300 /*not important in test*/, /* seed */ 123);    
+
     //assertion for active inrgedent size
-    BOOST_CHECK_EQUAL(grid.ingredients.size(),ingredients.size());
-    BOOST_CHECK_EQUAL(grid.activeIngr0.size(),6) ;    //negative packingPriority
-    BOOST_CHECK_EQUAL(grid.activeIngr12.size(),9) ;   //zero or positive packingPriority
-    BOOST_CHECK_EQUAL(grid.activeIngr.size(),ingredients.size());//initially all ingredient should be active
+    BOOST_CHECK_EQUAL(dispatcher.ingredients.size(),ingredients.size());
+    BOOST_CHECK_EQUAL(dispatcher.activeIngr0.size(),6) ;    //negative packingPriority
+    BOOST_CHECK_EQUAL(dispatcher.activeIngr12.size(),9) ;   //zero or positive packingPriority
+    BOOST_CHECK_EQUAL(dispatcher.activeIngr.size(),ingredients.size());//initially all ingredient should be active
 
     std::vector<Ingredient> expected; //excpectation after initialization
 
@@ -98,15 +94,15 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     expected.push_back(makeIngredient("r2p0c0"     , 2, 0.1 ,   0));
 
     //test the order and the new packing priority computed for priority of 0 ->radius based
-    for(int i=0; i<grid.activeIngr.size(); ++i) {
-            std::cout << grid.activeIngr[i]->name << std::endl;
-            BOOST_CHECK_EQUAL(expected[i].name, grid.activeIngr[i]->name);
-            BOOST_CHECK_EQUAL(expected[i].packingPriority, grid.activeIngr[i]->packingPriority);
+    for(int i=0; i<dispatcher.activeIngr.size(); ++i) {
+            std::cout << dispatcher.activeIngr[i]->name << std::endl;
+            BOOST_CHECK_EQUAL(expected[i].name, dispatcher.activeIngr[i]->name);
+            BOOST_CHECK_EQUAL(expected[i].packingPriority, dispatcher.activeIngr[i]->packingPriority);
     }
     //there is no more ingredient with priority = 0.
 
     //Now drop ingredient. Negative ingredient should be pack first
-    for (int i = 0 ; i< 6;i++ ) grid.dropIngredient(grid.activeIngr[0]);
+    for (int i = 0 ; i< 6;i++ ) dispatcher.dropIngredient(dispatcher.activeIngr[0]);
 
     std::vector<Ingredient> expected_after_drop;
     expected_after_drop.push_back(makeIngredient("r1p0c0.1"   , 1, 0.05, 0.1));
@@ -119,17 +115,17 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     expected_after_drop.push_back(makeIngredient("r1p0.2c0.1" , 1, 0.2 , 0.1));
     expected_after_drop.push_back(makeIngredient("r1p0.2c0"   , 1, 0.2 ,   0));
     //test the order and the new packing priority computed for priority of 0 ->radius based
-    for(int i=0; i<grid.activeIngr.size(); ++i) {
+    for(int i=0; i<dispatcher.activeIngr.size(); ++i) {
             //std::cout << grid.activeIngr[i]->name << " " << expected_after_drop[i].name << std::endl;
             //std::cout << grid.activeIngr[i]->packingPriority << " " << expected_after_drop[i].packingPriority << std::endl;
-            BOOST_CHECK_EQUAL(expected_after_drop[i].name, grid.activeIngr[i]->name);
-            BOOST_CHECK_EQUAL(expected_after_drop[i].packingPriority, grid.activeIngr[i]->packingPriority);
+            BOOST_CHECK_EQUAL(expected_after_drop[i].name, dispatcher.activeIngr[i]->name);
+            BOOST_CHECK_EQUAL(expected_after_drop[i].packingPriority, dispatcher.activeIngr[i]->packingPriority);
     }
     //Continue to Drop and see how it goes, also with change of completion
     //after negative droppin the inrdent picking is based on the weight.
     //r2p0.2c0 should be the mot probable
-    grid.dropIngredient(grid.activeIngr[6]);//
-    grid.activeIngr[1]->completion = 0.6;
+    dispatcher.dropIngredient(dispatcher.activeIngr[6]);//
+    dispatcher.activeIngr[1]->completion = 0.6;
 
     std::vector<Ingredient> expected_after_drop_and_completion;
     expected_after_drop_and_completion.push_back(makeIngredient("r1p0c0.1"   , 1, 0.05, 0.1));//shouldn't be r1p0c0 here ? verify with Graham if behaviour is correct here
@@ -141,11 +137,11 @@ BOOST_AUTO_TEST_CASE( PrioritiestSortingTest ) {
     expected_after_drop_and_completion.push_back(makeIngredient("r1p0.2c0.1" , 1, 0.2 , 0.1));
     expected_after_drop_and_completion.push_back(makeIngredient("r1p0.2c0"   , 1, 0.2 ,   0));
 
-    for(int i=0; i<grid.activeIngr.size(); ++i) {
-            std::cout << grid.activeIngr[i]->name << " " << expected_after_drop_and_completion[i].name << std::endl;
-            std::cout << grid.activeIngr[i]->packingPriority << " " << expected_after_drop_and_completion[i].packingPriority << std::endl;
-            BOOST_CHECK_EQUAL(expected_after_drop_and_completion[i].name, grid.activeIngr[i]->name);
-            BOOST_CHECK_EQUAL(expected_after_drop_and_completion[i].packingPriority, grid.activeIngr[i]->packingPriority);
+    for(int i=0; i<dispatcher.activeIngr.size(); ++i) {
+            std::cout << dispatcher.activeIngr[i]->name << " " << expected_after_drop_and_completion[i].name << std::endl;
+            std::cout << dispatcher.activeIngr[i]->packingPriority << " " << expected_after_drop_and_completion[i].packingPriority << std::endl;
+            BOOST_CHECK_EQUAL(expected_after_drop_and_completion[i].name, dispatcher.activeIngr[i]->name);
+            BOOST_CHECK_EQUAL(expected_after_drop_and_completion[i].packingPriority, dispatcher.activeIngr[i]->packingPriority);
     }
 
     //for( Ingradient * ing : grid.activeIngr) {
