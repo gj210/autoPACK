@@ -13,7 +13,7 @@
 		molarity="0.5" 
 		name="mSphere" 
 		nbJitter="5" 
-		rejectionThreshold = "10000"
+		rejectionThreshold = "600"
 		nbMol="250" 
 		packingMode="close" 
 		packingPriority="0." 

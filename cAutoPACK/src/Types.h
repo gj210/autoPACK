@@ -67,7 +67,7 @@ openvdb includes
 
 static const float dmax = 999999.0f;        //maximum value assign to the grid for intialisation
 static const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
-static const bool DEBUG = true;                   //DEBUG mode for prining some information
+static const bool DEBUG = false;                   //DEBUG mode for prining some information
 static const float MaxRadius = float((2.0*1.1547)*20.0);  //Maximum radius allowed, this is used for the voxelisation
 static const float spherewidth = 10.0f;             //default or more ? close packing need to increase this number
 static const std::string packing = "random";       //packing mode, can be random or close

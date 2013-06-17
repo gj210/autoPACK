@@ -241,7 +241,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,flo
             else {
                 cijk = mini_cijk;
             }
-            if (ingr->rejectionCounter % 100 == 0){
+            if (ingr->rejectionCounter % 300 == 0){
                 cijk = allIngrPts[(int)(distribution(generator) * allIngrPts.size())];
                 //increase the threshold ?
                 //ingr->rejectionCounter = 0;//probably not enought....risk to never end...
