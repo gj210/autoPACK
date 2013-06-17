@@ -1,7 +1,28 @@
 <?xml version="1.0" ?>
 	<AutoFillSetup name="multiSpheres">
-	<options EnviroOnly="False" _hackFreepts="False" _timer="False" boundingBox="[[0.0, 0.0, 0.0], [40.0, 40.0, 40.0]]" cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" gradients="[]" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="200" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/AutoFill/autoFillRecipeScripts/2DsphereFill/results/SpherefillResult.afr" runTimeDisplay="False" saveResult="False" smallestProteinSize="2" use_gradient="False" version="1.0" windowsSize="10.0"/>
+	<options EnviroOnly="False" _hackFreepts="False" _timer="False" boundingBox="[[0.0, 0.0, 0.0], [40.0, 40.0, 40.0]]" cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" gradients="[]" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="200" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="SpherefillResult.afr" runTimeDisplay="False" saveResult="False" smallestProteinSize="1" use_gradient="False" version="1.0" windowsSize="10.0"/>
 	<cytoplasme>
-	<ingredient Type="MultiSphere" color="[0.46700000000000003, 0.23899999260902405, 0.97200000286102295]" coordsystem="right" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" molarity="0.5" name="mSphere" nbJitter="5" nbMol="49" packingMode="close" packingPriority="0." perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0],[0,0,7]]]" principalVector="(1, 0, 0)" radii="[[3,4]]" rotRange="6.2831" useRotAxis="False" use_mesh_rb="False"/>
+	<ingredient 
+		Type="MultiSphere" 
+		color="[0.46700000000000003, 0.23899999260902405, 0.97200000286102295]" 
+		coordsystem="right" 
+		cutoff_boundary="0" 
+		cutoff_surface="0" 
+		gradient="" 
+		jitterMax="(1, 1, 1)" 
+		molarity="0.5" 
+		name="mSphere" 
+		nbJitter="15" 
+		nbMol="500" 
+		packingMode="random" 
+		packingPriority="0." 
+		perturbAxisAmplitude="0.1" 
+		placeType="jitter" 
+		positions="[[[0, 0, 0],[0,0,5]]]" 
+		principalVector="(1, 0, 0)" 
+		radii="[[3,4]]" 
+		rotRange="6.2831" 
+		useRotAxis="False" 
+		use_mesh_rb="False"/>
 	</cytoplasme>
 	</AutoFillSetup>
