@@ -318,7 +318,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     // -- Constructing a uniform, cell-centered transform --
 
     // The offset to cell-center points
-    openvdb::math::Vec3f offset;//(delta/2., delta/2., delta/2.);
     openvdb::math::Mat4d rotMatj;
     rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
     //setTranslation>?
@@ -364,7 +363,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         target.x = px.x + dx;// = (tx+dx, ty+dy, tz+dz)
         target.y = px.y + dy;//
         target.z = px.z + dz;//
-        offset = openvdb::math::Vec3f(target.x,target.y,target.z);
         //rotMatj.setToRotation(openvdb::math::Vec3f(rand(),rand(),rand()),rand()%M_PI);
         if (ingr->useRotAxis){
             if (ingr->rotAxis.length() == 0.0)  rotMatj.setIdentity();
@@ -380,11 +378,10 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
             openvdb::math::Vec3f offset(target.x,target.y,target.z);
-
-            ingr->trans = openvdb::math::Vec3f(target.x,target.y,target.z);
+            ingr->trans = offset;
             //                std::cout << pid << " test data " << target.x <<' ' << target.y << ' ' << target.z <<' ' << collision << std::endl; 
             //                std::cout << pid << " test data " << ingr.trans.x <<' ' << ingr.trans.y << ' ' << ingr.trans.z <<' ' << collision << std::endl; 
-            rtrans.push_back(openvdb::math::Vec3f(target.x,target.y,target.z)); 
+            rtrans.push_back(offset);
             rrot.push_back(openvdb::math::Mat4d(rotMatj));
             results[rtrans.size()-1] = ingr;
 
