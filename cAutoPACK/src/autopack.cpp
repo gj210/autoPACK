@@ -304,11 +304,11 @@ void printTheGrid(std::shared_ptr<big_grid> g){
             }
             else if ((d == dmax )||(d >= spherewidth*stepsize)) {
                 if (d == dmax) d=spherewidth*stepsize;
-                //std::cout << "background.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+                std::cout << "background.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
                 //std::cout << "distances.append( "<< d <<")\n";
             }
             else {
-                //std::cout << "outside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
+                std::cout << "outside.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
         }
         }
     }

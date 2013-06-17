@@ -625,7 +625,7 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
         mesh mesh3d;
         std::vector<mesh> meshs;
         Ingredient ingr ;
-        if ((!strmeshFile.empty())&&(!forceSphere)){
+        if ((!strmeshFile.empty())&&(!fSphere)){
             //mesh3d = getMesh(strmeshFile);
             //meshs = getMeshs_assimp(strmeshFile);
             meshs = getMeshs(strmeshFile);
