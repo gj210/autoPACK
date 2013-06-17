@@ -661,6 +661,10 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
         }
         //packing mode overwrite from xml file
         ingr.packingMode = std::string(ingredient.attribute("packingMode").value());
+        //rejectionThreshold        
+        if (ingredient.attribute("rejectionThreshold")){      
+            ingr.rejectionThreshold = ingredient.attribute("rejectionThreshold").as_float();
+        }
         _ingredients.push_back(ingr);
         std::cout << "#ingredient done!" << std::endl;
     }

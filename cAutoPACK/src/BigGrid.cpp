@@ -232,13 +232,19 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,flo
     if (pickRandPt){
         std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
-
+            //try to add here case where there is still space but need anoher starting point.
             if (mini_d == dmax){
                 cijk = allIngrPts[0];                    
             }
-            //want the smallest distance
+            //want the smallest distance, but it is alway the same, so we get stuck here...
+            //maybe use a weighting system based on distance, closed distance high prob.
             else {
                 cijk = mini_cijk;
+            }
+            if (ingr->rejectionCounter % 100 == 0){
+                cijk = allIngrPts[(int)(distribution(generator) * allIngrPts.size())];
+                //increase the threshold ?
+                //ingr->rejectionCounter = 0;//probably not enought....risk to never end...
             }
             std::cout << "#dist " << mini_d << " =dmax " << (mini_d == dmax) << " ptsijk " << cijk<<std::endl;
         }
