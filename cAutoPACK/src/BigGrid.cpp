@@ -302,10 +302,11 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }
 
         openvdb::math::Mat4d rotMatj;
-        rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
         if (ingr->useRotAxis){
-            if (ingr->rotAxis.length() == 0.0)  rotMatj.setIdentity();
-            else rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
+            if (ingr->rotAxis.length() == 0.0)  
+                rotMatj.setIdentity();
+            else 
+                rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
         }else {
             rotMatj.setToRotation(openvdb::math::Vec3f(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
         }
