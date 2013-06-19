@@ -110,7 +110,7 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, float step, op
     generator.seed(seed);
 }
 
-unsigned int big_grid::initializeNumPointsCount()
+openvdb::Index64 big_grid::initializeNumPointsCount()
 {
     dim = distance_grid->evalActiveVoxelDim();    
     std::cout << "#Grid Npoints " << dim << distance_grid->activeVoxelCount() << std::endl;

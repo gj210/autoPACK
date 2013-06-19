@@ -83,7 +83,7 @@ struct big_grid {
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
     big_grid(std::vector<Ingredient> const & _ingredients, float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
 
-    unsigned int initializeNumPointsCount();
+    openvdb::Index64 initializeNumPointsCount();
 
     openvdb::FloatGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
 
