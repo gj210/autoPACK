@@ -451,12 +451,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
 bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
 {
-    openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
-    openvdb::math::Transform::Ptr transform =
-        openvdb::math::Transform::createLinearTransform(sp->stepsize);//
-    transform->postTranslate(woffset);
-    //transform->worldToIndex
-    //sp.gsphere->setTransform(transform);
     openvdb::Vec3d cc;
     openvdb::Coord spcc;
     openvdb::Coord ci;
@@ -484,7 +478,7 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
             //std::cout << "#spxyz " << spxyz << " " << std::endl;
             cc=distance_grid->worldToIndex(spxyz);//spcc+woffset;//
             //std::cout << "#cc " << cc << std::endl;
-            ci = openvdb::Coord((int)round(cc.x()),(int)round(cc.y()),(int)round(cc.z()));
+            ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
             //test if ci in bb ?
             //std::cout << "#ci " << ci << std::endl;
             //if  (!bbox.isInside(ci)){collide = true;return true;continue;}//or reject ?
@@ -498,9 +492,13 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
             //float dist = iter.getValue();
             //std::cout << "dist " << dist << std::endl;
             //check in distance if already a inside value
-            if (v < 0.0) {  
-                if (DEBUG) std::cout << "#sphere position " << ci << " " << offset << " " << woffset << " reject point at d " << v <<  std::endl;
-                if (DEBUG) std::cout << "#in sphere xyz " << sp->gsphere->indexToWorld(spcc) << " ijk " << spcc << "  to grid xyz " << spxyz << " ijk " << cc <<std::endl;
+            if (v < 0.0) { 
+                if (DEBUG) {
+                    openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
+                    std::cout << "#sphere position " << ci << " " << offset << " " << woffset << " reject point at d " << v <<  std::endl;
+                    std::cout << "#in sphere xyz " << sp->gsphere->indexToWorld(spcc) << " ijk " << spcc << "  to grid xyz " << spxyz << " ijk " << cc <<std::endl;
+                }
+                
                 //reject point
                 //std::cout << "reject point" << std::endl;
                 collide = true;
