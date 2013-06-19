@@ -93,7 +93,6 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
     }    
 }
 
-
 } //namespace
 
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
@@ -149,7 +148,7 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
 
 openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,float jitter,int *emptyList )
 {
-    float cut = radius-jitter;//why - jitter ?
+    const float cut = radius-jitter;//why - jitter ?
     float d;
     float mini_d=dmax;
     *emptyList = 0;
@@ -176,7 +175,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,flo
     //bottom-up tree traversal-> how to get real random after
     //this loop populate mostly with bottum up coordinate
     //may need a regular access with the 3 for loop and then grid.tree()->getValue(ijk).     
-    for (openvdb::FloatGrid::ValueOnIter  iter = distance_grid->beginValueOn(); iter; ++iter) {
+    for (openvdb::FloatGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
         //for (openvdb::FloatGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
         d=iter.getValue();
@@ -287,20 +286,15 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
-    float rad = ingr->radius;        
-    openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor(); 
-    float d = accessor_distance.getValue(cijk);
-    //if (d < ingr.radius) {
-    //    std::cout  <<"exit because radius "<< d << " "<< ingr.radius << " " << cijk << " " << pid << std::endl; 
-    //    return true;
-    // }
+    const float rad = ingr->radius;        
+    bool collision;
     openvdb::Vec3f center=distance_grid->indexToWorld(cijk);
+
     point px;   //the selected point where we want to drop
     px.x = center.x();
     px.y = center.y();        
     px.z = center.z();
     point target;           //the point with some jitter
-    d = 0.0;          //distance to be computed
     unsigned nbJitter = ingr->nbJitter;  //nb of jitter
     //should be defined in ingredient
     float jx=ingr->jitterMax.x();           //jitter amount on x 
@@ -314,15 +308,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     float d2;
     float jitter = space;
     float jitter2 = jitter * jitter;
-    bool collision;
-    // -- Constructing a uniform, cell-centered transform --
-
-    // The offset to cell-center points
-    openvdb::math::Mat4d rotMatj;
-    rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
-    //setTranslation>?
-
-    //rotMatj=histoVol.randomRot.get() 
+    
 
     //prepare the normal distribution for generating the jitter offset
     //std::default_random_engine generator;
@@ -363,7 +349,9 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         target.x = px.x + dx;// = (tx+dx, ty+dy, tz+dz)
         target.y = px.y + dy;//
         target.z = px.z + dz;//
-        //rotMatj.setToRotation(openvdb::math::Vec3f(rand(),rand(),rand()),rand()%M_PI);
+
+        openvdb::math::Mat4d rotMatj;
+        rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
         if (ingr->useRotAxis){
             if (ingr->rotAxis.length() == 0.0)  rotMatj.setIdentity();
             else rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
@@ -373,7 +361,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         //can get translate the grid correctly for some reason
         //jitterLength += dx*dx + dy*dy + dz*dz  //#Why is this expensive line needed?
         //jitterList.append( (dx,dy,dz) )      
-        //check for collision at the given target point coordinate for the given radius      
+        //check for collision at the given target point coordinate for the given radius     
         collision = checkSphCollisions(target,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
