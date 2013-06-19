@@ -103,10 +103,11 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, float step, op
     uniform(0.0f,1.0f),
     distribution(0.0,1.0),
     gauss(0.0f,0.3f),        
-    pickRandPt(true)
+    pickRandPt(true),
+    jitter(step),
+    jitterSquare(step*step)
 {
     generator.seed(seed);
-    space = step;
 }
 
 unsigned int big_grid::initializeNumPointsCount()
@@ -290,65 +291,15 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     bool collision;
     openvdb::Vec3f center=distance_grid->indexToWorld(cijk);
 
-    point px;   //the selected point where we want to drop
-    px.x = center.x();
-    px.y = center.y();        
-    px.z = center.z();
-    point target;           //the point with some jitter
-    unsigned nbJitter = ingr->nbJitter;  //nb of jitter
-    //should be defined in ingredient
-    float jx=ingr->jitterMax.x();           //jitter amount on x 
-    float jy=ingr->jitterMax.y();            //jitter amount on y 
-    float jz=ingr->jitterMax.z();            //jitter amount on z 
     //actuall jitter that will be apply to the point
-    float dx=0.0;
-    float dy=0.0;
-    float dz=0.0;
-    //square jitter
-    float d2;
-    float jitter = space;
-    float jitter2 = jitter * jitter;
-    
-
-    //prepare the normal distribution for generating the jitter offset
-    //std::default_random_engine generator;
-    //std::normal_distribution<float> distribution(0.0,0.3);
-    //std::cout  << "testData" << std::endl;
-    unsigned totnbJitter=0;//total number of jitter
-    for(unsigned i = 0; i < nbJitter; ++i) { 
-        if (jitter2 > 0.0){
-            bool found = false;//already found a good poisition ?
-            while (!found){
-                //genereate the offset on x,y,z and the square value
-                dx = jx*jitter*gauss(generator);
-                dy = jy*jitter*gauss(generator);
-                dz = jz*jitter*gauss(generator);
-                d2 = dx*dx + dy*dy + dz*dz;
-                if (d2 < jitter2){
-                    //if compNum > 0: # jitter less among normal
-                    //    #if self.name=='2uuh C4 SYNTHASE':
-                    //    #    import pdb
-                    //    #    pdb.set_trace()
-                    //    dx, dy, dz, dum = numpy.dot(rotMat, (dx,dy,dz,0))
-                    target.x = px.x + dx;// = (tx+dx, ty+dy, tz+dz)
-                    target.y = px.y + dy;//
-                    target.z = px.z + dz;//
-                    found = true;
-                }else{
-                    //print('JITTER REJECTED', d2, jitter2)
-                }
-            }
+   
+    openvdb::Vec3f target;           //the point with some jitter
+    for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
+        if (jitterSquare > 0.0){
+            target = center + generateRandomJitterOffset(ingr->jitterMax);
         }else{
-            target.x = px.x;
-            target.y = px.y;
-            target.z = px.z;
-            dx = dy = dz = 0.0;
+            target = center;
         }
-        dx = dy = dz = 0.0;
-        ++totnbJitter;
-        target.x = px.x + dx;// = (tx+dx, ty+dy, tz+dz)
-        target.y = px.y + dy;//
-        target.z = px.z + dz;//
 
         openvdb::math::Mat4d rotMatj;
         rotMatj.setToRotation(openvdb::math::Vec3d(rand(),rand(),rand()),rand()*M_PI); // random value for axe and angle in radians
@@ -358,14 +309,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }else {
             rotMatj.setToRotation(openvdb::math::Vec3f(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
         }
-        //can get translate the grid correctly for some reason
-        //jitterLength += dx*dx + dy*dy + dz*dz  //#Why is this expensive line needed?
-        //jitterList.append( (dx,dy,dz) )      
+
         //check for collision at the given target point coordinate for the given radius     
         collision = checkSphCollisions(target,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
-            openvdb::math::Vec3f offset(target.x,target.y,target.z);
+            openvdb::math::Vec3f offset(target);
             ingr->trans = offset;
             //                std::cout << pid << " test data " << target.x <<' ' << target.y << ' ' << target.z <<' ' << collision << std::endl; 
             //                std::cout << pid << " test data " << ingr.trans.x <<' ' << ingr.trans.y << ' ' << ingr.trans.z <<' ' << collision << std::endl; 
@@ -499,9 +448,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 }
 
 
-bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
+bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
 {
-    openvdb::math::Vec3f offset(pos.x,pos.y,pos.z);//where the sphere should be.
     openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
     openvdb::math::Transform::Ptr transform =
         openvdb::math::Transform::createLinearTransform(sp->stepsize);//
@@ -561,4 +509,17 @@ bool big_grid::checkSphCollisions( point pos,openvdb::math::Mat4d rotMatj, float
         }
     }
     return collide;
+}
+
+openvdb::Vec3f big_grid::generateRandomJitterOffset( openvdb::Vec3f const& ingrJitter )
+{
+    while (true) {
+        const openvdb::Vec3f randomJitter( 
+            jitter*gauss(generator)
+            , jitter*gauss(generator)
+            , jitter*gauss(generator));
+        const openvdb::Vec3f deltaOffset (ingrJitter * randomJitter);
+        if ( deltaOffset.lengthSqr() < jitterSquare )
+            return deltaOffset;
+    } 
 }

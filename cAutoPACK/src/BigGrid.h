@@ -62,7 +62,8 @@ struct big_grid {
     std::vector<openvdb::math::Mat4d> rrot;
     openvdb::Index64 num_empty;         //the number of free point available
     
-    float space;                //spacing of the grid (unit depends on user)
+    const float jitter;
+    const float jitterSquare;
     
     float totalPriorities;
 
@@ -96,11 +97,11 @@ struct big_grid {
 
     bool is_empty(unsigned i) const;
 
-    bool checkSphCollisions(point pos,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp);
+    bool checkSphCollisions(openvdb::Vec3f const& offset,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp);
     
     int calculateTotalNumberMols();
 
 private:
-        
+    openvdb::Vec3f generateRandomJitterOffset( openvdb::Vec3f const & ingrJitter );    
     
 };
