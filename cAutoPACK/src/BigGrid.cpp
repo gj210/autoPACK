@@ -451,34 +451,28 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
 bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
 {
-    openvdb::Vec3d cc;
-    openvdb::Coord spcc;
-    openvdb::Coord ci;
-    openvdb::Vec3f spxyz;
-    bool collide = false;
     openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
 
     //if intersect
     //should actually go through the sphere bounding box//ie object bounding 
     //value on is the shell...which could be the radius?
     //can we first test if boudning box hasOverlap ?
-    float d;
-    for (openvdb::FloatGrid::ValueAllIter iter = sp->gsphere->beginValueAll(); iter; ++iter) {
-        spcc = iter.getCoord();//ijk or xyz
-        d = iter.getValue();
-        if  ((sp->bbox.isInside(spcc))&&(d<0) ){
-            //std::cout << "#spcc " << spcc << std::endl;
-            spxyz = sp->gsphere->indexToWorld(spcc);
-            //std::cout << "#spxyz " << spxyz << " " << std::endl;
+    for (openvdb::FloatGrid::ValueAllCIter iter = sp->gsphere->cbeginValueAll(); iter; ++iter) {
+        const openvdb::Coord sphereIndexCoord = iter.getCoord();//ijk or xyz
+        const float d = iter.getValue();
+        if  ( d<0 && sp->bbox.isInside(sphereIndexCoord) ) {
+            //std::cout << "#sphereIndexCoord " << sphereIndexCoord << std::endl;
+            openvdb::Vec3f sphereWorldCoord = sp->gsphere->indexToWorld(sphereIndexCoord);
+            //std::cout << "#sphereWorldCoord " << sphereWorldCoord << " " << std::endl;
             //apply rotation
-            spxyz =rotMatj.transform(spxyz);
-            spxyz = spxyz + offset;
-            //spxyz = transform->indexToWorld(spcc);
-            //spxyz = spcc*matrix;
-            //std::cout << "#spxyz " << spxyz << " " << std::endl;
-            cc=distance_grid->worldToIndex(spxyz);//spcc+woffset;//
+            sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
+            sphereWorldCoord = sphereWorldCoord + offset;
+            //sphereWorldCoord = transform->indexToWorld(sphereIndexCoord);
+            //sphereWorldCoord = sphereIndexCoord*matrix;
+            //std::cout << "#sphereWorldCoord " << sphereWorldCoord << " " << std::endl;
+            openvdb::Vec3d cc=distance_grid->worldToIndex(sphereWorldCoord);//sphereIndexCoord+woffset;//
             //std::cout << "#cc " << cc << std::endl;
-            ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
+            openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
             //test if ci in bb ?
             //std::cout << "#ci " << ci << std::endl;
             //if  (!bbox.isInside(ci)){collide = true;return true;continue;}//or reject ?
@@ -487,7 +481,7 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
                 //continue;                       
             }//or reject ? or we can just look for collision outside ? could have an outside layer...
             //like two bounding box
-            float v  = accessor_distance.getValue(ci);
+            const float v  = accessor_distance.getValue(ci);
             //std::cout << "#v " << v << " " << ci << std::endl;
             //float dist = iter.getValue();
             //std::cout << "dist " << dist << std::endl;
@@ -496,18 +490,17 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
                 if (DEBUG) {
                     openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);
                     std::cout << "#sphere position " << ci << " " << offset << " " << woffset << " reject point at d " << v <<  std::endl;
-                    std::cout << "#in sphere xyz " << sp->gsphere->indexToWorld(spcc) << " ijk " << spcc << "  to grid xyz " << spxyz << " ijk " << cc <<std::endl;
+                    std::cout << "#in sphere xyz " << sp->gsphere->indexToWorld(sphereIndexCoord) << " ijk " << sphereIndexCoord << "  to grid xyz " << sphereWorldCoord << " ijk " << cc <<std::endl;
                 }
                 
                 //reject point
                 //std::cout << "reject point" << std::endl;
-                collide = true;
                 //counterRej++;
                 return true;
             }
         }
     }
-    return collide;
+    return false;
 }
 
 openvdb::Vec3f big_grid::generateRandomJitterOffset( openvdb::Vec3f const& ingrJitter )
