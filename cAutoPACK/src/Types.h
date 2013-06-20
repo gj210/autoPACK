@@ -75,17 +75,6 @@ static const std::string packing = "random";       //packing mode, can be random
 extern float stepsize;         //grid step size ie smallest ingredients radius
 extern bool forceSphere;
 
-//a simple point, deprecated with openvdb::Vec3
-struct point {
-    float x,y,z;
-};
-/* 
-a box, let define the grid size in x y an z
-again deprectaed with openvdb
-*/
-struct box {
-    unsigned x,y,z;
-};
 
 /* 
 a simple mesh struct
