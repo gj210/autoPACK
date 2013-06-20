@@ -423,12 +423,12 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<double> &ra
 }
 
 
-void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid, const std::string &file ) 
+void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<double> &radiis, std::vector<openvdb::Vec3d> &colors, bool ds_grid, bool ds_ingrgrid, const std::string &file ) 
 {
 	std::ofstream coordFile;
 	coordFile.open (file);
 	
-	openvdb::Vec3f pos;
+	openvdb::Vec3d pos;
 	Ingredient * ingr;
 	for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
 		ingr = g->results[i];
@@ -439,7 +439,7 @@ void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<float> &radiis
 		targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
 		openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
 		int j = 0;
-		for(openvdb::Vec3f const & position : g->results[i]->positions ) {        
+		for(openvdb::Vec3d const & position : g->results[i]->positions ) {        
 			pos = mat.transform(position);
 			coordFile << pos.x() << ' ' << pos.y() << ' ' << pos.z() << ' ' << g->results[i]->radii[j] << std::endl;
 			j++;
