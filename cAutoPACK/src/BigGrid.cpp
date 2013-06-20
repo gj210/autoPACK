@@ -57,15 +57,15 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
     int ny = dim.y();
     int nz = dim.z();
     int integer;
-    float decimal;
-    float fraction;
+    double decimal;
+    double fraction;
     int nysc;
     if (u < dim.z()){
         i_ijk[2] = u;
     }
     else if ((u < nynz)&&(u >= nxnynz)){
         //whats z
-        fraction = (float)u/(float)dim.z();
+        fraction = (double)u/(double)dim.z();
         integer = (int) fraction;
         decimal = fraction - integer;
         i_ijk[2] = (int) round(decimal*dim.z());
@@ -73,36 +73,36 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
         i_ijk[1] = integer;  
     }
     else if ((u < nxnynz)&&(u >= nynz)){
-        fraction = (float)u/(float)nynz;
+        fraction = (double)u/(double)nynz;
         integer = (int) fraction;
         decimal = fraction - integer;
         nysc = ny * integer;
         //whast x 
         i_ijk[0] = integer;  
-        fraction = (float)u/(float)nz;
+        fraction = (double)u/(double)nz;
         integer = (int) fraction;
         decimal = fraction - integer;
         //whats z        
-        i_ijk[2] = (int) round(decimal*(float)nz);
+        i_ijk[2] = (int) round(decimal*(double)nz);
         //whast y 
         //46867 
         //233 15477 201 77 603 77.7231
-        //std::cout << integer << " " << nysc << " " << ny << " " << (int)((float)u/(float)nynz) << " " << nynz << " " << (float)u/(float)nynz << std::endl;
-        i_ijk[1] = integer - (ny*(int)((float)u/(float)nynz));  
-        //int (integer - (ny*int(float(u)/float(nynz))));
+        //std::cout << integer << " " << nysc << " " << ny << " " << (int)((double)u/(double)nynz) << " " << nynz << " " << (double)u/(double)nynz << std::endl;
+        i_ijk[1] = integer - (ny*(int)((double)u/(double)nynz));  
+        //int (integer - (ny*int(double(u)/double(nynz))));
     }    
 }
 
 } //namespace
 
-big_grid::big_grid( std::vector<Ingredient> const & _ingredients, float step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
+big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
     distance_grid(initializeDistanceGrid(bot, up)),
     num_points(initializeNumPointsCount()),    
     ingredientsDipatcher(_ingredients, num_points, seed),
     num_empty(num_points),
-    uniform(0.0f,1.0f),
+    uniform(0.0,1.0),
     distribution(0.0,1.0),
-    gauss(0.0f,0.3f),        
+    gauss(0.0,0.3),        
     pickRandPt(true),
     jitter(step),
     jitterSquare(step*step)
@@ -117,10 +117,10 @@ openvdb::Index64 big_grid::initializeNumPointsCount()
     return distance_grid->activeVoxelCount();
 }
 
-openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up )
+openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up )
 {
-    openvdb::FloatGrid::Ptr distance_grid;
-    distance_grid = openvdb::FloatGrid::create();//the indice ?
+    openvdb::DoubleGrid::Ptr distance_grid;
+    distance_grid = openvdb::DoubleGrid::create();
     distance_grid->setTransform(
         openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));
     //set active within the given bounding box
@@ -137,7 +137,7 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
     distance_grid->fill(bbox,dmax,true);//bbox, value, active
     distance_grid->prune();
 
-    openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
+    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     std::cout << "#Testing distance access:" << std::endl;
     std::cout << "#Grid " << left << " "<< botleft << " = " << accessor_distance.getValue(left) << std::endl;
     std::cout << "#Grid " << right << " "<< upright << " = " << accessor_distance.getValue(right) << std::endl;
@@ -147,18 +147,18 @@ openvdb::FloatGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, op
 }
 
 
-openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,float jitter,int *emptyList )
+openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int *emptyList )
 {
-    const float cut = radius-jitter;//why - jitter ?
-    float d;
-    float mini_d=dmax;
+    const double cut = radius-jitter;//why - jitter ?
+    double d;
+    double mini_d=dmax;
     *emptyList = 0;
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;        
     openvdb::Coord cijk;
     openvdb::Coord mini_cijk;
-    openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
+    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     std::vector<openvdb::Coord> allIngrPts;
-    std::vector<float> allIngrDist;
+    std::vector<double> allIngrDist;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
     bool notfound = true;      
     //only onValue or all value ? 
@@ -176,8 +176,8 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, float radius,flo
     //bottom-up tree traversal-> how to get real random after
     //this loop populate mostly with bottum up coordinate
     //may need a regular access with the 3 for loop and then grid.tree()->getValue(ijk).     
-    for (openvdb::FloatGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
-        //for (openvdb::FloatGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
+    for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
+        //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
         d=iter.getValue();
         if (d>=cut){//the grid voxel is available and can receivethe given ingredient
@@ -287,13 +287,13 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
-    const float rad = ingr->radius;        
+    const double rad = ingr->radius;        
     bool collision;
-    openvdb::Vec3f center=distance_grid->indexToWorld(cijk);
+    openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
     //actuall jitter that will be apply to the point
    
-    openvdb::Vec3f target;           //the point with some jitter
+    openvdb::Vec3d target;           //the point with some jitter
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
         if (jitterSquare > 0.0){
             target = center + generateRandomJitterOffset(ingr->jitterMax);
@@ -308,14 +308,14 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             else 
                 rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
         }else {
-            rotMatj.setToRotation(openvdb::math::Vec3f(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
+            rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
         }
 
         //check for collision at the given target point coordinate for the given radius     
         collision = checkSphCollisions(target,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
-            openvdb::math::Vec3f offset(target);
+            openvdb::math::Vec3d offset(target);
             ingr->trans = offset;
             //                std::cout << pid << " test data " << target.x <<' ' << target.y << ' ' << target.z <<' ' << collision << std::endl; 
             //                std::cout << pid << " test data " << ingr.trans.x <<' ' << ingr.trans.y << ' ' << ingr.trans.z <<' ' << collision << std::endl; 
@@ -340,13 +340,13 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             openvdb::Vec3d cc;
             openvdb::Coord spcc;
             openvdb::Coord ci;
-            openvdb::Vec3f spxyz;
+            openvdb::Vec3d spxyz;
 
             // Save copies of the two grids; compositing operations always
             // modify the A grid and leave the B grid empty.
             if (DEBUG) std::cout << "#duplicate ingredient grid "<< std::endl;
-            openvdb::FloatGrid::Ptr copyOfGridSphere = openvdb::FloatGrid::create(dmax);
-            //openvdb::FloatGrid::Ptr copyOfGridSphere = ingr.gsphere->deepCopy();
+            openvdb::DoubleGrid::Ptr copyOfGridSphere = openvdb::DoubleGrid::create(dmax);
+            //openvdb::DoubleGrid::Ptr copyOfGridSphere = ingr.gsphere->deepCopy();
             copyOfGridSphere->setTransform(targetXform);
 
             /*
@@ -359,7 +359,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             openvdb::tools::GridTransformer transformer(targetXform->baseMap()->getAffineMap()->getMat4());
 
             // Resample using nearest-neighbor interpolation.
-            transformer.transformGrid<openvdb::tools::PointSampler, openvdb::FloatGrid>(
+            transformer.transformGrid<openvdb::tools::PointSampler, openvdb::DoubleGrid>(
                 *ingr->gsphere, *copyOfGridSphere);
             copyOfGridSphere->tree().prune();
             //openvdb::tools::resampleToMatch<openvdb::tools::PointSampler>(ingr.gsphere,copyOfGridSphere);
@@ -374,7 +374,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             //update empty list
             //return collision;
             num_empty=0;
-            for (openvdb::FloatGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
+            for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
                 //create a sphere with color or radius dependant of value ?
                 ci=iter.getCoord();
                 if (bbox.isInside(ci)){
@@ -405,9 +405,9 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             // Compute the union (A u B) of the two level sets.
             //openvdb::tools::csgUnion(*distance_grid, *ingr.gsphere);
             /*
-            openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
-            for (openvdb::FloatGrid::ValueAllCIter iter = ingr.gsphere->cbeginValueAll(); iter; ++iter) {
-            float dist = iter.getValue();//inside or outside // after / before the translation
+            openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
+            for (openvdb::DoubleGrid::ValueAllCIter iter = ingr.gsphere->cbeginValueAll(); iter; ++iter) {
+            double dist = iter.getValue();//inside or outside // after / before the translation
             spcc = iter.getCoord();//ijk or xyz
             //std::cout << "#spcc " << spcc << " " <<ingr.bbox<< std::endl;
             if  (ingr.bbox.isInside(spcc)){
@@ -423,7 +423,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             ci = openvdb::Coord((int)round(cc.x()),(int)round(cc.y()),(int)round(cc.z()));
             //test if ci in bb ?
             //std::cout << "#ci " << ci << std::endl;
-            float v  = accessor_distance.getValue(ci);
+            double v  = accessor_distance.getValue(ci);
             //std::cout << "#dist " << dist << " " << v << ci << std::endl;
             if ((dist < v ))   {     
             std::cout << "#dist " << dist << " " << v << ci << std::endl;
@@ -439,7 +439,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             }
             }  */
             //distance_grid->signedFloodFill();  
-            //openvdb::FloatGrid::ConstPtr copyOfGridSphere = ingr.gsphere->deepCopy();
+            //openvdb::DoubleGrid::ConstPtr copyOfGridSphere = ingr.gsphere->deepCopy();
             //openvdb::tools::compMin(*distance_grid, *ingr.gsphere);maetof
             //ingr.gsphere = copyOfGridSphere->deepCopy();
             return collision;
@@ -449,20 +449,20 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 }
 
 
-bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::math::Mat4d rotMatj, float radii, Ingredient* sp )
+bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp )
 {
-    openvdb::FloatGrid::Accessor accessor_distance = distance_grid->getAccessor();
+    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
 
     //if intersect
     //should actually go through the sphere bounding box//ie object bounding 
     //value on is the shell...which could be the radius?
     //can we first test if boudning box hasOverlap ?
-    for (openvdb::FloatGrid::ValueAllCIter iter = sp->gsphere->cbeginValueAll(); iter; ++iter) {
+    for (openvdb::DoubleGrid::ValueAllCIter iter = sp->gsphere->cbeginValueAll(); iter; ++iter) {
         const openvdb::Coord sphereIndexCoord = iter.getCoord();//ijk or xyz
-        const float d = iter.getValue();
+        const double d = iter.getValue();
         if  ( d<0 && sp->bbox.isInside(sphereIndexCoord) ) {
             //std::cout << "#sphereIndexCoord " << sphereIndexCoord << std::endl;
-            openvdb::Vec3f sphereWorldCoord = sp->gsphere->indexToWorld(sphereIndexCoord);
+            openvdb::Vec3d sphereWorldCoord = sp->gsphere->indexToWorld(sphereIndexCoord);
             //std::cout << "#sphereWorldCoord " << sphereWorldCoord << " " << std::endl;
             //apply rotation
             sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
@@ -481,9 +481,9 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
                 //continue;                       
             }//or reject ? or we can just look for collision outside ? could have an outside layer...
             //like two bounding box
-            const float v  = accessor_distance.getValue(ci);
+            const double v  = accessor_distance.getValue(ci);
             //std::cout << "#v " << v << " " << ci << std::endl;
-            //float dist = iter.getValue();
+            //double dist = iter.getValue();
             //std::cout << "dist " << dist << std::endl;
             //check in distance if already a inside value
             if (v < 0.0) { 
@@ -503,14 +503,14 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3f const& offset,openvdb::m
     return false;
 }
 
-openvdb::Vec3f big_grid::generateRandomJitterOffset( openvdb::Vec3f const& ingrJitter )
+openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJitter )
 {
     while (true) {
-        const openvdb::Vec3f randomJitter( 
+        const openvdb::Vec3d randomJitter( 
             jitter*gauss(generator)
             , jitter*gauss(generator)
             , jitter*gauss(generator));
-        const openvdb::Vec3f deltaOffset (ingrJitter * randomJitter);
+        const openvdb::Vec3d deltaOffset (ingrJitter * randomJitter);
         if ( deltaOffset.lengthSqr() < jitterSquare )
             return deltaOffset;
     } 

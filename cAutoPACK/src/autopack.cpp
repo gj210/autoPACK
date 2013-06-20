@@ -88,7 +88,7 @@ not use yet
 struct container{
     std::string name;
     int id;
-    openvdb::FloatGrid::Ptr grid;
+    openvdb::DoubleGrid::Ptr grid;
     openvdb::CoordBBox bbox;
     //why no use the mesh struct.
     std::vector<openvdb::Vec3s> vertices;
@@ -100,13 +100,13 @@ struct container{
 
 
 
-float stepsize = float(15*1.1547);         //grid step size ie smallest ingredients radius
+double stepsize = double(15*1.1547);         //grid step size ie smallest ingredients radius
 bool forceSphere = true;
 
 
 
 /*
-openvdb::CoordBBox getBB(float radius,  openvdb::Vec3f pos){
+openvdb::CoordBBox getBB(double radius,  openvdb::Vec3d pos){
     const openvdb::Vec3d ibotleft(pos-radius,pos-radius,pos-radius);//(0,0,0)
     const openvdb::Vec3d iupright(pos+radius,pos+radius,pos+radius);//(1000,1000,10);
     openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform(stepsize);
@@ -123,9 +123,9 @@ openvdb::CoordBBox getBB(float radius,  openvdb::Vec3f pos){
 
 //exapl of function applied on grid data
 struct SetMaxToDefault {
-    float _max;
-    SetMaxToDefault(float max) {_max=max;}
-    inline void operator()(const openvdb::FloatGrid::ValueAllIter& iter) const {
+    double _max;
+    SetMaxToDefault(double max) {_max=max;}
+    inline void operator()(const openvdb::DoubleGrid::ValueAllIter& iter) const {
        if (iter.getValue() == _max) iter.setValue(dmax);
     }
 };
@@ -141,7 +141,7 @@ void processTypedGrid(openvdb::GridBase::Ptr grid, OpType& op)
     op.template operator()<GridType>(openvdb::gridPtrCast<GridType>(grid))
 
     if (grid->isType<openvdb::BoolGrid>())        CALL_OP(openvdb::BoolGrid);
-    else if (grid->isType<openvdb::FloatGrid>())  CALL_OP(openvdb::FloatGrid);
+    else if (grid->isType<openvdb::DoubleGrid>())  CALL_OP(openvdb::DoubleGrid);
     else if (grid->isType<openvdb::DoubleGrid>()) CALL_OP(openvdb::DoubleGrid);
     else if (grid->isType<openvdb::Int32Grid>())  CALL_OP(openvdb::Int32Grid);
     else if (grid->isType<openvdb::Int64Grid>())  CALL_OP(openvdb::Int64Grid);
@@ -185,15 +185,15 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
     int ny = dim.y();
     int nz = dim.z();
     int integer;
-    float decimal;
-    float fraction;
+    double decimal;
+    double fraction;
     int nysc;
     if (u < dim.z()){
         i_ijk[2] = u;
     }
     else if ((u < nynz)&&(u >= nxnynz)){
         //whats z
-        fraction = (float)u/(float)dim.z();
+        fraction = (double)u/(double)dim.z();
         integer = (int) fraction;
         decimal = fraction - integer;
         i_ijk[2] = (int) round(decimal*dim.z());
@@ -201,23 +201,23 @@ inline openvdb::Coord getIJKc(int u,openvdb::Coord dim){
         i_ijk[1] = integer;  
     }
     else if ((u < nxnynz)&&(u >= nynz)){
-        fraction = (float)u/(float)nynz;
+        fraction = (double)u/(double)nynz;
         integer = (int) fraction;
         decimal = fraction - integer;
         nysc = ny * integer;
         //whast x 
         i_ijk[0] = integer;  
-        fraction = (float)u/(float)nz;
+        fraction = (double)u/(double)nz;
         integer = (int) fraction;
         decimal = fraction - integer;
         //whats z        
-        i_ijk[2] = (int) round(decimal*(float)nz);
+        i_ijk[2] = (int) round(decimal*(double)nz);
         //whast y 
         //46867 
         //233 15477 201 77 603 77.7231
-        //std::cout << integer << " " << nysc << " " << ny << " " << (int)((float)u/(float)nynz) << " " << nynz << " " << (float)u/(float)nynz << std::endl;
-        i_ijk[1] = integer - (ny*(int)((float)u/(float)nynz));  
-        //int (integer - (ny*int(float(u)/float(nynz))));
+        //std::cout << integer << " " << nysc << " " << ny << " " << (int)((double)u/(double)nynz) << " " << nynz << " " << (double)u/(double)nynz << std::endl;
+        i_ijk[1] = integer - (ny*(int)((double)u/(double)nynz));  
+        //int (integer - (ny*int(double(u)/double(nynz))));
     } 
     return openvdb::Coord(i_ijk[0],i_ijk[1],i_ijk[2]);   
 }
@@ -228,16 +228,16 @@ void printIngredientGrid(Ingredient const& ingr){
     int counter=0;
     //evalMinMax
     openvdb::Coord cc;
-    for (openvdb::FloatGrid::ValueAllIter  iter = ingr.gsphere->beginValueAll(); iter; ++iter) {
+    for (openvdb::DoubleGrid::ValueAllIter  iter = ingr.gsphere->beginValueAll(); iter; ++iter) {
         //create a sphere with color or radius dependant of value ?
         cc=iter.getCoord();
         if (ingr.bbox.isInside(cc)){
             counter++;
-            float d = iter.getValue();
-            //float dv = d;
-            openvdb::Vec3f pos=ingr.gsphere->indexToWorld(cc); //getValue? 
+            double d = iter.getValue();
+            //double dv = d;
+            openvdb::Vec3d pos=ingr.gsphere->indexToWorld(cc); //getValue? 
             /*if (iter.getValue() > 0.0 ){
-                float d = iter.getValue();
+                double d = iter.getValue();
                 if (d == dmax) d=90.0;
                 std::cout << "distances.append( "<< d <<")\n";
                 std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
@@ -276,18 +276,18 @@ void printTheGrid(std::shared_ptr<big_grid> g){
     int counter=0;
     openvdb::Coord cc;
     //the main grid, extract some distance information from it
-    for (openvdb::FloatGrid::ValueAllIter  iter = g->distance_grid->beginValueAll(); iter; ++iter) {//g->distance_grid
-    //for (openvdb::FloatGrid::ValueAllIter  iter = g->ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
+    for (openvdb::DoubleGrid::ValueAllIter  iter = g->distance_grid->beginValueAll(); iter; ++iter) {//g->distance_grid
+    //for (openvdb::DoubleGrid::ValueAllIter  iter = g->ingredients[1].gsphere->beginValueAll(); iter; ++iter) {
         //create a sphere with color or radius dependant of value ?
         cc=iter.getCoord();
         if (g->bbox.isInside(cc)){
         //if (g->ingredients[1].bbox.isInside(cc)){
             counter++;
-            float d = iter.getValue();
-            //float dv = d;
-            openvdb::Vec3f pos=g->distance_grid->indexToWorld(cc); //getValue? 
+            double d = iter.getValue();
+            //double dv = d;
+            openvdb::Vec3d pos=g->distance_grid->indexToWorld(cc); //getValue? 
             /*if (iter.getValue() > 0.0 ){
-                float d = iter.getValue();
+                double d = iter.getValue();
                 if (d == dmax) d=90.0;
                 std::cout << "distances.append( "<< d <<")\n";
                 std::cout << "all.append( ["<<pos.x()<<","<<pos.y()<<"," << pos.z() <<"])\n";
@@ -317,10 +317,10 @@ void printTheGrid(std::shared_ptr<big_grid> g){
     std::cout << "isph=helper.PointCloudObject(\"outside\",vertices = outside,materials=[[0,1,0]])\n";
 }
 
-void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid ) 
+void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<double> &radiis, std::vector<openvdb::Vec3d> &colors, bool ds_grid, bool ds_ingrgrid ) 
 {
     std::cout << "pts=[" << std::endl;
-    openvdb::Vec3f pos;
+    openvdb::Vec3d pos;
     Ingredient * ingr;
     for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
         ingr = g->results[i];
@@ -330,7 +330,7 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &rad
         targetXform->preMult(g->rrot[i]);
         targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-        for(openvdb::Vec3f const & position : g->results[i]->positions ) {        
+        for(openvdb::Vec3d const & position : g->results[i]->positions ) {        
             pos = mat.transform(position);
             std::cout << '[' << pos.x() <<',' << pos.y() << ',' << pos.z() << ']' << ',' <<std::endl; 
         }        
@@ -340,7 +340,7 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &rad
     for(Ingredient const & ingr: g->ingredientsDipatcher) { 
         std::cout << "matrices[\"" << ingr.name << "\"]=[]\n";
     }
-    //openvdb::Vec3f pos;
+    //openvdb::Vec3d pos;
     //sphere * ingr;
     for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
         ingr = g->results[i];
@@ -355,9 +355,9 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &rad
     //std::cout << "]" << std::endl; 
 
     std::cout << "r=[" << std::endl  ;  
-    for(std::vector<float>::size_type i = 0; i < radiis.size(); ++i) { 
+    for(std::vector<double>::size_type i = 0; i < radiis.size(); ++i) { 
         //std::cout << i << ' ' << radiis[i] << std::endl;
-        for (std::vector<float>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
+        for (std::vector<double>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
             std::cout << g->results[i]->radii[j] << ',' <<std::endl; //rot? 
         }        
         //std::cout << 3.0 << ',' <<std::endl; 
@@ -366,9 +366,9 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &rad
     std::cout << "]" << std::endl;
 
     std::cout << "color=[" << std::endl  ;  
-    for(std::vector<float>::size_type i = 0; i < colors.size(); ++i) { 
+    for(std::vector<double>::size_type i = 0; i < colors.size(); ++i) { 
         //std::cout << i << ' ' << usedPoints[i] << std::endl;
-        for (std::vector<float>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
+        for (std::vector<double>::size_type j = 0 ; j < g->results[i]->radii.size() ; j ++){
             std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl; 
         }
         //std::cout << '[' << colors[i].x() <<',' << colors[i].y() << ',' << colors[i].z() << ']' << ',' <<std::endl;  
@@ -388,8 +388,8 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<float> &rad
 
     std::cout << "#" << g->num_empty << std::endl;
     std::cout << "#" << g->distance_grid->activeVoxelCount() << std::endl;
-    float mini=0.0;
-    float maxi=0.0;
+    double mini=0.0;
+    double maxi=0.0;
     g->distance_grid->evalMinMax(mini,maxi);
     std::cout << "#" << mini << " " <<maxi << std::endl;
     //mesh
@@ -445,16 +445,16 @@ int main(int argc, char* argv[])
     int rejection=0;
 
     openvdb::Coord cc;
-    std::vector<openvdb::Vec3f> usedPoints;
-    std::vector<float> radiis;
-    std::vector<openvdb::Vec3f> colors;
+    std::vector<openvdb::Vec3d> usedPoints;
+    std::vector<double> radiis;
+    std::vector<openvdb::Vec3d> colors;
 
     std::cout << "#prepare ingredient complete\n";
 
     int PlacedMols=0;
     int emptyList;
 
-    openvdb::FloatGrid::Accessor accessor_distance = grid->distance_grid->getAccessor();
+    openvdb::DoubleGrid::Accessor accessor_distance = grid->distance_grid->getAccessor();
 
     while(grid->num_empty > 0 && grid->ingredientsDipatcher.hasNextIngradient()) {     
         if (DEBUG) std::cout << "#begin loop\n";
@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
             colors.push_back(ingr->color);
             rejection=0;  
             ingr->counter++;
-            ingr->completion = (float)ingr->counter/(float)ingr->nbMol;
+            ingr->completion = (double)ingr->counter/(double)ingr->nbMol;
             if (DEBUG) std::cout << "# main loop accepted c " <<ingr->completion<< " " << ingr->name << " counter " << ingr->counter << " ijk " << s << " nempty " << grid->num_empty << " r " << rejection <<  " collide " << collision << std::endl;          
             if (ingr->completion >= 1.0) {
                 std::cout << "#ingredient completion no more nmol to place "<< ingr->counter << std::endl;

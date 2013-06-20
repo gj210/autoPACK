@@ -40,23 +40,23 @@
 #include "Ingredient.h"
 
 //helper to create an ingredient given a 3d mesh triangles or quads
-Ingredient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
-                                 float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-                                 unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d);
+Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concentration, 
+                                 double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+                                 unsigned nbJitter,openvdb::Vec3d jitterMax, mesh mesh3d);
 
 //helper to create an ingredient given a different 3d mesh triangles or quads
-Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
-                                   float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-                                   unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs);
+Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double concentration, 
+                                   double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+                                   unsigned nbJitter,openvdb::Vec3d jitterMax, std::vector<mesh> meshs);
 
 
 //helper to create a singleSphere ingredient given a radius, and some options
-Ingredient makeSphere(float radius, int mode, float concentration, 
-         float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-        unsigned nbJitter,openvdb::Vec3f jitterMax);
+Ingredient makeSphere(double radius, int mode, double concentration, 
+         double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+        unsigned nbJitter,openvdb::Vec3d jitterMax);
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
-Ingredient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
-         float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-        unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions);
+Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentration, 
+         double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+        unsigned nbJitter,openvdb::Vec3d jitterMax,std::vector<openvdb::Vec3d> positions);

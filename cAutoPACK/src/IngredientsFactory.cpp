@@ -38,14 +38,14 @@
 
 
 //helper to create an ingredient given a 3d mesh triangles or quads
-Ingredient makeMeshIngredient(std::vector<float> radii, int mode, float concentration, 
-                                 float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-                                 unsigned nbJitter,openvdb::Vec3f jitterMax, mesh mesh3d){
+Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concentration, 
+                                 double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+                                 unsigned nbJitter,openvdb::Vec3d jitterMax, mesh mesh3d){
     Ingredient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
-    sp.positions[0] = openvdb::Vec3f(0,0,0);
+    sp.positions[0] = openvdb::Vec3d(0,0,0);
     //sp.positions = positions;
     sp.radius = radii[0];
     sp.mode = mode;
@@ -61,42 +61,42 @@ Ingredient makeMeshIngredient(std::vector<float> radii, int mode, float concentr
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3f(0,0,0);
+    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
-    sp.gsphere = openvdb::FloatGrid::create(dmax);
-    float size=stepsize;
+    sp.gsphere = openvdb::DoubleGrid::create(dmax);
+    double size=stepsize;
     if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
     sp.stepsize = stepsize;
     //levelSet
     if (DEBUG) std::cout << "#mesh have v "<< mesh3d.vertices.size() << " f " << mesh3d.faces.size() << " q " << mesh3d.quads.size() << std::endl;
 
     if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() != 0)){
-        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
             *openvdb::math::Transform::createLinearTransform(size), 
             mesh3d.vertices, mesh3d.faces, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() == 0)){
-        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
             *openvdb::math::Transform::createLinearTransform(size), 
             mesh3d.vertices, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() == 0)&&(mesh3d.faces.size() != 0)){
-        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+        sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
             *openvdb::math::Transform::createLinearTransform(size), 
             mesh3d.vertices, mesh3d.faces);
     }
 
     //sp.gsphere->signedFloodFill();
-    //sp.gsphere = openvdb::tools::meshToSignedDistanceField<openvdb::FloatGrid>(
+    //sp.gsphere = openvdb::tools::meshToSignedDistanceField<openvdb::DoubleGrid>(
     //    *openvdb::math::Transform::createLinearTransform(stepsize), mesh3d.vertices, mesh3d.faces,mesh3d.quads,(int)spherewidth,(int)spherewidth);
     //what about sdf ?
-    //meshToSignedDistanceField (const openvdb::math::Transform &xform, const std::vector< Vec3s > &points, const std::vector< Vec3I > &triangles, const std::vector< Vec4I > &quads, float exBandWidth, float inBandWidth)
+    //meshToSignedDistanceField (const openvdb::math::Transform &xform, const std::vector< Vec3s > &points, const std::vector< Vec3I > &triangles, const std::vector< Vec4I > &quads, double exBandWidth, double inBandWidth)
     //openvdb::tools::internal::MeshVoxelizer<openvdb::FloatTree>
     //   voxelizer(mesh3d.vertices, mesh3d.faces);
     //voxelizer.runParallel();
-    //sp.gsphere = openvdb::FloatGrid::create(voxelizer);//use 4I ?
+    //sp.gsphere = openvdb::DoubleGrid::create(voxelizer);//use 4I ?
     sp.bbox = sp.gsphere->evalActiveVoxelBoundingBox();
     sp.gsphere->evalMinMax(sp.miniVal,sp.maxiVal);//distance
     // Apply the functor to all active values.
@@ -108,14 +108,14 @@ Ingredient makeMeshIngredient(std::vector<float> radii, int mode, float concentr
 }
 
 //helper to create an ingredient given a different 3d mesh triangles or quads
-Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concentration, 
-                                   float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-                                   unsigned nbJitter,openvdb::Vec3f jitterMax, std::vector<mesh> meshs){
+Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double concentration, 
+                                   double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+                                   unsigned nbJitter,openvdb::Vec3d jitterMax, std::vector<mesh> meshs){
     Ingredient sp;
     sp.molarity=concentration;
     sp.radii = radii;
     sp.positions.resize(1);
-    sp.positions[0] = openvdb::Vec3f(0,0,0);
+    sp.positions[0] = openvdb::Vec3d(0,0,0);
     //sp.positions = positions;
     sp.radius = radii[0];
     sp.mode = mode;
@@ -131,16 +131,16 @@ Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concen
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3f(0,0,0);
+    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
-    sp.gsphere = openvdb::FloatGrid::create(dmax);
-    float size=stepsize;
+    sp.gsphere = openvdb::DoubleGrid::create(dmax);
+    double size=stepsize;
     if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
     sp.stepsize = stepsize;
     //levelSet
-    std::vector<openvdb::FloatGrid::Ptr> gspheres;
+    std::vector<openvdb::DoubleGrid::Ptr> gspheres;
     sp.gsphere->setTransform(
         openvdb::math::Transform::createLinearTransform(/*voxel size=*/size));    
     gspheres.resize(meshs.size());
@@ -149,17 +149,17 @@ Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concen
         //is the position in xyz or ijk ?
         if (DEBUG) std::cout << "#mesh have v "<< meshs[i].vertices.size() << " f " << meshs[i].faces.size() << " q " << meshs[i].quads.size() << std::endl;
         if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() != 0)){
-            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
                 *openvdb::math::Transform::createLinearTransform(size), 
                 meshs[i].vertices, meshs[i].faces, meshs[i].quads);
         }
         else if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() == 0)){
-            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
                 *openvdb::math::Transform::createLinearTransform(size), 
                 meshs[i].vertices, meshs[i].quads);
         }
         else if ((meshs[i].quads.size() == 0)&&(meshs[i].faces.size() != 0)){
-            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+            gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
                 *openvdb::math::Transform::createLinearTransform(size), 
                 meshs[i].vertices, meshs[i].faces);
         }
@@ -183,9 +183,9 @@ Ingredient makeMeshesIngredient(std::vector<float> radii, int mode, float concen
 
 
 //helper to create a singleSphere ingredient given a radius, and some options
-Ingredient makeSphere(float radius, int mode, float concentration, 
-         float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-        unsigned nbJitter,openvdb::Vec3f jitterMax){
+Ingredient makeSphere(double radius, int mode, double concentration, 
+         double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+        unsigned nbJitter,openvdb::Vec3d jitterMax){
     Ingredient sp;
     sp.radius = radius;
     sp.molarity=concentration;
@@ -202,18 +202,18 @@ Ingredient makeSphere(float radius, int mode, float concentration,
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3f(0,0,0);
+    sp.trans = openvdb::Vec3d(0,0,0);
     sp.radii.push_back(radius);    
-    sp.positions.push_back(openvdb::Vec3f(0,0,0));
+    sp.positions.push_back(openvdb::Vec3d(0,0,0));
     sp.jitterMax = jitterMax;
     //build the grid
-    float size=stepsize;
+    double size=stepsize;
     if (stepsize > sp.minRadius) size = sp.minRadius/2.0;
     sp.stepsize = size;
 
-    sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
-              /*radius=*/radius, /*center=*/sp.trans,//where is the sphere is  index or worl
-               /*voxel size=*/size, /*width=*/25.0);//width could be maxRadius / stepsize (int)MaxRadius/stepsize
+    sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
+              /*radius=*/float(radius), /*center=*/sp.trans,//where is the sphere is  index or worl
+               /*voxel size=*/float(size), /*width=*/float(25.0));//width could be maxRadius / stepsize (int)MaxRadius/stepsize
     //sp.gsphere->signedFloodFill();
         
     //sphere bounding box
@@ -238,9 +238,9 @@ Ingredient makeSphere(float radius, int mode, float concentration,
 
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
-Ingredient makeMultiSpheres(std::vector<float> radii, int mode, float concentration, 
-         float packingPriority,int nbMol,std::string name, openvdb::Vec3f color,
-        unsigned nbJitter,openvdb::Vec3f jitterMax,std::vector<openvdb::Vec3f> positions){
+Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentration, 
+         double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
+        unsigned nbJitter,openvdb::Vec3d jitterMax,std::vector<openvdb::Vec3d> positions){
     Ingredient sp;
     sp.radii = radii;
     sp.positions = positions;
@@ -263,19 +263,19 @@ Ingredient makeMultiSpheres(std::vector<float> radii, int mode, float concentrat
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3f(0,0,0);
+    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
 
-    float size=stepsize;
+    double size=stepsize;
     if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
     sp.stepsize = stepsize;
     
     if (radii.size() == 1 ){
-         sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
-              /*radius=*/sp.radius, /*center=*/positions[0],//where is the sphere is  index or worl
-               /*voxel size=*/size, /*width=*/spherewidth); 
+         sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
+              /*radius=*/float(sp.radius), /*center=*/positions[0],//where is the sphere is  index or worl
+               /*voxel size=*/float(size), /*width=*/float(spherewidth)); 
         //sphere bounding box
         const openvdb::Vec3d ibotleft(-sp.radius,-sp.radius,-sp.radius);//(0,0,0)
         const openvdb::Vec3d iupright(sp.radius,sp.radius,sp.radius);//(1000,1000,10);
@@ -289,17 +289,17 @@ Ingredient makeMultiSpheres(std::vector<float> radii, int mode, float concentrat
         sp.bbox = openvdb::CoordBBox(left,right);//min and max                
     }
     else {
-        std::vector<openvdb::FloatGrid::Ptr> gspheres;
-        sp.gsphere = openvdb::FloatGrid::create(dmax);
+        std::vector<openvdb::DoubleGrid::Ptr> gspheres;
+        sp.gsphere = openvdb::DoubleGrid::create(dmax);
         sp.gsphere->setTransform(
             openvdb::math::Transform::createLinearTransform(/*voxel size=*/size)); 
         gspheres.resize(radii.size());
-        for (std::vector<float>::size_type i =0 ; i < radii.size();i++) {
+        for (std::vector<double>::size_type i =0 ; i < radii.size();i++) {
             //is the position in xyz or ijk ?
             if (DEBUG)std::cout << "#r " << radii[i] << " pos " <<  positions[i] << std::endl;
-            gspheres[i] = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
-                  /*radius=*/radii[i], /*center=*/positions[i],//where is the sphere is  index or worl
-                   /*voxel size=*/size, /*width=*/spherewidth);
+            gspheres[i] = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
+                  /*radius=*/float(radii[i]), /*center=*/positions[i],//where is the sphere is  index or worl
+                   /*voxel size=*/float(size), /*width=*/float(spherewidth));
             //union with gsphere
             sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
             //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());

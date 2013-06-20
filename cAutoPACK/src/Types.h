@@ -65,14 +65,14 @@ openvdb includes
     #pragma warning(pop)
 #endif
 
-static const float dmax = 999999.0f;        //maximum value assign to the grid for intialisation
+static const double dmax = 999999.0;        //maximum value assign to the grid for intialisation
 static const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
 static const bool DEBUG = false;                   //DEBUG mode for prining some information
-static const float MaxRadius = float((2.0*1.1547)*20.0);  //Maximum radius allowed, this is used for the voxelisation
-static const float spherewidth = 10.0f;             //default or more ? close packing need to increase this number
+static const double MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
+static const double spherewidth = 10.0;             //default or more ? close packing need to increase this number
 static const std::string packing = "random";       //packing mode, can be random or close
 
-extern float stepsize;         //grid step size ie smallest ingredients radius
+extern double stepsize;         //grid step size ie smallest ingredients radius
 extern bool forceSphere;
 
 
@@ -92,7 +92,7 @@ struct mesh {
 // struct and then sets the result member to the maximum of a and b.
 // what if we want to keep the level set ? this apply to all value
 struct Local {
-    static inline void min(openvdb::CombineArgs<float>& args) {
+    static inline void min(openvdb::CombineArgs<double>& args) {
         if (args.b() < args.a()) {
             if ((args.b() < 0.0 )||args.bIsActive()){
                 // Transfer the B value and its active state if active
@@ -110,7 +110,7 @@ struct Local {
             args.setResultIsActive(args.aIsActive());
         }
     }
-    static inline void rmin(openvdb::CombineArgs<float>& args) {
+    static inline void rmin(openvdb::CombineArgs<double>& args) {
         if (args.b() < args.a()) {
             // Transfer the B value and its active state 
             args.setResult(args.b());

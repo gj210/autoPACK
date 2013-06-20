@@ -59,7 +59,7 @@ double getRadii(std::string str){
     return atof(str.c_str());
 }
 
-std::vector<float> getBox(std::string str){
+std::vector<double> getBox(std::string str){
     std::replace(str.begin(), str.end(), '[', ' ');  
     std::replace(str.begin(), str.end(), ']', ' ');  
     std::replace(str.begin(), str.end(), '(', ' ');  
@@ -69,11 +69,11 @@ std::vector<float> getBox(std::string str){
     std::istringstream iss(str);
     //std::cout << str << std::endl;
     // If possible, always prefer std::vector to naked array
-    std::vector<float> v;
+    std::vector<double> v;
     // Iterate over the istream, using >> to grab floats
     // and push_back to store them in the vector
-    std::copy(std::istream_iterator<float>(iss),
-        std::istream_iterator<float>(),
+    std::copy(std::istream_iterator<double>(iss),
+        std::istream_iterator<double>(),
         std::back_inserter(v));
     return v;
 }
@@ -92,21 +92,21 @@ std::vector<int> getInts(std::string str){
     return v;
 }
 
-std::vector<openvdb::Vec3f> getPositions(std::vector<float> pos){
-    std::vector<float>::size_type i = 0; 
-    std::vector<openvdb::Vec3f> positions;   
+std::vector<openvdb::Vec3d> getPositions(std::vector<double> pos){
+    std::vector<double>::size_type i = 0; 
+    std::vector<openvdb::Vec3d> positions;   
     while (i<pos.size()-2){
-         openvdb::Vec3f p(pos[i],pos[i+1],pos[i+2]);
+         openvdb::Vec3d p(pos[i],pos[i+1],pos[i+2]);
          positions.push_back(p);
          i = i+3;
     }
     return positions;
 }
-std::vector<openvdb::Vec3s> getPositionsS(std::vector<float> pos){
-    std::vector<float>::size_type i = 0; 
+std::vector<openvdb::Vec3s> getPositionsS(std::vector<double> pos){
+    std::vector<double>::size_type i = 0; 
     std::vector<openvdb::Vec3s> positions;   
     while (i<pos.size()-2){
-         openvdb::Vec3f p(pos[i],pos[i+1],pos[i+2]);
+         openvdb::Vec3s p( float(pos[i]), static_cast<float>(pos[i+1]), float(pos[i+2]));
          positions.push_back(p);
          i = i+3;
     }
@@ -125,7 +125,7 @@ std::vector<openvdb::Vec3I> getPositionsInt(std::vector<int> pos){
     return positions;
 }
 
-openvdb::Vec3f getArray(std::string str){
+openvdb::Vec3d getArray(std::string str){
     std::replace(str.begin(), str.end(), '[', ' ');  
     std::replace(str.begin(), str.end(), ']', ' ');  
     std::replace(str.begin(), str.end(), '(', ' ');  
@@ -135,13 +135,13 @@ openvdb::Vec3f getArray(std::string str){
     std::istringstream iss(str);
     //std::cout << str << std::endl;
     // If possible, always prefer std::vector to naked array
-    std::vector<float> v;
+    std::vector<double> v;
     // Iterate over the istream, using >> to grab floats
     // and push_back to store them in the vector
-    std::copy(std::istream_iterator<float>(iss),
-        std::istream_iterator<float>(),
+    std::copy(std::istream_iterator<double>(iss),
+        std::istream_iterator<double>(),
         std::back_inserter(v));
-    openvdb::Vec3f p(v[0],v[1],v[2]);
+    openvdb::Vec3d p(v[0],v[1],v[2]);
     return p;
 }
 /* 
@@ -245,7 +245,7 @@ openvdb::math::Mat4d getNodeTransformation(pugi::xml_node nd){
     if (std::string(nd.name()) == "visual_scene")
         return transfo->baseMap()->getAffineMap()->getMat4();//should be identity    
     std::string stringT( nd.child("translate").text().get() );
-    std::vector<float> pos = getBox(stringT);    
+    std::vector<double> pos = getBox(stringT);    
     if (DEBUG) std::cout << "# trans  " <<stringT<< std::endl; 
     //std::vector<openvdb::Vec3s> translate = getPositionsS(pos);
     openvdb::math::Mat4d T;
@@ -262,7 +262,7 @@ openvdb::math::Mat4d getNodeTransformation(pugi::xml_node nd){
     //rotation 
     for (pugi::xml_node rotation = nd.child("rotate"); rotation; rotation = rotation.next_sibling("rotate")){
         std::string stringR( rotation.text().get() );
-        std::vector<float> r = getBox(stringR);  
+        std::vector<double> r = getBox(stringR);  
         if (DEBUG) std::cout << "#rotation  " <<stringR<< std::endl;           
         if (std::string(rotation.attribute("sid").value()) =="rotateY"){
             rY.setToRotation(openvdb::Vec3d(r[0],r[1],r[2]),(r[3]/180.0)*M_PI);
@@ -389,7 +389,7 @@ std::vector<mesh> getMeshs(std::string path){
         if (DEBUG)std::cout << "#meshnode " << meshnode << std::endl;
         pugi::xml_node vnode = meshnode.child("vertices");
         if (DEBUG)std::cout << "#vnode " << vnode << " x " << vnode.child("input") << std::endl;
-        //get the ID of the array of float ie input source
+        //get the ID of the array of double ie input source
         std::string idsource(vnode.child("input").attribute("source").value());
         //remove the #
         //std::replace(idsource.begin(), idsource.end(), '#', '');
@@ -411,7 +411,7 @@ std::vector<mesh> getMeshs(std::string path){
         //std::string varraysource(varray.value());
         //std::cout << "#varray " << varray.text().get()  << std::endl;
         std::string strarray( varray.text().get() );
-        std::vector<float> pos = getBox(strarray);     
+        std::vector<double> pos = getBox(strarray);     
         std::vector<openvdb::Vec3s> vertices = getPositionsS(pos);
         //now the face
         std::vector<openvdb:: Vec3I > faces;
@@ -488,7 +488,7 @@ mesh getMesh(std::string path){
     std::cout << "#meshnode " << meshnode << std::endl;
     pugi::xml_node vnode = meshnode.child("vertices");
     std::cout << "#vnode " << vnode << " x " << vnode.child("input") << std::endl;
-    //get the ID of the array of float ie input source
+    //get the ID of the array of double ie input source
     std::string idsource(vnode.child("input").attribute("source").value());
     //remove the #
     //std::replace(idsource.begin(), idsource.end(), '#', '');
@@ -510,7 +510,7 @@ mesh getMesh(std::string path){
     //std::string varraysource(varray.value());
     //std::cout << "#varray " << varray.text().get()  << std::endl;
     std::string strarray( varray.text().get() );
-    std::vector<float> pos = getBox(strarray);     
+    std::vector<double> pos = getBox(strarray);     
     std::vector<openvdb::Vec3s> vertices = getPositionsS(pos);
     //now the face
     std::vector<openvdb:: Vec3I > faces;
@@ -545,7 +545,7 @@ mesh getMesh(std::string path){
     mesh3d.faces = faces;
     mesh3d.quads = quads;
     //grid work
-    //openvdb::FloatGrid::Ptr grid = openvdb::tools::meshToLevelSet<openvdb::FloatGrid>(
+    //openvdb::DoubleGrid::Ptr grid = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
     //    *openvdb::math::Transform::createLinearTransform(), vertices, faces);
     //OR which work too
     //openvdb::tools::internal::MeshVoxelizer<openvdb::FloatTree>
@@ -569,7 +569,7 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
     std::cout <<"#step " << stepsize <<std::endl;
     std::cout <<"#seed " <<seed<<std::endl;
     std::string strbb(doc.child("AutoFillSetup").child("options").attribute("boundingBox").value());
-    std::vector<float> bb = getBox(strbb);
+    std::vector<double> bb = getBox(strbb);
 
     bool pickWeightedIngr =doc.child("AutoFillSetup").child("options").attribute("pickWeightedIngr").as_bool();
     bool pickRandPt =doc.child("AutoFillSetup").child("options").attribute("pickRandPt").as_bool();
@@ -579,36 +579,36 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
     std::vector<Ingredient> _ingredients;
     //need to add organelle as well...organelle ingredient are inside organelle levelSet.
     pugi::xml_node cytoplasme = doc.child("AutoFillSetup").child("cytoplasme");
-    //float radius, int mode, float concentration, 
-    //     float packingPriority,int nbMol,std::string name, point color    
+    //double radius, int mode, double concentration, 
+    //     double packingPriority,int nbMol,std::string name, point color    
     for (pugi::xml_node ingredient = cytoplasme.child("ingredient"); ingredient; ingredient = ingredient.next_sibling("ingredient")){
         if (DEBUG) std::cout << "#ingredient " << ingredient.attribute("name").value() << std::endl;
         std::string str(ingredient.attribute("radii").value()); 
-        std::vector<float> radii = getBox(str);     
+        std::vector<double> radii = getBox(str);     
         std::string posstr(ingredient.attribute("positions").value()); 
-        std::vector<float> pos = getBox(posstr);     
-        std::vector<openvdb::Vec3f> positions = getPositions(pos);
-        //float r = getRadii(str); //different radii... as well as the position...  
+        std::vector<double> pos = getBox(posstr);     
+        std::vector<openvdb::Vec3d> positions = getPositions(pos);
+        //double r = getRadii(str); //different radii... as well as the position...  
         //std::cout << r << std::endl;
-        float mol = ingredient.attribute("molarity").as_float();
+        double mol = ingredient.attribute("molarity").as_float();
         if (DEBUG)std::cout << "#molarity "<<mol << std::endl;
-        float priority = ingredient.attribute("packingPriority").as_float();
+        double priority = ingredient.attribute("packingPriority").as_float();
         if (DEBUG)std::cout << "#priority "<< priority << std::endl;        
         int nMol = ingredient.attribute("nbMol").as_int();
         if (DEBUG)std::cout << "#nmol "<< nMol << std::endl; 
         std::string iname(ingredient.attribute("name").value()); 
-        openvdb::Vec3f color(1,0,0);
+        openvdb::Vec3d color(1,0,0);
         if (ingredient.attribute("color")){        
             std::string strcol(ingredient.attribute("color").value());
-            openvdb::Vec3f color = getArray(strcol);//TODO : pass to inredient
+            openvdb::Vec3d color = getArray(strcol);//TODO : pass to inredient
         }
         unsigned nbJitter = ingredient.attribute("nbJitter").as_int();
         if (DEBUG)std::cout << "#color "<< color << std::endl;
         std::string strjitter(ingredient.attribute("jitterMax").value());
-        openvdb::Vec3f jitter =  getArray(strjitter);
+        openvdb::Vec3d jitter =  getArray(strjitter);
         if (DEBUG)std::cout << "#jitter "<< jitter << std::endl;     
         std::string straxe(ingredient.attribute("principalVector").value());
-        openvdb::Vec3f principalVector =  getArray(straxe);
+        openvdb::Vec3d principalVector =  getArray(straxe);
         if (DEBUG)std::cout << "#principalVector "<< principalVector << std::endl;
         bool fSphere=forceSphere;
         if (ingredient.attribute("forceSphere"))
@@ -649,21 +649,21 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
         ingr.useRotAxis = false;
         if (ingredient.attribute("useRotAxis")){
             ingr.useRotAxis = ingredient.attribute("useRotAxis").as_bool();
-            ingr.rotRange = ingredient.attribute("rotRange").as_float();
+            ingr.rotRange = ingredient.attribute("rotRange").as_double();
             if (ingr.useRotAxis){
                 std::string strRaxe(ingredient.attribute("rotAxis").value());
                 ingr.rotAxis =  getArray(strRaxe);
             }
         }
-        ingr.perturbAxisAmplitude = 0.1f;
+        ingr.perturbAxisAmplitude = 0.1;
         if (ingredient.attribute("perturbAxisAmplitude")){
-            ingr.perturbAxisAmplitude = ingredient.attribute("perturbAxisAmplitude").as_float();
+            ingr.perturbAxisAmplitude = ingredient.attribute("perturbAxisAmplitude").as_double();
         }
         //packing mode overwrite from xml file
         ingr.packingMode = std::string(ingredient.attribute("packingMode").value());
         //rejectionThreshold        
         if (ingredient.attribute("rejectionThreshold")){      
-            ingr.rejectionThreshold = ingredient.attribute("rejectionThreshold").as_float();
+            ingr.rejectionThreshold = ingredient.attribute("rejectionThreshold").as_int();
         }
         _ingredients.push_back(ingr);
         std::cout << "#ingredient done!" << std::endl;

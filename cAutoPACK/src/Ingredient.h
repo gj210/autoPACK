@@ -41,41 +41,41 @@
 
 class Ingredient {
 public:
-    float radius;
-    std::vector<float> radii;
-    std::vector<openvdb::Vec3f> positions;
-    float minRadius;
-    float maxRadius;
-    float stepsize;
+    double radius;
+    std::vector<double> radii;
+    std::vector<openvdb::Vec3d> positions;
+    double minRadius;
+    double maxRadius;
+    double stepsize;
     //point trans;
     int mode;
     int nbMol;
-    float molarity; 
-    float completion;
-    float packingPriority;
+    double molarity; 
+    double completion;
+    double packingPriority;
     std::string name;
     std::string packingMode;
     int counter;
     int rejectionCounter;
     int rejectionThreshold;
     unsigned nbJitter;
-    openvdb::Vec3f color;
-    openvdb::Vec3f trans;
-    openvdb::Vec3f jitterMax;
-    openvdb::Vec3f principalVector;
-    openvdb::FloatGrid::Ptr gsphere;
+    openvdb::Vec3d color;
+    openvdb::Vec3d trans;
+    openvdb::Vec3d jitterMax;
+    openvdb::Vec3d principalVector;
+    openvdb::DoubleGrid::Ptr gsphere;
     openvdb::CoordBBox bbox;
-    float miniVal;
-    float maxiVal;
+    double miniVal;
+    double maxiVal;
     mesh mesh3d;
     std::string filename;
     //rotation paramters
     bool useRotAxis;
-    float rotRange;
-    openvdb::Vec3f rotAxis;
-    float perturbAxisAmplitude;
+    double rotRange;
+    openvdb::Vec3d rotAxis;
+    double perturbAxisAmplitude;
 
 public:
     bool isActive() { return completion < 1.0; }
-    void setCount(float volume);
+    void setCount(double volume);
 };

@@ -17,18 +17,18 @@ bool ingredient_compare1(Ingredient* x, Ingredient* y){
     """
     */
     
-    float p1 = x->packingPriority;
-    float p2 = y->packingPriority;
+    double p1 = x->packingPriority;
+    double p2 = y->packingPriority;
     if (p1 < p2) //# p1 > p2
         return true;
     else if (p1==p2){ //# p1 == p1
-       float r1 = x->minRadius;
-       float r2 = y->minRadius;
+       double r1 = x->minRadius;
+       double r2 = y->minRadius;
        if (r1 > r2) //# r1 < r2
            return true;
        else if (r1==r2){ //# r1 == r2
-           float c1 = x->completion;
-           float c2 = y->completion;
+           double c1 = x->completion;
+           double c2 = y->completion;
            if (c1 > c2) //# c1 > c2
                return true;
            else
@@ -48,18 +48,18 @@ bool ingredient_compare0(Ingredient* x, Ingredient* y){
     """
     */
     
-    float p1 = x->packingPriority;
-    float p2 = y->packingPriority;
+    double p1 = x->packingPriority;
+    double p2 = y->packingPriority;
     if (p1 > p2) //# p1 > p2
         return true;
     else if (p1==p2){ //# p1 == p1
-       float r1 = x->minRadius;
-       float r2 = y->minRadius;
+       double r1 = x->minRadius;
+       double r2 = y->minRadius;
        if (r1 > r2) //# r1 < r2
            return true;
        else if (r1==r2){ //# r1 == r2
-           float c1 = x->completion;
-           float c2 = y->completion;
+           double c1 = x->completion;
+           double c2 = y->completion;
            if (c1 > c2) //# c1 > c2
                return true;
            else
@@ -79,14 +79,14 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
     """
     */
     
-    float r1 = x->minRadius;
-    float r2 = y->minRadius;
+    double r1 = x->minRadius;
+    double r2 = y->minRadius;
     //ask graham about this issue
    if (r1 < r2) //# is r1 < r2 - this should be r1 > r2
        return true;
    else if (r1==r2){ //# r1 == r2
-       float c1 = x->completion;
-       float c2 = y->completion;
+       double c1 = x->completion;
+       double c2 = y->completion;
        if (c1 > c2) //# c1 > c2
            return true;
        else
@@ -99,7 +99,7 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
 }
 
 IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _ingredients, openvdb::Index64 num_points, unsigned int seed) 
-    :uniform(0.0f, 1.0f)
+    :uniform(0.0, 1.0)
     , vRangeStart(0.0)
     , generator(std::default_random_engine(seed))
     , pickWeightedIngr(true)
@@ -108,8 +108,8 @@ IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _i
     //retrieve the biggest one
     ingredients = _ingredients;
     activeIngr.resize(ingredients.size());
-    float unit_volume = pow(stepsize,3.0f);
-    float grid_volume =  num_points*unit_volume;
+    double unit_volume = pow(stepsize,3.0);
+    double grid_volume =  num_points*unit_volume;
     std::cout << "#Grid Volume " << grid_volume << " unitVol " << unit_volume << std::endl;
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
         activeIngr[i] = &ingredients[i];
@@ -127,14 +127,14 @@ Ingredient* IngradientsDispatcher::pickIngredient()
 {
     Ingredient* ingr;      
     unsigned int ingrInd;
-    float threshProb;
+    double threshProb;
     if (pickWeightedIngr){ 
         if (thresholdPriorities[0] == 2){
             //# Graham here: Walk through -priorities first
             ingr = activeIngr[0];
         }else{
             //#prob = uniform(vRangeStart,1.0)  #Graham 9/21/11 This is wrong...vRangeStart is the point index, need active list i.e. thresholdPriority to be limited
-            float prob = uniform(generator);
+            double prob = uniform(generator);
             ingrInd = 0;
             for(unsigned i = 0; i < thresholdPriorities.size(); ++i) {
                 threshProb = thresholdPriorities[i];
@@ -209,8 +209,8 @@ void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
     if (pickWeightedIngr)
         thresholdPriorities.resize(activeIngr0.size(), 2.0);   
 
-    float totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0f, 
-        [](float accumulator , Ingredient* ingr) { return accumulator + ingr->packingPriority; });
+    double totalPriorities = std::accumulate(activeIngr12.begin(), activeIngr12.end(), 0.0, 
+        [](double accumulator , Ingredient* ingr) { return accumulator + ingr->packingPriority; });
     std::cout << "#totalPriorities " << totalPriorities << std::endl;
 
     if (totalPriorities == 0)
@@ -220,9 +220,9 @@ void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
     }
     else
     {
-        float previousThresh = 0;                
+        double previousThresh = 0;                
         for(Ingredient * ingr : activeIngr12) {
-            const float np = ingr->packingPriority/totalPriorities;            
+            const double np = ingr->packingPriority/totalPriorities;            
             if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< ingr->packingPriority << " tp is " << np + previousThresh << std::endl;
 
             normalizedPriorities.push_back(np);
@@ -239,15 +239,15 @@ void IngradientsDispatcher::getSortedActiveIngredients()
 {
     //pirorities120 is ot used ??
     std::vector<Ingredient*> ingr1;  // given priorities pass ptr ?
-    std::vector<float> priorities1;
+    std::vector<double> priorities1;
     std::vector<Ingredient*> ingr2;  // priority = 0 or none and will be assigned based on complexity
-    std::vector<float> priorities2;
+    std::vector<double> priorities2;
     std::vector<Ingredient*> ingr0;  // negative values will pack first in order of abs[packingPriority]
-    std::vector<float> priorities0;
+    std::vector<double> priorities0;
     Ingredient* lowestIng; 
     Ingredient* ing; 
-    float r=0.0;
-    float np=0.0;      
+    double r=0.0;
+    double np=0.0;      
     for(unsigned i = 0; i < ingredients.size(); ++i) { 
         ing = &ingredients[i];
         if (ing->completion >= 1.0) continue;// # ignore completed ingredients
@@ -271,7 +271,7 @@ void IngradientsDispatcher::getSortedActiveIngredients()
     }
     //#for ing in ingr3 : ing.packingPriority    = -ing.packingPriority
     //#GrahamAdded this stuff in summer 2011, beware!
-    float lowestPriority;
+    double lowestPriority;
     if (ingr1.size() != 0){
         lowestIng = ingr1[ingr1.size()-1];
         lowestPriority = lowestIng->packingPriority;
@@ -291,7 +291,7 @@ void IngradientsDispatcher::getSortedActiveIngredients()
     for(unsigned i = 0; i < ingr2.size(); ++i) {
         ing = ingr2[i];
         r = ing->minRadius;
-        np = float(r)/float(totalRadii) * lowestPriority;
+        np = double(r)/double(totalRadii) * lowestPriority;
         //std::cout << "#packingPriority " << np << ' ' << r <<' '<< totalRadii<< ' ' << lowestPriority << std::endl;
         ing->packingPriority = np;
     }           
