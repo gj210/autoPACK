@@ -26,14 +26,18 @@ message(STATUS "OpenVDB includes found in: ${OPENVDB_INCLUDE_DIR}")
 find_library(OPENVDB_LIBRARY NAMES openvdb vdb PATH_SUFFIXES OpenVDB/lib REQUIRED)
 message(STATUS "OpenVDB library found in: ${OPENVDB_LIBRARY}")
 
-find_package(Boost REQUIRED)
+set(Boost_USE_STATIC_LIBS        ON)
+if (UNIX)
+  set(Boost_USE_STATIC_LIBS        OFF)
+endif()
+find_package(Boost COMPONENTS program_options REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
     
 FILE(GLOB AUTOPACK_SOURCE_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)	
-	
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)	
+    
 FILE(GLOB AUTOPACK_HEADER_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)	
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)	
 
 add_executable(autoPack ${AUTOPACK_SOURCE_FILES} ${AUTOPACK_HEADER_FILES})
 
@@ -46,10 +50,10 @@ set( EXTERNAL_LIBRARIES ${ZLIB_LIBRARIES} ${ILMBASE_LIBRARY} ${TBB_LIBRARY} ${PU
 target_link_libraries(autoPack ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
 if(MSVC)
-    ADD_DEFINITIONS(-DNOMINMAX)	
+    ADD_DEFINITIONS(-DNOMINMAX)
     ADD_DEFINITIONS(-DZLIB_WINAPI)
     ADD_DEFINITIONS(-D__TBB_NO_IMPLICIT_LINKAGE)
-	ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+    ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
 endif()
 if (UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -std=c++11")
@@ -58,20 +62,15 @@ if (UNIX)
     endif()
 endif()
 
-set(Boost_USE_STATIC_LIBS        ON)
-if (UNIX)
-  set(Boost_USE_STATIC_LIBS        OFF)
-endif()
-
 find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
 FILE(GLOB AUTOPACK_TESTS_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
-	add_executable(UnitTests  src/IngredientsDispatcher.cpp src/BigGrid.cpp src/Ingredient.cpp ${AUTOPACK_TESTS_FILES})
-	target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
+    add_executable(UnitTests  src/IngredientsDispatcher.cpp src/BigGrid.cpp src/Ingredient.cpp ${AUTOPACK_TESTS_FILES})
+    target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
-	enable_testing()
-	add_test(UniTests UnitTests)
+    enable_testing()
+    add_test(UniTests UnitTests)
 endif()
 
 

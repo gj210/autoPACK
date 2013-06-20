@@ -39,4 +39,4 @@
 
 #include "BigGrid.h"
 
-std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed);
+std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed,bool forceSphere);

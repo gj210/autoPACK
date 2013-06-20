@@ -556,7 +556,7 @@ mesh getMesh(std::string path){
 
 
 //we load the autopack xml setup and create the grid class object
-std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed){
+std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bool forceSphere){
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(path.c_str());
     //std::cout << path << std::endl;

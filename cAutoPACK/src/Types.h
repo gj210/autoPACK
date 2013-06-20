@@ -73,7 +73,6 @@ static const double spherewidth = 10.0;             //default or more ? close pa
 static const std::string packing = "random";       //packing mode, can be random or close
 
 extern double stepsize;         //grid step size ie smallest ingredients radius
-extern bool forceSphere;
 
 
 /* 
