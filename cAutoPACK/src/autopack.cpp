@@ -422,6 +422,32 @@ void generatePythonScript( std::shared_ptr<big_grid> &g, std::vector<double> &ra
     } 
 }
 
+
+void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<float> &radiis, std::vector<openvdb::Vec3f> &colors, bool ds_grid, bool ds_ingrgrid, const std::string &file ) 
+{
+	std::ofstream coordFile;
+	coordFile.open (file);
+	
+	openvdb::Vec3f pos;
+	Ingredient * ingr;
+	for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+		ingr = g->results[i];
+		openvdb::math::Transform::Ptr targetXform =
+			openvdb::math::Transform::createLinearTransform();
+		// Add the offset.
+		targetXform->preMult(g->rrot[i]);
+		targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
+		openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+		int j = 0;
+		for(openvdb::Vec3f const & position : g->results[i]->positions ) {        
+			pos = mat.transform(position);
+			coordFile << pos.x() << ' ' << pos.y() << ' ' << pos.z() << ' ' << g->results[i]->radii[j] << std::endl;
+			j++;
+		}        
+    }
+	coordFile.close();
+}
+
 //main loop is here
 int main(int argc, char* argv[])
 {   
@@ -432,6 +458,7 @@ int main(int argc, char* argv[])
  
     bool ds_ingrgrid = atoi(argv[4])>0;//display level set grid for ingredient
     bool ds_grid = atoi(argv[5])>0;    //display global set grid
+	bool createResFile = atoi(argv[6])>0;
  
     srand (seed);
  
@@ -509,6 +536,9 @@ int main(int argc, char* argv[])
     clock_t endRun = clock();
     std::cout << "#Running time: " << std::fixed << double(endRun-beginRun)/(60*1000) << std::defaultfloat << std::endl;
     generatePythonScript(grid, radiis, colors, ds_grid, ds_ingrgrid);
+
+	if(createResFile);
+		generateCoordFile( grid, radiis, colors, ds_grid, ds_ingrgrid, "result.txt");
 
 
     //stdout the grid
