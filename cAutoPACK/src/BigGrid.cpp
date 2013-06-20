@@ -293,12 +293,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
     //actuall jitter that will be apply to the point
    
-    openvdb::Vec3d target;           //the point with some jitter
+    openvdb::Vec3d offset;           //the point with some jitter
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
         if (jitterSquare > 0.0){
-            target = center + generateRandomJitterOffset(ingr->jitterMax);
+            offset = center + generateRandomJitterOffset(ingr->jitterMax);
         }else{
-            target = center;
+            offset = center;
         }
 
         openvdb::math::Mat4d rotMatj;
@@ -312,48 +312,30 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }
 
         //check for collision at the given target point coordinate for the given radius     
-        collision = checkSphCollisions(target,rotMatj,rad,ingr);
+        collision = checkSphCollisions(offset,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
-            openvdb::math::Vec3d offset(target);
             ingr->trans = offset;
-            //                std::cout << pid << " test data " << target.x <<' ' << target.y << ' ' << target.z <<' ' << collision << std::endl; 
-            //                std::cout << pid << " test data " << ingr.trans.x <<' ' << ingr.trans.y << ' ' << ingr.trans.z <<' ' << collision << std::endl; 
+
             rtrans.push_back(offset);
-            rrot.push_back(openvdb::math::Mat4d(rotMatj));
+            rrot.push_back(rotMatj);
             results[rtrans.size()-1] = ingr;
 
             if (DEBUG) std::cout << "#combine the grid "<< std::endl;
 
-            // A linear transform with the correct spacing
-            openvdb::math::Transform::Ptr sourceXform =
-                openvdb::math::Transform::createLinearTransform(ingr->stepsize);//should be stepsize or minRadius
-            //which stepsize for the target transform
             openvdb::math::Transform::Ptr targetXform =
                 openvdb::math::Transform::createLinearTransform();//stepsize ?
+            
             // Add the offset.
-            openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
+            const openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
             targetXform->preMult(rotMatj);
             targetXform->postTranslate(woffset);
-
-            openvdb::Vec3d vcc;
-            openvdb::Vec3d cc;
-            openvdb::Coord spcc;
-            openvdb::Coord ci;
-            openvdb::Vec3d spxyz;
 
             // Save copies of the two grids; compositing operations always
             // modify the A grid and leave the B grid empty.
             if (DEBUG) std::cout << "#duplicate ingredient grid "<< std::endl;
-            openvdb::DoubleGrid::Ptr copyOfGridSphere = openvdb::DoubleGrid::create(dmax);
-            //openvdb::DoubleGrid::Ptr copyOfGridSphere = ingr.gsphere->deepCopy();
-            copyOfGridSphere->setTransform(targetXform);
-
-            /*
-            openvdb::Mat4R xform =
-                sourceXform->baseMap()->getAffineMap()->getMat4() *
-                targetXform->baseMap()->getAffineMap()->getMat4().inverse();
-            */
+            
+            openvdb::DoubleGrid::Ptr copyOfGridSphere = openvdb::DoubleGrid::create(dmax);            
 
             // Create the transformer.
             openvdb::tools::GridTransformer transformer(targetXform->baseMap()->getAffineMap()->getMat4());
@@ -362,11 +344,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             transformer.transformGrid<openvdb::tools::PointSampler, openvdb::DoubleGrid>(
                 *ingr->gsphere, *copyOfGridSphere);
             copyOfGridSphere->tree().prune();
-            //openvdb::tools::resampleToMatch<openvdb::tools::PointSampler>(ingr.gsphere,copyOfGridSphere);
-            //openvdb::tools::compMin(*distance_grid, *ingr.gsphere);
+           
             if (DEBUG) std::cout << "#combine grid "<< std::endl;
             distance_grid->tree().combineExtended(copyOfGridSphere->tree(), Local::min);//b is empty after
+
             if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
+
             //problem doesnt fill everywhere....
             //maybe should use a dense fill instead of sparse.?
             //openvdb::tools::compMin(*distance_grid, *copyOfGridSphere);
@@ -376,72 +359,20 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             num_empty=0;
             for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
                 //create a sphere with color or radius dependant of value ?
-                ci=iter.getCoord();
-                if (bbox.isInside(ci)){
-                    //std::cout << "inside \n";
-                    //if (iter.getValue() < 0.0) {iter.setActiveState(false);}
-                    //if ((iter.getValue() > 0.0)&&(iter.getValue() > 0.0) {iter.setActiveState(true);}
+                if (bbox.isInside(iter.getCoord())){
+                    //std::cout << "inside \n";                    
                     if (iter.getValue() > 0.0){
                         //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
-                        //empty[num_empty] = getU(dim,ci);
-                        //all[num_empty] = getU(dim,ci);
-                        //num_empty++;
                         iter.setActiveState(true);                         
                     }
-                    //if (iter.getValue() >= ingr->maxiVal){
-                    //    iter.setValue(dmax);                        
-                    // }
-                    //if (iter.getValue() > 0.0) {iter.setValueOff();}
-
                 }
             }
 
             openvdb::Index64 result = distance_grid->activeVoxelCount();
-            assert( result <= std::numeric_limits<unsigned int>::max() );
             num_empty=unsigned(result);
 
             if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
-            //if (DEBUG) std::cout << "#num_empty "<< num_empty <<std::endl;
-            // Compute the union (A u B) of the two level sets.
-            //openvdb::tools::csgUnion(*distance_grid, *ingr.gsphere);
-            /*
-            openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
-            for (openvdb::DoubleGrid::ValueAllCIter iter = ingr.gsphere->cbeginValueAll(); iter; ++iter) {
-            double dist = iter.getValue();//inside or outside // after / before the translation
-            spcc = iter.getCoord();//ijk or xyz
-            //std::cout << "#spcc " << spcc << " " <<ingr.bbox<< std::endl;
-            if  (ingr.bbox.isInside(spcc)){
-            //std::cout << "#spcc " << spcc << std::endl;
-            spxyz = transform->indexToWorld(spcc);
-            //spxyz = ingr.gsphere->indexToWorld(spcc);
-            //std::cout << "#spxyz " << spxyz << " " << std::endl;
-            //spxyz = spxyz + offset;
-            //spxyz = spcc*matrix;
-            //std::cout << "#spxyz " << spxyz << " " << std::endl;
-            cc=distance_grid->worldToIndex(spxyz);//spcc+woffset;//
-            //std::cout << "#cc " << cc << std::endl;
-            ci = openvdb::Coord((int)round(cc.x()),(int)round(cc.y()),(int)round(cc.z()));
-            //test if ci in bb ?
-            //std::cout << "#ci " << ci << std::endl;
-            double v  = accessor_distance.getValue(ci);
-            //std::cout << "#dist " << dist << " " << v << ci << std::endl;
-            if ((dist < v ))   {     
-            std::cout << "#dist " << dist << " " << v << ci << std::endl;
-            accessor_distance.setValue(ci,dist);
-            if (dist < 0.0) {
-            accessor_distance.setValueOff(ci);
-            //swap
-            if (bbox.isInside(ci)) set_filled(getU(dim,ci));
-            std::cout << "#set_filled_dist " << ci <<  getU(dim,ci) << " " << dist << " " << v << std::endl;
-            //--N;
-            }//only if inside sphere
-            }
-            }
-            }  */
-            //distance_grid->signedFloodFill();  
-            //openvdb::DoubleGrid::ConstPtr copyOfGridSphere = ingr.gsphere->deepCopy();
-            //openvdb::tools::compMin(*distance_grid, *ingr.gsphere);maetof
-            //ingr.gsphere = copyOfGridSphere->deepCopy();
+           
             return collision;
         }
     }  
