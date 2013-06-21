@@ -513,7 +513,6 @@ int main(int argc, char* argv[])
 
     std::cout << "#prepare ingredient complete\n";
 
-    int PlacedMols=0;
     int emptyList;
 
     openvdb::DoubleGrid::Accessor accessor_distance = grid->distance_grid->getAccessor();
@@ -536,7 +535,6 @@ int main(int argc, char* argv[])
 
         bool collision = grid->try_dropCoord(s,ingr);
         if (!collision){
-            PlacedMols++;
             radiis.push_back(ingr->radius);
             colors.push_back(ingr->color);
             rejection=0;  
