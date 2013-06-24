@@ -289,8 +289,8 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
-    const double rad = ingr->radius;        
-    bool collision;
+    const double rad = ingr->radius;
+
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
     //actuall jitter that will be apply to the point
@@ -314,7 +314,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }
 
         //check for collision at the given target point coordinate for the given radius     
-        collision = checkSphCollisions(offset,rotMatj,rad,ingr);
+        const bool collision = checkSphCollisions(offset,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
             ingr->trans = offset;
@@ -327,10 +327,10 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
             if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
            
-            return collision;
+            return false;
         }
     }  
-    return collision;
+    return true;
 }
 
 
