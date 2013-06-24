@@ -315,6 +315,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         collision = checkSphCollisions(offset,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
+            ingr->trans = offset;
+
+            rtrans.push_back(offset);
+            rrot.push_back(rotMatj);
+            results[rtrans.size()-1] = ingr;
+
             storePlacedIngradientInGrid(ingr, offset, rotMatj);
 
             if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
@@ -395,11 +401,6 @@ openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJ
 
 void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj )
 {
-    ingr->trans = offset;
-
-    rtrans.push_back(offset);
-    rrot.push_back(rotMatj);
-    results[rtrans.size()-1] = ingr;
 
     if (DEBUG) std::cout << "#combine the grid "<< std::endl;
 
