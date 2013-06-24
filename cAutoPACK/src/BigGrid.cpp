@@ -315,61 +315,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         collision = checkSphCollisions(offset,rotMatj,rad,ingr);
         //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
         if (!collision) {
-            ingr->trans = offset;
-
-            rtrans.push_back(offset);
-            rrot.push_back(rotMatj);
-            results[rtrans.size()-1] = ingr;
-
-            if (DEBUG) std::cout << "#combine the grid "<< std::endl;
-
-            openvdb::math::Transform::Ptr targetXform =
-                openvdb::math::Transform::createLinearTransform();//stepsize ?
-            
-            // Add the offset.
-            const openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
-            targetXform->preMult(rotMatj);
-            targetXform->postTranslate(woffset);
-
-            // Save copies of the two grids; compositing operations always
-            // modify the A grid and leave the B grid empty.
-            if (DEBUG) std::cout << "#duplicate ingredient grid "<< std::endl;
-            
-            openvdb::DoubleGrid::Ptr copyOfGridSphere = openvdb::DoubleGrid::create(dmax);            
-
-            // Create the transformer.
-            openvdb::tools::GridTransformer transformer(targetXform->baseMap()->getAffineMap()->getMat4());
-
-            // Resample using nearest-neighbor interpolation.
-            transformer.transformGrid<openvdb::tools::PointSampler, openvdb::DoubleGrid>(
-                *ingr->gsphere, *copyOfGridSphere);
-            copyOfGridSphere->tree().prune();
-           
-            if (DEBUG) std::cout << "#combine grid "<< std::endl;
-            distance_grid->tree().combineExtended(copyOfGridSphere->tree(), Local::min);//b is empty after
-
-            if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
-
-            //problem doesnt fill everywhere....
-            //maybe should use a dense fill instead of sparse.?
-            //openvdb::tools::compMin(*distance_grid, *copyOfGridSphere);
-            //ingr.gsphere = copyOfGridSphere->deepCopy();
-            //update empty list
-            //return collision;
-            num_empty=0;
-            for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
-                //create a sphere with color or radius dependant of value ?
-                if (bbox.isInside(iter.getCoord())){
-                    //std::cout << "inside \n";                    
-                    if (iter.getValue() > 0.0){
-                        //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
-                        iter.setActiveState(true);                         
-                    }
-                }
-            }
-
-            openvdb::Index64 result = distance_grid->activeVoxelCount();
-            num_empty=unsigned(result);
+            storePlacedIngradientInGrid(ingr, offset, rotMatj);
 
             if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
            
@@ -445,4 +391,63 @@ openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJ
         if ( deltaOffset.lengthSqr() < jitterSquare )
             return deltaOffset;
     } 
+}
+
+void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj )
+{
+    ingr->trans = offset;
+
+    rtrans.push_back(offset);
+    rrot.push_back(rotMatj);
+    results[rtrans.size()-1] = ingr;
+
+    if (DEBUG) std::cout << "#combine the grid "<< std::endl;
+
+    openvdb::math::Transform::Ptr targetXform =
+        openvdb::math::Transform::createLinearTransform();//stepsize ?
+
+    // Add the offset.
+    const openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
+    targetXform->preMult(rotMatj);
+    targetXform->postTranslate(woffset);
+
+    // Save copies of the two grids; compositing operations always
+    // modify the A grid and leave the B grid empty.
+    if (DEBUG) std::cout << "#duplicate ingredient grid "<< std::endl;
+
+    openvdb::DoubleGrid::Ptr copyOfGridSphere = openvdb::DoubleGrid::create(dmax);            
+
+    // Create the transformer.
+    openvdb::tools::GridTransformer transformer(targetXform->baseMap()->getAffineMap()->getMat4());
+
+    // Resample using nearest-neighbor interpolation.
+    transformer.transformGrid<openvdb::tools::PointSampler, openvdb::DoubleGrid>(
+        *ingr->gsphere, *copyOfGridSphere);
+    copyOfGridSphere->tree().prune();
+
+    if (DEBUG) std::cout << "#combine grid "<< std::endl;
+    distance_grid->tree().combineExtended(copyOfGridSphere->tree(), Local::min);//b is empty after
+
+    if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
+
+    //problem doesnt fill everywhere....
+    //maybe should use a dense fill instead of sparse.?
+    //openvdb::tools::compMin(*distance_grid, *copyOfGridSphere);
+    //ingr.gsphere = copyOfGridSphere->deepCopy();
+    //update empty list
+    //return collision;
+    num_empty=0;
+    for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
+        //create a sphere with color or radius dependant of value ?
+        if (bbox.isInside(iter.getCoord())){
+            //std::cout << "inside \n";                    
+            if (iter.getValue() > 0.0){
+                //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
+                iter.setActiveState(true);                         
+            }
+        }
+    }
+
+    openvdb::Index64 result = distance_grid->activeVoxelCount();
+    num_empty=unsigned(result);
 }

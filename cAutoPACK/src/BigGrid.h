@@ -103,5 +103,6 @@ struct big_grid {
 
 private:
     openvdb::Vec3d generateRandomJitterOffset( openvdb::Vec3d const & ingrJitter );    
+    void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
     
 };
