@@ -61,7 +61,8 @@ struct big_grid {
     std::vector<openvdb::Vec3d> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
     openvdb::Index64 num_empty;         //the number of free point available
-    
+    std::vector<openvdb::Vec3d> rpossitions;    //coordinations of molecules
+
     const double jitter;
     const double jitterSquare;
     
@@ -104,5 +105,7 @@ struct big_grid {
 private:
     openvdb::Vec3d generateRandomJitterOffset( openvdb::Vec3d const & ingrJitter );    
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
+	double countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
+	openvdb::Vec3d calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
     
 };

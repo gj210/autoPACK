@@ -35,6 +35,7 @@
 */
 
 #include <numeric>
+#include <limits>
 #include "BigGrid.h"
 
 namespace {
@@ -287,23 +288,48 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
     return try_dropCoord(cijk,ingr);
 }
 
+openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
+{	
+    openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
+    targetXform->preMult(rotMatj);
+    targetXform->postTranslate(offset);
+    openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+	const openvdb::Vec3d pos = mat.transform(*(ingr->positions.begin()));
+	return pos;
+}
+
+double big_grid::countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
+{
+	const openvdb::Vec3d pos = calculatePossition( ingr, offset, rotMatj );
+	double sum = 0;
+	for(std::vector<openvdb::Vec3d>::iterator it = rpossitions.begin(); it != rpossitions.end(); it++)
+	{
+		const openvdb::Vec3d setPos = *it;
+		sum += pos.lengthSqr() - setPos.lengthSqr();
+	}
+	return sum;
+}
+
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     const double rad = ingr->radius;
-
+    bool collision = true;
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
     //actuall jitter that will be apply to the point
    
-    openvdb::Vec3d offset;           //the point with some jitter
+    openvdb::Vec3d globOffset;           //the point with some jitter
+	openvdb::math::Mat4d globRotMatj;
+	double distance = std::numeric_limits<double>::max( );
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
+		openvdb::Vec3d offset;           //the point with some jitter
+		openvdb::math::Mat4d rotMatj;
         if (jitterSquare > 0.0){
             offset = center + generateRandomJitterOffset(ingr->jitterMax);
         }else{
             offset = center;
         }
 
-        openvdb::math::Mat4d rotMatj;
         if (ingr->useRotAxis){
             if (ingr->rotAxis.length() == 0.0)  
                 rotMatj.setIdentity();
@@ -314,23 +340,33 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }
 
         //check for collision at the given target point coordinate for the given radius     
-        const bool collision = checkSphCollisions(offset,rotMatj,rad,ingr);
-        //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
+        collision = checkSphCollisions(offset,rotMatj,rad,ingr);
         if (!collision) {
-            ingr->trans = offset;
-
-            rtrans.push_back(offset);
-            rrot.push_back(rotMatj);
-            results[rtrans.size()-1] = ingr;
-
-            storePlacedIngradientInGrid(ingr, offset, rotMatj);
-
-            if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
-           
-            return false;
+			const double newDist = countDistance(ingr, offset, rotMatj);
+			if( newDist  < distance )
+			{
+				if(newDist != 0)
+					distance = newDist;
+				globOffset = offset;
+				globRotMatj = rotMatj;
+			}
         }
-    }  
-    return true;
+    }
+
+	if(!collision)
+	{
+		ingr->trans = globOffset;
+		rtrans.push_back(globOffset);
+		rrot.push_back(globRotMatj);
+		results[rtrans.size()-1] = ingr;
+		rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
+
+		storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
+
+		if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
+	}
+
+    return collision;
 }
 
 
