@@ -161,22 +161,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     std::vector<openvdb::Coord> allIngrPts;
     std::vector<double> allIngrDist;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
-    bool notfound = true;      
-    //only onValue or all value ? 
-    /*
-    It might surprise you that the Grid class doesn't directly provide access to 
-    voxels via their $(i,j,k)$ coordinates. Instead, the recommended procedure is 
-    to ask the grid for a "value accessor", which is an accelerator object that 
-    performs bottom-up tree traversal using cached information from previous traversals. 
-    Caching greatly improves performance, but it is inherently not thread-safe. 
-    However, a single grid may have multiple value accessors, so each thread can 
-    safely be assigned its own value accessor. Uncachedand therefore slower, 
-    but thread-saferandom access is possible through a grid's tree, for example 
-    with a call like grid.tree()->getValue(ijk).
-    */
-    //bottom-up tree traversal-> how to get real random after
-    //this loop populate mostly with bottum up coordinate
-    //may need a regular access with the 3 for loop and then grid.tree()->getValue(ijk).     
+    bool notfound = true;
     for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
         //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
@@ -286,6 +271,18 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
     getIJK(pid,dim,i_ijk);
     openvdb::Coord cijk(i_ijk[0],i_ijk[1],i_ijk[2]);
     return try_dropCoord(cijk,ingr);
+}
+
+void big_grid::printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &fileName, const std::string &radius)
+{
+	std::ofstream file;
+	file.open(fileName);
+	for(std::size_t i=0; i<allIngrPts.size(); i++)
+	{
+		openvdb::Coord point = allIngrPts[i];
+		file << point.x() << ' ' << point.y() << ' ' << point.z() << ' ' << radius << std::endl;
+	}
+	file.close();
 }
 
 openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )

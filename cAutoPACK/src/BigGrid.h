@@ -107,5 +107,5 @@ private:
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
 	double countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
 	openvdb::Vec3d calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
-    
+	void printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &file, const std::string &radius);
 };

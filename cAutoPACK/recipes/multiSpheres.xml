@@ -60,7 +60,7 @@
 		name="mSphere" 
 		nbJitter="50" 
 		rejectionThreshold = "5000"
-		nbMol="29" 
+		nbMol="6" 
 		packingMode="close"
 		packingPriority="0." 
 		perturbAxisAmplitude="0.1" 
