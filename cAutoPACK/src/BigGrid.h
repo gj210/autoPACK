@@ -88,7 +88,7 @@ struct big_grid {
 
     openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
 
-    openvdb::Coord getPointToDropCoord(Ingredient* ingr, double radius, double jitter,int *emptyList);
+    openvdb::Coord getPointToDropCoord(Ingredient* ingr, double radius, double jitter,int &emptyList);
 
     bool try_drop(unsigned pid,Ingredient *ingr);
 

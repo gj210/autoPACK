@@ -148,24 +148,19 @@ openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, o
 }
 
 
-openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int *emptyList )
+openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int &emptyList )
 {
     const double cut = radius-jitter;//why - jitter ?
-    double d;
     double mini_d=dmax;
-    *emptyList = 0;
-    if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;        
-    openvdb::Coord cijk;
+    if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     openvdb::Coord mini_cijk;
-    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     std::vector<openvdb::Coord> allIngrPts;
-    std::vector<double> allIngrDist;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
     bool notfound = true;
     for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
         //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
-        d=iter.getValue();
+        double d=iter.getValue();
         if (d>=cut){//the grid voxel is available and can receivethe given ingredient
             if (iter.isTileValue()){
                 openvdb::CoordBBox bbox = iter.getBoundingBox();
@@ -207,14 +202,17 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
         }
     }
 
+
     if (DEBUG) std::cout << "#allIngrPts size " <<allIngrPts.size() << " nempty " << num_empty << " cutoff " << cut << " minid " << mini_d<<std::endl;
     if (allIngrPts.size()==0){
         std::cout << "# drop no more point \n" ;
         ingredientsDipatcher.dropIngredient(ingr); 
         totalPriorities = 0; //# 0.00001
-        *emptyList = 1;
-        return openvdb::Coord(0,0,0);                   
+        emptyList = 1;
+        return openvdb::Coord(0,0,0);
     }
+	emptyList = 0;
+	openvdb::Coord cijk;
     if (pickRandPt){
         std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
