@@ -149,14 +149,14 @@ openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, o
 
 
 openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int &emptyList )
-{
-    const double cut = radius-jitter;//why - jitter ?
+{   
     double mini_d=dmax;
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
-    if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;  
-    bool notfound = true;
+    if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
+
+	const double cut = radius-jitter;//why - jitter ?
     for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
         //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
@@ -173,13 +173,11 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                             openvdb::Coord nijk(i,j,k);
                             allIngrPts.push_back(nijk);
                             if (d < mini_d){
-                                if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end());
-                                if (notfound) {
-                                    // not found
-                                    mini_d = d;
-                                    mini_cijk = openvdb::Coord( nijk.asVec3i() );
-                                }               
-                            }   
+								if (visited_rejected_coord.size() != 0 && std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end())
+									continue;
+								mini_d = d;
+								mini_cijk = openvdb::Coord( nijk.asVec3i() );
+							}   
                         }
                     }
                 }
@@ -187,18 +185,18 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
             else {
                 openvdb::Coord cc=iter.getCoord();
                 //return getU(dim,cc);//return first found
-                allIngrPts.push_back(cc);
-                if (d < mini_d){
-                    //if the point alread visisted and rejected 
-                    //should be for this ingredient only
-                    if (visited_rejected_coord.size() != 0) notfound =  (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end());
-                    if (notfound) {
-                        // not found
-                        mini_d = d;
-                        mini_cijk = openvdb::Coord( cc.asVec3i() );
-                    }               
-                }
-            }           
+				allIngrPts.push_back(cc);
+				if (d < mini_d){
+					//if the point alread visisted and rejected 
+					//should be for this ingredient only
+					if (visited_rejected_coord.size() != 0 && (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end()))
+						continue;
+
+					// not found
+					mini_d = d;
+					mini_cijk = openvdb::Coord( cc.asVec3i() );
+				}
+			}           
         }
     }
 
