@@ -101,6 +101,7 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, o
     ingredientsDipatcher(_ingredients, num_points, seed),
     num_empty(num_points),
     uniform(0.0,1.0),
+    half_uniform(-0.5,0.5),
     distribution(0.0,1.0),
     gauss(0.0,0.3),        
     pickRandPt(true),
@@ -391,10 +392,15 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::m
 openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJitter )
 {
     while (true) {
-        const openvdb::Vec3d randomJitter( 
+/*        const openvdb::Vec3d randomJitter( 
             jitter*gauss(generator)
             , jitter*gauss(generator)
             , jitter*gauss(generator));
+*/
+        const openvdb::Vec3d randomJitter( 
+            step*half_uniform(generator)
+            , step*half_uniform(generator)
+            , step*half_uniform(generator));
         const openvdb::Vec3d deltaOffset (ingrJitter * randomJitter);
         if ( deltaOffset.lengthSqr() < jitterSquare )
             return deltaOffset;

@@ -71,6 +71,7 @@ struct big_grid {
 
     std::default_random_engine generator;
     std::uniform_real_distribution<double> uniform;// (0.0,1.0);
+    std::uniform_real_distribution<double> half_uniform;// (-0.5,0.5);
     std::normal_distribution<double> gauss;//(0.0,0.3);
     std::uniform_real_distribution<double> distribution;
     
