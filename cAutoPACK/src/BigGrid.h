@@ -60,31 +60,24 @@ struct big_grid {
    
     std::vector<openvdb::Vec3d> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
+    std::map<int, Ingredient*> results; 
+
     openvdb::Index64 num_empty;         //the number of free point available
-    
+       
     const double jitter;
     const double jitterSquare;
     
-    double totalPriorities;
-
     bool pickRandPt;
 
     std::default_random_engine generator;
     std::uniform_real_distribution<double> uniform;// (0.0,1.0);
     std::uniform_real_distribution<double> half_uniform;// (-0.5,0.5);
-    std::normal_distribution<double> gauss;//(0.0,0.3);
     std::uniform_real_distribution<double> distribution;
     
-    
-    openvdb::Coord dim;
-    //openvdb::DoubleGrid::Accessor accessor_distance;
     std::vector<openvdb::Coord> visited_rejected_coord;
-    std::map<int, Ingredient*> results; 
 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
     big_grid(std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
-
-    openvdb::Index64 initializeNumPointsCount();
 
     openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
 
@@ -94,13 +87,7 @@ struct big_grid {
 
     bool try_dropCoord(openvdb::Coord cijk,Ingredient *ingr);
 
-    void set_filled(unsigned i);
-
-    bool is_empty(unsigned i) const;
-
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
-    
-    int calculateTotalNumberMols();
 
 private:
     openvdb::Vec3d generateRandomJitterOffset( openvdb::Vec3d const & ingrJitter );    

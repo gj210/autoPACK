@@ -97,25 +97,18 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
 
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
     distance_grid(initializeDistanceGrid(bot, up)),
-    num_points(initializeNumPointsCount()),    
+    num_points(distance_grid->activeVoxelCount()),    
     ingredientsDipatcher(_ingredients, num_points, seed),
     num_empty(num_points),
     uniform(0.0,1.0),
     half_uniform(-0.5,0.5),
     distribution(0.0,1.0),
-    gauss(0.0,0.3),        
     pickRandPt(true),
     jitter(step),
     jitterSquare(step*step)
 {
+    std::cout << "#Grid Npoints " << distance_grid->evalActiveVoxelDim() <<  distance_grid->activeVoxelCount() << std::endl;
     generator.seed(seed);
-}
-
-openvdb::Index64 big_grid::initializeNumPointsCount()
-{
-    dim = distance_grid->evalActiveVoxelDim();    
-    std::cout << "#Grid Npoints " << dim << distance_grid->activeVoxelCount() << std::endl;
-    return distance_grid->activeVoxelCount();
 }
 
 openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up )
@@ -226,7 +219,6 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     if (allIngrPts.size()==0){
         std::cout << "# drop no more point \n" ;
         ingredientsDipatcher.dropIngredient(ingr); 
-        totalPriorities = 0; //# 0.00001
         *emptyList = 1;
         return openvdb::Coord(0,0,0);                   
     }
@@ -283,7 +275,7 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
     i_ijk[0]=0;
     i_ijk[1]=0;
     i_ijk[2]=0;
-    getIJK(pid,dim,i_ijk);
+    getIJK(pid, distance_grid->evalActiveVoxelDim(),i_ijk);
     openvdb::Coord cijk(i_ijk[0],i_ijk[1],i_ijk[2]);
     return try_dropCoord(cijk,ingr);
 }
@@ -392,15 +384,10 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::m
 openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJitter )
 {
     while (true) {
-/*        const openvdb::Vec3d randomJitter( 
-            jitter*gauss(generator)
-            , jitter*gauss(generator)
-            , jitter*gauss(generator));
-*/
         const openvdb::Vec3d randomJitter( 
-            step*half_uniform(generator)
-            , step*half_uniform(generator)
-            , step*half_uniform(generator));
+            jitter*half_uniform(generator)
+            , jitter*half_uniform(generator)
+            , jitter*half_uniform(generator));
         const openvdb::Vec3d deltaOffset (ingrJitter * randomJitter);
         if ( deltaOffset.lengthSqr() < jitterSquare )
             return deltaOffset;
