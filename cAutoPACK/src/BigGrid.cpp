@@ -96,27 +96,25 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
 } //namespace
 
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
-    distance_grid(initializeDistanceGrid(bot, up)),
+    distance_grid(initializeDistanceGrid(bot, up, stepsize)),
     num_points(distance_grid->activeVoxelCount()),    
     ingredientsDipatcher(_ingredients, num_points, seed),
     num_empty(num_points),
     uniform(0.0,1.0),
     half_uniform(-0.5,0.5),
     distribution(0.0,1.0),
-    pickRandPt(true),
-    jitter(step),
-    jitterSquare(step*step)
+    pickRandPt(true)
 {
     std::cout << "#Grid Npoints " << distance_grid->evalActiveVoxelDim() <<  distance_grid->activeVoxelCount() << std::endl;
     generator.seed(seed);
 }
 
-openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up )
+openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize )
 {
     openvdb::DoubleGrid::Ptr distance_grid;
     distance_grid = openvdb::DoubleGrid::create();
     distance_grid->setTransform(
-        openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));
+        openvdb::math::Transform::createLinearTransform(/*voxel size=*/voxelSize));
     //set active within the given bounding box
     // Define a coordinate with large signed indices.
     const openvdb::Vec3d ibotleft = bot;//(0,0,0)
@@ -282,20 +280,9 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
-    const double rad = ingr->radius;
-
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
-    //actuall jitter that will be apply to the point
-   
-    openvdb::Vec3d offset;           //the point with some jitter
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
-        if (jitterSquare > 0.0){
-            offset = center + generateRandomJitterOffset(ingr->jitterMax);
-        }else{
-            offset = center;
-        }
-
         openvdb::math::Mat4d rotMatj;
         if (ingr->useRotAxis){
             if (ingr->rotAxis.length() == 0.0)  
@@ -305,10 +292,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         }else {
             rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
         }
+        
+        const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax);
 
         //check for collision at the given target point coordinate for the given radius     
-        const bool collision = checkSphCollisions(offset,rotMatj,rad,ingr);
-        //if (DEBUG) std::cout << "#" << rotMatj << "collide ? " << collision << std::endl;
+        const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
+
         if (!collision) {
             ingr->trans = offset;
 
@@ -381,17 +370,20 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::m
     return false;
 }
 
-openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJitter )
-{
-    while (true) {
+openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter )
+{    
+    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
+    if ( maxJitterLength > 0) {
         const openvdb::Vec3d randomJitter( 
-            jitter*half_uniform(generator)
-            , jitter*half_uniform(generator)
-            , jitter*half_uniform(generator));
-        const openvdb::Vec3d deltaOffset (ingrJitter * randomJitter);
-        if ( deltaOffset.lengthSqr() < jitterSquare )
-            return deltaOffset;
-    } 
+              half_uniform(generator)
+            , half_uniform(generator)
+            , half_uniform(generator));
+        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
+
+        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
+        return center + distance_grid->indexToWorld( deltaOffset );
+    }
+    return center ;
 }
 
 void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj )

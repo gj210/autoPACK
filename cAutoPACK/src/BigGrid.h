@@ -64,9 +64,6 @@ struct big_grid {
 
     openvdb::Index64 num_empty;         //the number of free point available
        
-    const double jitter;
-    const double jitterSquare;
-    
     bool pickRandPt;
 
     std::default_random_engine generator;
@@ -79,13 +76,15 @@ struct big_grid {
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
     big_grid(std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
 
-    openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
+    openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize  );
 
     openvdb::Coord getPointToDropCoord(Ingredient* ingr, double radius, double jitter,int *emptyList);
 
     bool try_drop(unsigned pid,Ingredient *ingr);
 
     bool try_dropCoord(openvdb::Coord cijk,Ingredient *ingr);
+
+    openvdb::math::Mat4d generateIngredientRotation( Ingredient const& ingr);
 
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
 
