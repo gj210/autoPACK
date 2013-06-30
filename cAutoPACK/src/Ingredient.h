@@ -46,9 +46,7 @@ public:
     std::vector<openvdb::Vec3d> positions;
     double minRadius;
     double maxRadius;
-    double stepsize;
     //point trans;
-    int mode;
     int nbMol;
     double molarity; 
     double completion;
@@ -60,7 +58,6 @@ public:
     int rejectionThreshold;
     unsigned nbJitter;
     openvdb::Vec3d color;
-    openvdb::Vec3d trans;
     openvdb::Vec3d jitterMax;
     openvdb::Vec3d principalVector;
     openvdb::DoubleGrid::Ptr gsphere;

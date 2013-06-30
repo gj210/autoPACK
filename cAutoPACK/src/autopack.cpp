@@ -452,15 +452,6 @@ void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<double> &radii
     coordFile.close();
 }
 
-template<typename T>
-T getProgramOption(std::string option) {
-    if (vm.count("option")) {
-        cout << option << " was set to " 
-            << vm["option"].as<int>() << ".\n";
-    } else {
-        cout << option << " was not set.\n";
-    }
-}
 //main loop is here
 int main(int argc, char* argv[])
 {   

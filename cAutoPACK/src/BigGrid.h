@@ -60,32 +60,24 @@ struct big_grid {
    
     std::vector<openvdb::Vec3d> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
-    openvdb::Index64 num_empty;         //the number of free point available
+    std::map<int, Ingredient*> results; 
     std::vector<openvdb::Vec3d> rpossitions;    //coordinations of molecules
 
-    const double jitter;
-    const double jitterSquare;
-    
-    double totalPriorities;
 
+    openvdb::Index64 num_empty;         //the number of free point available
+       
     bool pickRandPt;
 
     std::default_random_engine generator;
     std::uniform_real_distribution<double> uniform;// (0.0,1.0);
-    std::normal_distribution<double> gauss;//(0.0,0.3);
+    std::uniform_real_distribution<double> half_uniform;// (-0.5,0.5);
     std::uniform_real_distribution<double> distribution;
     
-    
-    openvdb::Coord dim;
-    //openvdb::DoubleGrid::Accessor accessor_distance;
-    std::map<int, Ingredient*> results; 
 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box
     big_grid(std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed);
 
-    openvdb::Index64 initializeNumPointsCount();
-
-    openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up );
+    openvdb::DoubleGrid::Ptr initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize  );
 
     openvdb::Coord getPointToDropCoord(Ingredient* ingr, double radius, double jitter,int &emptyList);
 
@@ -93,16 +85,12 @@ struct big_grid {
 
     bool try_dropCoord(openvdb::Coord cijk,Ingredient *ingr);
 
-    void set_filled(unsigned i);
-
-    bool is_empty(unsigned i) const;
+    openvdb::math::Mat4d generateIngredientRotation( Ingredient const& ingr);
 
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
-    
-    int calculateTotalNumberMols();
 
 private:
-    openvdb::Vec3d generateRandomJitterOffset( openvdb::Vec3d const & ingrJitter );    
+    openvdb::Vec3d generateRandomJitterOffset(openvdb::Vec3d const& center, openvdb::Vec3d const & ingrJitter );    
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
 	double countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
 	openvdb::Vec3d calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );

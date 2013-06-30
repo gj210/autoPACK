@@ -97,33 +97,25 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
 } //namespace
 
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
-    distance_grid(initializeDistanceGrid(bot, up)),
-    num_points(initializeNumPointsCount()),    
+    distance_grid(initializeDistanceGrid(bot, up, stepsize)),
+    num_points(distance_grid->activeVoxelCount()),    
     ingredientsDipatcher(_ingredients, num_points, seed),
     num_empty(num_points),
     uniform(0.0,1.0),
+    half_uniform(-0.5,0.5),
     distribution(0.0,1.0),
-    gauss(0.0,0.3),        
-    pickRandPt(true),
-    jitter(step),
-    jitterSquare(step*step)
+    pickRandPt(true)
 {
+    std::cout << "#Grid Npoints " << distance_grid->evalActiveVoxelDim() <<  distance_grid->activeVoxelCount() << std::endl;
     generator.seed(seed);
 }
 
-openvdb::Index64 big_grid::initializeNumPointsCount()
-{
-    dim = distance_grid->evalActiveVoxelDim();    
-    std::cout << "#Grid Npoints " << dim << distance_grid->activeVoxelCount() << std::endl;
-    return distance_grid->activeVoxelCount();
-}
-
-openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up )
+openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize )
 {
     openvdb::DoubleGrid::Ptr distance_grid;
     distance_grid = openvdb::DoubleGrid::create();
     distance_grid->setTransform(
-        openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));
+        openvdb::math::Transform::createLinearTransform(/*voxel size=*/voxelSize));
     //set active within the given bounding box
     // Define a coordinate with large signed indices.
     const openvdb::Vec3d ibotleft = bot;//(0,0,0)
@@ -153,7 +145,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     double mini_d=dmax;    
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
-	const double cut = radius-jitter;//why - jitter ?
+    const double cut = radius-jitter;//why - jitter ?
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
     for (openvdb::DoubleGrid::ValueOnIter  iter = distance_grid->beginValueOn(); iter; ++iter) {
@@ -178,9 +170,9 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
 
                             allIngrPts.push_back(nijk);
                             if (d < mini_d){								
-								mini_d = d;
-								mini_cijk = openvdb::Coord( nijk.asVec3i() );
-							}   
+                                mini_d = d;
+                                mini_cijk = openvdb::Coord( nijk.asVec3i() );
+                            }   
                         }
                     }
                 }
@@ -188,21 +180,21 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
             else {
                 openvdb::Coord cc=iter.getCoord();
                 //return getU(dim,cc);//return first found
-				allIngrPts.push_back(cc);
-				if (d < mini_d){
-					//if the point alread visisted and rejected 
-					//should be for this ingredient only
-					if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
+                allIngrPts.push_back(cc);
+                if (d < mini_d){
+                    //if the point alread visisted and rejected 
+                    //should be for this ingredient only
+                    if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
                     {
                         iter.setActiveState(false);
-						continue;
+                        continue;
                     }
 
-					// not found
-					mini_d = d;
-					mini_cijk = openvdb::Coord( cc.asVec3i() );
-				}
-			}           
+                    // not found
+                    mini_d = d;
+                    mini_cijk = openvdb::Coord( cc.asVec3i() );
+                }
+            }           
         }
     }
 
@@ -211,12 +203,11 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     if (allIngrPts.size()==0){
         std::cout << "# drop no more point \n" ;
         ingredientsDipatcher.dropIngredient(ingr); 
-        totalPriorities = 0; //# 0.00001
         emptyList = 1;
         return openvdb::Coord(0,0,0);
     }
-	emptyList = 0;
-	openvdb::Coord cijk;
+    emptyList = 0;
+    openvdb::Coord cijk;
     if (pickRandPt){
         std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
@@ -230,8 +221,8 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                 cijk = mini_cijk;
             }
             
-			/*Daniel - doesn't work, always came here when rejectionCounter is equal to 0; */
-			if (ingr->rejectionCounter != 0 && ingr->rejectionCounter % 300 == 0){
+            /*Daniel - doesn't work, always came here when rejectionCounter is equal to 0; */
+            if (ingr->rejectionCounter != 0 && ingr->rejectionCounter % 300 == 0){
                 cijk = allIngrPts[(int)(distribution(generator) * allIngrPts.size())];
                 //increase the threshold ?
                 //ingr->rejectionCounter = 0;//probably not enought....risk to never end...
@@ -270,21 +261,21 @@ bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
     i_ijk[0]=0;
     i_ijk[1]=0;
     i_ijk[2]=0;
-    getIJK(pid,dim,i_ijk);
+    getIJK(pid, distance_grid->evalActiveVoxelDim(),i_ijk);
     openvdb::Coord cijk(i_ijk[0],i_ijk[1],i_ijk[2]);
     return try_dropCoord(cijk,ingr);
 }
 
 void big_grid::printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &fileName, const std::string &radius)
 {
-	std::ofstream file;
-	file.open(fileName);
-	for(std::size_t i=0; i<allIngrPts.size(); i++)
-	{
-		openvdb::Coord point = allIngrPts[i];
-		file << point.x() << ' ' << point.y() << ' ' << point.z() << ' ' << radius << std::endl;
-	}
-	file.close();
+    std::ofstream file;
+    file.open(fileName);
+    for(std::size_t i=0; i<allIngrPts.size(); i++)
+    {
+        openvdb::Coord point = allIngrPts[i];
+        file << point.x() << ' ' << point.y() << ' ' << point.z() << ' ' << radius << std::endl;
+    }
+    file.close();
 }
 
 openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
@@ -293,81 +284,62 @@ openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d co
     targetXform->preMult(rotMatj);
     targetXform->postTranslate(offset);
     openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-	const openvdb::Vec3d pos = mat.transform(*(ingr->positions.begin()));
-	return pos;
+    const openvdb::Vec3d pos = mat.transform(*(ingr->positions.begin()));
+    return pos;
 }
 
 double big_grid::countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
 {
-	const openvdb::Vec3d pos = calculatePossition( ingr, offset, rotMatj );
-	double sum = 0;
-	for(std::vector<openvdb::Vec3d>::iterator it = rpossitions.begin(); it != rpossitions.end(); it++)
-	{
-		const openvdb::Vec3d setPos = *it;
-		sum += pos.lengthSqr() - setPos.lengthSqr();
-	}
-	return sum;
+    const openvdb::Vec3d pos = calculatePossition( ingr, offset, rotMatj );
+    double sum = 0;
+    for(std::vector<openvdb::Vec3d>::iterator it = rpossitions.begin(); it != rpossitions.end(); it++)
+    {
+        const openvdb::Vec3d setPos = *it;
+        sum += pos.lengthSqr() - setPos.lengthSqr();
+    }
+    return sum;
 }
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
-    const double rad = ingr->radius;
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
-    //actuall jitter that will be apply to the point
-   
     openvdb::Vec3d globOffset;           //the point with some jitter
-	openvdb::math::Mat4d globRotMatj;
-	double distance = std::numeric_limits<double>::max( );
-	bool placed = false;
+    openvdb::math::Mat4d globRotMatj;
+    double distance = std::numeric_limits<double>::max( );
+    bool placed = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
-		openvdb::Vec3d offset;           //the point with some jitter
-		openvdb::math::Mat4d rotMatj;
-        if (jitterSquare > 0.0){
-            offset = center + generateRandomJitterOffset(ingr->jitterMax);
-        }else{
-            offset = center;
-        }
 
-        if (ingr->useRotAxis){
-            if (ingr->rotAxis.length() == 0.0)  
-                rotMatj.setIdentity();
-            else 
-                rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
-        }else {
-            rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
-        }
+        const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax);
+        const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
-        const bool collision = checkSphCollisions(offset,rotMatj,rad,ingr);
-        if (!collision) {
-			const double newDist = countDistance(ingr, offset, rotMatj);
-			if( newDist  < distance )
-			{
-				if(newDist != 0)
-					distance = newDist;
-				globOffset = offset;
-				globRotMatj = rotMatj;
-				center = offset;
-				placed = true;
-				if (rtrans.empty())
-					break;
-			}
-        }
+        const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
+        const double newDist = countDistance(ingr, offset, rotMatj);
+        if( newDist  < distance )
+        {
+            if(newDist != 0)
+                distance = newDist;
+            globOffset = offset;
+            globRotMatj = rotMatj;
+            center = offset;
+            placed = true;
+            if (rtrans.empty())
+                break;
+        }        
     }
 
-	if(placed)
-	{
-		ingr->trans = globOffset;
-		rtrans.push_back(globOffset);
-		rrot.push_back(globRotMatj);
-		results[rtrans.size()-1] = ingr;
-		rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
+    if (placed)
+    {
+        rtrans.push_back(globOffset);
+        rrot.push_back(globRotMatj);
+        results[rtrans.size()-1] = ingr;
+        rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
 
-		storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
+        storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
 
-		if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
-	}
+        if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
+    }
 
     return !placed;
 }
@@ -427,14 +399,20 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::m
     return false;
 }
 
-openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& ingrJitter )
-{   
-	const openvdb::Vec3d randomJitter( 
-		jitter*gauss(generator)
-		, jitter*gauss(generator)
-		, jitter*gauss(generator));
-	const openvdb::Vec3d deltaOffset (ingrJitter * randomJitter);
-	return deltaOffset;
+openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter )
+{    
+    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
+    if ( maxJitterLength > 0) {
+        const openvdb::Vec3d randomJitter( 
+              half_uniform(generator)
+            , half_uniform(generator)
+            , half_uniform(generator));
+        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
+
+        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
+        return center + distance_grid->indexToWorld( deltaOffset );
+    }
+    return center ;
 }
 
 void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj )
@@ -487,6 +465,19 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
         }
     }
 
-    openvdb::Index64 result = distance_grid->activeVoxelCount();
-    num_empty=unsigned(result);
+    num_empty = distance_grid->activeVoxelCount();    
+}
+
+openvdb::math::Mat4d big_grid::generateIngredientRotation( Ingredient const& ingr )
+{
+    openvdb::math::Mat4d rotMatj;
+    if (ingr.useRotAxis){
+        if (ingr.rotAxis.length() == 0.0)  
+            rotMatj.setIdentity();
+        else 
+            rotMatj.setToRotation(ingr.rotAxis,uniform(generator)*ingr.rotRange);
+    }else {
+        rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
+    }
+    return rotMatj;
 }
