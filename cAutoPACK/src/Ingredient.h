@@ -46,7 +46,6 @@ public:
     std::vector<openvdb::Vec3d> positions;
     double minRadius;
     double maxRadius;
-    double stepsize;
     //point trans;
     int mode;
     int nbMol;

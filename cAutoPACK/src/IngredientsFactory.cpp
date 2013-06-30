@@ -65,25 +65,22 @@ Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concen
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
     sp.gsphere = openvdb::DoubleGrid::create(dmax);
-    double size=stepsize;
-    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
-    sp.stepsize = stepsize;
     //levelSet
     if (DEBUG) std::cout << "#mesh have v "<< mesh3d.vertices.size() << " f " << mesh3d.faces.size() << " q " << mesh3d.quads.size() << std::endl;
 
     if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() != 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-            *openvdb::math::Transform::createLinearTransform(size), 
+            *openvdb::math::Transform::createLinearTransform(stepsize), 
             mesh3d.vertices, mesh3d.faces, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() != 0)&&(mesh3d.faces.size() == 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-            *openvdb::math::Transform::createLinearTransform(size), 
+            *openvdb::math::Transform::createLinearTransform(stepsize), 
             mesh3d.vertices, mesh3d.quads);
     }
     else if ((mesh3d.quads.size() == 0)&&(mesh3d.faces.size() != 0)){
         sp.gsphere = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-            *openvdb::math::Transform::createLinearTransform(size), 
+            *openvdb::math::Transform::createLinearTransform(stepsize), 
             mesh3d.vertices, mesh3d.faces);
     }
 
@@ -134,13 +131,10 @@ Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double conc
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
     sp.gsphere = openvdb::DoubleGrid::create(dmax);
-    double size=stepsize;
-    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
-    sp.stepsize = stepsize;
     //levelSet
     std::vector<openvdb::DoubleGrid::Ptr> gspheres;
     sp.gsphere->setTransform(
-        openvdb::math::Transform::createLinearTransform(/*voxel size=*/size));    
+        openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));    
     gspheres.resize(meshs.size());
     if (DEBUG) std::cout << "#merge "<< meshs.size() << " voxelmesh " << std::endl;
     for (std::vector<mesh>::size_type i =0 ; i < meshs.size();i++){
@@ -148,25 +142,25 @@ Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double conc
         if (DEBUG) std::cout << "#mesh have v "<< meshs[i].vertices.size() << " f " << meshs[i].faces.size() << " q " << meshs[i].quads.size() << std::endl;
         if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() != 0)){
             gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-                *openvdb::math::Transform::createLinearTransform(size), 
+                *openvdb::math::Transform::createLinearTransform(stepsize), 
                 meshs[i].vertices, meshs[i].faces, meshs[i].quads);
         }
         else if ((meshs[i].quads.size() != 0)&&(meshs[i].faces.size() == 0)){
             gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-                *openvdb::math::Transform::createLinearTransform(size), 
+                *openvdb::math::Transform::createLinearTransform(stepsize), 
                 meshs[i].vertices, meshs[i].quads);
         }
         else if ((meshs[i].quads.size() == 0)&&(meshs[i].faces.size() != 0)){
             gspheres[i] = openvdb::tools::meshToLevelSet<openvdb::DoubleGrid>(
-                *openvdb::math::Transform::createLinearTransform(size), 
+                *openvdb::math::Transform::createLinearTransform(stepsize), 
                 meshs[i].vertices, meshs[i].faces);
         }
-        if (DEBUG) std::cout <<  "#combine " <<size <<std::endl;
+        if (DEBUG) std::cout <<  "#combine " <<stepsize <<std::endl;
         sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
         sp.gsphere->prune();
         //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
     }
-    if (DEBUG) std::cout <<  "#OK merged all of them and step is "<< size <<std::endl;
+    if (DEBUG) std::cout <<  "#OK merged all of them and step is "<< stepsize <<std::endl;
     //sp.gsphere->prune();
     sp.bbox = sp.gsphere->evalActiveVoxelBoundingBox();
     if (DEBUG) std::cout <<  "#OK bbox "<< sp.bbox << std::endl;    
@@ -204,9 +198,7 @@ Ingredient makeSphere(double radius, int mode, double concentration,
     sp.positions.push_back(openvdb::Vec3d(0,0,0));
     sp.jitterMax = jitterMax;
     //build the grid
-    double size=stepsize;
-    if (stepsize > sp.minRadius) size = sp.minRadius/2.0;
-    sp.stepsize = size;
+    const double size= (stepsize > sp.minRadius) ? sp.minRadius/2.0 : stepsize;
 
     sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
               /*radius=*/float(radius), /*center=*/openvdb::Vec3d(0,0,0),//where is the sphere is  index or worl
@@ -264,14 +256,10 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
 
-    double size=stepsize;
-    if (stepsize > sp.minRadius) size = stepsize;//sp.minRadius/2.0;
-    sp.stepsize = stepsize;
-    
     if (radii.size() == 1 ){
          sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
               /*radius=*/float(sp.radius), /*center=*/positions[0],//where is the sphere is  index or worl
-               /*voxel size=*/float(size), /*width=*/float(spherewidth)); 
+               /*voxel size=*/float(stepsize), /*width=*/float(spherewidth)); 
         //sphere bounding box
         const openvdb::Vec3d ibotleft(-sp.radius,-sp.radius,-sp.radius);//(0,0,0)
         const openvdb::Vec3d iupright(sp.radius,sp.radius,sp.radius);//(1000,1000,10);
@@ -288,14 +276,14 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
         std::vector<openvdb::DoubleGrid::Ptr> gspheres;
         sp.gsphere = openvdb::DoubleGrid::create(dmax);
         sp.gsphere->setTransform(
-            openvdb::math::Transform::createLinearTransform(/*voxel size=*/size)); 
+            openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize)); 
         gspheres.resize(radii.size());
         for (std::vector<double>::size_type i =0 ; i < radii.size();i++) {
             //is the position in xyz or ijk ?
             if (DEBUG)std::cout << "#r " << radii[i] << " pos " <<  positions[i] << std::endl;
             gspheres[i] = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
                   /*radius=*/float(radii[i]), /*center=*/positions[i],//where is the sphere is  index or worl
-                   /*voxel size=*/float(size), /*width=*/float(spherewidth));
+                   /*voxel size=*/float(stepsize), /*width=*/float(spherewidth));
             //union with gsphere
             sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
             //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
