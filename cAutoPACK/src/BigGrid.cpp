@@ -315,18 +315,20 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
         //check for collision at the given target point coordinate for the given radius     
         const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
-        const double newDist = countDistance(ingr, offset, rotMatj);
-        if( newDist  < distance )
-        {
-            if(newDist != 0)
-                distance = newDist;
-            globOffset = offset;
-            globRotMatj = rotMatj;
-            center = offset;
-            placed = true;
-            if (rtrans.empty())
-                break;
-        }        
+        if (!collision) {
+            const double newDist = countDistance(ingr, offset, rotMatj);
+            if( newDist  < distance )
+            {
+                if(newDist != 0)
+                    distance = newDist;
+                globOffset = offset;
+                globRotMatj = rotMatj;
+                center = offset;
+                placed = true;
+                if (rtrans.empty())
+                    break;
+            }        
+        }
     }
 
     if (placed)
