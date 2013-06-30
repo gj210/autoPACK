@@ -150,13 +150,12 @@ openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, o
 
 openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int &emptyList )
 {   
-    double mini_d=dmax;
-    if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
+    double mini_d=dmax;    
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
-    if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
-
 	const double cut = radius-jitter;//why - jitter ?
+    if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
+    if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
     for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
         //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
