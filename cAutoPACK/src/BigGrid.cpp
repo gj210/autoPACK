@@ -436,6 +436,5 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
         }
     }
 
-    openvdb::Index64 result = distance_grid->activeVoxelCount();
-    num_empty=unsigned(result);
+    num_empty = distance_grid->activeVoxelCount();    
 }
