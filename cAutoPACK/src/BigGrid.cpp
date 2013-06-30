@@ -291,8 +291,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
 
         if (!collision) {
-            ingr->trans = offset;
-
             rtrans.push_back(offset);
             rrot.push_back(rotMatj);
             results[rtrans.size()-1] = ingr;

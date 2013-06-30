@@ -61,7 +61,6 @@ Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concen
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
@@ -131,7 +130,6 @@ Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double conc
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
@@ -202,7 +200,6 @@ Ingredient makeSphere(double radius, int mode, double concentration,
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3d(0,0,0);
     sp.radii.push_back(radius);    
     sp.positions.push_back(openvdb::Vec3d(0,0,0));
     sp.jitterMax = jitterMax;
@@ -212,7 +209,7 @@ Ingredient makeSphere(double radius, int mode, double concentration,
     sp.stepsize = size;
 
     sp.gsphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
-              /*radius=*/float(radius), /*center=*/sp.trans,//where is the sphere is  index or worl
+              /*radius=*/float(radius), /*center=*/openvdb::Vec3d(0,0,0),//where is the sphere is  index or worl
                /*voxel size=*/float(size), /*width=*/float(25.0));//width could be maxRadius / stepsize (int)MaxRadius/stepsize
     //sp.gsphere->signedFloodFill();
         
@@ -263,7 +260,6 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
     sp.rejectionThreshold  = rejectionThresholdIngredient;
     sp.color = color;
     sp.nbJitter = nbJitter;
-    sp.trans = openvdb::Vec3d(0,0,0);
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
