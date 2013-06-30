@@ -47,7 +47,6 @@ public:
     double minRadius;
     double maxRadius;
     //point trans;
-    int mode;
     int nbMol;
     double molarity; 
     double completion;

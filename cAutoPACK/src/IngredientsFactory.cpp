@@ -48,7 +48,6 @@ Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concen
     sp.positions[0] = openvdb::Vec3d(0,0,0);
     //sp.positions = positions;
     sp.radius = radii[0];
-    sp.mode = mode;
     sp.minRadius = sp.radius ;
     sp.maxRadius = 0.0;
     sp.nbMol=nbMol;
@@ -114,7 +113,6 @@ Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double conc
     sp.positions[0] = openvdb::Vec3d(0,0,0);
     //sp.positions = positions;
     sp.radius = radii[0];
-    sp.mode = mode;
     sp.minRadius = sp.radius ;
     sp.maxRadius = 0.0;
     sp.nbMol=nbMol;
@@ -181,7 +179,6 @@ Ingredient makeSphere(double radius, int mode, double concentration,
     Ingredient sp;
     sp.radius = radius;
     sp.molarity=concentration;
-    sp.mode = mode;
     sp.minRadius = radius;
     sp.maxRadius = radius;
     sp.nbMol=nbMol;
@@ -234,7 +231,6 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
     sp.radii = radii;
     sp.positions = positions;
     sp.radius = radii[0];
-    sp.mode = mode;
     sp.molarity=concentration;    
 
     auto minMaxIt = std::minmax_element(std::begin(radii), std::end(radii));
