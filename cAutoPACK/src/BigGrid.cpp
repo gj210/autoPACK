@@ -283,17 +283,9 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
-        openvdb::math::Mat4d rotMatj;
-        if (ingr->useRotAxis){
-            if (ingr->rotAxis.length() == 0.0)  
-                rotMatj.setIdentity();
-            else 
-                rotMatj.setToRotation(ingr->rotAxis,uniform(generator)*ingr->rotRange);
-        }else {
-            rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
-        }
         
         const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax);
+        const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
         const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
@@ -437,4 +429,18 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
     }
 
     num_empty = distance_grid->activeVoxelCount();    
+}
+
+openvdb::math::Mat4d big_grid::generateIngredientRotation( Ingredient const& ingr )
+{
+    openvdb::math::Mat4d rotMatj;
+    if (ingr.useRotAxis){
+        if (ingr.rotAxis.length() == 0.0)  
+            rotMatj.setIdentity();
+        else 
+            rotMatj.setToRotation(ingr.rotAxis,uniform(generator)*ingr.rotRange);
+    }else {
+        rotMatj.setToRotation(openvdb::math::Vec3d(uniform(generator),uniform(generator),uniform(generator)),uniform(generator)*2.0*M_PI);
+    }
+    return rotMatj;
 }

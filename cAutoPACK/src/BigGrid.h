@@ -89,7 +89,7 @@ struct big_grid {
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
 
 private:
-    openvdb::Vec3d generateRandomJitterOffset( openvdb::Vec3d const & ingrJitter );    
+    openvdb::Vec3d generateRandomJitterOffset(openvdb::Vec3d const& center, openvdb::Vec3d const & ingrJitter );    
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
     
 };
