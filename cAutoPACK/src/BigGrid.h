@@ -78,7 +78,6 @@ struct big_grid {
     
     openvdb::Coord dim;
     //openvdb::DoubleGrid::Accessor accessor_distance;
-    std::vector<openvdb::Coord> visited_rejected_coord;
     std::map<int, Ingredient*> results; 
 
     //the constructor that take as input the sizenor of the grid, the step, and the bouding box

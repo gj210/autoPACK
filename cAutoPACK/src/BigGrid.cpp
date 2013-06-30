@@ -156,7 +156,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
 	const double cut = radius-jitter;//why - jitter ?
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
-    for (openvdb::DoubleGrid::ValueOnCIter  iter = distance_grid->cbeginValueOn(); iter; ++iter) {
+    for (openvdb::DoubleGrid::ValueOnIter  iter = distance_grid->beginValueOn(); iter; ++iter) {
         //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
         //before getting value check if leaf or tile    
         double d=iter.getValue();
@@ -170,10 +170,14 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                     for (int j=bbmini.y();j<bbmaxi.y();j++){
                         for (int i=bbmini.x();i<bbmaxi.x();i++){
                             openvdb::Coord nijk(i,j,k);
+                            if (ingr->visited_rejected_coord.size() != 0 && std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), nijk) != ingr->visited_rejected_coord.end())
+                            {
+                                iter.setActiveState(false);
+                                continue;
+                            }
+
                             allIngrPts.push_back(nijk);
-                            if (d < mini_d){
-								if (visited_rejected_coord.size() != 0 && std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), nijk) == visited_rejected_coord.end())
-									continue;
+                            if (d < mini_d){								
 								mini_d = d;
 								mini_cijk = openvdb::Coord( nijk.asVec3i() );
 							}   
@@ -188,8 +192,11 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
 				if (d < mini_d){
 					//if the point alread visisted and rejected 
 					//should be for this ingredient only
-					if (visited_rejected_coord.size() != 0 && (std::find(visited_rejected_coord.begin(), visited_rejected_coord.end(), cc) == visited_rejected_coord.end()))
+					if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
+                    {
+                        iter.setActiveState(false);
 						continue;
+                    }
 
 					// not found
 					mini_d = d;

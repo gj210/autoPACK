@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
                 std::cout << "#ingredient completion too many rejection "<< ingr->rejectionCounter << std::endl;
                 grid->ingredientsDipatcher.dropIngredient(ingr); 
             }
-            grid->visited_rejected_coord.push_back(s);
+            ingr->visited_rejected_coord.push_back(s);
             rejection++;  
             if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid->num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
                  

@@ -74,6 +74,7 @@ public:
     double rotRange;
     openvdb::Vec3d rotAxis;
     double perturbAxisAmplitude;
+    std::vector<openvdb::Coord> visited_rejected_coord;
 
 public:
     bool isActive() { return completion < 1.0; }
