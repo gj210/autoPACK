@@ -143,7 +143,7 @@ openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, o
 
 openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, double jitter, int &emptyList )
 {   
-    double mini_d=dmax;    
+    double mini_d=dmax + 1;
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
     const double cut = radius-jitter;//why - jitter ?
@@ -168,9 +168,8 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                                 iter.setActiveState(false);
                                 continue;
                             }
-
                             allIngrPts.push_back(nijk);
-                            if (d < mini_d){								
+                            if (d < mini_d){                                
                                 mini_d = d;
                                 mini_cijk = openvdb::Coord( nijk.asVec3i() );
                             }   
@@ -180,17 +179,15 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
             } 
             else {
                 openvdb::Coord cc=iter.getCoord();
-                //return getU(dim,cc);//return first found
+                if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
+                {
+                    iter.setActiveState(false);
+                    continue;
+                }
                 allIngrPts.push_back(cc);
                 if (d < mini_d){
                     //if the point alread visisted and rejected 
                     //should be for this ingredient only
-                    if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
-                    {
-                        iter.setActiveState(false);
-                        continue;
-                    }
-
                     // not found
                     mini_d = d;
                     mini_cijk = openvdb::Coord( cc.asVec3i() );
@@ -212,15 +209,16 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     if (pickRandPt){
         std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
+            cijk = chooseTheBestPoint( allIngrPts, ingr );
             //try to add here case where there is still space but need anoher starting point.
-            if (mini_d == dmax){
+            /*if (mini_d == dmax){
                 cijk = allIngrPts[0];                    
             }
             //want the smallest distance, but it is alway the same, so we get stuck here...
             //maybe use a weighting system based on distance, closed distance high prob.
             else {
                 cijk = mini_cijk;
-            }
+            }*/
             
             /*Daniel - doesn't work, always came here when rejectionCounter is equal to 0; */
             if (ingr->rejectionCounter != 0 && ingr->rejectionCounter % 300 == 0){
@@ -322,11 +320,10 @@ openvdb::Vec3d big_grid::findDirection(openvdb::Vec3d const& center,  double rad
     const int size = sizeof(directions) / sizeof(directions[0]);
     openvdb::DoubleGrid::ConstAccessor accesor = distance_grid->getConstAccessor();
     openvdb::Vec3d retVec (1,1,1);
-    openvdb::Coord coord((int)center.x(), (int)center.y(), (int)center.z());
-    double retValue = accesor.getValue(coord);
+    double retValue = std::numeric_limits<double>::max( ) ;
     for (int i = 0; i < size; i++)
     {
-        openvdb::Vec3d newPos = center + directions[i];
+        openvdb::Vec3d newPos = center + distance_grid->indexToWorld(directions[i]);
         openvdb::Coord newCoord((int)newPos.x(), (int)newPos.y(), (int)newPos.z());
         const double newValue = accesor.getValue(newCoord);
         if (newValue != 0 && newValue < retValue)
@@ -381,6 +378,34 @@ openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center
     return center ;
 }
 
+openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
+{
+    double distance = std::numeric_limits<double>::max( );
+    openvdb::Coord coord;
+    for ( size_t i = 0; i < allIngrPts.size(); i++ )
+    {
+        openvdb::Coord tempCoord = allIngrPts[i];
+        const double tempDist = countCurrentDistance( tempCoord, ingr );
+        if (tempDist < distance)
+        {
+            distance = tempDist;
+            coord = tempCoord;
+        }
+    }
+
+    return coord;
+}
+
+double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
+{
+    openvdb::math::Mat4d rotMatj;
+    rotMatj.setIdentity();
+    openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
+    const double newDist = countDistance(ingr, center, rotMatj);
+    return newDist;
+}
+ 
+
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
@@ -391,7 +416,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     bool placed = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
 
-        const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
+        const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
+        //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
