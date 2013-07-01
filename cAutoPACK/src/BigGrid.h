@@ -90,7 +90,10 @@ struct big_grid {
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
 
 private:
-    openvdb::Vec3d generateRandomJitterOffset(openvdb::Vec3d const& center, openvdb::Vec3d const & ingrJitter );    
+    openvdb::Vec3d generateRandomJitterOffset(openvdb::Vec3d const& center, openvdb::Vec3d const & ingrJitter );
+    openvdb::Vec3d generateCloseJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr );
+    double calculateValue( double i);
+    openvdb::Vec3d findDirection(openvdb::Vec3d const& center,  double radius );
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
 	double countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
 	openvdb::Vec3d calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );

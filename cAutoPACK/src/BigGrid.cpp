@@ -37,6 +37,7 @@
 #include <numeric>
 #include <limits>
 #include "BigGrid.h"
+#include "BigGrid.h"
 
 namespace {
 
@@ -300,6 +301,86 @@ double big_grid::countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, 
     return sum;
 }
 
+openvdb::Vec3d color(1,0,0);
+openvdb::Vec3d directions [] = {
+      openvdb::Vec3d(1,0,0)
+    , openvdb::Vec3d(1,1,0)
+    , openvdb::Vec3d(-1,0,0)
+    , openvdb::Vec3d(-1,-1,0)
+    , openvdb::Vec3d(0,1,0)
+    , openvdb::Vec3d(0,1,1)
+    , openvdb::Vec3d(0,-1,0)
+    , openvdb::Vec3d(0,-1,-1)
+    , openvdb::Vec3d(0,0,1)
+    , openvdb::Vec3d(0,-1,1)
+    , openvdb::Vec3d(0,0,-1)
+    , openvdb::Vec3d(0,1,-1)
+    };
+
+openvdb::Vec3d big_grid::findDirection(openvdb::Vec3d const& center,  double radius )
+{
+    const int size = sizeof(directions) / sizeof(directions[0]);
+    openvdb::DoubleGrid::ConstAccessor accesor = distance_grid->getConstAccessor();
+    openvdb::Vec3d retVec (1,1,1);
+    openvdb::Coord coord((int)center.x(), (int)center.y(), (int)center.z());
+    double retValue = accesor.getValue(coord);
+    for (int i = 0; i < size; i++)
+    {
+        openvdb::Vec3d newPos = center + directions[i];
+        openvdb::Coord newCoord((int)newPos.x(), (int)newPos.y(), (int)newPos.z());
+        const double newValue = accesor.getValue(newCoord);
+        if (newValue != 0 && newValue < retValue)
+        {
+            retValue = newValue;
+            retVec = directions[i];
+        }
+    }
+    return retVec;
+}
+
+double big_grid::calculateValue( double i)
+{   
+    if (i < 0)
+    {
+        std::uniform_real_distribution<double> uniform (-0.5,0.0);
+        double ret = uniform(generator);
+        return ret;
+    }
+    if (i > 0)
+    {
+        std::uniform_real_distribution<double> uniform (0.0,0.5);
+        double ret = uniform(generator);
+        return ret;
+    }
+    else
+    {
+        double ret =  half_uniform(generator);
+        return ret;
+    }
+}
+
+openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
+{
+    openvdb::Vec3d dir = findDirection(center,  1 );
+
+    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
+    if ( maxJitterLength > 0) {
+        double x = calculateValue(dir.x());
+        double y = calculateValue(dir.y());
+        double z = calculateValue(dir.z());
+
+        const openvdb::Vec3d randomJitter( 
+              x
+            , y
+            , z);
+        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
+
+        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
+        return center + distance_grid->indexToWorld( deltaOffset );
+    }
+    return center ;
+}
+
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
@@ -310,7 +391,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     bool placed = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
 
-        const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax);
+        const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
