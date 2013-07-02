@@ -385,7 +385,7 @@ openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &
     for ( size_t i = 0; i < allIngrPts.size(); i++ )
     {
         openvdb::Coord tempCoord = allIngrPts[i];
-        const double tempDist = countCurrentDistance( tempCoord, ingr );
+        const double tempDist = std::abs(countCurrentDistance( tempCoord, ingr ));
         if (tempDist < distance)
         {
             distance = tempDist;
