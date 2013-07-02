@@ -99,5 +99,6 @@ private:
 	openvdb::Vec3d calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
 	void printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &file, const std::string &radius);
     double countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr );
-    openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr );
+    openvdb::Coord chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr );
+    openvdb::Coord getGridMiddlePoint( );
 };

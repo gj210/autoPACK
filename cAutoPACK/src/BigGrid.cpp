@@ -209,16 +209,14 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     if (pickRandPt){
         std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
-            cijk = chooseTheBestPoint( allIngrPts, ingr );
-            //try to add here case where there is still space but need anoher starting point.
-            /*if (mini_d == dmax){
-                cijk = allIngrPts[0];                    
+            if (mini_d == dmax){
+                cijk = getGridMiddlePoint( );
             }
             //want the smallest distance, but it is alway the same, so we get stuck here...
             //maybe use a weighting system based on distance, closed distance high prob.
             else {
-                cijk = mini_cijk;
-            }*/
+                cijk = chooseTheBestPoint( allIngrPts, ingr );
+            }
             
             /*Daniel - doesn't work, always came here when rejectionCounter is equal to 0; */
             if (ingr->rejectionCounter != 0 && ingr->rejectionCounter % 300 == 0){
@@ -381,7 +379,7 @@ openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center
 openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
 {
     double distance = std::numeric_limits<double>::max( );
-    openvdb::Coord coord;
+    openvdb::Coord coord (0, 0, 0);
     for ( size_t i = 0; i < allIngrPts.size(); i++ )
     {
         openvdb::Coord tempCoord = allIngrPts[i];
@@ -393,6 +391,13 @@ openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &
         }
     }
 
+    return coord;
+}
+
+openvdb::Coord big_grid::getGridMiddlePoint( )
+{
+    openvdb::Vec3d vec (distance_grid->indexToWorld(bbox.getCenter()));
+    openvdb::Coord coord (openvdb::Int32(vec.x()), openvdb::Int32(vec.y()), openvdb::Int32(vec.z()));
     return coord;
 }
 
@@ -416,8 +421,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     bool placed = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
 
-        const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
-        //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
+        //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
+        const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
