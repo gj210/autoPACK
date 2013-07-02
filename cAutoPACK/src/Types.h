@@ -65,12 +65,12 @@ openvdb includes
     #pragma warning(pop)
 #endif
 
-static const double dmax = 999999.0;        //maximum value assign to the grid for intialisation
-static const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
-static const bool DEBUG = false;                   //DEBUG mode for prining some information
-static const double MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
-static const double spherewidth = 10.0;             //default or more ? close packing need to increase this number
-static const std::string packing = "random";       //packing mode, can be random or close
+const double dmax = 999999.0;        //maximum value assign to the grid for intialisation
+const int rejectionThresholdIngredient = 300;//30 by default, number of rejection before stoppin a ingredient
+const bool DEBUG = false;                   //DEBUG mode for prining some information
+const double MaxRadius = (2.0*1.1547)*20.0;  //Maximum radius allowed, this is used for the voxelisation
+const double spherewidth = 10;             //default or more ? close packing need to increase this number
+const std::string packing = "random";       //packing mode, can be random or close
 
 extern double stepsize;         //grid step size ie smallest ingredients radius
 

@@ -100,8 +100,8 @@ inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
     distance_grid(initializeDistanceGrid(bot, up, stepsize)),
     num_points(distance_grid->activeVoxelCount()),    
-    ingredientsDipatcher(_ingredients, num_points, seed),
-    num_empty(num_points),
+    ingredientsDipatcher(_ingredients, bbox.volume(), seed),
+    num_empty(bbox.volume()),
     uniform(0.0,1.0),
     half_uniform(-0.5,0.5),
     distribution(0.0,1.0),
