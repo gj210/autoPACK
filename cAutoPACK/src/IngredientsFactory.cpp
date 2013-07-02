@@ -269,21 +269,26 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
         sp.bbox = openvdb::CoordBBox(left,right);//min and max                
     }
     else {
-        std::vector<openvdb::DoubleGrid::Ptr> gspheres;
+        
         sp.gsphere = openvdb::DoubleGrid::create(dmax);
         sp.gsphere->setTransform(
             openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize)); 
-        gspheres.resize(radii.size());
         for (std::vector<double>::size_type i =0 ; i < radii.size();i++) {
             //is the position in xyz or ijk ?
             if (DEBUG)std::cout << "#r " << radii[i] << " pos " <<  positions[i] << std::endl;
-            gspheres[i] = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
+            openvdb::DoubleGrid::Ptr localSphere = openvdb::tools::createLevelSetSphere<openvdb::DoubleGrid>(
                   /*radius=*/float(radii[i]), /*center=*/positions[i],//where is the sphere is  index or worl
-                   /*voxel size=*/float(stepsize), /*width=*/float(spherewidth));
-            //union with gsphere
-            sp.gsphere->tree().combineExtended(gspheres[i]->tree(), Local::rmin);
-            //openvdb::tools::csgUnion(sp.gsphere->tree(),gspheres[i]->tree());
+                   /*voxel size=*/float(stepsize), /*width=*/float(spherewidth)); 
+
+            openvdb::tools::csgUnion(*(sp.gsphere), *localSphere);
         }
+
+        for (auto iter = sp.gsphere->beginValueOn(); iter; ++iter) {
+                if (iter.getValue() < 0.0){                    
+                    iter.setActiveState(false);                         
+                }
+        }
+
         sp.gsphere->prune();
         //sp.gsphere->signedFloodFill();
         //sphere bounding box

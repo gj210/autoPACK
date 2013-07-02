@@ -111,10 +111,11 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, o
     generator.seed(seed);
 }
 
+
 openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize )
 {
     openvdb::DoubleGrid::Ptr distance_grid;
-    distance_grid = openvdb::DoubleGrid::create();
+    distance_grid = openvdb::DoubleGrid::create(dmax);
     distance_grid->setTransform(
         openvdb::math::Transform::createLinearTransform(/*voxel size=*/voxelSize));
     //set active within the given bounding box
@@ -127,9 +128,10 @@ openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, o
     openvdb::Coord left(openvdb::tools::local_util::roundVec3(botleft));//(openvdb::Int32)botleft.x(),(openvdb::Int32)botleft.y(),(openvdb::Int32)botleft.z());
     openvdb::Coord right(openvdb::tools::local_util::roundVec3(upright));//(openvdb::Int32)upright.x(),(openvdb::Int32)upright.y(),(openvdb::Int32)upright.z());
     //define the active region that will be our boundary. set to max everywhere
-    bbox = openvdb::CoordBBox(left,right);//min and max
-    distance_grid->fill(bbox,dmax,true);//bbox, value, active
-    distance_grid->prune();
+    bbox = openvdb::CoordBBox(left,right);//min and max    
+    
+    const openvdb::Coord center(openvdb::tools::local_util::roundVec3(bbox.getCenter()));
+    distance_grid->tree().setValueOn(center, dmax);
 
     openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     std::cout << "#Testing distance access:" << std::endl;
@@ -555,9 +557,8 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
     transformer.transformGrid<openvdb::tools::PointSampler, openvdb::DoubleGrid>(
         *ingr->gsphere, *copyOfGridSphere);
     copyOfGridSphere->tree().prune();
-
-    if (DEBUG) std::cout << "#combine grid "<< std::endl;
-    distance_grid->tree().combineExtended(copyOfGridSphere->tree(), Local::min);//b is empty after
+    if (DEBUG) std::cout << "#combine grid "<< std::endl;    
+    openvdb::tools::csgUnion(*distance_grid, *copyOfGridSphere);
 
     if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
 
@@ -577,6 +578,8 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
                 iter.setActiveState(true);                         
             }
         }
+        else
+            iter.setActiveState(false);
     }
 
     num_empty = distance_grid->activeVoxelCount();    
