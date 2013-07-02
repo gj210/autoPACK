@@ -355,6 +355,33 @@ double big_grid::calculateValue( double i)
     }
 }
 
+openvdb::Vec3d big_grid::findDirectionToCenter(openvdb::Vec3d const& point )
+{
+    openvdb::Vec3d direction (getGridMiddlePoint() - point);
+    return direction;
+}
+
+openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
+{
+    openvdb::Vec3d dir = findDirectionToCenter( center );
+    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
+    if ( maxJitterLength > 0) {
+        double x = calculateValue(dir.x());
+        double y = calculateValue(dir.y());
+        double z = calculateValue(dir.z());
+
+        const openvdb::Vec3d randomJitter( 
+            x
+            , y
+            , z);
+        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
+
+        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
+        return center + distance_grid->indexToWorld( deltaOffset );
+    }
+    return center ;
+}
+
 openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
 {
     openvdb::Vec3d dir = findDirection(center,  1 );
@@ -424,6 +451,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
         //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
         const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
+        //const openvdb::Vec3d offset = generateCenterJitterOffset(center, ingr->jitterMax, ingr);
         const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
         //check for collision at the given target point coordinate for the given radius     
