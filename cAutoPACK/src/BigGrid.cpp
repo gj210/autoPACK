@@ -209,7 +209,6 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     emptyList = 0;
     openvdb::Coord cijk;
     if (pickRandPt){
-        std::cout << "#allIngrPts " <<allIngrPts.size() << "mode " << ingr->packingMode <<std::endl;
         if (ingr->packingMode=="close"){
             if (mini_d == dmax){
                 cijk = getGridMiddlePoint( );
@@ -226,7 +225,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                 //increase the threshold ?
                 //ingr->rejectionCounter = 0;//probably not enought....risk to never end...
             }
-            std::cout << "#dist " << mini_d << " =dmax " << (mini_d == dmax) << " ptsijk " << cijk<<std::endl;
+            std::cout << "#Point to place picked:" << cijk << std::endl;
         }
         //    ptInd = 0;//sample_closest_empty(allIngrDist,allIngrPts);
         //else if (ingr->packingMode=="gradient") //&& (use_gradient)  
@@ -338,13 +337,13 @@ double big_grid::calculateValue( double i)
 {   
     if (i < 0)
     {
-        std::uniform_real_distribution<double> uniform (-0.5,0.0);
+        std::uniform_real_distribution<double> uniform (-1 ,0.0);
         double ret = uniform(generator);
         return ret;
     }
     if (i > 0)
     {
-        std::uniform_real_distribution<double> uniform (0.0,0.5);
+        std::uniform_real_distribution<double> uniform (0.0, 1);
         double ret = uniform(generator);
         return ret;
     }
@@ -355,47 +354,39 @@ double big_grid::calculateValue( double i)
     }
 }
 
-openvdb::Vec3d big_grid::findDirectionToCenter(openvdb::Vec3d const& point )
-{
-    openvdb::Vec3d direction (getGridMiddlePoint() - point);
-    return direction;
+openvdb::Coord big_grid::findDirectionToCenter(openvdb::Coord const& point )
+{    
+    return getGridMiddlePoint() - point;
 }
 
-openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
+openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& indexCenter, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
 {
-    openvdb::Vec3d dir = findDirectionToCenter( center );
-    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
-    if ( maxJitterLength > 0) {
-        double x = calculateValue(dir.x());
-        double y = calculateValue(dir.y());
-        double z = calculateValue(dir.z());
+    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirectionToCenter( indexCenter ));
+    dir.normalize();
+    if ( ingrMaxJitter != openvdb::Vec3d::zero() ) {
+        const double x = calculateValue(dir.x());
+        const double y = calculateValue(dir.y());
+        const double z = calculateValue(dir.z());
 
-        const openvdb::Vec3d randomJitter( 
-            x
-            , y
-            , z);
+        const openvdb::Vec3d randomJitter( x, y, z);
         const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
 
         assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
-        return center + distance_grid->indexToWorld( deltaOffset );
+        return  distance_grid->indexToWorld( indexCenter + deltaOffset );
     }
-    return center ;
+    return distance_grid->indexToWorld(indexCenter) ;
 }
 
 openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
 {
     openvdb::Vec3d dir = findDirection(center,  1 );
-
-    const auto maxJitterLength = ingrMaxJitter.lengthSqr();
-    if ( maxJitterLength > 0) {
+    dir.normalize();
+    if ( ingrMaxJitter != openvdb::Vec3d::zero() ) {
         double x = calculateValue(dir.x());
         double y = calculateValue(dir.y());
         double z = calculateValue(dir.z());
 
-        const openvdb::Vec3d randomJitter( 
-              x
-            , y
-            , z);
+        const openvdb::Vec3d randomJitter( x, y, z);
         const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
 
         assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
@@ -447,29 +438,37 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     openvdb::math::Mat4d globRotMatj;
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
+    bool collision = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
-
+        
+        openvdb::Vec3d offset;
+        if (collision) 
+            offset = generateRandomJitterOffset(center, ingr->jitterMax);
+        else
+            offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
         //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
-        const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
-        //const openvdb::Vec3d offset = generateCenterJitterOffset(center, ingr->jitterMax, ingr);
-        const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
+        //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
+        //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
+        for(unsigned j = 0; j < ingr->nbJitter*2; ++j) {
+            const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
-        //check for collision at the given target point coordinate for the given radius     
-        const bool collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
-        if (!collision) {
-            const double newDist = countDistance(ingr, offset, rotMatj);
-            if( newDist  < distance )
-            {
-                if(newDist != 0)
-                    distance = newDist;
-                globOffset = offset;
-                globRotMatj = rotMatj;
-                center = offset;
-                placed = true;
-                if (rtrans.empty())
-                    break;
-            }        
-        }
+            //check for collision at the given target point coordinate for the given radius     
+            collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
+            if (!collision) {
+                const double newDist = countDistance(ingr, offset, rotMatj);
+                if( newDist  < distance )
+                {
+                    if(newDist != 0)
+                        distance = newDist;
+                    globOffset = offset;
+                    globRotMatj = rotMatj;
+                    center = offset;
+                    placed = true;
+                    if (rtrans.empty())
+                        break;
+                }        
+            }
+        }        
     }
 
     if (placed)
@@ -595,19 +594,18 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
     //ingr.gsphere = copyOfGridSphere->deepCopy();
     //update empty list
     //return collision;
-    num_empty=0;
-    for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
-        //create a sphere with color or radius dependant of value ?
-        if (bbox.isInside(iter.getCoord())){
-            //std::cout << "inside \n";                    
-            if (iter.getValue() > 0.0){
-                //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
-                iter.setActiveState(true);                         
-            }
-        }
-        else
-            iter.setActiveState(false);
-    }
+    //num_empty=0;
+    //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
+    //    //create a sphere with color or radius dependant of value ?
+    //    if (bbox.isInside(iter.getCoord())){
+    //        //std::cout << "inside \n";                    
+    //        if (iter.getValue() > 0.0){
+    //            //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
+    //            iter.setActiveState(true);                         
+    //        }
+    //    }
+    //    
+    //}
 
     num_empty = distance_grid->activeVoxelCount();    
 }

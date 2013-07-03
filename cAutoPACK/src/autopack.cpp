@@ -535,8 +535,9 @@ int main(int argc, char* argv[])
             if (ingr->completion >= 1.0) {
                 std::cout << "#ingredient completion no more nmol to place "<< ingr->counter << std::endl;
                 grid->ingredientsDipatcher.dropIngredient(ingr);            
-                }
             }
+            std::cout << "## Ingredient placed, count:" << grid->rtrans.size() << std::endl;
+        }            
         else {
             ingr->rejectionCounter++;
             if (ingr->rejectionCounter > ingr->rejectionThreshold){
@@ -545,6 +546,7 @@ int main(int argc, char* argv[])
             }
             ingr->visited_rejected_coord.push_back(s);
             rejection++;  
+            std::cout << "## Ingredient rejected, already placed: " << grid->rtrans.size() << std::endl;
             if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid->num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
                  
         }  
