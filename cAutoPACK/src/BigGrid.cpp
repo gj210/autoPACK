@@ -588,25 +588,9 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
 
     if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
 
-    //problem doesnt fill everywhere....
-    //maybe should use a dense fill instead of sparse.?
-    //openvdb::tools::compMin(*distance_grid, *copyOfGridSphere);
-    //ingr.gsphere = copyOfGridSphere->deepCopy();
-    //update empty list
-    //return collision;
-    //num_empty=0;
-    //for (openvdb::DoubleGrid::ValueAllIter  iter = distance_grid->beginValueAll(); iter; ++iter) {
-    //    //create a sphere with color or radius dependant of value ?
-    //    if (bbox.isInside(iter.getCoord())){
-    //        //std::cout << "inside \n";                    
-    //        if (iter.getValue() > 0.0){
-    //            //std::cout << "#off "<<ci<<" "<<iter.getValue()<<std::endl;                             
-    //            iter.setActiveState(true);                         
-    //        }
-    //    }
-    //    
-    //}
-
+    openvdb::tools::foreach(distance_grid->beginValueOn(), [this] (const openvdb::DoubleGrid::ValueOnIter& iter) {
+        if (!this->bbox.isInside(iter.getCoord())) iter.setActiveState(false); } );
+    
     num_empty = distance_grid->activeVoxelCount();    
 }
 
