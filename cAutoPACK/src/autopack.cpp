@@ -567,5 +567,18 @@ int main(int argc, char* argv[])
     else
         generatePythonScript(outputFile, grid, radiis, colors, ds_grid, ds_ingrgrid);
 
+
+    int count = 0;
+    openvdb::tools::foreach(grid->distance_grid->cbeginValueAll(), [&count, grid] (const openvdb::DoubleGrid::ValueAllCIter& iter) {
+        if ( grid->bbox.isInside(iter.getCoord()) && iter.getValue() < 0) count++;
+        } );
+
+    auto allVoxles = grid->bbox.volume();
+
+   std::cout << "#Volume statistics" << std::endl;
+   std::cout << "\tInternal voxels:" << count << std::endl;
+   std::cout << "\tAll voxels:" << allVoxles << std::endl;
+   std::cout << "\tProcentage:" << (count*100)/allVoxles << std::endl;
+
     //stdout the grid
 }
