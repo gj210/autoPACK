@@ -322,7 +322,7 @@ openvdb::Vec3d big_grid::findDirection(openvdb::Vec3d const& center,  double rad
     for (int i = 0; i < size; i++)
     {
         openvdb::Vec3d newPos = center + distance_grid->indexToWorld(directions[i]);
-        openvdb::Coord newCoord((int)newPos.x(), (int)newPos.y(), (int)newPos.z());
+        openvdb::Coord newCoord = openvdb::Coord(openvdb::tools::local_util::roundVec3(newPos));
         const double newValue = accesor.getValue(newCoord);
         if (newValue != 0 && newValue < retValue)
         {
@@ -372,7 +372,7 @@ openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& index
         const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
 
         assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
-        return  distance_grid->indexToWorld( indexCenter + deltaOffset );
+        return  distance_grid->indexToWorld( indexCenter ) + deltaOffset;
     }
     return distance_grid->indexToWorld(indexCenter) ;
 }
@@ -408,15 +408,14 @@ openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &
             distance = tempDist;
             coord = tempCoord;
         }
-    }
-
+    }    
     return coord;
 }
 
 openvdb::Coord big_grid::getGridMiddlePoint( )
 {
-    openvdb::Vec3d vec (distance_grid->indexToWorld(bbox.getCenter()));
-    openvdb::Coord coord (openvdb::Int32(vec.x()), openvdb::Int32(vec.y()), openvdb::Int32(vec.z()));
+    openvdb::Vec3d vec (bbox.getCenter());
+    openvdb::Coord coord = openvdb::Coord(openvdb::tools::local_util::roundVec3(vec));
     return coord;
 }
 
@@ -453,7 +452,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
             //check for collision at the given target point coordinate for the given radius     
-            collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
+            //collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
+            collision = checkCollisionBasedOnGridValue(offset, rotMatj, ingr);
             if (!collision) {
                 const double newDist = countDistance(ingr, offset, rotMatj);
                 if( newDist  < distance )
@@ -541,6 +541,25 @@ bool big_grid::checkSphCollisions( openvdb::math::Vec3d const& offset,openvdb::m
     return false;
 }
 
+bool big_grid::checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp )
+{
+    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
+    for (size_t i=0; i < sp->positions.size(); i++)
+    {
+        openvdb::Vec3d pos = sp->positions[i];
+        openvdb::Vec3d offs = distance_grid->worldToIndex(offset);
+        openvdb::Vec3d transformed = pos; //distance_grid->worldToIndex(pos);
+        transformed =rotMatj.transform(transformed);
+        transformed += offs;
+        openvdb::Coord coord = openvdb::Coord(openvdb::tools::local_util::roundVec3(distance_grid->indexToWorld(transformed)));
+        const double gridValue = accessor_distance.getValue(coord);
+        const double radius = sp->radii[i];
+        if (gridValue < radius)
+            return true;
+    }
+    return false;
+}
+
 openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter )
 {    
     const auto maxJitterLength = ingrMaxJitter.lengthSqr();
@@ -566,7 +585,7 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
         openvdb::math::Transform::createLinearTransform();//stepsize ?
 
     // Add the offset.
-    const openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
+    const openvdb::Vec3d woffset = offset; //distance_grid->worldToIndex(offset);//offset assume the stepsize
     targetXform->preMult(rotMatj);
     targetXform->postTranslate(woffset);
 

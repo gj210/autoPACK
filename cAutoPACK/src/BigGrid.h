@@ -88,6 +88,7 @@ struct big_grid {
     openvdb::math::Mat4d generateIngredientRotation( Ingredient const& ingr);
 
     bool checkSphCollisions(openvdb::Vec3d const& offset,openvdb::math::Mat4d rotMatj, double radii, Ingredient* sp);
+    
 
 private:
     openvdb::Vec3d generateRandomJitterOffset(openvdb::Vec3d const& center, openvdb::Vec3d const & ingrJitter );
@@ -103,4 +104,5 @@ private:
     double countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr );
     openvdb::Coord chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr );
     openvdb::Coord getGridMiddlePoint( );
+    bool checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp );
 };
