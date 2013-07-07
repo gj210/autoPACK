@@ -198,7 +198,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
         }
     }
 
-
+    
     if (DEBUG) std::cout << "#allIngrPts size " <<allIngrPts.size() << " nempty " << num_empty << " cutoff " << cut << " minid " << mini_d<<std::endl;
     if (allIngrPts.size()==0){
         std::cout << "# drop no more point \n" ;
@@ -547,11 +547,10 @@ bool big_grid::checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offse
     for (size_t i=0; i < sp->positions.size(); i++)
     {
         openvdb::Vec3d pos = sp->positions[i];
-        openvdb::Vec3d offs = distance_grid->worldToIndex(offset);
-        openvdb::Vec3d transformed = pos; //distance_grid->worldToIndex(pos);
+        openvdb::Vec3d transformed = distance_grid->indexToWorld(pos); //distance_grid->worldToIndex(pos);
         transformed =rotMatj.transform(transformed);
-        transformed += offs;
-        openvdb::Coord coord = openvdb::Coord(openvdb::tools::local_util::roundVec3(distance_grid->indexToWorld(transformed)));
+        transformed += distance_grid->worldToIndex(offset);
+        openvdb::Coord coord = openvdb::Coord(openvdb::tools::local_util::roundVec3(distance_grid->worldToIndex(transformed)));
         const double gridValue = accessor_distance.getValue(coord);
         const double radius = sp->radii[i];
         if (gridValue < radius)
@@ -585,7 +584,7 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
         openvdb::math::Transform::createLinearTransform();//stepsize ?
 
     // Add the offset.
-    const openvdb::Vec3d woffset = offset; //distance_grid->worldToIndex(offset);//offset assume the stepsize
+    const openvdb::Vec3d woffset = distance_grid->worldToIndex(offset);//offset assume the stepsize
     targetXform->preMult(rotMatj);
     targetXform->postTranslate(woffset);
 
