@@ -43,6 +43,7 @@
 
 #include "Ingredient.h"
 #include "IngredientsDispatcher.h"
+#include "ParticeList.h"
 
 
 /* the main class that handle the packing
@@ -105,4 +106,5 @@ private:
     openvdb::Coord chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr );
     openvdb::Coord getGridMiddlePoint( );
     bool checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp );
+    void placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp );
 };

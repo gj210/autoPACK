@@ -59,6 +59,7 @@ openvdb includes
 #include <openvdb/tools/Composite.h>
 #include <openvdb/tree/Tree.h>
 #include <openvdb/tools/GridTransformer.h>
+#include <openvdb/tools/ParticlesToLevelSet.h>
 
 #ifdef _MSC_VER
     //Disable warnings from openvdb in Visual Studio

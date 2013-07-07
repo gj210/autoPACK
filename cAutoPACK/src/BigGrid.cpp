@@ -115,7 +115,10 @@ big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, o
 openvdb::DoubleGrid::Ptr big_grid::initializeDistanceGrid( openvdb::Vec3d bot, openvdb::Vec3d up, double voxelSize )
 {
     openvdb::DoubleGrid::Ptr distance_grid;
-    distance_grid = openvdb::DoubleGrid::create(dmax);
+    //distance_grid = openvdb::DoubleGrid::create(dmax);
+    distance_grid = openvdb::createLevelSet<openvdb::DoubleGrid>(voxelSize);
+    distance_grid->setBackground(dmax);
+
     distance_grid->setTransform(
         openvdb::math::Transform::createLinearTransform(/*voxel size=*/voxelSize));
     //set active within the given bounding box
@@ -478,7 +481,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         results[rtrans.size()-1] = ingr;
         rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
 
-        storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
+        placeSphereInTheGrid(globOffset, globRotMatj, ingr);
+        //storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
 
         if (DEBUG) std::cout << "#update num_empty "<< num_empty << " " << distance_grid->activeVoxelCount() << std::endl;
     }
@@ -546,17 +550,38 @@ bool big_grid::checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offse
     openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     for (size_t i=0; i < sp->positions.size(); i++)
     {
-        openvdb::Vec3d pos = sp->positions[i];
-        openvdb::Vec3d transformed = distance_grid->indexToWorld(pos); //distance_grid->worldToIndex(pos);
-        transformed =rotMatj.transform(transformed);
-        transformed += distance_grid->worldToIndex(offset);
-        openvdb::Coord coord = openvdb::Coord(openvdb::tools::local_util::roundVec3(distance_grid->worldToIndex(transformed)));
-        const double gridValue = accessor_distance.getValue(coord);
+        openvdb::Vec3d sphereWorldCoord = sp->gsphere->indexToWorld(sp->positions[i]);
+        sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
+        sphereWorldCoord = sphereWorldCoord + offset;
+
+        openvdb::Vec3d cc=distance_grid->worldToIndex(sphereWorldCoord);
+        openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
+        const double gridValue  = accessor_distance.getValue(ci);
         const double radius = sp->radii[i];
         if (gridValue < radius)
             return true;
     }
+
     return false;
+}
+
+
+void big_grid::placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp )
+{   
+    ParticeList partcieList;
+    openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
+    for (size_t i=0; i < sp->positions.size(); i++)
+    {
+        openvdb::Vec3R sphereWorldCoord = sp->gsphere->indexToWorld(sp->positions[i]);
+        sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
+        sphereWorldCoord = sphereWorldCoord + offset;
+        partcieList.add(sphereWorldCoord, openvdb::Real(sp->radii[i]));
+    }
+
+    openvdb::tools::ParticlesToLevelSet<openvdb::DoubleGrid, ParticeList> raster(*distance_grid);
+    raster.setGrainSize(1); //a value of zero disables threading
+    raster.rasterizeSpheres(partcieList);
+
 }
 
 openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter )
@@ -606,8 +631,10 @@ void big_grid::storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d of
 
     if (DEBUG) std::cout << "#combine grid OK "<< std::endl;
 
-    openvdb::tools::foreach(distance_grid->beginValueOn(), [this] (const openvdb::DoubleGrid::ValueOnIter& iter) {
-        if (!this->bbox.isInside(iter.getCoord())) iter.setActiveState(false); } );
+    openvdb::tools::foreach(distance_grid->beginValueOn(), [this] (const openvdb::DoubleGrid::ValueOnIter& iter) 
+    {
+        if (!this->bbox.isInside(iter.getCoord())) iter.setActiveState(false); 
+    } );
     
     num_empty = distance_grid->activeVoxelCount();    
 }
