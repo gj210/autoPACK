@@ -106,34 +106,6 @@ double stepsize = double(15*1.1547);         //grid step size ie smallest ingred
 
 
 
-/*
-openvdb::CoordBBox getBB(double radius,  openvdb::Vec3d pos){
-    const openvdb::Vec3d ibotleft(pos-radius,pos-radius,pos-radius);//(0,0,0)
-    const openvdb::Vec3d iupright(pos+radius,pos+radius,pos+radius);//(1000,1000,10);
-    openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform(stepsize);
-    openvdb::Vec3d botleft=transform->worldToIndex(ibotleft);
-    openvdb::Vec3d upright=transform->worldToIndex(iupright);
-    openvdb::Coord left(openvdb::tools::local_util::roundVec3(botleft));//(openvdb::Int32)botleft.x(),(openvdb::Int32)botleft.y(),(openvdb::Int32)botleft.z());
-    openvdb::Coord right(openvdb::tools::local_util::roundVec3(upright));//(openvdb::Int32)upright.x(),(openvdb::Int32)upright.y(),(openvdb::Int32)upright.z());
-    //define the active region that will be our boundary. set to max everywhere
-    openvdb::CoordBBox bbox = openvdb::CoordBBox(left,right);//min and max
-    return bbox;
-}
-*/
-
-
-//exapl of function applied on grid data
-struct SetMaxToDefault {
-    double _max;
-    SetMaxToDefault(double max) {_max=max;}
-    inline void operator()(const openvdb::DoubleGrid::ValueAllIter& iter) const {
-       if (iter.getValue() == _max) iter.setValue(dmax);
-    }
-};
-
-
-
-
 //code from the openvdb documentation
 template<typename OpType>
 void processTypedGrid(openvdb::GridBase::Ptr grid, OpType& op)
