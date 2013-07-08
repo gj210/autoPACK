@@ -63,7 +63,7 @@ Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concen
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
-    sp.gsphere = openvdb::DoubleGrid::create(dmax);
+    sp.gsphere = openvdb::createLevelSet<openvdb::DoubleGrid>(stepsize, spherewidth);     
     //levelSet
     if (DEBUG) std::cout << "#mesh have v "<< mesh3d.vertices.size() << " f " << mesh3d.faces.size() << " q " << mesh3d.quads.size() << std::endl;
 
@@ -128,11 +128,9 @@ Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double conc
     sp.jitterMax = jitterMax;
     //build the grid
     //need to create as many grid as sphere, then combine then in one uniq ie union?
-    sp.gsphere = openvdb::DoubleGrid::create(dmax);
+    sp.gsphere = openvdb::createLevelSet<openvdb::DoubleGrid>(stepsize, spherewidth);     
     //levelSet
     std::vector<openvdb::DoubleGrid::Ptr> gspheres;
-    sp.gsphere->setTransform(
-        openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize));    
     gspheres.resize(meshs.size());
     if (DEBUG) std::cout << "#merge "<< meshs.size() << " voxelmesh " << std::endl;
     for (std::vector<mesh>::size_type i =0 ; i < meshs.size();i++){
@@ -270,9 +268,7 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
     }
     else {
         
-        sp.gsphere = openvdb::DoubleGrid::create(dmax);
-        sp.gsphere->setTransform(
-            openvdb::math::Transform::createLinearTransform(/*voxel size=*/stepsize)); 
+        sp.gsphere = openvdb::createLevelSet<openvdb::DoubleGrid>(stepsize, spherewidth);        
         for (std::vector<double>::size_type i =0 ; i < radii.size();i++) {
             //is the position in xyz or ijk ?
             if (DEBUG)std::cout << "#r " << radii[i] << " pos " <<  positions[i] << std::endl;
