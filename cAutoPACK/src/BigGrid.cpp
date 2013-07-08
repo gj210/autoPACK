@@ -375,7 +375,7 @@ openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& index
         const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
 
         assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
-        return  distance_grid->indexToWorld( indexCenter ) + deltaOffset;
+        return  distance_grid->indexToWorld( indexCenter + deltaOffset);
     }
     return distance_grid->indexToWorld(indexCenter) ;
 }
