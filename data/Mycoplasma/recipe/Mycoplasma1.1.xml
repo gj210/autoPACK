@@ -59,7 +59,7 @@ Membrane proteins (labels in blue) surface
                 radii="[[5.0]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False"/> 
     </surface>
-	<interior include="http://autofill.googlecode.com/git/data/GenerycCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
+	<interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
 		<ingredient Type="SingleSphere" convex_hull="False" coordsystem="left" 
                 cutoff_boundary="0.0" cutoff_surface="0.0" gradient="gX" 
                 jitterMax="[1.0, 1.0, 1.0]" molarity="0.0" name="Ingr25" 
