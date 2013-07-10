@@ -51,11 +51,11 @@ Membrane proteins (labels in blue) surface
                <ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
                 cutoff_boundary="0.0" cutoff_surface="0.0" gradient="" 
-                jitterMax="(1, 1, 1)" length="2350" marge="20.0" 
-                molarity="0" name="hair" nbJitter="1" nbMol="3" 
+                jitterMax="(1, 1, 1)" length="2350" marge="45.0" 
+                molarity="1" name="hair" nbJitter="1" nbMol="0" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
-                positions2="[[[100.0, 0.0, 0.0]]]" uLength ="50" principalVector="(0, 1, 0)" 
+                positions2="[[[50.0, 0.0, 0.0]]]" uLength ="50" principalVector="(0, 1, 0)" 
                 radii="[[5.0]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False"/> 
     </surface>
@@ -72,8 +72,8 @@ Membrane proteins (labels in blue) surface
                 
        <ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
-                cutoff_boundary="55.0" cutoff_surface="250.0" gradient="" 
-                jitterMax="(1, 1, 1)" length="4119790" marge="20.0" 
+                cutoff_boundary="55.0" cutoff_surface="100.0" gradient="" 
+                jitterMax="(1, 1, 1)" length="4119790" marge="25.0" 
                 molarity="0" name="snake" nbJitter="1" nbMol="1" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
