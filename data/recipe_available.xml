@@ -106,5 +106,10 @@
         <wrkdir>autoFillRecipeScripts/Mycoplasma</wrkdir>
         <resultfile>http://autofill.googlecode.com/git/data/Mycoplasma/results/MycoplasmaPackResult.json</resultfile>
     </recipe>
+    <recipe name="Mycoplasma" version="1.1">
+        <setupfile>http://autofill.googlecode.com/git/data/Mycoplasma/recipe/Mycoplasma1.1.xml</setupfile>
+        <wrkdir>autoFillRecipeScripts/Mycoplasma</wrkdir>
+        <resultfile>http://autofill.googlecode.com/git/data/Mycoplasma/results/MycoplasmaPackResult.json</resultfile>
+    </recipe>
     
 </AF_recipe>
