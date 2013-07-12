@@ -50,7 +50,7 @@ Membrane proteins (labels in blue) surface
 	<surface include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/SynapticVesicle_ingredients.xml">
                <ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
-                cutoff_boundary="0.0" cutoff_surface="0.0" gradient="" 
+                cutoff_boundary="0.0" cutoff_surface="10.0" gradient="" 
                 jitterMax="(1, 1, 1)" length="2350" marge="20.0" 
                 molarity="0" name="hair" nbJitter="1" nbMol="3" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
@@ -60,7 +60,7 @@ Membrane proteins (labels in blue) surface
                 constraintMarge="False"/> 
     </surface>
 	<interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
-		<ingredient Type="SingleSphere" convex_hull="False" coordsystem="left" 
+		<!--ingredient Type="SingleSphere" convex_hull="False" coordsystem="left" 
                 cutoff_boundary="0.0" cutoff_surface="0.0" gradient="gX" 
                 jitterMax="[1.0, 1.0, 1.0]" molarity="0.0" name="Ingr25" 
                 nbJitter="5" nbMol="1000" packingMode="gradient" 
@@ -68,12 +68,12 @@ Membrane proteins (labels in blue) surface
                 placeType="jitter" positions="[[[0, 0, 0]]]" 
                 principalVector="[1.0, 0.0, 0.0]" radii="[[25.]]" 
                 rotAxis="[0.0, 0.0, 0.0]" rotRange="6.28310012817" 
-                useRotAxis="False" use_mesh_rb="False"/>
+                useRotAxis="False" use_mesh_rb="False"/-->
                 
        <ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
-                cutoff_boundary="55.0" cutoff_surface="250.0" gradient="" 
-                jitterMax="(1, 1, 1)" length="4119790" marge="20.0" 
+                cutoff_boundary="55.0" cutoff_surface="55.0" gradient="" 
+                jitterMax="(1, 1, 1)" length="4119790" marge="45.0" 
                 molarity="0" name="snake" nbJitter="1" nbMol="1" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
