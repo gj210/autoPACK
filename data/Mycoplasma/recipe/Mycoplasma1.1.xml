@@ -23,11 +23,11 @@
 	<!--need to inverse the principal Vector-->
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves203MeshsParent.xml"/>
 <!--18. secretory proteins-->
-<!--19. sodium pump-->
-<!--20. zinc transporter-->
-<!--21. magnesium transporter-->
-<!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette")-->
-<!--23. magnesium transporter-->
+<!--19. sodium pump PDB OPM 4av3-->
+<!--20. zinc transporter PDB OPM 3j1z-->
+<!--21. magnesium transporter PDB OPM 4i0u-->
+<!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
+<!--23. magnesium transporter ? why twice -->
 <!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane)--> 
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
