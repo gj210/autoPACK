@@ -549,15 +549,14 @@ bool big_grid::checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offse
     for (size_t i=0; i < sp->positions.size(); i++)
     {
         openvdb::Vec3d sphereWorldCoord = sp->positions[i];
-        sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
+        sphereWorldCoord = rotMatj.transform(sphereWorldCoord);
         sphereWorldCoord = sphereWorldCoord + offset;
 
         openvdb::Vec3d cc=distance_grid->worldToIndex(sphereWorldCoord);
-        openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
+        openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));        
         const double gridValue  = accessor_distance.getValue(ci);
         const double radius = sp->radii[i];
-        //TODO tune gridValue -> cc-ci
-        if (gridValue < radius)
+        if ( gridValue < radius)
             return true;
     }
 
@@ -571,7 +570,7 @@ void big_grid::placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb:
     openvdb::DoubleGrid::Accessor accessor_distance = distance_grid->getAccessor();
     for (size_t i=0; i < sp->positions.size(); i++)
     {
-        openvdb::Vec3R sphereWorldCoord = sp->gsphere->indexToWorld(sp->positions[i]);
+        openvdb::Vec3R sphereWorldCoord = sp->positions[i];
         sphereWorldCoord =rotMatj.transform(sphereWorldCoord);
         sphereWorldCoord = sphereWorldCoord + offset;
         partcieList.add(sphereWorldCoord, openvdb::Real(sp->radii[i]));
