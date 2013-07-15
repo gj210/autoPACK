@@ -24,6 +24,7 @@
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves203MeshsParent.xml"/>
 <!--18. secretory proteins-->
 <!--19. sodium pump PDB OPM 4av3-->
+	<ingredient Type="SingleSphere" color="(1.0, 0.71399999999999997, 0.75700000000000001)" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" meshFile="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/CoarseMS_4av3.fbx" molarity="0.008288" name="CoarseMS_4av3" nbJitter="5" nbMol="3" packingMode="random" packingPriority="-10.0" pdb="4av3" perturbAxisAmplitude="0.1" placeType="jitter" positions="[[(0.,0.,0.)]]" principalVector="(0, 0, -1)" radii="[[45.0]]" coordsystem="right"/>
 <!--20. zinc transporter PDB OPM 3j1z-->
 <!--21. magnesium transporter PDB OPM 4i0u-->
 <!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
