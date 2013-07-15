@@ -72,6 +72,7 @@
 <!--11. topoisomerases pdb 1A36-->
 <!--12. Rec system for DNA repair: a) RecA pdb 1REA, b) RecBC pdb 1W36-->
 <!--13. chaperonin GroEL (helps folding of new proteins) pdb 1AON-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1aon.xml"/>
 <!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
 <!--15. glycolytic enymes-->
 	<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml"/>
