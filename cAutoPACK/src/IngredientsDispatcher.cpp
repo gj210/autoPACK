@@ -100,7 +100,6 @@ bool ingredient_compare2(Ingredient* x, Ingredient* y){
 
 IngradientsDispatcher::IngradientsDispatcher( std::vector<Ingredient> const & _ingredients, openvdb::Index64 num_points, unsigned int seed) 
     :uniform(0.0, 1.0)
-    , vRangeStart(0.0)
     , generator(std::default_random_engine(seed))
     , pickWeightedIngr(true)
 {
@@ -163,7 +162,6 @@ Ingredient* IngradientsDispatcher::pickIngredient()
 void IngradientsDispatcher::dropIngredient( Ingredient *ingr )
 {
     ingr->completion = 1.0;
-    vRangeStart = vRangeStart + normalizedPriorities[0];
     std::cout << "#drop ingredient " << ingr->name << " " << ingr->nbMol << " " << ingr->completion << " " << ingr->counter << " "<< ingr->rejectionCounter <<std::endl;
     //update priorities will regenerate activeIngr based on completion field
     updatePriorities();
@@ -173,11 +171,7 @@ bool IngradientsDispatcher::hasNextIngradient() const {
     if (activeIngr.empty()) { 
         std::cout << "#broken by no more ingredient Done!!!****\n";
         return false;
-    }
-    if (vRangeStart > 1.0) {
-        std::cout << "#broken by vRange and hence Done!!!****\n";
-        return false;
-    }
+    }   
     return true;
 }
 
@@ -193,19 +187,15 @@ void IngradientsDispatcher::prepareIngredient()
 
 void IngradientsDispatcher::updatePriorities()
 {
-    vRangeStart = vRangeStart + normalizedPriorities[0];
-    //# Start of massive overruling section from corrected thesis file of Sept. 25, 2012    
     prepareIngredient();
 }
 
 void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
 {
-    normalizedPriorities.clear();
     thresholdPriorities.clear();
     //# Graham- Once negatives are used, if picked random# 
     //# is below a number in this list, that item becomes 
     //#the active ingredient in the while loop below
-    normalizedPriorities.resize(activeIngr0.size(), 0.0);
     if (pickWeightedIngr)
         thresholdPriorities.resize(activeIngr0.size(), 2.0);   
 
@@ -215,7 +205,6 @@ void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
 
     if (totalPriorities == 0)
     {
-        normalizedPriorities.resize(normalizedPriorities.size() + activeIngr12.size(), 0.0);
         thresholdPriorities.resize(thresholdPriorities.size() + activeIngr12.size(), 0.0);  
     }
     else
@@ -224,8 +213,6 @@ void IngradientsDispatcher::calculateThresholdAndNormalizedPriorities()
         for(Ingredient * ingr : activeIngr12) {
             const double np = ingr->packingPriority/totalPriorities;            
             if (DEBUG)  std::cout << "#np is "<< np << " pp is "<< ingr->packingPriority << " tp is " << np + previousThresh << std::endl;
-
-            normalizedPriorities.push_back(np);
             previousThresh += np;
             thresholdPriorities.push_back(previousThresh);
         }    

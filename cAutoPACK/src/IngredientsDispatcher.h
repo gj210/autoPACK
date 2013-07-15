@@ -15,9 +15,6 @@ public: //Temporary public, should be private
     std::vector<Ingredient*> activeIngr0;
     std::vector<Ingredient*> activeIngr12;
 
-    std::vector<double> normalizedPriorities;
-    double vRangeStart;
-
     std::vector<double> thresholdPriorities; 
 
     std::vector<Ingredient> ingredients;//the list of sphere ingredient to pack
