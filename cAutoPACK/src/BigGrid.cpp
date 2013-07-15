@@ -148,8 +148,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     double mini_d=dmax + 1;
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
-    const double inv_dx = 1.0/distance_grid->voxelSize().x();
-    const double cut =  inv_dx * (radius+2+jitter);//why - jitter ?
+    const double cut =  radius+jitter;
     
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
@@ -556,8 +555,7 @@ bool big_grid::checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offse
         openvdb::Vec3d cc=distance_grid->worldToIndex(sphereWorldCoord);
         openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::roundVec3(cc));
         const double gridValue  = accessor_distance.getValue(ci);
-        const double inv_dx = 1.0/distance_grid->voxelSize().x();
-        const double radius = inv_dx * sp->radii[i];
+        const double radius = sp->radii[i];
         //TODO tune gridValue -> cc-ci
         if (gridValue < radius)
             return true;
