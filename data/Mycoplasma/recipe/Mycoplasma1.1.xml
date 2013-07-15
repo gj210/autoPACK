@@ -27,7 +27,9 @@
 <!--20. zinc transporter PDB OPM 3j1z-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3j1z.xml"/>
 <!--21. magnesium transporter PDB OPM 4i0u-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml"/>
 <!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml"/>
 <!--23. magnesium transporter ? why twice -->
 <!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane)--> 
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
