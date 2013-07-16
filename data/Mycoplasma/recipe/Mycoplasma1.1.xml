@@ -58,7 +58,9 @@
                 constraintMarge="False"/> 
 <!--2. DNA polymerase PDB 1kln-->
 <!--3. single-stranded-DNA binding protein (protects single-stranded portions during replication) pdb 3AFP-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml"/>
 <!--4. RNA polymerase pdb 4KMU-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml"/>
 <!--5. messenger RNA-->
 <!--6. ribosome pdb 4KBT-->
 <!--7. transfer RNA (in pink) and elongation factor Tu (in blue)-->
