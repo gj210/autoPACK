@@ -5,7 +5,7 @@
             boundingBox="[[-1445.0, -1445.0, -2200.0], [1445.0, 1445.0, 2200.0]]" 
             cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" 
             gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan" 
-            largestProteinSize="250" overwritePlaceMethod="True" pickRandPt="True" 
+            largestProteinSize="50" overwritePlaceMethod="True" pickRandPt="True" 
             pickWeightedIngr="True" placeMethod="pandaBullet" 
             runTimeDisplay="False" saveResult="False" smallestProteinSize="100." 
             resultfile="/Users/ludo/DEV/autofill_svn/trunk/AutoFillClean/autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult.apr"
