@@ -80,8 +80,6 @@
 	<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml"/>
 <!--16. pyruvate dehydrogenase complex-->
 	<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml"/>
-
 	</interior>
-	
 	</organelle>
 	</autopackSetup>
