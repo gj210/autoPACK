@@ -21,7 +21,8 @@
 	<surface>
 <!--17. ATP synthase-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml"/>
-<!--18. secretory proteins-->
+<!--18. secretory proteins PDB OPM 2zjs-->
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_2zjs.xml"/>
 <!--19. sodium pump PDB OPM 4av3-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4av3.xml"/>
 <!--20. zinc transporter PDB OPM 3j1z-->
@@ -30,7 +31,6 @@
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml"/>
 <!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml"/>
-<!--23. magnesium transporter ? why twice -->
 <!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane)--> 
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
@@ -57,29 +57,38 @@
                 radii="[[10.0]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False"/> 
 <!--2. DNA polymerase PDB 1kln-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1kln.xml"/>
 <!--3. single-stranded-DNA binding protein (protects single-stranded portions during replication) pdb 3AFP-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml"/>
 <!--4. RNA polymerase pdb 4KMU-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml"/>
 <!--5. messenger RNA-->
 <!--6. ribosome pdb 4KBT-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kbt.xml"/>
 <!--7. transfer RNA (in pink) and elongation factor Tu (in blue)-->
 <!--8. elongation factor Tu and Ts-->
 		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_prot.xml"/>
 		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_rna.xml"/>
 		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT.xml"/>
 <!--9. elongation factor G pdb 1EFG-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1efg.xml"/>
 <!--10. aminoacyl-tRNA synthetases-->
 		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml"/>
 <!--11. topoisomerases pdb 1A36-->
+		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_BC.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_A.xml"/-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36.xml"/>
 <!--12. Rec system for DNA repair: a) RecA pdb 1REA, b) RecBC pdb 1W36-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1rea.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1w36.xml"/>
 <!--13. chaperonin GroEL (helps folding of new proteins) pdb 1AON-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1aon.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1aon.xml"/>
 <!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1r6b.xml"/>
 <!--15. glycolytic enymes-->
-	<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml"/>
 <!--16. pyruvate dehydrogenase complex-->
-	<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml"/>
 	</interior>
 	</organelle>
 	</autopackSetup>
