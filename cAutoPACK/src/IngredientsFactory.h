@@ -39,22 +39,6 @@
 #include "Types.h"
 #include "Ingredient.h"
 
-//helper to create an ingredient given a 3d mesh triangles or quads
-Ingredient makeMeshIngredient(std::vector<double> radii, int mode, double concentration, 
-                                 double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
-                                 unsigned nbJitter,openvdb::Vec3d jitterMax, mesh mesh3d);
-
-//helper to create an ingredient given a different 3d mesh triangles or quads
-Ingredient makeMeshesIngredient(std::vector<double> radii, int mode, double concentration, 
-                                   double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
-                                   unsigned nbJitter,openvdb::Vec3d jitterMax, std::vector<mesh> meshs);
-
-
-//helper to create a singleSphere ingredient given a radius, and some options
-Ingredient makeSphere(double radius, int mode, double concentration, 
-         double packingPriority,int nbMol,std::string name, openvdb::Vec3d color,
-        unsigned nbJitter,openvdb::Vec3d jitterMax);
-
 //helper to create a multiSpheres ingredient given a list of radii and positions
 //if only one radius and one position given we build a uniq sphere.
 Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentration, 
