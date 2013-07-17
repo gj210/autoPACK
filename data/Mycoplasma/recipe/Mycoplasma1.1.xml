@@ -5,7 +5,7 @@
             boundingBox="[[-1445.0, -1445.0, -2200.0], [1445.0, 1445.0, 2200.0]]" 
             cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" 
             gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan" 
-            largestProteinSize="50" overwritePlaceMethod="True" pickRandPt="True" 
+            largestProteinSize="100" overwritePlaceMethod="True" pickRandPt="True" 
             pickWeightedIngr="True" placeMethod="pandaBullet" 
             runTimeDisplay="False" saveResult="False" smallestProteinSize="100." 
             resultfile="/Users/ludo/DEV/autofill_svn/trunk/AutoFillClean/autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult.apr"
@@ -48,7 +48,7 @@
 <!--1. DNA 1500kb->4119790A-->
        	<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
-                cutoff_boundary="55.0" cutoff_surface="155.0" gradient="" 
+                cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
                 jitterMax="(1, 1, 1)" length="4119790" marge="45.0" 
                 molarity="0" name="snake" nbJitter="1" nbMol="1" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
