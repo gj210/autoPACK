@@ -78,7 +78,18 @@ std::vector<double> getBox(std::string str){
     return v;
 }
 
-std::vector<openvdb::Vec3d> moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions );
+void moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions )
+{
+    auto geometricCenterOffset = std::accumulate(positions.begin(), positions.end(), openvdb::Vec3d::zero() , 
+        [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
+
+    geometricCenterOffset /= positions.size();
+
+    std::transform(positions.begin(), positions.end(), positions.begin(),
+        [&geometricCenterOffset] (openvdb::Vec3d const& item) { return item - geometricCenterOffset; } );
+
+}
+
 
 std::vector<openvdb::Vec3d> getPositions(std::vector<double> pos){
     std::vector<double>::size_type i = 0; 
@@ -89,7 +100,9 @@ std::vector<openvdb::Vec3d> getPositions(std::vector<double> pos){
          i = i+3;
     }
     
-    return moveMultisphereToGeomCenter(positions);
+    moveMultisphereToGeomCenter(positions);
+
+    return positions;
 }
 
 
@@ -226,15 +239,4 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bo
     grid->pickRandPt =pickRandPt; 
     //g.setMode(0);//1-close packing 0-random    
     return grid;
-}
-
-std::vector<openvdb::Vec3d> moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions )
-{
-    auto geometricCenterOffset = std::accumulate(positions.begin(), positions.end(), openvdb::Vec3d::zero() , 
-        [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
-
-    geometricCenterOffset /= positions.size();
-
-    std::transform(positions.begin(), positions.end(), positions.begin(),
-        [&geometricCenterOffset] (openvdb::Vec3d const& item) { return item - geometricCenterOffset; } );
 }
