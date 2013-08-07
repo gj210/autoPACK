@@ -476,7 +476,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     {
         rtrans.push_back(globOffset);
         rrot.push_back(globRotMatj);
-        results[rtrans.size()-1] = ingr;
+        results.push_back(ingr);
         rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
 
         placeSphereInTheGrid(globOffset, globRotMatj, ingr);

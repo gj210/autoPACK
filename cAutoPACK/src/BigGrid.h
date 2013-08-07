@@ -61,7 +61,7 @@ struct big_grid {
    
     std::vector<openvdb::Vec3d> rtrans;    //the grid 3d coordintates
     std::vector<openvdb::math::Mat4d> rrot;
-    std::map<int, Ingredient*> results; 
+    std::vector<Ingredient*> results; 
     std::vector<openvdb::Vec3d> rpossitions;    //coordinations of molecules
 
 
