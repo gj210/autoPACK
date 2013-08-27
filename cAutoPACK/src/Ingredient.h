@@ -81,4 +81,14 @@ public:
         return std::accumulate( radii.cbegin(), radii.cend(), 0.0,
             [] (double acc, double radius ) {return acc + (4 * 3.1415 * radius * radius * radius)/3; } );
     }
+
+    openvdb::BBoxd getOuterBox() {
+        auto outerBox = openvdb::BBoxd();
+        auto radiusIter = radii.cbegin();
+        for ( auto posIter = positions.cbegin(); posIter != positions.cend(); ++posIter, ++radiusIter) {
+            outerBox.expand(*posIter, *radiusIter);            
+        }
+
+        return outerBox;
+    }
 };

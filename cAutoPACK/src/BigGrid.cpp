@@ -38,17 +38,17 @@
 #include <limits>
 #include "BigGrid.h"
 #include "BigGrid.h"
-
+#include <algorithm>
 namespace {
 
-//some expermental functions for the IJK<->U grid index convertion
-//currently unused
-/* 
-unused but keep in case
-inline unsigned getU(openvdb::Coord dim,openvdb::Coord ijk){
-    return (int)(ijk.x()*dim.x()*dim.y() + ijk.y()*dim.x() + ijk.z());
-}
-*/
+    openvdb::BBoxd getNeigbourBox( Ingredient * ingr, double distanceToClosestNeighbour, openvdb::Vec3d center )
+    {    
+        openvdb::BBoxd outerBox = ingr->getOuterBox();
+        outerBox.expand(outerBox.extents()*2);
+        outerBox.expand(distanceToClosestNeighbour);
+        outerBox.translate(center);
+        return outerBox;
+    }
 
 inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
     // = {0,0,0};    
@@ -287,11 +287,11 @@ openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d co
     return pos;
 }
 
-double big_grid::countDistance( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
+double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
 {
     const openvdb::Vec3d ingradientPosition = calculatePossition( ingr, offset, rotMatj );
     double sum = 0;
-    for(std::vector<openvdb::Vec3d>::iterator placedIngradientsPosIter = rpossitions.begin(); placedIngradientsPosIter != rpossitions.end(); placedIngradientsPosIter++)
+    for(auto placedIngradientsPosIter = rpossitions.cbegin(); placedIngradientsPosIter != rpossitions.cend(); placedIngradientsPosIter++)
     {
         sum += std::abs((ingradientPosition - *placedIngradientsPosIter).lengthSqr());
     }
@@ -425,7 +425,7 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
     openvdb::math::Mat4d rotMatj;
     rotMatj.setIdentity();
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
-    const double newDist = countDistance(ingr, center, rotMatj);
+    const double newDist = countDistance(rpossitions, ingr, center, rotMatj);
     return newDist;
 }
  
@@ -438,6 +438,13 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     openvdb::math::Mat4d globRotMatj;
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
+
+    auto outerBox = getNeigbourBox(ingr, distance_grid->getConstAccessor().getValue(cijk), center);
+
+    std::vector<openvdb::Vec3d> localPositions;
+    std::copy_if(rpossitions.cbegin(), rpossitions.cend(), std::back_inserter(localPositions),
+        [&outerBox](openvdb::Vec3d item ) { return outerBox.isInside(item);} );
+
     bool collision = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
         
@@ -456,7 +463,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             //collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
             collision = checkCollisionBasedOnGridValue(offset, rotMatj, ingr);
             if (!collision) {
-                const double newDist = countDistance(ingr, offset, rotMatj);
+                const double newDist = countDistance(localPositions, ingr, offset, rotMatj);
                 if( newDist  < distance )
                 {
                     if(newDist != 0)
@@ -650,3 +657,5 @@ openvdb::math::Mat4d big_grid::generateIngredientRotation( Ingredient const& ing
     }
     return rotMatj;
 }
+
+
