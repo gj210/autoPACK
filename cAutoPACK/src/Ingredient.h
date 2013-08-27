@@ -37,6 +37,7 @@
 #pragma once
 #include "Types.h"
 #include <vector>
+#include <numeric>
 
 
 class Ingredient {
@@ -76,4 +77,8 @@ public:
 public:
     bool isActive() { return completion < 1.0; }
     void setCount(double volume);
+    double volume() const {
+        return std::accumulate( radii.cbegin(), radii.cend(), 0.0,
+            [] (double acc, double radius ) {return acc + (4 * 3.1415 * radius * radius * radius)/3; } );
+    }
 };
