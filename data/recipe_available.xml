@@ -111,5 +111,9 @@
         <wrkdir>autoFillRecipeScripts/Mycoplasma</wrkdir>
         <resultfile>http://autofill.googlecode.com/git/data/Mycoplasma/results/MycoplasmaPackResult_2.json</resultfile>
     </recipe>
-    
+    <recipe name="planeWave" version="1.0">
+        <setupfile>http://autofill.googlecode.com/git/data/planeWave/planeWave1.0.xml</setupfile>
+        <wrkdir>autoFillRecipeScripts/planeWave</wrkdir>
+        <resultfile>http://autofill.googlecode.com/git/data/planeWave/results/planeWave.apr.json</resultfile>
+    </recipe>    
 </AF_recipe>
