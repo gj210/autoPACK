@@ -289,13 +289,15 @@ openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d co
 
 double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
 {
+    if (rpossitions.empty())
+        return 0;
     const openvdb::Vec3d ingradientPosition = calculatePossition( ingr, offset, rotMatj );
     double sum = 0;
     for(auto placedIngradientsPosIter = rpossitions.cbegin(); placedIngradientsPosIter != rpossitions.cend(); placedIngradientsPosIter++)
     {
         sum += std::abs((ingradientPosition - *placedIngradientsPosIter).lengthSqr());
     }
-    return sum;
+    return sum/rpossitions.size();
 }
 
 openvdb::Vec3d color(1,0,0);
