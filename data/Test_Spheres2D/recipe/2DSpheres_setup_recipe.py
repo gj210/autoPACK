@@ -191,7 +191,8 @@ tStart = time()
 #    lingr["y400_n25"].gradient = grname1
 #    lingr["y400_n25"].packingMode=packingmode
 
-helper.toggleDisplay(vBaseGeometryHider,False)
+if helper.host != "dejavu":
+    helper.toggleDisplay(vBaseGeometryHider,False)
 
 #===============================================================================
 # viewer setup
