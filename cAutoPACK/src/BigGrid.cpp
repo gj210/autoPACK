@@ -148,7 +148,9 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     double mini_d=dmax + 1;
     openvdb::Coord mini_cijk;
     std::vector<openvdb::Coord> allIngrPts;
-    const double cut =  radius+jitter;
+    
+    const double dx = distance_grid->voxelSize().x();
+    const double cut =  radius * dx;    
     
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;

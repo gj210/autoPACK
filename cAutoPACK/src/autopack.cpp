@@ -490,7 +490,10 @@ int main(int argc, char* argv[])
 
         if (DEBUG) std::cout  << "#" << ingr->name << " c " << ingr->completion << " counter " << ingr->counter<<" nbmol " << ingr->nbMol <<std::endl;
 
-        openvdb::Coord s = grid->getPointToDropCoord(ingr, ingr->minRadius,1.0,emptyList);
+        openvdb::BBoxd box = ingr->getOuterBox();
+        double length = box.extents().length();        
+
+        openvdb::Coord s = grid->getPointToDropCoord(ingr, length,1.0,emptyList);
         if (DEBUG) std::cout  << "#" << s << " " <<emptyList << " " << accessor_distance.getValue(s) << " " << ingr->radius <<std::endl;
         if ( emptyList == -1 ){
             continue;
