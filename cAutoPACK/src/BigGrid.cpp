@@ -440,11 +440,10 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
-
     std::cout << "!!!!!!" << center << std::endl;
-    openvdb::Vec3d globOffset;           //the point with some jitter
+    openvdb::Vec3d globOffset ( center );
     openvdb::math::Mat4d globRotMatj;
-    globRotMatj.zero();
+    globRotMatj = globRotMatj.identity();
 
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
@@ -456,26 +455,22 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         [&outerBox](openvdb::Vec3d item ) { return outerBox.isInside(item);} );
 
     bool collision = false;
-    for(unsigned i = 0; i < ingr->nbJitter; ++i) { 
-        
-        openvdb::Vec3d offset;
-        if (collision) 
-            offset = generateRandomJitterOffset(center, ingr->jitterMax);
-        else
+    for(unsigned i = 0; i < ingr->nbJitter; ++i)
+    {
+        openvdb::Vec3d offset = center;
+        if (i != 0)
         {
-            openvdb::Vec3d cc=distance_grid->worldToIndex(center);
-            openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
-            offset = generateCenterJitterOffset(ci, ingr->jitterMax, ingr);
+            if (collision) 
+                offset = generateRandomJitterOffset(center, ingr->jitterMax);
+            else
+            {
+                openvdb::Vec3d cc=distance_grid->worldToIndex(center);
+                openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
+                offset = generateCenterJitterOffset(ci, ingr->jitterMax, ingr);
+            }
         }
-        //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
-        //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
-        //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
+
         collision = true;
-        if(i == 0)
-        {
-            globRotMatj = generateIngredientRotation(*ingr); 
-            center = distance_grid->indexToWorld(cijk); 
-        }
         auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
         if (!localCollision) {
             const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
@@ -486,11 +481,11 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                 globOffset = offset;
                 center = offset;
                 placed = true;
+                collision = false;
                 if (rtrans.empty())
                     break;
             }        
         }
-
 
         //check for collision at the given target point coordinate for the given radius            
         for(unsigned j = 0; j < ingr->nbJitter*3; ++j) {
