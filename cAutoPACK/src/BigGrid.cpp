@@ -469,7 +469,9 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
         collision = true;
-        if ( i!=0 ) {
+        if(i == 0)
+            globRotMatj = generateIngredientRotation(*ingr);
+        else if ( i!=0 ) {
             auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
             if (!localCollision) {
                 const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
