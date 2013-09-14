@@ -441,6 +441,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
+
     openvdb::Vec3d globOffset;           //the point with some jitter
     openvdb::math::Mat4d globRotMatj;
     double distance = std::numeric_limits<double>::max( );
@@ -483,11 +484,14 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                     globRotMatj = rotMatj;
                     center = offset;
                     placed = true;
-                    if (rtrans.empty())
+                    if (rtrans.empty() || rpossitions.empty())
                         break;
                 }        
             }
-        }        
+        }
+
+        if(placed && rpossitions.empty())
+            break;
     }
 
     if (placed)
