@@ -441,10 +441,9 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
-    std::cout << "!!!!!!!!! " << center;
-
     openvdb::Vec3d globOffset;           //the point with some jitter
     openvdb::math::Mat4d globRotMatj;
+
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
 
@@ -469,14 +468,35 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
         //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
+        collision = true;
+        if ( i!=0 ) {
+            auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
+            if (!localCollision) {
+                const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
+                if( newDist  < distance )
+                {
+                    if(newDist != 0)
+                        distance = newDist;
+                    globOffset = offset;
+                    center = offset;
+                    placed = true;
+                    if (rtrans.empty())
+                        break;
+                }        
+            }
+        }
+
+
+        //check for collision at the given target point coordinate for the given radius            
         for(unsigned j = 0; j < ingr->nbJitter*3; ++j) {
             const openvdb::math::Mat4d rotMatj = generateIngredientRotation(*ingr);
 
             //check for collision at the given target point coordinate for the given radius     
             //collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
-            collision = checkCollisionBasedOnGridValue(offset, rotMatj, ingr);
-            if (!collision) {
+            auto localCollision = checkCollisionBasedOnGridValue(offset, rotMatj, ingr);
+            if (!localCollision) {
                 const double newDist = countDistance(localPositions, ingr, offset, rotMatj);
+                collision = false;
                 if( newDist  < distance )
                 {
                     if(newDist != 0)
@@ -485,14 +505,11 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                     globRotMatj = rotMatj;
                     center = offset;
                     placed = true;
-                    if (rtrans.empty() || rpossitions.empty())
+                    if (rtrans.empty())
                         break;
                 }        
             }
-        }
-
-        if(placed && rpossitions.empty())
-            break;
+        }        
     }
 
     if (placed)
