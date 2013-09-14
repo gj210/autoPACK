@@ -150,7 +150,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
     std::vector<openvdb::Coord> allIngrPts;
     
     const double dx = distance_grid->voxelSize().x();
-    const double cut =  radius * dx;    
+    const double cut =  radius * dx;
     
     if (DEBUG) std::cout << "#getPointToDropCoord " << cut << " " << mini_d <<std::endl;
     if (DEBUG) std::cout << "#retrieving available point from global grid " <<std::endl;
@@ -441,8 +441,10 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
+    std::cout << "!!!!!!" << center << std::endl;
     openvdb::Vec3d globOffset;           //the point with some jitter
     openvdb::math::Mat4d globRotMatj;
+    globRotMatj.zero();
 
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
@@ -470,22 +472,23 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
         collision = true;
         if(i == 0)
-            globRotMatj = generateIngredientRotation(*ingr);
-        else if ( i!=0 ) {
-            auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
-            if (!localCollision) {
-                const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
-                if( newDist  < distance )
-                {
-                    if(newDist != 0)
-                        distance = newDist;
-                    globOffset = offset;
-                    center = offset;
-                    placed = true;
-                    if (rtrans.empty())
-                        break;
-                }        
-            }
+        {
+            globRotMatj = generateIngredientRotation(*ingr); 
+            center = distance_grid->indexToWorld(cijk); 
+        }
+        auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
+        if (!localCollision) {
+            const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
+            if( newDist  < distance )
+            {
+                if(newDist != 0)
+                    distance = newDist;
+                globOffset = offset;
+                center = offset;
+                placed = true;
+                if (rtrans.empty())
+                    break;
+            }        
         }
 
 
