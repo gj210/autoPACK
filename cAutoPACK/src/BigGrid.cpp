@@ -168,7 +168,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
                     for (int j=bbmini.y();j<bbmaxi.y();j++){
                         for (int i=bbmini.x();i<bbmaxi.x();i++){
                             openvdb::Coord nijk(i,j,k);
-                            if (ingr->visited_rejected_coord.size() != 0 && std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), nijk) != ingr->visited_rejected_coord.end())
+                            if (ingr->visited_rejected_coord.size() != 0 && std::binary_search(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), nijk))
                             {
                                 iter.setActiveState(false);
                                 continue;
@@ -184,7 +184,7 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
             } 
             else {
                 openvdb::Coord cc=iter.getCoord();
-                if (ingr->visited_rejected_coord.size() != 0 && (std::find(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc) != ingr->visited_rejected_coord.end()))
+                if (ingr->visited_rejected_coord.size() != 0 && std::binary_search(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end(), cc))
                 {
                     iter.setActiveState(false);
                     continue;

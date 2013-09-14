@@ -522,6 +522,7 @@ int main(int argc, char* argv[])
                 grid->ingredientsDipatcher.dropIngredient(ingr); 
             }
             ingr->visited_rejected_coord.push_back(s);
+            std::sort(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end());
             rejection++;  
             std::cout << "## Ingredient rejected, already placed: " << grid->rtrans.size() << std::endl;
             if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid->num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
