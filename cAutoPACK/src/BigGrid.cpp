@@ -456,7 +456,11 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         if (collision) 
             offset = generateRandomJitterOffset(center, ingr->jitterMax);
         else
-            offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
+        {
+            openvdb::Vec3d cc=distance_grid->worldToIndex(center);
+            openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
+            offset = generateCenterJitterOffset(ci, ingr->jitterMax, ingr);
+        }
         //const openvdb::Vec3d offset = generateRandomJitterOffset(center, ingr->jitterMax); 
         //const openvdb::Vec3d offset = generateCloseJitterOffset(center, ingr->jitterMax, ingr);
         //const openvdb::Vec3d offset = generateCenterJitterOffset(cijk, ingr->jitterMax, ingr);
