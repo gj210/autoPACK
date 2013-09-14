@@ -621,7 +621,7 @@ void big_grid::placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb:
         partcieList.add(sphereWorldCoord, openvdb::Real(sp->radii[i]));
     }
 
-    openvdb::tools::ParticlesToLevelSet<openvdb::DoubleGrid, ParticeList> raster(*distance_grid);
+    openvdb::tools::ParticlesToLevelSet<openvdb::DoubleGrid> raster(*distance_grid);
     raster.setGrainSize(2); //a value of zero disables threading
     raster.rasterizeSpheres(partcieList);
 
