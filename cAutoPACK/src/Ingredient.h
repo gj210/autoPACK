@@ -86,7 +86,8 @@ public:
         auto outerBox = openvdb::BBoxd();
         auto radiusIter = radii.cbegin();
         for ( auto posIter = positions.cbegin(); posIter != positions.cend(); ++posIter, ++radiusIter) {
-            outerBox.expand(*posIter, *radiusIter);            
+            const auto sphereBox = openvdb::BBoxd(*posIter - *radiusIter, *posIter + *radiusIter);
+            outerBox.expand(sphereBox);            
         }
 
         return outerBox;
