@@ -441,6 +441,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
 
+    std::cout << "!!!!!!!!! " << center;
 
     openvdb::Vec3d globOffset;           //the point with some jitter
     openvdb::math::Mat4d globRotMatj;

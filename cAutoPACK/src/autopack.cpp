@@ -494,6 +494,11 @@ int main(int argc, char* argv[])
         double length = box.extents().length();        
 
         openvdb::Coord s = grid->getPointToDropCoord(ingr, length,1.0,emptyList);
+        
+        //generateCoordFile( grid, radiis, colors, ds_grid, ds_ingrgrid, outputFile);
+
+        
+
         if (DEBUG) std::cout  << "#" << s << " " <<emptyList << " " << accessor_distance.getValue(s) << " " << ingr->radius <<std::endl;
         if ( emptyList == -1 ){
             continue;
