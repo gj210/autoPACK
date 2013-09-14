@@ -1,0 +1,1 @@
+cmake  -D ZLIB_ROOT:PATH="c:/SourceCode/SOD/zlib/" -D CMAKE_PREFIX_PATH:PATH="c:/SourceCode/SOD/" -D BOOST_ROOT:PATH="c:/SourceCode/Libraries/boost_1_53_0/" -G "Visual Studio 11" ../autofill/cAutoPACK/
