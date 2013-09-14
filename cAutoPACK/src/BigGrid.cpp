@@ -402,6 +402,9 @@ openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center
 
 openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
 {
+
+
+
     double distance = std::numeric_limits<double>::max( );
     openvdb::Coord coord (0, 0, 0);
     for ( size_t i = 0; i < allIngrPts.size(); i++ )
@@ -598,16 +601,22 @@ void big_grid::placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb:
 }
 
 openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter )
-{    
+{
+    openvdb::Vec3d cc=distance_grid->worldToIndex(center);
+    openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
+    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirectionToCenter( ci ));
+    dir.normalize();
+    openvdb::Vec3d normal = dir.getArbPerpendicular();
+
     const auto maxJitterLength = ingrMaxJitter.lengthSqr();
     if ( maxJitterLength > 0) {
         const openvdb::Vec3d randomJitter( 
               half_uniform(generator)
             , half_uniform(generator)
             , half_uniform(generator));
-        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
+        openvdb::Vec3d newIngrMaxJitter = ingrMaxJitter * 2;
+        const openvdb::Vec3d deltaOffset ((newIngrMaxJitter * randomJitter) + normal);
 
-        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
         return center + distance_grid->indexToWorld( deltaOffset );
     }
     return center ;
