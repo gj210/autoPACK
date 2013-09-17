@@ -324,14 +324,14 @@ double big_grid::calculateValue( double i)
     }
 }
 
-openvdb::Coord big_grid::findDirectionToCenter(openvdb::Coord const& point )
+openvdb::Coord big_grid::findDirection(openvdb::Coord const& fromPoint, openvdb::Coord const& toCenter )
 {    
-    return getGridMiddlePoint() - point;
+    return toCenter - fromPoint;
 }
 
-openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& indexCenter, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
+openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& pointFrom, openvdb::Coord const& pointToGo, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
 {
-    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirectionToCenter( indexCenter ));
+    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirection( pointFrom, pointToGo ));
     dir.normalize();
     if ( ingrMaxJitter != openvdb::Vec3d::zero() ) {
         const double x = calculateValue(dir.x());
@@ -342,9 +342,9 @@ openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& index
         const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
 
         assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
-        return  distance_grid->indexToWorld( indexCenter + deltaOffset);
+        return  distance_grid->indexToWorld( pointFrom + deltaOffset);
     }
-    return distance_grid->indexToWorld(indexCenter) ;
+    return distance_grid->indexToWorld(pointFrom) ;
 }
 
 openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
@@ -380,6 +380,14 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
     return newDist;
 }
  
+openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d> &positions )
+{
+    auto geometricCenterOffset = std::accumulate(positions.begin(), positions.end(), openvdb::Vec3d::zero() , 
+        [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
+
+    geometricCenterOffset /= positions.size();
+    return geometricCenterOffset;
+}
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
@@ -410,7 +418,13 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             {
                 openvdb::Vec3d cc=distance_grid->worldToIndex(center);
                 openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
-                offset = generateCenterJitterOffset(ci, ingr->jitterMax, ingr);
+
+                openvdb::Coord localCenter = openvdb::Coord(
+                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(localPositions)))
+                );
+
+                offset = generateCenterJitterOffset(ci, localCenter, ingr->jitterMax, ingr);
+                //offset = generateCenterJitterOffset(ci, getGridMiddlePoint(), ingr->jitterMax, ingr);
             }
         }
 
@@ -570,7 +584,7 @@ openvdb::Vec3d big_grid::generateRandomJitterOffset( openvdb::Vec3d const& cente
 {
     openvdb::Vec3d cc=distance_grid->worldToIndex(center);
     openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
-    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirectionToCenter( ci ));
+    openvdb::Vec3d dir = distance_grid->indexToWorld(findDirection( ci, getGridMiddlePoint() ));
     dir.normalize();
     openvdb::Vec3d normal = dir.getArbPerpendicular();
 
