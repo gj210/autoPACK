@@ -436,7 +436,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                 openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
 
                 openvdb::Coord localCenter = openvdb::Coord(
-                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(std::begin(localPositions), std::end(localPositions))))
+                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(findGeomCenterOfClosestNeghbours(center, localPositions)))
                 );
 
                 offset = generateCenterJitterOffset(ci, localCenter, ingr->jitterMax, ingr);
