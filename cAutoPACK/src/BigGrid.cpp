@@ -302,41 +302,6 @@ double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, 
     return sum/rpossitions.size();
 }
 
-openvdb::Vec3d color(1,0,0);
-openvdb::Vec3d directions [] = {
-      openvdb::Vec3d(1,0,0)
-    , openvdb::Vec3d(1,1,0)
-    , openvdb::Vec3d(-1,0,0)
-    , openvdb::Vec3d(-1,-1,0)
-    , openvdb::Vec3d(0,1,0)
-    , openvdb::Vec3d(0,1,1)
-    , openvdb::Vec3d(0,-1,0)
-    , openvdb::Vec3d(0,-1,-1)
-    , openvdb::Vec3d(0,0,1)
-    , openvdb::Vec3d(0,-1,1)
-    , openvdb::Vec3d(0,0,-1)
-    , openvdb::Vec3d(0,1,-1)
-    };
-
-openvdb::Vec3d big_grid::findDirection(openvdb::Vec3d const& center,  double radius )
-{
-    const int size = sizeof(directions) / sizeof(directions[0]);
-    openvdb::DoubleGrid::ConstAccessor accesor = distance_grid->getConstAccessor();
-    openvdb::Vec3d retVec (1,1,1);
-    double retValue = std::numeric_limits<double>::max( ) ;
-    for (int i = 0; i < size; i++)
-    {
-        openvdb::Vec3d newPos = center + distance_grid->indexToWorld(directions[i]);
-        openvdb::Coord newCoord = openvdb::Coord(openvdb::tools::local_util::roundVec3(newPos));
-        const double newValue = accesor.getValue(newCoord);
-        if (newValue != 0 && newValue < retValue)
-        {
-            retValue = newValue;
-            retVec = directions[i];
-        }
-    }
-    return retVec;
-}
 
 double big_grid::calculateValue( double i)
 {   
@@ -380,24 +345,6 @@ openvdb::Vec3d big_grid::generateCenterJitterOffset( openvdb::Coord const& index
         return  distance_grid->indexToWorld( indexCenter + deltaOffset);
     }
     return distance_grid->indexToWorld(indexCenter) ;
-}
-
-openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center, openvdb::Vec3d const& ingrMaxJitter, Ingredient *ingr )
-{
-    openvdb::Vec3d dir = findDirection(center,  1 );
-    dir.normalize();
-    if ( ingrMaxJitter != openvdb::Vec3d::zero() ) {
-        double x = calculateValue(dir.x());
-        double y = calculateValue(dir.y());
-        double z = calculateValue(dir.z());
-
-        const openvdb::Vec3d randomJitter( x, y, z);
-        const openvdb::Vec3d deltaOffset (ingrMaxJitter * randomJitter);
-
-        assert( deltaOffset.lengthSqr() < ingrMaxJitter.lengthSqr() );
-        return center + distance_grid->indexToWorld( deltaOffset );
-    }
-    return center ;
 }
 
 openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
