@@ -380,14 +380,30 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
     return newDist;
 }
  
-openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d> &positions )
+openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d>::const_iterator beginIter, std::vector<openvdb::Vec3d>::const_iterator endIter )
 {
-    auto geometricCenterOffset = std::accumulate(positions.begin(), positions.end(), openvdb::Vec3d::zero() , 
+    auto geometricCenterOffset = std::accumulate(beginIter, endIter, openvdb::Vec3d::zero() , 
         [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
 
-    geometricCenterOffset /= positions.size();
+    geometricCenterOffset /= std::distance(beginIter,endIter);
     return geometricCenterOffset;
 }
+
+openvdb::Vec3d findGeomCenterOfClosestNeghbours(openvdb::Vec3d const& moleculeCenter, std::vector<openvdb::Vec3d> & positions )
+{
+    const int numberOfNegighToTake = 2;
+    
+    std::sort(positions.begin(), positions.end(),
+        [&moleculeCenter] (openvdb::Vec3d & v1, openvdb::Vec3d & v2) {
+            const double firstLength = (v1 - moleculeCenter).lengthSqr();
+            const double secondLength = (v2 - moleculeCenter).lengthSqr();
+            return firstLength < secondLength;
+        } 
+    );
+    
+    return getGeomCenter(positions.begin(), positions.begin() + std::min(int(positions.size()), numberOfNegighToTake));
+}
+
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
@@ -420,7 +436,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                 openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
 
                 openvdb::Coord localCenter = openvdb::Coord(
-                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(localPositions)))
+                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(std::begin(localPositions), std::end(localPositions))))
                 );
 
                 offset = generateCenterJitterOffset(ci, localCenter, ingr->jitterMax, ingr);
