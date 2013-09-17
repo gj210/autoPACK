@@ -402,9 +402,6 @@ openvdb::Vec3d big_grid::generateCloseJitterOffset( openvdb::Vec3d const& center
 
 openvdb::Coord big_grid::chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr )
 {
-
-
-
     double distance = std::numeric_limits<double>::max( );
     openvdb::Coord coord (0, 0, 0);
     for ( size_t i = 0; i < allIngrPts.size(); i++ )
