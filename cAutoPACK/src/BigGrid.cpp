@@ -302,6 +302,33 @@ double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, 
     return sum/rpossitions.size();
 }
 
+double big_grid::countDistanceLocal( 
+      std::vector<openvdb::Vec3d> const& rpossitions
+    , Ingredient *ingr
+    , openvdb::Vec3d const& offset
+    , openvdb::math::Mat4d const& rotMatj
+    , std::vector<openvdb::Vec3d> &locaAtomlPositions)
+{
+    if (rpossitions.empty())
+        return 0;
+    int count = 0;
+    double sum = 0;
+    for (size_t i=0; i < ingr->positions.size(); i++)
+    {
+        openvdb::Vec3d sphereWorldCoord = ingr->positions[i];
+        sphereWorldCoord = rotMatj.transform(sphereWorldCoord);
+        sphereWorldCoord = sphereWorldCoord + offset;
+
+        openvdb::Vec3d cc=distance_grid->worldToIndex(sphereWorldCoord);
+        for(size_t pos = 0; pos < locaAtomlPositions.size(); pos++)
+        {
+            openvdb::Vec3d localPos = locaAtomlPositions[pos];
+            sum += std::abs((cc - localPos).lengthSqr());
+            count++;
+        }
+    }
+    return sum/count;
+}
 
 double big_grid::calculateValue( double i)
 {   
@@ -389,21 +416,48 @@ openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d>::const_iterator beginI
     return geometricCenterOffset;
 }
 
-openvdb::Vec3d findGeomCenterOfClosestNeghbours(openvdb::Vec3d const& moleculeCenter, std::vector<openvdb::Vec3d> & positions )
+void big_grid::findClosestNeighbours(
+      Ingredient *ingr
+    , const int howMany
+    , openvdb::Coord cijk
+    , std::vector<openvdb::Vec3d> &localPositions
+    , std::vector<openvdb::Vec3d> &locaAtomlPositions)
 {
-    const int numberOfNegighToTake = 2;
-    
-    std::sort(positions.begin(), positions.end(),
-        [&moleculeCenter] (openvdb::Vec3d & v1, openvdb::Vec3d & v2) {
-            const double firstLength = (v1 - moleculeCenter).lengthSqr();
-            const double secondLength = (v2 - moleculeCenter).lengthSqr();
+    std::vector<openvdb::Vec3d> temp;
+    openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
+    auto outerBox = getNeigbourBox(ingr, distance_grid->getConstAccessor().getValue(cijk), center);
+    std::copy_if(rpossitions.cbegin(), rpossitions.cend(), std::back_inserter(temp),
+        [&outerBox](openvdb::Vec3d item ) { return outerBox.isInside(item);} );
+
+    std::sort(temp.begin(), temp.end(),
+        [&center] (openvdb::Vec3d & v1, openvdb::Vec3d & v2) {
+            const double firstLength = (v1 - center).lengthSqr();
+            const double secondLength = (v2 - center).lengthSqr();
             return firstLength < secondLength;
         } 
     );
-    
-    return getGeomCenter(positions.begin(), positions.begin() + std::min(int(positions.size()), numberOfNegighToTake));
-}
 
+    //prepare all local atoms possitions
+    for(std::vector<openvdb::Vec3d>::iterator it = temp.begin(); it != (temp.begin() + std::min(int(temp.size()), howMany)); it++)
+    {
+        std::vector<openvdb::Vec3d>::iterator posIt = std::find(rpossitions.begin(), rpossitions.end(), *it);
+        if(posIt != rpossitions.end())
+        {
+            const int pos = posIt - rpossitions.begin();
+            Ingredient * ingradient = results[pos];
+            openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
+            targetXform->preMult(rrot[pos]);
+            targetXform->postTranslate(rtrans[pos]);
+            openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+            int j = 0;
+            for(openvdb::Vec3d const & position : ingradient->positions ) {        
+                locaAtomlPositions.push_back(mat.transform(position));
+            }
+        }
+    }
+
+    localPositions.insert( localPositions.end(), temp.begin(), temp.begin() + std::min(int(temp.size()), howMany) );
+}
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 {
@@ -416,11 +470,12 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     double distance = std::numeric_limits<double>::max( );
     bool placed = false;
 
-    auto outerBox = getNeigbourBox(ingr, distance_grid->getConstAccessor().getValue(cijk), center);
-
     std::vector<openvdb::Vec3d> localPositions;
-    std::copy_if(rpossitions.cbegin(), rpossitions.cend(), std::back_inserter(localPositions),
-        [&outerBox](openvdb::Vec3d item ) { return outerBox.isInside(item);} );
+    std::vector<openvdb::Vec3d> locaAtomlPositions;
+    findClosestNeighbours(ingr, 2, cijk, localPositions, locaAtomlPositions);
+    openvdb::Coord localCenter = openvdb::Coord(
+        openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(localPositions.begin(), localPositions.end())))
+                );
 
     bool collision = false;
     for(unsigned i = 0; i < ingr->nbJitter; ++i)
@@ -434,20 +489,14 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             {
                 openvdb::Vec3d cc=distance_grid->worldToIndex(center);
                 openvdb::Coord ci = openvdb::Coord(openvdb::tools::local_util::floorVec3(cc));
-
-                openvdb::Coord localCenter = openvdb::Coord(
-                    openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(findGeomCenterOfClosestNeghbours(center, localPositions)))
-                );
-
                 offset = generateCenterJitterOffset(ci, localCenter, ingr->jitterMax, ingr);
-                //offset = generateCenterJitterOffset(ci, getGridMiddlePoint(), ingr->jitterMax, ingr);
             }
         }
 
         collision = true;
         auto localCollision = checkCollisionBasedOnGridValue(offset, globRotMatj, ingr);
         if (!localCollision) {
-            const double newDist = countDistance(localPositions, ingr, offset, globRotMatj);
+            const double newDist = countDistanceLocal(localPositions, ingr, offset, globRotMatj, locaAtomlPositions);
             if( newDist  < distance )
             {
                 if(newDist != 0)
@@ -469,7 +518,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
             //collision = checkSphCollisions(offset, rotMatj, ingr->radius, ingr);
             auto localCollision = checkCollisionBasedOnGridValue(offset, rotMatj, ingr);
             if (!localCollision) {
-                const double newDist = countDistance(localPositions, ingr, offset, rotMatj);
+                const double newDist = countDistanceLocal(localPositions, ingr, offset, rotMatj, locaAtomlPositions);
                 collision = false;
                 if( newDist  < distance )
                 {

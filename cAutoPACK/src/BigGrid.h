@@ -105,4 +105,16 @@ private:
     openvdb::Coord getGridMiddlePoint( );
     bool checkCollisionBasedOnGridValue( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp );
     void placeSphereInTheGrid( openvdb::math::Vec3d const& offset,openvdb::math::Mat4d rotMatj, Ingredient* sp );
+    void findClosestNeighbours(
+      Ingredient *ingr
+    , const int howMany
+    , openvdb::Coord cijk
+    , std::vector<openvdb::Vec3d> &localPositions
+    , std::vector<openvdb::Vec3d> &locaAtomlPositions);
+    double countDistanceLocal( 
+      std::vector<openvdb::Vec3d> const& rpossitions
+    , Ingredient *ingr
+    , openvdb::Vec3d const& offset
+    , openvdb::math::Mat4d const& rotMatj
+    , std::vector<openvdb::Vec3d> &locaAtomlPositions);
 };
