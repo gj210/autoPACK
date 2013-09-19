@@ -22,17 +22,24 @@
 	<!--surface include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/SynapticVesicle_ingredients.xml"-->
 	<surface>
 <!--17. ATP synthase-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml"/>
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml">
+        <overwrite principalVector="[0.0, 0.0, 1.0]"/>
+	</ingredient>
 <!--18. secretory proteins PDB OPM 2zjs-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_2zjs.xml"/>
+	<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_2zjs.xml"/-->
 <!--19. sodium pump PDB OPM 4av3-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4av3.xml"/>
 <!--20. zinc transporter PDB OPM 3j1z-->
 	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3j1z.xml"/>
 <!--21. magnesium transporter PDB OPM 4i0u-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml"/>
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml">
+        <overwrite principalVector="[0.0, 1.0, 0.0]"/>
+	</ingredient>
 <!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml"/>
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml">
+        <overwrite principalVector="[0.0, 0.0, 1.0]"/>
+	</ingredient>
+
 <!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane)--> 
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
