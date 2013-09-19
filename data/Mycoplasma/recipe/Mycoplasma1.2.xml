@@ -87,13 +87,23 @@
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kbt.xml"/>
 <!--7. transfer RNA (in pink) 4tna 174/1000A^3 and elongation factor Tu (in blue)-->
 <!--8. elongation factor Tu and Ts 60/1000A^3 20 alone-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_prot.xml"/>
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_rna.xml"/>
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_prot.xml">       
+        <overwrite encapsulatingRadius="40"/>
+      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
+	
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_rna.xml">       
+        <overwrite encapsulatingRadius="41"/>
+      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
+	
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT.xml">
+       <overwrite encapsulatingRadius="60"/>
+      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
 <!--9. elongation factor G pdb 1EFG  1dar 20-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1efg.xml"/>
 <!--10. aminoacyl-tRNA synthetases 30-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml">
+       <overwrite encapsulatingRadius="66"/>
+     </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
 <!--11. topoisomerases pdb 1A36-->
 		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_BC.xml"/>
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_A.xml"/-->
@@ -106,9 +116,12 @@
 <!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1r6b.xml"/>
 <!--15. glycolytic enymes 200-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml"/>
-<!--16. pyruvate dehydrogenase complex 1 -->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml">
+         <overwrite encapsulatingRadius="54"/>
+      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml">
+         <overwrite encapsulatingRadius="69"/>
+      </ingredient>
 	</interior>
 	</organelle>
 	</autopackSetup>
