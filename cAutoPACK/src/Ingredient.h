@@ -91,4 +91,14 @@ public:
 
         return outerBox;
     }
+
+    void moveMultisphereToGeomCenter()
+    {
+        const auto geometricCenterOffset = Geometric::calculateGeometricCenter(std::begin(positions), std::end(positions));
+
+        std::transform(positions.begin(), positions.end(), positions.begin(),
+            [&geometricCenterOffset] (openvdb::Vec3d const& item) { return item - geometricCenterOffset; } );
+
+        geometricCenter = openvdb::Vec3d::zero();
+    }
 };

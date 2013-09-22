@@ -78,16 +78,6 @@ std::vector<double> getBox(std::string str){
     return v;
 }
 
-openvdb::Vec3d moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions )
-{
-    const auto geometricCenterOffset = Geometric::calculateGeometricCenter(std::begin(positions), std::end(positions));
-
-    std::transform(positions.begin(), positions.end(), positions.begin(),
-        [&geometricCenterOffset] (openvdb::Vec3d const& item) { return item - geometricCenterOffset; } );
-
-    return geometricCenterOffset;
-}
-
 
 std::vector<openvdb::Vec3d> getPositions(std::vector<double> pos){
     std::vector<double>::size_type i = 0; 
@@ -156,7 +146,6 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bo
         std::vector<double> pos = getBox(posstr);   
         
         std::vector<openvdb::Vec3d> positions = getPositions(pos);
-        auto geometricCenter = moveMultisphereToGeomCenter(positions);
         
         //double r = getRadii(str); //different radii... as well as the position...  
         //std::cout << r << std::endl;
@@ -203,8 +192,9 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bo
                     color,nbJitter,jitter,positions);
         }
         ingr.filename = strmeshFile;
-        ingr.geometricCenter = geometricCenter;
-        ingr.principalVector=principalVector;
+
+        ingr.moveMultisphereToGeomCenter();
+
         ingr.useRotAxis = false;
         if (ingredient.attribute("useRotAxis")){
             ingr.useRotAxis = ingredient.attribute("useRotAxis").as_bool();
