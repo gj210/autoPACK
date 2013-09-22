@@ -63,16 +63,16 @@ if (UNIX)
     endif()
 endif()
 
-find_package(Boost COMPONENTS system filesystem unit_test_framework)
-if(Boost_FOUND)
-FILE(GLOB AUTOPACK_TESTS_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
-    add_executable(UnitTests  src/IngredientsDispatcher.cpp src/BigGrid.cpp src/Ingredient.cpp ${AUTOPACK_TESTS_FILES})
-    target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
+# find_package(Boost COMPONENTS system filesystem unit_test_framework)
+# if(Boost_FOUND)
+# FILE(GLOB AUTOPACK_TESTS_FILES
+    # ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)	
+    # add_executable(UnitTests  src/IngredientsDispatcher.cpp src/BigGrid.cpp src/Ingredient.cpp ${AUTOPACK_TESTS_FILES})
+    # target_link_libraries(UnitTests ${Boost_LIBRARIES} ${EXTERNAL_LIBRARIES})
 
-    enable_testing()
-    add_test(UniTests UnitTests)
-endif()
+    # enable_testing()
+    # add_test(UniTests UnitTests)
+# endif()
 
 
 
