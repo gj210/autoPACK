@@ -279,26 +279,24 @@ void big_grid::printVectorPointsToFile(const std::vector<openvdb::Coord> &allIng
     file.close();
 }
 
-openvdb::Vec3d big_grid::calculatePossition( Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
+openvdb::Vec3d big_grid::transformPossition( openvdb::Vec3d const& position, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
 {	
     openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
     targetXform->preMult(rotMatj);
     targetXform->postTranslate(offset);
     openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-    const openvdb::Vec3d pos = mat.transform(*(ingr->positions.begin()));
+    const openvdb::Vec3d pos = mat.transform(position);
     return pos;
 }
 
-double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, Ingredient *ingr, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
+double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, openvdb::Vec3d const& transformedPosition)
 {
     if (rpossitions.empty())
         return 0;
-    const openvdb::Vec3d ingradientPosition = calculatePossition( ingr, offset, rotMatj );
-    double sum = 0;
-    for(auto placedIngradientsPosIter = rpossitions.cbegin(); placedIngradientsPosIter != rpossitions.cend(); placedIngradientsPosIter++)
-    {
-        sum += std::abs((ingradientPosition - *placedIngradientsPosIter).lengthSqr());
-    }
+
+   double sum = std::accumulate(std::begin(rpossitions), std::end(rpossitions), 0, [ &transformedPosition ](double acc, openvdb::Vec3d const& position) 
+        { return acc + std::abs((transformedPosition - position).lengthSqr()); } );
+    
     return sum/rpossitions.size();
 }
 
@@ -398,15 +396,6 @@ openvdb::Coord big_grid::getGridMiddlePoint( )
     return coord;
 }
 
-double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
-{
-    openvdb::math::Mat4d rotMatj;
-    rotMatj.setIdentity();
-    openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
-    const double newDist = countDistance(rpossitions, ingr, center, rotMatj);
-    return newDist;
-}
- 
 openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d>::const_iterator beginIter, std::vector<openvdb::Vec3d>::const_iterator endIter )
 {
     auto geometricCenterOffset = std::accumulate(beginIter, endIter, openvdb::Vec3d::zero() , 
@@ -416,6 +405,18 @@ openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d>::const_iterator beginI
     return geometricCenterOffset;
 }
 
+
+double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
+{
+    openvdb::math::Mat4d rotMatj;
+    rotMatj.setIdentity();
+    openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
+    const auto ingredientGeometricalCenter = getGeomCenter(std::begin(ingr->positions), std::end(ingr->positions));
+    const auto transformedIngradientPosition = transformPossition( ingredientGeometricalCenter, center, rotMatj );
+    const double newDist = countDistance(rpossitions, transformedIngradientPosition);
+    return newDist;
+}
+ 
 void big_grid::findClosestNeighbours(
       Ingredient *ingr
     , const int howMany
@@ -540,7 +541,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         rtrans.push_back(globOffset);
         rrot.push_back(globRotMatj);
         results.push_back(ingr);
-        rpossitions.push_back( calculatePossition( ingr, globOffset, globRotMatj ) );
+        auto geometricCenter = getGeomCenter(std::begin(ingr->positions), std::end(ingr->positions));
+        rpossitions.push_back( transformPossition( geometricCenter, globOffset, globRotMatj ) );
 
         placeSphereInTheGrid(globOffset, globRotMatj, ingr);
         //storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
