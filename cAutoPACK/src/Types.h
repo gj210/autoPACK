@@ -61,6 +61,9 @@ openvdb includes
 #include <openvdb/tools/GridTransformer.h>
 #include <openvdb/tools/ParticlesToLevelSet.h>
 
+
+#include "GeometricTools.h"
+
 #ifdef _MSC_VER
     //Disable warnings from openvdb in Visual Studio
     #pragma warning(pop)

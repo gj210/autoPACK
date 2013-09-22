@@ -220,27 +220,6 @@ void big_grid::printVectorPointsToFile(const std::vector<openvdb::Coord> &allIng
     file.close();
 }
 
-openvdb::Vec3d big_grid::transformPossition( openvdb::Vec3d const& position, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj )
-{	
-    openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
-    targetXform->preMult(rotMatj);
-    targetXform->postTranslate(offset);
-    openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
-    const openvdb::Vec3d pos = mat.transform(position);
-    return pos;
-}
-
-double big_grid::countDistance( std::vector<openvdb::Vec3d> const& rpossitions, openvdb::Vec3d const& transformedPosition)
-{
-    if (rpossitions.empty())
-        return 0;
-
-   double sum = std::accumulate(std::begin(rpossitions), std::end(rpossitions), 0, [ &transformedPosition ](double acc, openvdb::Vec3d const& position) 
-        { return acc + std::abs((transformedPosition - position).lengthSqr()); } );
-    
-    return sum/rpossitions.size();
-}
-
 double big_grid::countDistanceLocal( 
       std::vector<openvdb::Vec3d> const& rpossitions
     , Ingredient *ingr
@@ -337,24 +316,15 @@ openvdb::Coord big_grid::getGridMiddlePoint( )
     return coord;
 }
 
-openvdb::Vec3d getGeomCenter( std::vector<openvdb::Vec3d>::const_iterator beginIter, std::vector<openvdb::Vec3d>::const_iterator endIter )
-{
-    auto geometricCenterOffset = std::accumulate(beginIter, endIter, openvdb::Vec3d::zero() , 
-        [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
 
-    geometricCenterOffset /= std::distance(beginIter,endIter);
-    return geometricCenterOffset;
-}
 
 
 double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
 {
-    openvdb::math::Mat4d rotMatj;
-    rotMatj.setIdentity();
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
-    const auto ingredientGeometricalCenter = getGeomCenter(std::begin(ingr->positions), std::end(ingr->positions));
-    const auto transformedIngradientPosition = transformPossition( ingredientGeometricalCenter, center, rotMatj );
-    const double newDist = countDistance(rpossitions, transformedIngradientPosition);
+    const auto ingredientGeometricalCenter = ingr->geometricCenter;
+    const auto transformedIngradientPosition = ingredientGeometricalCenter + center;
+    const double newDist = Geometric::countNormalizedDistanceToAllPositions(rpossitions, transformedIngradientPosition);
     return newDist;
 }
  
@@ -416,7 +386,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
     std::vector<openvdb::Vec3d> locaAtomlPositions;
     findClosestNeighbours(ingr, 2, cijk, localPositions, locaAtomlPositions);
     openvdb::Coord localCenter = openvdb::Coord(
-        openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(getGeomCenter(localPositions.begin(), localPositions.end())))
+        openvdb::tools::local_util::floorVec3(distance_grid->worldToIndex(Geometric::calculateGeometricCenter(localPositions.begin(), localPositions.end())))
                 );
 
     bool collision = false;
@@ -482,8 +452,8 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         rtrans.push_back(globOffset);
         rrot.push_back(globRotMatj);
         results.push_back(ingr);
-        auto geometricCenter = getGeomCenter(std::begin(ingr->positions), std::end(ingr->positions));
-        rpossitions.push_back( transformPossition( geometricCenter, globOffset, globRotMatj ) );
+        auto geometricCenter = ingr->geometricCenter;
+        rpossitions.push_back( Geometric::transformPossition( geometricCenter, globOffset, globRotMatj ) );
 
         placeSphereInTheGrid(globOffset, globRotMatj, ingr);
         //storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);

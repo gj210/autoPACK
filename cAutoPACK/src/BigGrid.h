@@ -97,8 +97,6 @@ private:
     double calculateValue( double i);
     openvdb::Coord findDirection(openvdb::Coord const& fromPoint, openvdb::Coord const& toCenter);
     void storePlacedIngradientInGrid( Ingredient * ingr, openvdb::Vec3d offset, openvdb::math::Mat4d rotMatj );
-	double countDistance( std::vector<openvdb::Vec3d> const& rpossitions, openvdb::Vec3d const& transformedPosition);
-	openvdb::Vec3d transformPossition( openvdb::Vec3d const& position, openvdb::Vec3d const& offset, openvdb::math::Mat4d const& rotMatj );
 	void printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &file, const std::string &radius);
     double countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr );
     openvdb::Coord chooseTheBestPoint( const std::vector<openvdb::Coord> &allIngrPts, Ingredient *ingr );
