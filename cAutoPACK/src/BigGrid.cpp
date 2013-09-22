@@ -322,8 +322,7 @@ openvdb::Coord big_grid::getGridMiddlePoint( )
 double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
-    const auto ingredientGeometricalCenter = ingr->geometricCenter;
-    const auto transformedIngradientPosition = ingredientGeometricalCenter + center;
+    const auto transformedIngradientPosition = ingr->geometricCenter + center;
     const double newDist = Geometric::countNormalizedDistanceToAllPositions(rpossitions, transformedIngradientPosition);
     return newDist;
 }
@@ -454,8 +453,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         rtrans.push_back(globOffset);
         rrot.push_back(globRotMatj);
         results.push_back(ingr);
-        auto geometricCenter = ingr->geometricCenter;
-        rpossitions.push_back( Geometric::transformPossition( geometricCenter, globOffset, globRotMatj ) );
+        rpossitions.push_back( Geometric::transformPossition( ingr->geometricCenter, globOffset, globRotMatj ) );
 
         placeSphereInTheGrid(globOffset, globRotMatj, ingr);
         //storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
