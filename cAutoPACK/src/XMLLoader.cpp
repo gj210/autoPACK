@@ -78,16 +78,14 @@ std::vector<double> getBox(std::string str){
     return v;
 }
 
-void moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions )
+openvdb::Vec3d moveMultisphereToGeomCenter( std::vector<openvdb::Vec3d> &positions )
 {
-    auto geometricCenterOffset = std::accumulate(positions.begin(), positions.end(), openvdb::Vec3d::zero() , 
-        [] (openvdb::Vec3d const& acc, openvdb::Vec3d const& item) { return item + acc; });
-
-    geometricCenterOffset /= positions.size();
+    const auto geometricCenterOffset = Geometric::calculateGeometricCenter(std::begin(positions), std::end(positions));
 
     std::transform(positions.begin(), positions.end(), positions.begin(),
         [&geometricCenterOffset] (openvdb::Vec3d const& item) { return item - geometricCenterOffset; } );
 
+    return geometricCenterOffset;
 }
 
 
@@ -99,8 +97,6 @@ std::vector<openvdb::Vec3d> getPositions(std::vector<double> pos){
          positions.push_back(p);
          i = i+3;
     }
-    
-    moveMultisphereToGeomCenter(positions);
 
     return positions;
 }
@@ -157,8 +153,11 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bo
         std::string str(ingredient.attribute("radii").value()); 
         std::vector<double> radii = getBox(str);     
         std::string posstr(ingredient.attribute("positions").value()); 
-        std::vector<double> pos = getBox(posstr);     
+        std::vector<double> pos = getBox(posstr);   
+        
         std::vector<openvdb::Vec3d> positions = getPositions(pos);
+        auto geometricCenter = moveMultisphereToGeomCenter(positions);
+        
         //double r = getRadii(str); //different radii... as well as the position...  
         //std::cout << r << std::endl;
         double mol = ingredient.attribute("molarity").as_float();
@@ -204,6 +203,7 @@ std::shared_ptr<big_grid> load_xml(std::string path,int _mode,unsigned _seed, bo
                     color,nbJitter,jitter,positions);
         }
         ingr.filename = strmeshFile;
+        ingr.geometricCenter = geometricCenter;
         ingr.principalVector=principalVector;
         ingr.useRotAxis = false;
         if (ingredient.attribute("useRotAxis")){

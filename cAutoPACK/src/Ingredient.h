@@ -74,6 +74,8 @@ public:
     double perturbAxisAmplitude;
     std::vector<openvdb::Coord> visited_rejected_coord;
 
+    openvdb::Vec3d geometricCenter;
+
 public:
     bool isActive() { return completion < 1.0; }
     void setCount(double volume);
