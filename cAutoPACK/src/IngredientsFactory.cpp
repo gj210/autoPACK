@@ -109,22 +109,5 @@ Ingredient makeMultiSpheres(std::vector<double> radii, int mode, double concentr
         sp.bbox = sp.gsphere->evalActiveVoxelBoundingBox();
         sp.useRotAxis=false;
     }
-    /*
-    const openvdb::Vec3d ibotleft(-radius,-radius,-radius);//(0,0,0)
-    const openvdb::Vec3d iupright(radius,radius,radius);//(1000,1000,10);
-    openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform(stepsize);
-    openvdb::Vec3d botleft=transform->worldToIndex(ibotleft);
-    openvdb::Vec3d upright=transform->worldToIndex(iupright);
-    
-    openvdb::Coord left(openvdb::tools::local_util::roundVec3(botleft));//(openvdb::Int32)botleft.x(),(openvdb::Int32)botleft.y(),(openvdb::Int32)botleft.z());
-    openvdb::Coord right(openvdb::tools::local_util::roundVec3(upright));//(openvdb::Int32)upright.x(),(openvdb::Int32)upright.y(),(openvdb::Int32)upright.z());
-    //define the active region that will be our boundary. set to max everywhere
-    sp.bbox = openvdb::CoordBBox(left,right);//min and max 
-    */               
-    sp.gsphere->evalMinMax(sp.miniVal,sp.maxiVal);
-    // Apply the functor to all active values.
-    std::cout << "#mini " << sp.miniVal << " maxi " << sp.maxiVal << " bb " << sp.bbox<<std::endl;
-    //openvdb::tools::foreach(sp.gsphere->beginValueAll(), SetMaxToDefault(sp.maxiVal));
-    //translate (const Coord &t)
     return sp;
 }

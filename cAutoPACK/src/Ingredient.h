@@ -60,11 +60,8 @@ public:
     unsigned nbJitter;
     openvdb::Vec3d color;
     openvdb::Vec3d jitterMax;
-    openvdb::Vec3d principalVector;
     openvdb::DoubleGrid::Ptr gsphere;
     openvdb::CoordBBox bbox;
-    double miniVal;
-    double maxiVal;
     mesh mesh3d;
     std::string filename;
     //rotation paramters

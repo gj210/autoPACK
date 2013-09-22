@@ -386,7 +386,6 @@ void generatePythonScript( std::string file, std::shared_ptr<big_grid> &g, std::
         resultFile << "\thelper.rotateObj(geom,[0,math.pi/2.0,0.0])\n";//rotate on X in C4D
         resultFile << "\thelper.reParent(geom,parent)\n";
         resultFile << "\tiparent=helper.newEmpty(iname+\"_iparent\")\n";
-        resultFile << "\taxis = " << ingr.principalVector << "\n";
         resultFile << "\tipoly = helper.instancePolygon(iname+\"inst\",\n";
         resultFile << "                      matrices=matrices[iname],\n";
         resultFile << "                      mesh=parent,parent = iparent,\n";
