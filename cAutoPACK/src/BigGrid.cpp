@@ -49,52 +49,6 @@ namespace {
         outerBox.translate(center);
         return outerBox;
     }
-
-inline void getIJK(int u,openvdb::Coord dim,int* i_ijk){
-    // = {0,0,0};    
-    //openvdb::Coord ijk(0,0,0);
-    int nxnynz = dim.x()*dim.y()*dim.z();
-    int nynz = dim.z()*dim.y();
-    //int nx = dim.x();
-    int ny = dim.y();
-    int nz = dim.z();
-    int integer;
-    double decimal;
-    double fraction;
-    int nysc;
-    if (u < dim.z()){
-        i_ijk[2] = u;
-    }
-    else if ((u < nynz)&&(u >= nxnynz)){
-        //whats z
-        fraction = (double)u/(double)dim.z();
-        integer = (int) fraction;
-        decimal = fraction - integer;
-        i_ijk[2] = (int) round(decimal*dim.z());
-        //whast y 
-        i_ijk[1] = integer;  
-    }
-    else if ((u < nxnynz)&&(u >= nynz)){
-        fraction = (double)u/(double)nynz;
-        integer = (int) fraction;
-        decimal = fraction - integer;
-        nysc = ny * integer;
-        //whast x 
-        i_ijk[0] = integer;  
-        fraction = (double)u/(double)nz;
-        integer = (int) fraction;
-        decimal = fraction - integer;
-        //whats z        
-        i_ijk[2] = (int) round(decimal*(double)nz);
-        //whast y 
-        //46867 
-        //233 15477 201 77 603 77.7231
-        //std::cout << integer << " " << nysc << " " << ny << " " << (int)((double)u/(double)nynz) << " " << nynz << " " << (double)u/(double)nynz << std::endl;
-        i_ijk[1] = integer - (ny*(int)((double)u/(double)nynz));  
-        //int (integer - (ny*int(double(u)/double(nynz))));
-    }    
-}
-
 } //namespace
 
 big_grid::big_grid( std::vector<Ingredient> const & _ingredients, double step, openvdb::Vec3d bot, openvdb::Vec3d up, unsigned seed ) :     
@@ -252,19 +206,6 @@ openvdb::Coord big_grid::getPointToDropCoord( Ingredient* ingr, double radius, d
         cijk = allIngrPts[0];
     }
     return cijk;
-}
-
-bool big_grid::try_drop( unsigned pid,Ingredient *ingr )
-{
-    //main function that decide to drop an ingredient or not
-    //std::cout  <<"test_data "<< ingr.name << ' ' << pid << std::endl;        
-    int i_ijk[3];
-    i_ijk[0]=0;
-    i_ijk[1]=0;
-    i_ijk[2]=0;
-    getIJK(pid, distance_grid->evalActiveVoxelDim(),i_ijk);
-    openvdb::Coord cijk(i_ijk[0],i_ijk[1],i_ijk[2]);
-    return try_dropCoord(cijk,ingr);
 }
 
 void big_grid::printVectorPointsToFile(const std::vector<openvdb::Coord> &allIngrPts, const std::string &fileName, const std::string &radius)
