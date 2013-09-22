@@ -349,26 +349,28 @@ void big_grid::findClosestNeighbours(
         } 
     );
 
+    localPositions.insert( localPositions.end(), temp.begin(), temp.begin() + std::min(int(temp.size()), howMany) );
+
     //prepare all local atoms possitions
     for(std::vector<openvdb::Vec3d>::iterator it = temp.begin(); it != (temp.begin() + std::min(int(temp.size()), howMany)); it++)
     {
         std::vector<openvdb::Vec3d>::iterator posIt = std::find(rpossitions.begin(), rpossitions.end(), *it);
         if(posIt != rpossitions.end())
         {
-            const int pos = posIt - rpossitions.begin();
-            Ingredient * ingradient = results[pos];
+            const int pos = std::distance(rpossitions.begin(), posIt);
+            const Ingredient * ingradient = results[pos];
+
             openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
             targetXform->preMult(rrot[pos]);
             targetXform->postTranslate(rtrans[pos]);
             openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
+
             int j = 0;
             for(openvdb::Vec3d const & position : ingradient->positions ) {        
                 locaAtomlPositions.push_back(mat.transform(position));
             }
         }
     }
-
-    localPositions.insert( localPositions.end(), temp.begin(), temp.begin() + std::min(int(temp.size()), howMany) );
 }
 
 bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
