@@ -323,7 +323,7 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
     const auto transformedIngradientPosition = ingr->geometricCenter + center;
-    const double newDist = Geometric::countNormalizedDistanceToAllPositions(rpossitions, transformedIngradientPosition);
+    const double newDist = Geometric::countNormalizedDistanceToAllPositions(rtrans, transformedIngradientPosition);
     return newDist;
 }
  
@@ -337,8 +337,8 @@ void big_grid::findClosestNeighbours(
     std::vector<openvdb::Vec3d> temp;
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
     auto outerBox = getNeigbourBox(ingr, distance_grid->getConstAccessor().getValue(cijk), center);
-    std::copy_if(rpossitions.cbegin(), rpossitions.cend(), std::back_inserter(temp),
-        [&outerBox](openvdb::Vec3d item ) { return outerBox.isInside(item);} );
+    std::copy_if(rtrans.cbegin(), rtrans.cend(), std::back_inserter(temp),
+        [&outerBox](openvdb::Vec3d const& item ) { return outerBox.isInside(item);} );
 
     std::sort(temp.begin(), temp.end(),
         [&center] (openvdb::Vec3d & v1, openvdb::Vec3d & v2) {
@@ -353,10 +353,10 @@ void big_grid::findClosestNeighbours(
     //prepare all local atoms possitions
     for(std::vector<openvdb::Vec3d>::iterator it = temp.begin(); it != (temp.begin() + std::min(int(temp.size()), howMany)); it++)
     {
-        std::vector<openvdb::Vec3d>::iterator posIt = std::find(rpossitions.begin(), rpossitions.end(), *it);
-        if(posIt != rpossitions.end())
+        std::vector<openvdb::Vec3d>::iterator posIt = std::find(rtrans.begin(), rtrans.end(), *it);
+        if(posIt != rtrans.end())
         {
-            const int pos = std::distance(rpossitions.begin(), posIt);
+            const int pos = std::distance(rtrans.begin(), posIt);
             const Ingredient * ingradient = results[pos];
 
             openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
@@ -453,7 +453,6 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
         rtrans.push_back(globOffset);
         rrot.push_back(globRotMatj);
         results.push_back(ingr);
-        rpossitions.push_back( Geometric::transformPossition( ingr->geometricCenter, globOffset, globRotMatj ) );
 
         placeSphereInTheGrid(globOffset, globRotMatj, ingr);
         //storePlacedIngradientInGrid(ingr, globOffset, globRotMatj);
