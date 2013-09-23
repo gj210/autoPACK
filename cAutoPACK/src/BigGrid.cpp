@@ -323,7 +323,7 @@ double big_grid::countCurrentDistance( openvdb::Coord cijk, Ingredient *ingr )
 {
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
     const auto transformedIngradientPosition = ingr->geometricCenter + center;
-    const double newDist = Geometric::countNormalizedDistanceToAllPositions(rtrans, transformedIngradientPosition);
+    const double newDist = Geometric::countNormalizedDistanceToAllPositions(rpositions, transformedIngradientPosition);
     return newDist;
 }
  
@@ -337,7 +337,7 @@ void big_grid::findClosestNeighbours(
     std::vector<openvdb::Vec3d> temp;
     openvdb::Vec3d center=distance_grid->indexToWorld(cijk);
     auto outerBox = getNeigbourBox(ingr, distance_grid->getConstAccessor().getValue(cijk), center);
-    std::copy_if(rtrans.cbegin(), rtrans.cend(), std::back_inserter(temp),
+    std::copy_if(rpositions.cbegin(), rpositions.cend(), std::back_inserter(temp),
         [&outerBox](openvdb::Vec3d const& item ) { return outerBox.isInside(item);} );
 
     std::sort(temp.begin(), temp.end(),
@@ -353,15 +353,15 @@ void big_grid::findClosestNeighbours(
     //prepare all local atoms possitions
     for(std::vector<openvdb::Vec3d>::iterator it = temp.begin(); it != (temp.begin() + std::min(int(temp.size()), howMany)); it++)
     {
-        std::vector<openvdb::Vec3d>::iterator posIt = std::find(rtrans.begin(), rtrans.end(), *it);
-        if(posIt != rtrans.end())
+        std::vector<openvdb::Vec3d>::iterator posIt = std::find(rpositions.begin(), rpositions.end(), *it);
+        if(posIt != rpositions.end())
         {
-            const int pos = std::distance(rtrans.begin(), posIt);
+            const int pos = std::distance(rpositions.begin(), posIt);
             const Ingredient * ingradient = results[pos];
 
             openvdb::math::Transform::Ptr targetXform = openvdb::math::Transform::createLinearTransform();
             targetXform->preMult(rrot[pos]);
-            targetXform->postTranslate(rtrans[pos]);
+            targetXform->postTranslate(rpositions[pos]);
             openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
 
             int j = 0;
@@ -418,7 +418,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                 center = offset;
                 placed = true;
                 collision = false;
-                if (rtrans.empty())
+                if (rpositions.empty())
                     break;
             }        
         }
@@ -441,7 +441,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
                     globRotMatj = rotMatj;
                     center = offset;
                     placed = true;
-                    if (rtrans.empty())
+                    if (rpositions.empty())
                         break;
                 }        
             }
@@ -450,7 +450,7 @@ bool big_grid::try_dropCoord( openvdb::Coord cijk,Ingredient *ingr )
 
     if (placed)
     {
-        rtrans.push_back(globOffset);
+        rpositions.push_back(globOffset);
         rrot.push_back(globRotMatj);
         results.push_back(ingr);
 

@@ -59,7 +59,7 @@ struct big_grid {
 
     IngradientsDispatcher ingredientsDipatcher;
    
-    std::vector<openvdb::Vec3d> rposition;    //molecules offset
+    std::vector<openvdb::Vec3d> rpositions;    //molecules offset
     std::vector<openvdb::math::Mat4d> rrot;
     std::vector<Ingredient*> results; 
 

@@ -298,13 +298,13 @@ void generatePythonScript( std::string file, std::shared_ptr<big_grid> &g, std::
     resultFile << "pts=[" << std::endl;
     openvdb::Vec3d pos;
     Ingredient * ingr;
-    for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+    for(unsigned i = 0; i < g->rpositions.size(); ++i) { 
         ingr = g->results[i];
         openvdb::math::Transform::Ptr targetXform =
             openvdb::math::Transform::createLinearTransform();
         // Add the offset.
         targetXform->preMult(g->rrot[i]);
-        targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
+        targetXform->postTranslate(g->rpositions[i]);//should be woffset ? nope we apply on xyz not on ijk
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
         for(openvdb::Vec3d const & position : g->results[i]->positions ) {        
             pos = mat.transform(position);
@@ -318,13 +318,13 @@ void generatePythonScript( std::string file, std::shared_ptr<big_grid> &g, std::
     }
     //openvdb::Vec3d pos;
     //sphere * ingr;
-    for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+    for(unsigned i = 0; i < g->rpositions.size(); ++i) { 
         ingr = g->results[i];
         openvdb::math::Transform::Ptr targetXform =
             openvdb::math::Transform::createLinearTransform();
         // Add the offset.
         targetXform->preMult(g->rrot[i]);
-        targetXform->postTranslate(g->rtrans[i]);
+        targetXform->postTranslate(g->rpositions[i]);
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
         resultFile << "matrices[\""<< ingr->name <<"\"].append( " << mat  <<")"<< std::endl;
     }
@@ -405,13 +405,13 @@ void generateCoordFile( std::shared_ptr<big_grid> &g, std::vector<double> &radii
     
     openvdb::Vec3d pos;
     Ingredient * ingr;
-    for(unsigned i = 0; i < g->rtrans.size(); ++i) { 
+    for(unsigned i = 0; i < g->rpositions.size(); ++i) { 
         ingr = g->results[i];
         openvdb::math::Transform::Ptr targetXform =
             openvdb::math::Transform::createLinearTransform();
         // Add the offset.
         targetXform->preMult(g->rrot[i]);
-        targetXform->postTranslate(g->rtrans[i]);//should be woffset ? nope we apply on xyz not on ijk
+        targetXform->postTranslate(g->rpositions[i]);//should be woffset ? nope we apply on xyz not on ijk
         openvdb::math::Mat4d mat = targetXform->baseMap()->getAffineMap()->getMat4();
         int j = 0;
         for(openvdb::Vec3d const & position : g->results[i]->positions ) {        
@@ -512,7 +512,7 @@ int main(int argc, char* argv[])
                 std::cout << "#ingredient completion no more nmol to place "<< ingr->counter << std::endl;
                 grid->ingredientsDipatcher.dropIngredient(ingr);            
             }
-            std::cout << "## Ingredient placed, count:" << grid->rtrans.size() << std::endl;
+            std::cout << "## Ingredient placed, count:" << grid->rpositions.size() << std::endl;
         }            
         else {
             ingr->rejectionCounter++;
@@ -523,7 +523,7 @@ int main(int argc, char* argv[])
             ingr->visited_rejected_coord.push_back(s);
             std::sort(ingr->visited_rejected_coord.begin(), ingr->visited_rejected_coord.end());
             rejection++;  
-            std::cout << "## Ingredient rejected, already placed: " << grid->rtrans.size() << std::endl;
+            std::cout << "## Ingredient rejected, already placed: " << grid->rpositions.size() << std::endl;
             if (DEBUG) std::cout << "# main loop rejected " << ingr->name << ' ' << s << ' ' << grid->num_empty << ' ' << rejection <<  " collide " << collision << std::endl;            
                  
         }  
@@ -534,7 +534,7 @@ int main(int argc, char* argv[])
     //this can be replace by any output.
     
     std::cout << "#distance_grid->activeVoxelCount() " << grid->num_empty << " " <<grid->distance_grid->activeVoxelCount()<<std::endl;
-    std::cout << "#main loop " << grid->rtrans.size() << std::endl;
+    std::cout << "#main loop " << grid->rpositions.size() << std::endl;
 
     clock_t endRun = clock();
     std::cout << "#Running time: " << std::fixed << double(endRun-beginRun)/(60*1000) << std::defaultfloat << std::endl;
