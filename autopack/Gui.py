@@ -663,7 +663,7 @@ class AnalysisTab:
     
     def __init__(self,afgui=None):
         self.afgui = afgui #used for callback
-        from AutoFill.analysis import AnalyseAP
+        from autopack.Analysis import AnalyseAP
         self.aap = AnalyseAP(env=self.afgui.histoVol,
                              viewer=self.afgui.afviewer)
                              

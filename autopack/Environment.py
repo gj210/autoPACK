@@ -1167,6 +1167,9 @@ class Environment(CompartmentList):
             self.setExteriorRecipe(rCyto)
             
         onodes = root.getElementsByTagName("compartment")#Change to Compartment
+        if not len(onodes) :
+            #backward compatibility
+            onodes = root.getElementsByTagName("organelle")#Change to Compartment            
         from autopack.Compartment import Compartment
         for onode in onodes:
             name = str(onode.getAttribute("name"))

@@ -9,14 +9,20 @@ import math
 import numpy
 import csv
 from time import time
-import matplotlib
-# Force matplotlib to not use any Xwindows backend.
-#matplotlib.use('Agg')   
-from matplotlib import pylab
-from matplotlib import pyplot
-import matplotlib.mlab as mlab
-from matplotlib.patches import Circle
-
+try :
+    import matplotlib
+    # Force matplotlib to not use any Xwindows backend.
+    #matplotlib.use('Agg')   
+    from matplotlib import pylab
+    from matplotlib import pyplot
+    import matplotlib.mlab as mlab
+    from matplotlib.patches import Circle
+except :
+    matplotlib=None
+    pylab = None
+    pyplot = None
+    Circle = None
+    mlab = None
 from autopack.GeometryTools import GeometriTools,Rectangle
 
 class AnalyseAP:
