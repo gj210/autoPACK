@@ -751,7 +751,7 @@ class Grid:
         #ptInd = k*(sizex)*(sizey)+j*(sizex)+i;#want i,j,k
         return self.ijkPtIndice[ptInd]
 
-    def checkPointInside(self,pt3d,dist=None):
+    def checkPointInside(self,pt3d,dist=None,jitter=[1,1,1]):
         """
         Check if the given 3d points is inside the grid
         """        
@@ -879,6 +879,7 @@ class Environment(CompartmentList):
 
     def __init__(self,name="H"):
         CompartmentList.__init__(self)
+#        self.compartments = []
         self.verbose = verbose  #Graham added to try to make universal "global variable Verbose" on Aug 28
         self.timeUpDistLoopTotal = 0 #Graham added to try to make universal "global variable Verbose" on Aug 28
         self.name = name        
@@ -1428,23 +1429,23 @@ class Environment(CompartmentList):
         setupStr="""
 import sys
 import os
-#AUTOFILL
-import AutoFill
-localdir = wrkDir = AutoFill.__path__[0]
-from AutoFill.Ingredient import SingleSphereIngr, MultiSphereIngr
-from AutoFill.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
-from AutoFill.Organelle import Organelle
-from AutoFill.Recipe import Recipe
-from AutoFill.HistoVol import Environment
-from AutoFill.autofill_viewer import AFViewer
+#autopack
+import autopack
+localdir = wrkDir = autopack.__path__[0]
+from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr
+from autopack.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
+from autopack.Compartment import Compartment
+from autopack.Recipe import Recipe
+from autopack.Environment import Environment
+from autopack.Graphics import AutopackViewer as AFViewer
 #access the helper
-helper = AutoFill.helper
+helper = autopack.helper
 if helper is None :
     import upy
     helperClass = upy.getHelperClass()
     helper =helperClass()
 #create the viewer
-ViewerType=AutoFill.helper.host    
+ViewerType=autopack.helper.host    
 afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
 #make some option here     
 afviewer.doPoints = False
@@ -1498,14 +1499,14 @@ h1 = Environment()
                     ingrnode = io_ingr.ingrPythonNode(ingr,recipe="cytoplasme")
                     setupStr+=ingrnode
             setupStr+="h1.setExteriorRecipe(cytoplasme)\n"                    
-        for o in self.organelles:
-            setupStr+=o.name+" = Organelle('"+o.name+"',None, None, None,\n"
+        for o in self.compartments:
+            setupStr+=o.name+" = Compartment('"+o.name+"',None, None, None,\n"
             setupStr+="         filename='"+o.filename+"',\n"
             if o.representation is not None:
                 setupStr+="         object_name ='"+o.representation+"',\n"
                 setupStr+="         object_filename ='"+o.representation_file+"'\n"
             setupStr+="         )\n"
-            setupStr+="h1.addOrganelle("+o.name+")\n"
+            setupStr+="h1.addCompartment("+o.name+")\n"
             rs = o.surfaceRecipe
             if rs :
                 setupStr+=o.name+"_surface = Recipe()\n"
@@ -1944,7 +1945,7 @@ h1 = Environment()
         """
         assert isinstance(recipe, Recipe)
         self.exteriorRecipe = recipe
-        recipe.organelle = self#weakref.ref(self)
+        recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = 0
 
@@ -2196,7 +2197,7 @@ h1 = Environment()
 #                molecules.extend(organelle.molecules)
             for i,mingrs in enumerate(self.molecules) :#( jtrans, rotMatj, self, ptInd )
                 nbFreePoints=self.onePrevIngredient(i,mingrs,distance,nbFreePoints,self.molecules)
-            for organelle in self.organelles:
+            for organelle in self.compartments:
                 for i,mingrs in enumerate(organelle.molecules) :#( jtrans, rotMatj, self, ptInd )
                     nbFreePoints=self.onePrevIngredient(i,mingrs,distance,nbFreePoints,organelle.molecules)
 
@@ -3013,7 +3014,7 @@ h1 = Environment()
         #if bullet build the organel rbnode
         if self.placeMethod == "pandaBullet":
             self.setupPanda()
-            for o in self.organelles:
+            for o in self.compartments:
                 if o.rbnode is None :
                     o.rbnode = self.addMeshRBOrganelle(o)
 #==============================================================================
@@ -3719,7 +3720,7 @@ h1 = Environment()
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle ingr
-        for orga in self.organelles:
+        for orga in self.compartments:
             #organelle surface ingr
             rs =  orga.surfaceRecipe
             if rs :
@@ -4089,7 +4090,8 @@ h1 = Environment()
 #        spherenp.setPos(-2, 0, 4)
         return inodenp
         
-    def addMultiCylinderRB(self,ingr,pMat,jtrans,rotMat):   
+    def addMultiCylinderRB(self,ingr,pMat,jtrans,rotMat):
+        helper = autopack.helper
         inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
         inodenp.node().setMass(1.0)
         centT1 = ingr.positions[0]#ingr.transformPoints(jtrans, rotMat, ingr.positions[0])

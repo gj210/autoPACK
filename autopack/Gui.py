@@ -151,6 +151,10 @@ class SubdialogGradient(uiadaptor):
 
         self.SetTitle(self.title)
         
+        self.parent = None
+        if "parent" in kw :
+            self.parent = kw["parent"]
+#        print "mode",self.mode
         if self.mode == "Edit":
             #edit mode we gather the gradient from the environment
             self.gradient =  self.histoVol.gradients[self.gname]
@@ -315,12 +319,13 @@ class SubdialogIngrdient(uiadaptor):
         self.Widget["labeloptions"]={}
         self.Widget["edit"]={}
         #what are the option we want from the ingredient
-        self.listAttrOrdered = ["rejectionThreshold","nbJitter", "perturbAxisAmplitude", "principalVector","jitterMax",#"principalVector",
+        self.listAttrOrdered = ["encapsulatingRadius","rejectionThreshold","nbJitter", 
+        "perturbAxisAmplitude", "principalVector","jitterMax",#"principalVector",
          "useRotAxis","rotAxis","rotRange",                      
          "packingMode","gradient","placeType",
-         "isAttractor","weight","proba_binding","proba_not_binding",
+         "use_mesh_rb","isAttractor","weight","proba_binding","proba_not_binding",
          "cutoff_boundary","cutoff_surface",
-         "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold","use_mesh_rb","convex_hull"]
+         "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold",]
 
         dic={"int":"inputInt","float":"inputFloat","bool":"checkbox","liste":"pullMenu","filename":"inputStr"}
         dic2={"int":"int","float":"float","bool":"int","liste":"int","filename":"str"}  
@@ -690,7 +695,12 @@ class AnalysisTab:
         self.widget["btn_save_closest_dist"]=self.afgui._addElemt(name="savecdist",
                         width=150,height=10,type="button",icon=None,
                     action=self.saveclosestdist,label="Compute and Save (.csv)",
-                                     variable=self.afgui.addVariable("int",0)) 
+                                     variable=self.afgui.addVariable("int",0))
+        self.widget["export_result"]=self.afgui._addElemt(name="export_result",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.export_result,label="Export Result as ",
+                                     variable=self.afgui.addVariable("int",0))
+                                     
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
         #if volume rendering support could display a volume for distance array
@@ -750,6 +760,9 @@ class AnalysisTab:
     def saveclosestdist(self,):
         d=self.aap.getClosestDistance(usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
         self.aap.save_csv(d,"/Users/ludo/closest_distance.csv")
+
+    def export_result(self,):
+        passs
         
 #create subdialog here
 #could be in different file
@@ -875,16 +888,17 @@ class SubdialogFiller(uiadaptor):
                               "saveResult",#13
                               "resultfile",#14
                               "gridPts",#15
-                              "spherePrimitive"#16
+                              "spherePrimitive",#16
+                              "ingrLookForNeighbours"#17
                               ]
         self.listAFo["Simple"]=[0,1,2,6,8,13,14]
-        self.listAFo["Intermediate"]=[0,1,2,4,5,6,8,9,13,14]
-        self.listAFo["Advanced"]= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-        self.listAFo["Debug"]=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]                   
+        self.listAFo["Intermediate"]=[0,1,2,4,5,6,8,9,13,14,17]
+        self.listAFo["Advanced"]= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17]
+        self.listAFo["Debug"]=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]                   
         #add here the optnios you want
 #        for option in self.listAFoptions:#self.histoVol.OPTIONS:
         print ("self.guimode",self.guimode)
-        for i in self.listAFo["Debug"]:
+        for i in self.listAFo[self.guimode]:#all options
             option =  self.listAFoptions[i]
             if option not in self.histoVol.OPTIONS:
                 if option == "prevIngr":                                   
@@ -1301,33 +1315,54 @@ class SubdialogFiller(uiadaptor):
         ingrname=ingr.name
         parentname =  "Meshs_"+ingrname.replace(" ","_")
         parent = self.helper.getObject(parentname)
-        print (ingrname,parentname,parent)
+#        print ("Delete",ingrname,parentname,parent)
         if parent is not None :
-            instances = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in instances]
-            self.helper.deleteObject(parent) #is this dleete the child ?
+            if self.helper.host == "dejavu":
+                pass
+                #self.helper.deleteObject(parent)
+            else :
+                instances = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in instances]
+                self.helper.deleteObject(parent) #is this dleete the child ?
         #need to do the same for cylinder
-        ingr.ipoly = None
+        if self.helper.host == "dejavu":
+            ingr.ipoly.Set(instanceMatrices=[[[ 1.,  0.,  0.,  0.],
+       [ 0.,  1.,  0.,  0.],
+       [ 0.,  0.,  1.,  0.],
+       [ 0.,  0.,  0.,  1.]]], visible=1)
+            ingr.mesh_3d  = ingr.mesh
+            #what about sphere gemetry ingredient
+            from DejaVu.Spheres import Spheres
+            if isinstance(ingr.mesh,Spheres):
+                ingr.mesh.Set(centers=[])
+        else :
+            ingr.ipoly = None
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
         if self.afviewer.doSpheres :
-            orga = ingr.recipe().compartment()
+            orga = ingr.recipe.compartment
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
 #            print (name,parent)            
             if parent is not None :
-                instances = self.helper.getChilds(parent)
-                [self.helper.deleteObject(o) for o in instances]
-                self.helper.deleteObject(parent)
+                if self.helper.host == "dejavu":
+                    self.helper.deleteObject(parent)
+                else :
+                    instances = self.helper.getChilds(parent)
+                    [self.helper.deleteObject(o) for o in instances]
+                    self.helper.deleteObject(parent)
             name = orga.name+"_Cylinders_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
 #            print (name,parent)            
             if parent is not None :
-                instances = self.helper.getChilds(parent)
-                [self.helper.deleteObject(o) for o in instances]
-                self.helper.deleteObject(parent)
+                if self.helper.host == "dejavu":
+                    self.helper.deleteObject(parent)
+                else :
+                    instances = self.helper.getChilds(parent)
+                    [self.helper.deleteObject(o) for o in instances]
+                    self.helper.deleteObject(parent)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().compartment()
+            o = ingr.recipe.compartment
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
@@ -1343,9 +1378,13 @@ class SubdialogFiller(uiadaptor):
         """ will clear everything related to self.recipe"""
         parent = self.helper.getObject(self.recipe)
         if parent is not None :
-            instances = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in instances]
-            self.helper.deleteObject(parent)
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent)
+            else :
+                instances = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in instances]
+                self.helper.deleteObject(parent)
+            #if dejavu can delete the parent directly
 
     def clearAll(self,*args):
         #shoud remove everything
@@ -1397,8 +1436,20 @@ class SubdialogFiller(uiadaptor):
         parent = self.helper.getObject(parentname)
 #        print (parentname,parent)
         if parent is not None :
-            static = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in static]
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent)
+            else :
+                static = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in static]
+        parentname =  "staticMesh"
+        parent = self.helper.getObject(parentname)
+#        print (parentname,parent)
+        if parent is not None :
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent)
+            else :
+                static = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in static]
         
         self.clearOrgaAdded()
         self.clearIngrAdded()
@@ -1408,19 +1459,28 @@ class SubdialogFiller(uiadaptor):
         parent = self.helper.getObject(parentname)
 #        print (parentname,parent)
         if parent is not None :
-            static = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in static]
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent)
+            else :
+                static = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in static]
 
         parent = self.helper.getObject(self.recipe+"GridPointHider")
         if parent is not None :
-            point = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in point]
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent)
+            else :
+                point = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in point]
         
         for orga in self.histoVol.compartments:  
             parent = self.helper.getObject(orga.name+"GridPointHider")
             if parent is not None :
-                point = self.helper.getChilds(parent)
-                [self.helper.deleteObject(o) for o in point]
+                if self.helper.host == "dejavu":
+                    self.helper.deleteObject(parent)
+                else :
+                    point = self.helper.getChilds(parent)
+                    [self.helper.deleteObject(o) for o in point]
             
     def togleRecipeIngrInc(self,recipe, includeTog):
         if recipe :
@@ -1755,6 +1815,9 @@ class SubdialogFiller(uiadaptor):
         else :
             gridFileIn=self.gridresultfile
         print ("##############",fbuild,gridFileIn,gridFileOut)
+        #check the innermethod  
+        if type(self.histoVol.innerGridMethod) != str :
+            self.histoVol.innerGridMethod = "bhtree"
         self.histoVol.buildGrid(boundingBox=bb,gridFileIn=gridFileIn,rebuild=fbuild ,
                       gridFileOut=gridFileOut,previousFill=pFill)
         #should use some cache for the box here,maybe compreto current one
@@ -1780,8 +1843,20 @@ class SubdialogFiller(uiadaptor):
             parent = self.helper.getObject(parentname)
     #        print (parentname,parent)
             if parent is not None :
-                static = self.helper.getChilds(parent)
-                [self.helper.deleteObject(o) for o in static]
+                if self.helper.host=="dejavu":
+                    self.helper.deleteObject(parent)
+                else :
+                    static = self.helper.getChilds(parent)
+                    [self.helper.deleteObject(o) for o in static]
+            parentname =  "staticMesh"
+            parent = self.helper.getObject(parentname)
+            print (parentname,parent)
+            if parent is not None :
+                if self.helper.host=="dejavu":
+                    self.helper.deleteObject(parent)
+                else :
+                    static = self.helper.getChilds(parent)
+                    [self.helper.deleteObject(o) for o in static]
         print ('time to display', time()-t2)
         #self.setVal(self.LABELS["Time"] ,"Time to fill = %0.5f sec" % (t2-t1))
         self.helper.resetProgressBar()
@@ -2517,11 +2592,21 @@ class SubdialogViewer(uiadaptor):
         parent = self.helper.getObject(parentname)
         print (ingrname,parentname,parent)
         if parent is not None :
-            instances = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in instances]
-            self.helper.deleteObject(parent) #is this dleete the child ?
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent) 
+            else :
+                instances = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in instances]
+                self.helper.deleteObject(parent) #is this dleete the child ?
         #need to do the same for cylinder
-        ingr.ipoly = None
+        if self.helper.host == "dejavu":
+            ingr.ipoly.Set(instanceMatrices=[], visible=1)
+            #print "rest matrice", ingr.ipoly,ingr.mesh, ingr.mesh_3d
+            ingr.mesh.Set(instanceMatrices=[], visible=1)
+            #print "rest matrice",ingr.mesh 
+        else :
+            ingr.ipoly = None
+            del ingr.ipoly
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
         if self.afviewer.doSpheres :
             orga = ingr.recipe().compartment()
@@ -2578,9 +2663,12 @@ class SubdialogViewer(uiadaptor):
         """ will clear everything related to self.recipe"""
         parent = self.helper.getObject(self.recipe)
         if parent is not None :
-            instances = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in instances]
-            self.helper.deleteObject(parent)
+            if self.helper.host == "dejavu":
+                self.helper.deleteObject(parent) 
+            else :
+                instances = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in instances]
+                self.helper.deleteObject(parent)
 
     def reMake (self,*args):
         """ same effect as AFGui make ? but only curren ? I think we 
@@ -3370,6 +3458,7 @@ Copyright: Graham Johnson ©2010
             liste_version.sort()
             self.resetPMenu(self.WidgetViewer["recipeversion"] )
             [self.addItemToPMenu(self.WidgetViewer["recipeversion"],n) for n in liste_version]
+            self.setVal(self.WidgetViewer["recipeversion"],0)
 
     def updateRVersionFiller(self,*args):
         recipe = self.getVal(self.WidgetFiller["menuscene"])
@@ -3379,6 +3468,7 @@ Copyright: Graham Johnson ©2010
             liste_version.sort()
             self.resetPMenu(self.WidgetFiller["recipeversion"] )
             [self.addItemToPMenu(self.WidgetFiller["recipeversion"],n) for n in liste_version]
+            self.setVal(self.WidgetFiller["recipeversion"],0)
     
 
         

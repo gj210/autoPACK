@@ -78,6 +78,7 @@ from .Recipe import Recipe
 #print "import AutoFill"
 import autopack
 from autopack import checkURL
+from RAPID import RAPIDlib
 
 AFDIR = autopack.__path__[0]
 
@@ -132,6 +133,7 @@ class  Compartment(CompartmentList):
         if "fnormals" in kw :
             self.fnormals = kw["fnormals"]
         self.mesh = None
+        self.rbnode = None
         self.gname= ""
         self.ghost =False
         self.bb = None
@@ -162,8 +164,8 @@ class  Compartment(CompartmentList):
         self.surfaceRecipe = None
         self.surfaceVolume = 0.0
         self.interiorVolume = 0.0
-        self.closed = False
-        # list of grid point indices inside compartment
+        self.rapid_model = None
+        # list of grid point indices inside organelle
         self.insidePoints = None
         # list of grid point indices on compartment surface
         self.surfacePoints = None
@@ -220,7 +222,20 @@ class  Compartment(CompartmentList):
 #        if helper is not None:
 #            helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])
         return geom
-        
+ 
+    def create_rapid_model(self):
+        self.rapid_model = RAPIDlib.RAPID_model()
+        #need triangle and vertices
+        #faces,vertices,vnormals = helper.DecomposeMesh(self.mesh,
+        #                   edit=False,copy=False,tri=True,transform=True) 
+        self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+                   
+    def get_rapid_model(self):
+        if (self.rapid_model is None ):
+            self.create_rapid_model()
+        return self.rapid_model 
+
+       
     def getMesh(self,filename=None,rep=None,**kw):
         """
         Retrieve the compartment 3d representaton from the given filename
@@ -233,13 +248,14 @@ class  Compartment(CompartmentList):
         geom = None
         gname = self.name
         helper = autopack.helper
-        parent=helper.getObject("autopackHider")
-        if parent is None:
-            parent = helper.newEmpty("autopackHider")
+        if helper is not None :
+            parent=helper.getObject("autopackHider")
+            if parent is None:
+                parent = helper.newEmpty("autopackHider")
         if rep is not None :
             gname =rep 
-            parent=helper.getObject('O%s'%self.name)
-        #print ("compartment",filename,gname,rep)
+            if helper is not None :parent=helper.getObject('O%s'%self.name)
+        #print ("organelle",filename,gname,rep)
         if filename.find("http") != -1 or filename.find("ftp")!= -1 :
             try :
                 import urllib.request as urllib# , urllib.parse, urllib.error
@@ -300,7 +316,7 @@ class  Compartment(CompartmentList):
                 helper.read(filename)
                 geom = helper.getObject(gname)
                 #reparent to the fill parent
-                if helper.host == "3dsmax" :
+                if helper.host == "3dsmax" or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing
                 if helper.host != "c4d" and rep == None  and helper.host != "softimage":
                     #need to rotate the transform that carry the shape
@@ -316,19 +332,31 @@ class  Compartment(CompartmentList):
 #            return None
         elif fileExtension == ".dae":
             #use the host helper if any to read
-            if helper is not None:#neeed the helper
+            if helper is None :
+                from upy.dejavuTk.dejavuHelper import dejavuHelper
+                #need to get the mesh directly. Only possible if dae or dejavu format
+                #get the dejavu heper but without the View, and in nogui mode
+                h =  dejavuHelper(vi="nogui")
+                dgeoms = h.read(filename)
+                v,vn,f = dgeoms.values()[0]["mesh"]
+                vn = self.getVertexNormals(v,f)                
+                return f,v,vn
+            else : #if helper is not None:#neeed the helper
                 helper.read(filename)
                 geom = helper.getObject(gname)
                 print ("should have read...",gname,geom,parent)
 #                helper.update()
-                if helper.host == "3dsmax" :
+                if helper.host == "3dsmax" or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing
                 if helper.host != "c4d"  and helper.host != "dejavu"  and helper.host != "softimage":
                     #need to rotate the transform that carry the shape
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
                 if helper.host =="softimage"  :
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0],primitive=True)#need to rotate the primitive                    
-#                p=helper.getObject("autopackHider")
+#                if helper.host =="c4d"  :
+                    #remove the normaltag if exist
+#                    helper.removeNormalTag(geom)
+#                p=helper.getObject("AutoFillHider")
 #                if p is None:
 #                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
@@ -423,7 +451,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
         self.innerRecipe.number= self.number
-        recipe.compartment = weakref.ref(self)
+        recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
 
@@ -433,7 +461,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
         self.surfaceRecipe.number= self.number
-        recipe.compartment = weakref.ref(self)
+        recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
 
@@ -578,6 +606,26 @@ class  Compartment(CompartmentList):
         if self.innerRecipe:
             mini2, maxi2 = self.innerRecipe.getMinMaxProteinSize()
         return min(mini1, mini2), max(maxi1, maxi2)
+
+    def getVertexNormals(self, vertices, faces):
+        vnormals = vertices[:]
+        face = [[0,0,0],[0,0,0],[0,0,0]]
+        v = [[0,0,0],[0,0,0],[0,0,0]]        
+        for f in faces:
+            for i in range(3) :
+                face [i] = vertices[f[i]]
+            for i in range(3) :
+                v[0][i] = face[1][i]-face[0][i]
+                v[1][i] = face[2][i]-face[0][i]                
+            normal = vcross(v[0],v[1])
+            n = vlen(normal)
+            if n == 0. :
+                n1=1.
+            else :
+                n1 = 1./n
+            for i in range(3) :
+                vnormals[f[i]] = [normal[0]*n1, normal[1]*n1, normal[2]*n1]
+        return vnormals #areas added by Graham
 
     def getFaceNormals(self, vertices, faces,fillBB=None):
         """compute the face normal of the compartment mesh"""
@@ -779,6 +827,31 @@ class  Compartment(CompartmentList):
 
         self.ogsurfacePoints = points
         self.ogsurfacePointsNormals = normals
+
+    def checkPointInside(self,point,diag):
+        inside = False
+        insideBB  = self.checkPointInsideBB(point)#cutoff?
+        r=False
+        if insideBB:
+            helper = AutoFill.helper
+            geom =   helper.getObject(self.gname)      
+            if geom is None :
+                self.gname = '%s_Mesh'%self.name            
+                geom = helper.getObject(self.gname)  
+            center = helper.getTranslation( geom )
+            intersect, count = helper.raycast(geom, point, center, diag, count = True )
+            r= ((count % 2) == 1)
+            intersect2, count2 = helper.raycast(geom, point, point+[0.,0.,1.1], diag, count = True )
+            intersect3, count3 = helper.raycast(geom, point, point+[0.,1.1,0.], diag, count = True )
+            if r :
+               if (count2 % 2) == 1 and (count3 % 2) == 1 :
+                   r=True
+               else : 
+                   r=False
+        if r : # odd inside
+            inside = True
+        return inside
+
 
     #Jordan Curve Theorem
     def BuildGridJordan(self, histoVol,ray=1):

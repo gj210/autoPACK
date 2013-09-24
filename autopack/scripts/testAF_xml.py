@@ -21,16 +21,16 @@ import os
 import sys
 sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs")
 sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/PIL/")
-import AutoFill
+import autopack
 #wrkDir = AutoFill.__path__[0]
-localdir = wrkDir = AutoFill.__path__[0]
+localdir = wrkDir = autopack.__path__[0]
 
-from AutoFill.HistoVol import Environment
-from AutoFill.autofill_viewer import AFViewer
-from AutoFill.analysis import AnalyseAP
+from autopack.Environment import Environment
+from autopack.Graphics import AutopackViewer as AFViewer
+from autopack.Analysis import AnalyseAP
 TWOD = 1
 NOGUI = 1
-helper = AutoFill.helper
+helper = autopack.helper
 if helper is None and not NOGUI:
     import upy
     helperClass = upy.getHelperClass()
@@ -38,8 +38,8 @@ if helper is None and not NOGUI:
 else :
     import upy
     helperClass = upy.getHelperClass()
-    helper =helperClass(vi="nogui")
-AutoFill.helper = helper
+    helper = helperClass(vi="nogui")
+autopack.helper = helper
 #filename = "/Users/ludo/Desktop/cell.xml"
 #filename = "/Users/ludo/DEV/autofill_svn/trunk/AutoFillClean/autoFillRecipeScripts/2DsphereFill/Test_Spheres2D1.0.xml"
 filename = "/Users/ludo/Desktop/cell_hack.xml"

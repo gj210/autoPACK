@@ -413,7 +413,7 @@ class IngredientInstanceDrop:
         self.bb=( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
         #maybe get bb from mesh if any ?
         if self.ingredient.mesh is not None :
-            self.bb = AutoFill.helper.getBoundingBox(self.ingredient.mesh)
+            self.bb = autopack.helper.getBoundingBox(self.ingredient.mesh)
             for i in range(3):
                 self.bb[0][i]=self.bb[0][i]+self.position[i]
                 self.bb[1][i]=self.bb[1][i]+self.position[i]
@@ -720,7 +720,7 @@ class Ingredient(Agent):
         self.moving_geom = None
         self.rb_nodes = []#store rbnode. no more than X ?
         self.limit_nb_nodes = 50
-        self.vi = AutoFill.helper
+        self.vi = autopack.helper
         self.minRadius = 0
         self.encapsulatingRadius = 0
         self.maxLevel = 1
@@ -955,7 +955,7 @@ class Ingredient(Agent):
                            # of spheres in next level covererd by this sphere
         # ...
         # int: number of spheres in second level
-        helper = AutoFill.helper
+        helper = autopack.helper
         reporthook = None
         if helper is not None:        
             reporthook=helper.reporthook
@@ -964,7 +964,7 @@ class Ingredient(Agent):
             name = sphereFile.split("/")[-1]
             tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+"sphereTree"+os.sep+name
             #check if exist first
-            if not os.path.isfile(tmpFileName) or AutoFill.forceFetch :
+            if not os.path.isfile(tmpFileName) or autopack.forceFetch :
                 try :
                     import urllib.request as urllib
                 except :
@@ -1050,7 +1050,7 @@ class Ingredient(Agent):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
         if self.mesh :
-            helper = AutoFill.helper
+            helper = autopack.helper
             #should get the mesh
             m = helper.getMesh(helper.getName(self.mesh))
             faces,vertices,vnormals = helper.DecomposeMesh(m,
@@ -1197,7 +1197,7 @@ class Ingredient(Agent):
                 if helper.host == "c4d" and self.coordsystem == "right":
                     helper.resetTransformation(geom)
                     helper.rotateObj(geom,[0.0,math.pi/2.0,math.pi/2.0],primitive=True)
-                p=helper.getObject("AutoFillHider")
+                p=helper.getObject("autopackHider")
                 if p is None:
                     p = helper.newEmpty("autopackHider")
                     if helper.host.find("blender") == -1 :
@@ -2087,7 +2087,7 @@ class Ingredient(Agent):
         if self.compNum == 0 :
             organelle = self.histoVol
         else :
-            organelle = self.histoVol.organelles[abs(self.compNum)-1]
+            organelle = self.histoVol.compartments[abs(self.compNum)-1]
         compNum = self.compNum
 #        print "compNum ",compNum
         
@@ -2123,7 +2123,7 @@ class Ingredient(Agent):
 #        elif compNum == 0 :
         else :
             #chec oustide / inside depdening the principalVector ?
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 #add some jitter to the cutoff ?
                 closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#returnNullIfFail
                 #print closest        
@@ -2435,7 +2435,7 @@ class Ingredient(Agent):
             nodes.append([node,numpy.array(jtrans),numpy.array(rotMat[:3,:3],'f')])
         #append organelle rb nodes
         if self.compNum < 0 or self.compNum == 0 :     
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 node = o.get_rapid_model() 
                 if node is not None : 
                     nodes.append([node,numpy.zeros((3), 'f'),numpy.zeros((3, 3), 'f')])
@@ -2513,7 +2513,7 @@ class Ingredient(Agent):
             nodes.append(rbnode)
         #append organelle rb nodes
         if self.compNum < 0 or self.compNum == 0 :     
-            for o in self.histoVol.organelles:
+            for o in self.histoVol.compartments:
                 if o.rbnode is not None : 
                     nodes.append(o.rbnode)
 #        print len(nodes),nodes
@@ -2556,7 +2556,7 @@ class Ingredient(Agent):
               sphCenters=None,  sphRadii=None, sphColors=None):
         success = False
         #print self.placeType
-        self.vi = AutoFill.helper
+        self.vi = autopack.helper
 #        if histoVol.afviewer != None: 
 #            self.vi = histoVol.afviewer.vi
         self.histoVol=histoVol        
@@ -2605,10 +2605,10 @@ class Ingredient(Agent):
         if self.compNum == 0 :
             organelle = histoVol
         else :
-            organelle = histoVol.organelles[abs(self.compNum)-1]
+            organelle = histoVol.compartments[abs(self.compNum)-1]
         success = False
         #print self.placeType
-        self.vi = AutoFill.helper
+        self.vi = autopack.helper
 #        if histoVol.afviewer != None: 
 #            self.vi = histoVol.afviewer.vi
         self.histoVol=histoVol        
@@ -3333,7 +3333,7 @@ class Ingredient(Agent):
         if self.compNum == 0 :
             organelle = histoVol
         else :
-            organelle = histoVol.organelles[abs(self.compNum)-1]
+            organelle = histoVol.compartments[abs(self.compNum)-1]
         compNum = self.compNum
         radius = self.minRadius
         runTimeDisplay = histoVol.runTimeDisplay
@@ -4320,7 +4320,7 @@ class Ingredient(Agent):
         if self.compNum == 0 :
             organelle = histoVol
         else :
-            organelle = histoVol.organelles[abs(self.compNum)-1]
+            organelle = histoVol.compartments[abs(self.compNum)-1]
         compNum = self.compNum
         radius = self.minRadius
         runTimeDisplay = histoVol.runTimeDisplay
@@ -5230,10 +5230,10 @@ class MultiCylindersIngr(Ingredient):
             d = numpy.array(bb[1])-numpy.array(bb[0])
             s = numpy.sum(d*d)
             self.length  = math.sqrt(s ) #diagonal
-#        if self.mesh is None and AutoFill.helper is not None :
+#        if self.mesh is None and autopack.helper is not None :
 #            #build a cylinder and make it length uLength, radius radii[0]
-#            self.mesh = AutoFill.helper.Cylinder(self.name+"_basic",radius=self.radii[0][0],
-#                                       length=self.uLength,parent="AutoFillHider")[0]
+#            self.mesh = autopack.helper.Cylinder(self.name+"_basic",radius=self.radii[0][0],
+#                                       length=self.uLength,parent="autopackHider")[0]
 
         self.KWDS["useLength"]={}
 
@@ -5345,12 +5345,13 @@ class GrowIngrediant(MultiCylindersIngr):
         self.walkingType = "stepbystep" #or atonce
         #create a simple geom if none pass?        
         
-        if self.mesh is None and AutoFill.helper is not None :
-            #build a cylinder and make it length uLength, radius radii[0]
-            #this mesh is used bu RAPID for collision
-            self.mesh = AutoFill.helper.Cylinder(self.name+"_basic",
+        if self.mesh is None and autopack.helper is not None  :
+            if not autopack.helper.nogui :
+                #build a cylinder and make it length uLength, radius radii[0]
+                #this mesh is used bu RAPID for collision
+                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 5, parent="AutoFillHider")[0]
+                                res= 5, parent="autopackHider")[0]
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -5861,7 +5862,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         histoVol.nb_ingredient+=1
 #                        r,j=self.getJtransRot(numpy.array(pt2).flatten(),newPt)
                         histoVol.rTrans.append(numpy.array(pt2).flatten())
-#                        m=AutoFill.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
+#                        m=autopack.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
                         histoVol.rRot.append(numpy.array(r))#rotMatj 
                         histoVol.rIngr.append(self)
                         histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
@@ -6018,7 +6019,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         histoVol.nb_ingredient+=1
 #                        r,j=self.getJtransRot(numpy.array(pt2).flatten(),newPt)
                         histoVol.rTrans.append(numpy.array(jtrans).flatten())
-#                        m=AutoFill.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
+#                        m=autopack.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
                         histoVol.rRot.append(numpy.array(rotMatj))#rotMatj 
                         histoVol.rIngr.append(self)
                         histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
@@ -6093,7 +6094,7 @@ class GrowIngrediant(MultiCylindersIngr):
         counter = 0
         mask=None
         if self.walkingMode == "lattice" and self.compNum > 0:
-            o = self.histoVol.organelles[abs(self.compNum)-1]
+            o = self.histoVol.compartments[abs(self.compNum)-1]
             v=o.surfacePointsCoords
             mask=numpy.ones(len(v),int)
         gobackpoint=startingPoint
@@ -6321,7 +6322,7 @@ class GrowIngrediant(MultiCylindersIngr):
 
     def getFirstPoint(self,ptInd,seed=0):
         if self.compNum>0 : #surfacegrowing: first point is aling to the normal:
-            v2 = self.histoVol.organelles[abs(self.compNum)-1].surfacePointsNormals[ptInd]
+            v2 = self.histoVol.compartments[abs(self.compNum)-1].surfacePointsNormals[ptInd]
             secondPoint = numpy.array(self.startingpoint)+numpy.array(v2)*self.uLength
         else :               
             #randomize the orientation in the hemisphere following the direction.
@@ -6387,7 +6388,7 @@ class GrowIngrediant(MultiCylindersIngr):
 #        self.nbMol = 1               
 #        print("JitterPlace ingr Grow....................................................................")
         success = True
-        self.vi = AutoFill.helper
+        self.vi = autopack.helper
 #        if histoVol.afviewer != None :
 #            self.vi = histoVol.afviewer.vi
         afvi = histoVol.afviewer
@@ -6400,7 +6401,7 @@ class GrowIngrediant(MultiCylindersIngr):
         #self.startingpoint = previousPoint = startingPoint = numpy.array(histoVol.grid.masterGridPositions[ptInd])
         #jitter the first point
         if self.compNum > 0 :
-            normal = histoVol.organelles[abs(self.compNum)-1].surfacePointsNormals[ptInd]
+            normal = histoVol.compartments[abs(self.compNum)-1].surfacePointsNormals[ptInd]
         self.startingpoint = previousPoint = startingPoint =self.jitterPosition(numpy.array(histoVol.grid.masterGridPositions[ptInd]), histoVol.smallestProteinSize, normal = normal)
 
 #        print ("PTID ", numpy.array(histoVol.grid.masterGridPositions[ptInd]), "first ",startingPoint)
@@ -6810,10 +6811,10 @@ class IOingredientTool:
         if filename is not None :
             if filename.find("http") != -1 or filename.find("ftp")!= -1 :
                 name = filename.split("/")[-1]
-                tmpFileName = AFDIR+os.sep+"autoFillRecipeScripts"+os.sep+recipe+os.sep+"ingredients"+os.sep+name
+                tmpFileName = AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients"+os.sep+name
                 #check the folder ingredients
-                if not os.path.exists(AFDIR+os.sep+"autoFillRecipeScripts"+os.sep+recipe+os.sep+"ingredients"):
-                    os.makedirs(AFDIR+os.sep+"autoFillRecipeScripts"+os.sep+recipe+os.sep+"ingredients")
+                if not os.path.exists(AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients"):
+                    os.makedirs(AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients")
                 #check if exist first
                 if not os.path.isfile(tmpFileName) or autopack.forceFetch :
                     try :
@@ -6914,8 +6915,8 @@ class IOingredientTool:
         return inrStr
 
     def makeIngredient(self,**kw):
-#        from AutoFill.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
-#        from AutoFill.Ingredient import MultiCylindersIngr, GrowIngrediant
+#        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
+#        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
         ingr = None
 
         if kw["Type"]=="SingleSphere":

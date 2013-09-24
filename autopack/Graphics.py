@@ -623,7 +623,7 @@ class AutopackViewer:
 #                self.displayCompartmentPoints(orga)
 
     def displayIngrSpheres(self,ingr,verts,radii,visible=1):
-        o = ingr.recipe().compartment()
+        o = ingr.recipe.compartment
         if len(verts[ingr]):
             if ingr.modelType=='Spheres':
                 name = o.name+"_Spheres_"+ingr.name.replace(" ","_")
@@ -653,10 +653,36 @@ class AutopackViewer:
         #just use the realtime capbility
         if isinstance(ingr,GrowIngrediant):
             return
-        o = ingr.recipe().compartment()
+        o = ingr.recipe.compartment
         v = numpy.array(verts[ingr])
         f = numpy.arange(len(v))
         f.shape=(-1,2)
+        if isinstance(ingr,GrowIngrediant):
+            if ingr.use_rbsphere : 
+                for i in range(ingr.nbCurve):
+                    name = o.name+str(i)+"_Spheres_"+ingr.name.replace(" ","_")
+                    parent = self.vi.getObject(name)
+                    names=self.histo.FillName[self.histo.cFill]+"S"+ingr.name.replace(" ","_")
+                    if parent is None:
+                        parent=self.vi.newEmpty(name,parent=self.orgaToMasterGeom[ingr])
+                    pos=[]
+                    rad=[]
+                    for k in range(len(ingr.listePtLinear[i])-1) :
+                        pt1 = ingr.listePtLinear[i][k]
+                        pt2 = ingr.listePtLinear[i][k+1]
+                        r,pts = ingr.getInterpolatedSphere(pt1,pt2)
+                        pos.extend(pts)
+                        rad.extend(r)                    
+                    if not hasattr(ingr,'isph') or ingr.isph is None:
+                        ingr.isph=self.vi.instancesSphere(names,pos,rad,
+                                    self.pesph,[ingr.color],self.sc,parent=parent)
+                                    
+                    else :
+                        self.vi.updateInstancesSphere(names,ingr.isph,pos,rad,
+                                    self.pesph,[ingr.color],self.sc,
+                                    parent=parent,delete=True)
+                                    
+                return
         name = o.name+"_Cylinders_"+ingr.name.replace(" ","_")
         if self.ViewerType == 'dejavu':                
             cyl = self.vi.Cylinders(name, inheritMaterial=0,
@@ -704,12 +730,13 @@ class AutopackViewer:
     def displayIngrGrow(self,ingr,visible=1):
         print ("displayIngrGrow",ingr,ingr.nbCurve)
         #how to restore / store gro ingedient
-        o = ingr.recipe().compartment()
+        o = ingr.recipe.compartment
         parent=self.orgaToMasterGeom[ingr]
         pobj = None
         if ingr.unitParent is not None:
             pobj=ingr.unitParent
         for i in range(ingr.nbCurve):
+            print ("build curve ",i)
             name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
             snake = self.helper.getObject(name)
             if snake is None :
@@ -731,10 +758,42 @@ class AutopackViewer:
                     self.vi.updatePathDeform(modifier,object=actine,spline=snake)
                 #what about a reall long one -> cloner or instance
             else :
-                    circle = self.vi.build_2dshape(name+"_shape",opts=[ ingr.encapsulatingRadius,])
-                    extruder,shape = self.vi.extrudeSpline(snake,shape=circle)#shoud use the radius for a circle ?
+                if self.vi.host.find("blender") != -1 :
+                    circle = self.vi.build_2dshape(name+"_shape",opts=[ ingr.encapsulatingRadius,])[0]
+                    extruder,shape = self.vi.extrudeSpline(snake,shape=circle,parent=parent)#shoud use the radius for a circle ?
                     #reparent ?
-                    
+                    #should wereparent the extruder
+
+    def delIngredientGrow(self,ingr):
+        print ("delIngrGrow",ingr,ingr.nbCurve)
+        o = ingr.recipe.compartment
+#        o = ingr.recipe().organelle()
+        parent=self.orgaToMasterGeom[ingr]
+        pobj = None
+        if ingr.unitParent is not None:
+            pobj=ingr.unitParent
+        for i in range(ingr.nbCurve):
+            name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
+            snake = self.helper.getObject(name)
+            if snake is not None : 
+                self.helper.deleteObject(snake)            
+            if pobj is not None :
+                name = o.name+str(i)+"_unit_"+ingr.name.replace(" ","_")
+                #pathDeform instance of one turn using snake
+                actine = self.helper.getObject(name)
+                if actine is not None :
+                   self.helper.deleteObject(actine)
+                modifier = self.helper.getObject(name+"pd")
+                if modifier is not None :
+                    self.helper.deleteObject(modifier)
+                #what about a reall long one -> cloner or instance
+            else :
+                #delete the extruder what is the name of the extruder and how delete it.
+                name = "ext_"+o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
+                extruder = self.helper.getObject(name)                   
+                if extruder is not None :
+                   self.helper.deleteObject(extruder)
+                   
     def prepareIngrediant(self,):
        #cyto ingr
         r =  self.histo.exteriorRecipe
@@ -764,7 +823,7 @@ class AutopackViewer:
                     ingr.mesh_3d = ingr.mesh
                     
     def createIngrMesh(self,ingr):
-        o = ingr.recipe().compartment()
+        o = ingr.recipe.compartment
         geom = ingr.mesh   
         print ("createIngrMesh ",ingr.name, ingr.mesh, self.helper.getName(ingr.mesh) )
 # START New section added by Graham on July 16, 2012 replaces section below
@@ -900,7 +959,7 @@ class AutopackViewer:
         if ingredient is None :
             print ("no ingredient provided")
             return
-        o =  ingredient.recipe().compartment()
+        o =  ingredient.recipe.compartment
 #        comp = ingredient.compNum
         verts = []
         radii = []
@@ -925,7 +984,7 @@ class AutopackViewer:
         if doMesh and matrices:
             dejavui = False
             #recipe can be orga name or cyto_
-            #o =  ingredient.recipe().compartment()
+            #o =  ingredient.recipe.compartment
 #            geom = ingredient.mesh     
             if self.ViewerType != 'dejavu':
                 polygon = ingredient.mesh_3d
@@ -1269,7 +1328,7 @@ class AutopackViewer:
         #what about the ptId
         #molecules is [pos, rot, ingr, ptInd]
         #whats the compartiments, so the ingr have to be reviously add to a compartiments
-        orga = ingr.recipe().compartment()#what if it is cytoplsme?
+        orga = ingr.recipe.compartment#what if it is cytoplsme?
         #res = o.molecules[:]
         res=[]
         if self.histo.grid is None :
@@ -1817,7 +1876,7 @@ class AutopackViewer:
             #cytoplasme,compartmentname
             if parents is None :
                 listeParent = [self.histo.name+"_cytoplasm"]
-                for o in self.histo.organelles :
+                for o in self.histo.compartments :
                     listeParent.append(o.name+"_Matrix")
                     listeParent.append(o.name+"_surface")
             else :
@@ -2181,6 +2240,9 @@ class AutopackViewer:
         Display the given gradient as sphere at each grid position with radius = weight
         """
         parent = self.vi.newEmpty("gradient")
-        self.vi.instancesSphere("gradientSphere",positions,numpy.array(gradient.weight)*100.0,
+        #filter only non zero value
+        gw= numpy.array(gradient.weight)
+        pindices = numpy.nonzero(numpy.greater(gw,0.0001))[0]
+        self.vi.instancesSphere("gradientSphere",numpy.take(positions,pindices,0),numpy.take(gw,pindices,0)*100.0,
                                     self.pesph,[[1,0,0]],self.sc,parent=parent)
         
