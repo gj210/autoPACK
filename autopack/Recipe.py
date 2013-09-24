@@ -40,7 +40,7 @@
 """
 
 from .Ingredient import Ingredient
-import weakref
+#import weakref
 from random import random, seed 
 #randint,gauss,uniform added by Graham 8/18/11
 #seedNum = 14
@@ -75,7 +75,8 @@ class Recipe:
 #        print ingr,ingr.name
         if ingr not in self.ingredients :
             self.ingredients.append(ingr)
-        ingr.recipe = weakref.ref(self)
+#        ingr.recipe = weakref.ref(self)
+        ingr.recipe = self
         if ingr in self.exclude:
             ind = self.exclude.index(ingr)
             self.exclude.pop(ind)
@@ -99,6 +100,7 @@ class Recipe:
             #Mod by Graham 8/18/11: Needed this to give 
             #ingredients an increasing chance to add one more molecule
                 # based on modulus proximity to the next integer
+            #Molarity = No. of molecules /(N X V)
             nbr = ingr.molarity * volume * .000602 #Mod by Graham 8/18/11
             nbi = int(nbr)              #Mod by Graham 8/18/11
 #            print 'ingr.molarity = ', ingr.molarity
@@ -121,7 +123,7 @@ class Recipe:
                 ingr.nbMol = ingr.overwrite_nbMol_value
             else :
                 ingr.vol_nbmol = ingr.nbMol = nb + ingr.overwrite_nbMol_value
-            print(('RECIPE IS ON' + ingr.name + 'volume' + "%d" 'nb' "%d") % (volume, nb))
+            print(('RECIPE IS ON' + ingr.name + 'volume' + " %d " 'nb' " %d") % (volume, nb))
             #print '*************************************volume = '%(volume)
             if ingr.nbMol == 0:
                 print('WARNING GRAHAM: recipe ingredient %s has 0 molecules as target'%(

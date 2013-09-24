@@ -40,16 +40,16 @@ try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
     import urllib
-
+usePP = False
 helper = None
-autoPACKserver="http://autofill.googlecode.com/svn/data/"
+autoPACKserver="http://autofill.googlecode.com/git/data/"
 #try :
 #    from panda3d.core import Mat4
 #    LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax"]
 #except:
 #    LISTPLACEMETHOD =  ["jitter","spring","rigid-body"]
 
-LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev"]
+LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev","RAPID"]
 afdir = os.path.abspath(__path__[0])
 
 forceFetch = False
@@ -94,9 +94,26 @@ def checkURL(URL):
     except :
         return False
     return response.code != 404
-    
+ 
+def retrieveFile(filename,destination=os.sep):
+    if filename.find("http") != -1 or filename.find("ftp")!= -1 :
+        name = filename.split("/")[-1]
+        tmpFileName = afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination+name
+        #check if exist first
+        if not os.path.isfile(tmpFileName) or forceFetch :
+            if checkURL(filename):
+                urllib.urlretrieve(filename, tmpFileName,reporthook=None)
+            else :
+                if not os.path.isfile(tmpFileName)  :
+                    return  None
+        filename = tmpFileName
+        return filename
+    return filename
+   
 def checkRecipeAvailable():
-    fname = "http://autofill.googlecode.com/svn/data/recipe_available.xml"
+#    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
+#    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
+    fname = "http://autofill.googlecode.com/git/data/recipe_available.xml"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :

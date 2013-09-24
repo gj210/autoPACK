@@ -130,6 +130,7 @@ def ingredient_compare1(x, y):
     """
     sort ingredients using decreasing priority and decreasing radii for
     priority ties and decreasing completion for radii ties
+    for priority > 0
     """
     p1 = x.packingPriority
     p2 = y.packingPriority
@@ -158,6 +159,7 @@ def ingredient_compare0(x, y):
     """
     sort ingredients using decreasing priority and decreasing radii for
     priority ties and decreasing completion for radii ties
+    for priority < 0
     """
     p1 = x.packingPriority
     p2 = y.packingPriority
@@ -186,7 +188,8 @@ def ingredient_compare0(x, y):
 def ingredient_compare2(x, y):
     """
     sort ingredients using decreasing radii and decresing completion
-    for radii matches
+    for radii matches:
+    priority = 0
     """
     c1 = x.minRadius
     c2 = y.minRadius
@@ -281,6 +284,7 @@ class Gradient:
 #            self.mode = "direction"
             self.direction=direction#from direction should get start and end point of the gradient
         self.distance=0.0
+        self.gblob = 4.0
         #Note : theses functions could also be used to pick an ingredient
         self.pick_functions = {"max":self.getMaxWeight,
                                "min":self.getMinWeight,
@@ -291,7 +295,7 @@ class Gradient:
                                "reg":self.getForwWeight,
                                }    
         self.liste_weigth_mode = self.pick_functions.keys()
-        self.liste_options = ["mode","weight_mode","pick_mode","direction","radius"]
+        self.liste_options = ["mode","weight_mode","pick_mode","direction","radius","gblob"]
         self.OPTIONS = {
                     "mode":{"name":"mode","values":self.liste_mode,"default":"X",
                                            "type":"liste","description":"gradient direction",
@@ -306,6 +310,8 @@ class Gradient:
                                  "type":"label","description":None,"min":0,"max":0}, 
                     "radius":{"name":"radius","value":self.radius,"default":100.0,
                                  "type":"float","description":"radius for the radial mode","min":0,"max":2000.0}, 
+                    "gblob":{"name":"gblob","value":self.gblob,"default":4.0,
+                                 "type":"float","description":"bobliness the gaussian mode","min":0.1,"max":2000.0}, 
                                  
                     }
 
@@ -362,7 +368,7 @@ class Gradient:
         for i in range(window):  
             i=i-degree+1  
             frac=i/float(window)  
-            gauss=1/(numpy.exp((4*(frac))**2))  
+            gauss=1/(numpy.exp((self.gblob*(frac))**2))  
             weightGauss.append(gauss) 
         return numpy.array(weightGauss)*weight  
 
@@ -399,6 +405,11 @@ class Gradient:
         Ld = (1.0/vdot)*(cos(m)*L)
         return Ld,maxinmini
         
+    def get_gauss_weights1(self,N):
+        support_points = [(float(3 * i)/float(N))**2.0 for i in range(-N,N + 1)]
+        gii_factors = [exp(-(i/2.0)) for i in support_points]
+        ki = float(sum(gii_factors))
+        return [giin/ki for giin in gii_factors]
  
     def buildWeigthMapRadial(self,bb,MasterPosition):
         """
@@ -439,7 +450,6 @@ class Gradient:
 #                w = (1.0-(abs(dist)/self.radius)) if abs(dist) < self.radius else 0.0
                 i = int(w*N/3) if int(w*N/3) < len(d) else len(d)-1
                 self.weight.append( d[i] )
-                
        
     def buildWeigthMapDirection(self,bb,MasterPosition):
         """
@@ -648,6 +658,8 @@ class Grid:
         # the distance to the closest surface (either an already placed
         # object (or an compartment surface NOT IMPLEMENTED)
         self.distToClosestSurf = []
+        self.distToClosestSurf_store = []
+        
         self.diag=None
         self.gridSpacing = None
         self.nbGridPoints = None
@@ -666,16 +678,14 @@ class Grid:
         self.result_filename=None   #used after fill to store result
 
         self.encapsulatingGrid = 1
-# Very dangerous to manipulate the grids... lets solve this problem much earlier in the setup with the new PseudoCode        
-#    def removeFreePoint(self,pti):
-#        """
-#        Unused
-#        """
-#        tmp = self.freePoints[self.nbFreePoints] #last one
-#        self.freePoints[self.nbFreePoints] = pti
-#        self.freePoints[pti] = tmp
-#        self.nbFreePoints -= 1        
-#
+        
+    def removeFreePoint(self,pti):
+        tmp = self.freePoints[self.nbFreePoints] #last one
+        self.freePoints[self.nbFreePoints] = pti
+        self.freePoints[pti] = tmp
+        self.nbFreePoints -= 1        
+
+# Very dangerous to manipulate the grids... lets solve this problem much earlier in the setup with the new PseudoCode
 #    def updateDistances(self, histoVol ,insidePoints, freePoints,
 #                        nbFreePoints ):
 #        verbose = histoVol.verbose
@@ -755,10 +765,13 @@ class Grid:
             return False
         else :
             if dist is not None:
+                #distance to closest wall
                 d1 = P - O
-                s1 = numpy.sum(d1*d1)
+                s1=min(x for x in (d1*jitter) if x != 0)
+                #s1 = numpy.sum(d1*d1)
                 d2 = E - P
-                s2 = numpy.sum(d2*d2)
+                s2=min(x for x in (d2*jitter) if x != 0)
+                #s2 = numpy.sum(d2*d2)
                 if s1 <= dist or s2 <=dist:
                    return False 
             return True
@@ -792,14 +805,20 @@ class Grid:
 #        print("getPointsInCube bb[0] = ",bb[0])
 #        print("getPointsInCube bb[1] = ",bb[1])
         #        i0 = max(0, int((ox-OX)*spacing1)+1)
-        i0 = max(0, floor((ox-OX)*spacing1))
-        i1 = min(NX, int((ex-OX)*spacing1)+1)
+        i0 = int(max(0, floor((ox-OX)*spacing1)))
+        i1 = int(min(NX, int((ex-OX)*spacing1)+1))
         #        j0 = max(0, int((oy-OY)*spacing1)+1)
-        j0 = max(0, floor((oy-OY)*spacing1))
-        j1 = min(NY, int((ey-OY)*spacing1)+1)
+        j0 = int(max(0, floor((oy-OY)*spacing1)))
+        j1 = int(min(NY, int((ey-OY)*spacing1)+1))
         #        k0 = max(0, int((oz-OZ)*spacing1)+1)
-        k0 = max(0, floor((oz-OZ)*spacing1))
-        k1 = min(NZ, int((ez-OZ)*spacing1)+1)
+        k0 = int(max(0, floor((oz-OZ)*spacing1)))
+        k1 = int(min(NZ, int((ez-OZ)*spacing1)+1))
+#        print("oz-OZ = ", oz-OZ)
+#        print("((oz-OZ)*spacing1) = ", ((oz-OZ)*spacing1))
+#        print("int((oz-OZ)*spacing1)) = ", int((oz-OZ)*spacing1))
+#        print("int((oz-OZ)*spacing1)+1 = ", int((oz-OZ)*spacing1)+1)
+#        print("floor(oz-OZ)*spacing1) = ", floor((oz-OZ)*spacing1))
+#        print("i0= ", i0, ", i1= ", i1,", j0= ", j0,", j1= ",j1,", k0= ", k0, ", k1= ", k1)
 
         zPlaneLength = NX*NY
 
@@ -954,21 +973,21 @@ class Environment(CompartmentList):
         self._timer = False
         self._hackFreepts = False   #hack for speed up ?
         self.freePtsUpdateThrehod = 0.15
-        
+        self.nb_ingredient=0
+        self.totalNbIngr = 0
+        self.treemode = "cKDTree"# "bhtree"
+        self.close_ingr_bhtree=None#RBHTree(a.tolist(),range(len(a)),10,10,10,10,10,9999)
+        self.rTrans=[]  
+        self.result=[]
+        self.rIngr=[] 
+        self.rRot=[] 
         self.listPlaceMethod = LISTPLACEMETHOD
-        #setup the physics engine 
         #should be part of an independant module 
         self.panda_solver="bullet" #or bullet
-        self.rb_func_dic={"bullet":{
-            "SingleSphere":self.addSingleSphereRB,
-            "SingleCube":self.addSingleCubeRB,
-            "MultiSphere":self.addMultiSphereRB,
-            "MultiCylinder":self.addMultiCylinderRB,
-            "Mesh":self.addMeshRB,
-        },"ode":
-            {"SingleSphere":self.addSingleSphereRBODE,}
-            }
-        #summarize all the options in one dictionary, this help the xml setup as well gui design
+        #could be a problem here for pp
+        #can't pickle this dictionary
+        self.rb_func_dic={}
+        
         self.OPTIONS = {
                     "smallestProteinSize":{"name":"smallestProteinSize","value":15,"default":15,
                                            "type":"int","description":"Smallest ingredient packing radius override (low=accurate | high=fast)",
@@ -994,7 +1013,7 @@ class Environment(CompartmentList):
                     "pickWeightedIngr":{"name":"pickWeightedIngr","value":True,"default":True,"type":"bool","description":"Prioritize ingredient selection by packingWeight","width":200},
                     "pickRandPt":{"name":"pickRandPt","value":True,"default":True,"type":"bool","description":"Pick drop position point randomly","width":200},
                     #gradient
-                    "ingrLookForNeighbours":{"name":"pickWeightedIngr","value":True,"default":True,"type":"bool","description":"compute Grid Params","width":30},
+                    "ingrLookForNeighbours":{"name":"ingrLookForNeighbours","value":False,"default":False,"type":"bool","description":"Look for ingredients attractor and partner","width":30},
                     #debug with timer function
                     "_timer": {"name":"_timer","value":False,"default":False,"type":"bool","description":"evaluate time per function","width":30},
                     "_hackFreepts": {"name":"_hackFreepts","value":False,"default":False,"type":"bool","description":"no free point update","width":30},
@@ -1002,7 +1021,6 @@ class Environment(CompartmentList):
                         }
 
     def Setup(self,setupfile):
-        """TODO"""
         #parse the given fill for
         #1-fillin option
         #2-recipe
@@ -1046,9 +1064,33 @@ class Environment(CompartmentList):
             ingr.gradient = kw["gradient"]           
         return ingr
 
-#==============================================================================
-# IO Function , should we create an independant class for it ?        
-#==============================================================================
+    def set_partners_ingredient(self,ingr):
+        if ingr.partners_name :
+            for i,iname in enumerate(ingr.partners_name) :
+                print (iname)
+                partner = self.getIngrFromName(iname)
+                print (partner) 
+                ingr.addPartner(partner.name,weight=partner.weight,properties={"position":ingr.partners_position[i]})
+        if ingr.excluded_partners_name :
+            for iname in ingr.excluded_partners_name :
+                ingr.addExcludedPartner(iname)
+                
+    def set_recipe_ingredient(self,xmlnode,recipe,io_ingr):
+        #get the defined ingredient
+        ingrnodes = xmlnode.getElementsByTagName("ingredient")
+        for ingrnode in ingrnodes:
+            ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
+            if ingre : recipe.addIngredient(ingre) 
+            else : print ("PROBLEM creating ingredient from ",ingrnode) 
+        #check for includes 
+        ingrnodes_include = xmlnode.getElementsByTagName("include")
+        for inclnode in ingrnodes_include:
+            xmlfile = str(inclnode.getAttribute("filename"))
+            ingre = io_ingr.makeIngredientFromXml(filename = xmlfile, recipe=self.name)
+            if ingre : recipe.addIngredient(ingre)
+            else : print ("PROBLEM creating ingredient from ",ingrnode)
+            #look for overwritten attribute
+        
     def load_XML(self,setupfile):
         """
         Setup the environment according the given xml file. 
@@ -1101,16 +1143,25 @@ class Environment(CompartmentList):
         if len(rnode) :
             rCyto = Recipe()
             rnode=rnode[0]
-            ingrnodes = rnode.getElementsByTagName("ingredient")
-            for ingrnode in ingrnodes:
-                ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-                rCyto.addIngredient(ingre) 
-            #check for includes 
-            ingrnodes_include = rnode.getElementsByTagName("include")
-            for inclnode in ingrnodes_include:
-                xmlfile = str(inclnode.getAttribute("filename"))
-                ingre = io_ingr.makeIngredientFromXml(filename = xmlfile, recipe=self.name)
-                rCyto.addIngredient(ingre)
+            #check for include list of ingredients
+            ingredients_xmlfile = str(rnode.getAttribute("include"))
+            if ingredients_xmlfile :#open the file and parse the ingredient:
+                xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                if xmlfile :
+                    xmlinclude = parse(xmlfile).documentElement
+                    self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
+                
+            self.set_recipe_ingredient(rnode,rCyto,io_ingr)                
+#            ingrnodes = rnode.getElementsByTagName("ingredient")
+#            for ingrnode in ingrnodes:
+#                ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
+#                rCyto.addIngredient(ingre) 
+#            #check for includes 
+#            ingrnodes_include = rnode.getElementsByTagName("include")
+#            for inclnode in ingrnodes_include:
+#                xmlfile = str(inclnode.getAttribute("filename"))
+#                ingre = io_ingr.makeIngredientFromXml(filename = xmlfile, recipe=self.name)
+#                rCyto.addIngredient(ingre)
             #setup recipe
             self.setExteriorRecipe(rCyto)
             
@@ -1139,31 +1190,51 @@ class Environment(CompartmentList):
             if len(rsnodes) :
                 rSurf = Recipe()
                 rsnodes=rsnodes[0]
-                ingrnodes = rsnodes.getElementsByTagName("ingredient")
-                for ingrnode in ingrnodes:
-                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-                    rSurf.addIngredient(ingre) 
-                ingrnodes_include = rsnodes.getElementsByTagName("include")
-                for inclnode in ingrnodes_include:
-                    xmlfile = str(inclnode.getAttribute("filename"))
-                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
-                    rSurf.addIngredient(ingre)
+                ingredients_xmlfile = str(rsnodes.getAttribute("include"))
+                if ingredients_xmlfile :#open the file and parse the ingredient:
+                    xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                    if xmlfile :
+                        xmlinclude = parse(xmlfile).documentElement
+                        self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
+                self.set_recipe_ingredient(rsnodes,rSurf,io_ingr)                
+
+#                ingrnodes = rsnodes.getElementsByTagName("ingredient")
+#                for ingrnode in ingrnodes:
+#                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
+#                    rSurf.addIngredient(ingre) 
+#                ingrnodes_include = rsnodes.getElementsByTagName("include")
+#                for inclnode in ingrnodes_include:
+#                    xmlfile = str(inclnode.getAttribute("filename"))
+#                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
+#                    rSurf.addIngredient(ingre)
                 o.setSurfaceRecipe(rSurf)                
             rinodes = onode.getElementsByTagName("interior")
             if len(rinodes) :
                 rMatrix = Recipe()
                 rinodes=rinodes[0]
-                ingrnodes = rinodes.getElementsByTagName("ingredient")
-                for ingrnode in ingrnodes:
-                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-                    rMatrix.addIngredient(ingre) 
-                ingrnodes_include = rinodes.getElementsByTagName("include")
-                for inclnode in ingrnodes_include:
-                    xmlfile = str(inclnode.getAttribute("filename"))
-                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
-                    rMatrix.addIngredient(ingre)
+                ingredients_xmlfile = str(rinodes.getAttribute("include"))
+                if ingredients_xmlfile :#open the file and parse the ingredient:
+                    xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                    if xmlfile :
+                        xmlinclude = parse(xmlfile).documentElement
+                        self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
+                self.set_recipe_ingredient(rinodes,rMatrix,io_ingr)                
+
+#                ingrnodes = rinodes.getElementsByTagName("ingredient")
+#                for ingrnode in ingrnodes:
+#                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
+#                    rMatrix.addIngredient(ingre) 
+#                ingrnodes_include = rinodes.getElementsByTagName("include")
+#                for inclnode in ingrnodes_include:
+#                    xmlfile = str(inclnode.getAttribute("filename"))
+#                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
+#                    rMatrix.addIngredient(ingre)
                 o.setInnerRecipe(rMatrix)
-     
+        #Go through all ingredient and setup the partner  
+        self.loopThroughIngr(self.set_partners_ingredient)
+        if self.placeMethod.find("panda") != -1 :
+            self.setupPanda()
+            
     def getValueToXMLNode(self,vtype,node,attrname):
         """
         Helper function to get the value from a given xml node attribute of a given type 
@@ -1514,7 +1585,7 @@ h1 = Environment()
         Include or Exclude the given ingredient from the recipe. 
         (similar to an active state toggle)
         """
-        r=ingr.recipe()
+        r=ingr.recipe#()
         if include :
             r.addIngredient(ingr)
         else :
@@ -1873,7 +1944,7 @@ h1 = Environment()
         """
         assert isinstance(recipe, Recipe)
         self.exteriorRecipe = recipe
-        recipe.compartment = weakref.ref(self)
+        recipe.organelle = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = 0
 
@@ -1982,6 +2053,9 @@ h1 = Environment()
             self.exteriorRecipe.sort()
 
         for o in self.compartments:
+            o.molecules = []
+            if rebuild :
+                o.reset()
             if o.innerRecipe:
                 o.innerRecipe.sort()
             if o.surfaceRecipe:
@@ -2017,8 +2091,14 @@ h1 = Environment()
         xr,yr,zr = boundingBox[1]
         # distToClosestSurf is set to self.diag initially
         self.grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
-        self.grid.distToClosestSurf = [diag]*nbPoints#surface point too?
-        self.grid.freePoints = list(range(nbPoints))
+        if rebuild :
+            self.grid.distToClosestSurf = [diag]*nbPoints#surface point too?
+            self.grid.freePoints = list(range(nbPoints))
+        else :
+            #just reset
+            self.grid.distToClosestSurf = [diag]*len(self.grid.distToClosestSurf)#surface point too?
+            self.grid.freePoints = list(range(len(self.grid.freePoints)))
+            nbPoints = len(self.grid.freePoints)
         #print 'DIAG', diag
         
 #        if gridFileIn is None :
@@ -2029,13 +2109,18 @@ h1 = Environment()
 #            gridFileIn = None
 
 #        if rebuild :
-            #this restore/store the grid information of the compartment.
-        if gridFileIn is not None :
+            #this restore/store the grid information of the organelle.
+        if gridFileIn is not None and not rebuild:
+            print ("file in for building grid but it doesnt work well")
             self.grid.filename = gridFileIn
-            self.restoreGridFromFile(gridFileIn)
-        else:
+            if self.nFill == 0 :
+                self.restoreGridFromFile(gridFileIn)
+        elif gridFileIn is None and rebuild:
             # assign ids to grid points
+            print ("file is None for building grid")
             self.BuildGrids()
+        else :
+            print ("file is not rebuild")
         if gridFileOut is not None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
@@ -2082,9 +2167,13 @@ h1 = Environment()
         if r:
             r.setCount(totalVolume)#should actually use the fillBB
             
-        if self.use_gradient and len(self.gradients):
+        if self.use_gradient and len(self.gradients) and rebuild :
             for g in self.gradients:
                 self.gradients[g].buildWeigthMap(boundingBox,grid.masterGridPositions)
+        if not rebuild :
+            self.grid.distToClosestSurf = self.grid.distToClosestSurf_store[:]   
+        else :
+            self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:]   
             
         #we should be able here to update the number of free point using a previous grid 
         #overlap
@@ -2100,42 +2189,52 @@ h1 = Environment()
             distance = self.grid.distToClosestSurf#[:]
 #            nbFreePoints = nbPoints-1                #This already comes from the Point Volume- no subtraction needed (Graham turned off on 8/27/11)
             nbFreePoints = nbPoints#-1              #Graham turned this off on 5/16/12 to match August Repair for May Hybrid
-            backup = self.molecules[:]
-            molecules=self.molecules
-#            print("molecules",molecules)
-            for compartment in self.compartments:
-                molecules.extend(compartment.molecules)
-            for i,mingrs in enumerate(molecules) :#( jtrans, rotMatj, self, ptInd )
-                jtrans, rotMatj, ingr, ptInd = mingrs
-#                print ("OK",jtrans, rotMatj, ingr, ptInd)
-                centT = ingr.transformPoints(jtrans, rotMatj, ingr.positions[-1])
-                insidePoints = {}
-                newDistPoints = {}
-                mr = self.get_dpad(ingr.compNum)
-                spacing = self.smallestProteinSize
-                jitter = ingr.getMaxJitter(spacing)
-                dpad = ingr.minRadius + mr + jitter
-                insidePoints,newDistPoints = ingr.getInsidePoints(self.grid,
-                                    self.grid.masterGridPositions,dpad,distance,
-                                    centT=centT,
-                                    jtrans=jtrans, 
-                                    rotMatj=rotMatj)
-                # update free points
-                if len(insidePoints) and self.placeMethod.find("panda") != -1:
-                    print (ingr.name," is previous")
-                    #in case of pandaBullet we should update the ptInd of the rbnode. The point Id in 
-                    #molecules refer to previous grid
-                    self.checkPtIndIngr(ingr,insidePoints,i,ptInd)
-                #(self, histoVol,insidePoints, newDistPoints, freePoints,
-                #        nbFreePoints, distance, masterGridPositions, verbose)
-                nbFreePoints = ingr.updateDistances(self,insidePoints, newDistPoints, 
-                            self.grid.freePoints, nbFreePoints, distance, 
-                            self.grid.masterGridPositions,0)
-            self.molecules = backup              
+#            backupmol = self.molecules[:]          
+#            molecules=self.molecules
+##            print("molecules",molecules)
+#            for organelle in self.organelles:
+#                molecules.extend(organelle.molecules)
+            for i,mingrs in enumerate(self.molecules) :#( jtrans, rotMatj, self, ptInd )
+                nbFreePoints=self.onePrevIngredient(i,mingrs,distance,nbFreePoints,self.molecules)
+            for organelle in self.organelles:
+                for i,mingrs in enumerate(organelle.molecules) :#( jtrans, rotMatj, self, ptInd )
+                    nbFreePoints=self.onePrevIngredient(i,mingrs,distance,nbFreePoints,organelle.molecules)
+
+#                jtrans, rotMatj, ingr, ptInd = mingrs
+##                print ("OK",jtrans, rotMatj, ingr, ptInd)
+#                centT = ingr.transformPoints(jtrans, rotMatj, ingr.positions[-1])
+#                insidePoints = {}
+#                newDistPoints = {}
+#                mr = self.get_dpad(ingr.compNum)
+#                spacing = self.smallestProteinSize
+#                jitter = ingr.getMaxJitter(spacing)
+#                dpad = ingr.minRadius + mr + jitter
+#                insidePoints,newDistPoints = ingr.getInsidePoints(self.grid,
+#                                    self.grid.masterGridPositions,dpad,distance,
+#                                    centT=centT,
+#                                    jtrans=jtrans, 
+#                                    rotMatj=rotMatj)
+#                # update free points
+#                if len(insidePoints) and self.placeMethod.find("panda") != -1:
+#                       print (ingr.name," is inside")
+#                       self.checkPtIndIngr(ingr,insidePoints,i,ptInd)
+#                       #ingr.inside_current_grid = True
+#                else  :
+#                    #not in the grid
+#                    print (ingr.name," is outside")
+#                    #rbnode = ingr.rbnode[ptInd]
+#                    #ingr.rbnode.pop(ptInd)
+#                    molecules[i][3]=-1
+#                    #ingr.rbnode[-1] = rbnode
+#                #(self, histoVol,insidePoints, newDistPoints, freePoints,
+#                #        nbFreePoints, distance, masterGridPositions, verbose)
+#                nbFreePoints = ingr.updateDistances(self,insidePoints, newDistPoints, 
+#                            self.grid.freePoints, nbFreePoints, distance, 
+#                            self.grid.masterGridPositions,0)
             self.grid.nbFreePoints = nbFreePoints
         #self.hgrid.append(self.grid)
         self.setCompatibility()
-        
+
     def onePrevIngredient(self,i,mingrs,distance,nbFreePoints,marray):
         """
         Unused
@@ -2381,7 +2480,7 @@ h1 = Environment()
         self.resetIngrRecip(r)
         self.molecules=[]
         for orga in self.compartments:
-            orga.reset()
+            #orga.reset()
             rs =  orga.surfaceRecipe
             self.resetIngrRecip(rs)
             ri =  orga.innerRecipe
@@ -2399,7 +2498,19 @@ h1 = Environment()
             del self.octree
             self.octree = None
         #the reset doesnt touch the grid...
-            
+#        del self.close_ingr_bhtree
+        from bhtree import bhtreelib    
+#        if len(self.rTrans) :
+#            try :
+#                bhtreelib.freeBHtree(self.close_ingr_bhtree)
+#            except :
+#                print ("problem freeBHtree")
+        self.rTrans=[]   
+        self.rIngr=[] 
+        self.rRot=[] 
+        self.result = []
+        
+        
     def resetIngrRecip(self,recip):
         """Reset all ingredient of the given recipe"""
         if recip:            
@@ -2717,6 +2828,9 @@ h1 = Environment()
                 order = numpy.argsort(allIngrDist)
                 # pick point with closest distance
                 ptInd = allIngrPts[order[0]]
+                if (ingr.rejectionCounter % 300 == 0):
+                    ptIndr = int(random()*len(allIngrPts))
+                    ptInd = allIngrPts[ptIndr]                            
             elif ingr.packingMode=='gradient' and self.use_gradient:  
                 #get the most probable point using the gradient                
                 #use the gradient weighted map and get mot probabl point
@@ -2745,6 +2859,7 @@ h1 = Environment()
                 self.normalizedPriorities.pop(ind)
                 if verbose:
                         print(("time to reject the picking", time()-t))
+                print(("vRangeStart",vRangeStart))
                 return False,vRangeStart                    
 
 #            print(("time to random pick a point", time()-t2))
@@ -2756,21 +2871,29 @@ h1 = Environment()
         return True,ptInd
 
 #    import fill4isolated # Graham cut the outdated fill4 from this document and put it in a separate file. turn on here if you want to use it.
-#    def removeOnePoint(self, pt,freePoints,nbFreePoints):
-# UNSAFE NOT USED
-#        try :
-#                # New system replaced by Graham on Aug 18, 2012
-#                nbFreePoints -= 1  
-#                vKill = freePoints[pt]
-#                vLastFree = freePoints[nbFreePoints]
-#                freePoints[vKill] = vLastFree
-#                freePoints[vLastFree] = vKill
-#                # End New replaced by Graham on Aug 18, 2012
-#        except:
-#                pass
-#        return nbFreePoints
+    def removeOnePoint(self, pt,freePoints,nbFreePoints):
+        try :
+                # New system replaced by Graham on Aug 18, 2012
+                nbFreePoints -= 1  
+                vKill = freePoints[pt]
+                vLastFree = freePoints[nbFreePoints]
+                freePoints[vKill] = vLastFree
+                freePoints[vLastFree] = vKill
+                # End New replaced by Graham on Aug 18, 2012
+        except:
+                pass
+        return nbFreePoints
+
+    def getTotalNbObject(self,allIngredients):
+        totalNbIngr = 0
+        for ingr in allIngredients:
+            if ingr.Type == "Grow" :
+                totalNbIngr += int (ingr.nbMol*(ingr.length/ingr.uLength))
+            else :    
+                totalNbIngr += ingr.nbMol
+        return totalNbIngr
     
-    def fill5(self, seedNum=14, stepByStep=False, verbose=5, sphGeom=None,
+    def fill5(self, seedNum=14, stepByStep=False, verbose=False, sphGeom=None,
               labDistGeom=None, debugFunc=None,name = None, vTestid = 3,vAnalysis = 0,**kw):
         """
         the latest packing loop 
@@ -2781,7 +2904,7 @@ h1 = Environment()
         import time
         t1=time.time()
         self.timeUpDistLoopTotal = 0 #Graham added to try to make universal "global variable Verbose" on Aug 28
-
+        self.static=[]
         if self.grid is None:
             print("no grid setup")
             return
@@ -2865,6 +2988,7 @@ h1 = Environment()
 
         nls=0
         totalNumMols = 0
+        self.totalNbIngr = self.getTotalNbObject(allIngredients)
         if len(self.thresholdPriorities ) == 0:
             for ingr in allIngredients:
                 totalNumMols += ingr.nbMol
@@ -2885,6 +3009,13 @@ h1 = Environment()
 
         PlacedMols = 0
         vThreshStart = 0.0   # Added back by Graham on July 5, 2012 from Sept 25, 2011 thesis version
+        
+        #if bullet build the organel rbnode
+        if self.placeMethod == "pandaBullet":
+            self.setupPanda()
+            for o in self.organelles:
+                if o.rbnode is None :
+                    o.rbnode = self.addMeshRBOrganelle(o)
 #==============================================================================
 #         #the big loop
 #==============================================================================
@@ -2934,14 +3065,15 @@ h1 = Environment()
         #                   The self.afviewer.vi.progressBar(progress=int(p),label=ingr.name) functions shows zero progress until everything is ended, so using C4D for now
                         p = float(PlacedMols)/float(totalNumMols)*100.
                         c4d.StatusSetBar(int(p))
-                        c4d.StatusSetText(ingr.name) 
+                        c4d.StatusSetText(ingr.name+" "+str(ingr.completion))
+        #                print("PlacedMols= ", PlacedMols, ", while totalNumMols= ", totalNumMols, " so % = ", p)
         #               End working chunk pasted in by Graham from Sept 2011 on 5/16/12.
 #                        print ("using c4d override for Status Bar")
                     except :
         #               p = ((float(t)-float(len(self.activeIngr)))/float(t))*100.
                         p = ((float(PlacedMols))/float(totalNumMols))#*100.    #This code shows 100% of ingredients all the time
                         if self.afviewer is not None and hasattr(self.afviewer,"vi"):
-                            self.afviewer.vi.progressBar(progress=int(p),label=ingr.name)
+                            self.afviewer.vi.progressBar(progress=int(p),label=ingr.name+" "+str(ingr.completion))
                             if self.afviewer.renderDistance:
                                 self.afviewer.vi.displayParticleVolumeDistance(distance,self)
                         #pass
@@ -2956,7 +3088,7 @@ h1 = Environment()
             dpad = ingr.minRadius + mr + jitter
 
             if verbose > 2:
-                print('picked Ingr radius compNum dpad',ingr.name,radius,jitter,compNum,dpad)
+                print('picked Ingr radius compNum dpad',ingr.name,radius,compNum,dpad)
             
             ## find the points that can be used for this ingredients
             ##
@@ -2970,30 +3102,43 @@ h1 = Environment()
                     print ("problem ",ptInd)
                     continue
             else :
+                print ("vRangeStart coninue ",res)
                 vRangeStart = res[1]
                 continue
-            if verbose > 2:
-                print ("picked ",ptInd)
+#            print ("picked ",ptInd)
             #place the ingrediant
             if self.overwritePlaceMethod :
                 ingr.placeType = self.placeMethod
+            #check the largestProteinSize
+            if ingr.encapsulatingRadius > self.largestProteinSize : 
+                self.largestProteinSize = ingr.encapsulatingRadius 
+            #histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,usePP,
+            #  stepByStep=False, verbose=False,
             success, nbFreePoints = self.callFunction(ingr.place,(self, ptInd, 
-                                freePoints, nbFreePoints, distance, dpad,
+                                freePoints, nbFreePoints, distance, dpad,False,
                                 stepByStep, verbose),
                                 {"debugFunc":debugFunc})
-            if verbose > 2:
-                print("nbFreePoints after PLACE ",nbFreePoints)
+#            print("nbFreePoints after PLACE ",nbFreePoints)
             if success:
+                #update largest protein size
+                #problem when the encapsulatingRadius is actually wrong
+                if ingr.encapsulatingRadius > self.largestProteinSize : 
+                    self.largestProteinSize = ingr.encapsulatingRadius
                 PlacedMols+=1
 #                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
             if ingr.completion >= 1.0 :
                 print('completed***************', ingr.name)
                 print('PlacedMols = ', PlacedMols)
                 ind = self.activeIngr.index(ingr)
+                print('activeIngr index of ',ingr.name,ind)
+                print('threshold p len ',len(self.thresholdPriorities),
+                                  len(self.normalizedPriorities)) 
 #                vRangeStart = vRangeStart + self.normalizedPriorities[0]
                 if ind > 0:
                     #j = 0
-                    for j in range(ind):                
+                    for j in range(ind):   
+                        if j >= len(self.thresholdPriorities) or j >= len(self.normalizedPriorities):
+                            continue
                         self.thresholdPriorities[j] = self.thresholdPriorities[j] + self.normalizedPriorities[ind]
                 self.activeIngr.pop(ind)
 #                self.thresholdPriorities.pop(ind)  # Replaced these from July SVN version with large chunk of code from thesis Sept 25, 2011 version on July 5, 2012
@@ -3011,7 +3156,7 @@ h1 = Environment()
                 for priors in self.activeIngr12:
                     pp = priors.packingPriority
                     self.totalPriorities = self.totalPriorities + pp
-                    print ('totalPriorities = ', self.totalPriorities)
+#                    print ('totalPriorities = ', self.totalPriorities)
                 previousThresh = 0
                 self.normalizedPriorities = []
                 self.thresholdPriorities = [] 
@@ -3030,7 +3175,7 @@ h1 = Environment()
                     else:
                         np=0.
                     self.normalizedPriorities.append(np)
-                    print ('np is ', np, ' pp is ', pp, ' tp is ', np + previousThresh)
+#                    print ('np is ', np, ' pp is ', pp, ' tp is ', np + previousThresh)
                     self.thresholdPriorities.append(np + previousThresh)
                     previousThresh = np + float(previousThresh)
                 self.activeIngr = self.activeIngr0 + self.activeIngr12
@@ -3327,13 +3472,12 @@ h1 = Environment()
                 ingredients[ingr.name][2].append(rot)
                 ingredients[ingr.name][3].append(numpy.array(mat)) 
         self.ingr_result = ingredients
-
-    def build_grid_and_pack(self,seed=12):
-        #this function should call bothv build grid and fill5 with default value
-        self.buildGrid(boundingBox=self.boundingBox,gridFileIn=None,rebuild=True ,
-                      gridFileOut=None,previousFill=False)  
-        self.fill5(seedNum=seed,verbose=0)
-                          
+        if self.treemode == "bhtree" :
+            from bhtree import bhtreelib
+            bhtreelib.freeBHtree(self.close_ingr_bhtree)
+#        bhtreelib.FreeRBHTree(self.close_ingr_bhtree)
+#        del self.close_ingr_bhtree
+                    
     def displayCancelDialog(self):
         print('Popup CancelBox: if Cancel Box is up for more than 10 sec, close box and continue loop from here')
 #        from pyubic.cinema4d.c4dUI import TimerDialog
@@ -3567,29 +3711,35 @@ h1 = Environment()
         orgaresult=[[],]*len(self.compartments)
         r =  self.exteriorRecipe
         if r :
-            for ingr in r.ingredients:                
-                iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json["exteriorRecipe"][ingr.name])
-                for r in iresults:
-                    rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                    result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
-        #compartment ingr
-        for orga in self.compartments:
-            #compartment surface ingr
+            if "exteriorRecipe" in self.result_json:
+                for ingr in r.ingredients:        
+                    if ingr.name not in self.result_json["exteriorRecipe"] : continue
+                    iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json["exteriorRecipe"][ingr.name])
+                    for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+        #organelle ingr
+        for orga in self.organelles:
+            #organelle surface ingr
             rs =  orga.surfaceRecipe
             if rs :
-                for ingr in rs.ingredients:
-                    iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"][ingr.name])
-                    for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                        orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
-            #compartment matrix ingr
+                if orga.name+"_surfaceRecipe" in self.result_json:
+                    for ingr in rs.ingredients:
+                        if ingr.name not in self.result_json[orga.name+"_surfaceRecipe"] : continue
+                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"][ingr.name])
+                        for r in iresults:
+                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+            #organelle matrix ingr
             ri =  orga.innerRecipe
             if ri :
-                for ingr in ri.ingredients:                    
-                    iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"][ingr.name])
-                    for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                        orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+                if orga.name+"_innerRecipe" in self.result_json:
+                    for ingr in ri.ingredients:                    
+                        if ingr.name not in self.result_json[orga.name+"_innerRecipe"] : continue
+                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"][ingr.name])
+                        for r in iresults:
+                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         freePoint = []# pickle.load(rfile)
         try :
             rfile = open(resultfilename+"freePoints",'rb')
@@ -3641,7 +3791,7 @@ h1 = Environment()
             if ri :
                 self.result_json[orga.name+"_innerRecipe"]={}
                 for ingr in ri.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json["_innerRecipe"])
+                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])
         with open(resultfilename+".json", 'w') as fp :#doesnt work with symbol link ?
             json.dump(self.result_json,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
         
@@ -3824,6 +3974,16 @@ h1 = Environment()
             self.octree = Octree(self.grid.getRadius(),helper=helper)#Octree((0,0,0),self.grid.getRadius())   #0,0,0 or center of grid?         
             
     def setupPanda(self,):
+        self.rb_func_dic = {"bullet":{
+        "SingleSphere":self.addSingleSphereRB,
+        "SingleCube":self.addSingleCubeRB,
+        "MultiSphere":self.addMultiSphereRB,
+        "MultiCylinder":self.addMultiCylinderRB,
+        "Grow":self.addMultiCylinderRB,        
+        "Mesh":self.addMeshRB,
+        },"ode":
+            {"SingleSphere":self.addSingleSphereRBODE,}
+            }
         if self.world is None :
             if panda3d is None :
                 return
@@ -3836,15 +3996,16 @@ h1 = Environment()
 #            loadPrcFileData('', 'bullet-enable-contact-events true')
             loadPrcFileData('', 'bullet-max-objects 10240')#10240
             loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
+            loadPrcFileData('', 'bullet-sap-extents '+str(self.grid.diag))#
             
             import direct.directbase.DirectStart 
-            from panda3d.bullet import BulletWorld
             from panda3d.core import Vec3
 #            bullet.bullet-max-objects = 1024 * 10#sum of all predicted n Ingredient ?
             if self.panda_solver == "bullet":
                 from panda3d.bullet import BulletWorld               
                 self.worldNP = render.attachNewNode('World')            
                 self.world = BulletWorld()
+                self.BitMask32 = BitMask32
             elif self.panda_solver == "ode":
                 from panda3d.ode import OdeWorld, OdeQuadTreeSpace, OdeHashSpace
                 self.world = OdeWorld()    
@@ -3900,6 +4061,18 @@ h1 = Environment()
         inodenp.node().setMass(1.0)
         centT = ingr.positions[0]#ingr.transformPoints(jtrans, rotMat, ingr.positions[0])
         for radc, posc in zip(ingr.radii[0], centT):
+            shape = BulletSphereShape(radc)
+            inodenp.node().addShape(shape, TransformState.makePos(Point3(posc[0],posc[1],posc[2])))#
+        return inodenp
+
+    def multiSphereRB(self,name,pos,rad):
+        inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(name))
+        inodenp.node().setMass(1.0)
+        #centT = ingr.positions[0]#ingr.transformPoints(jtrans, rotMat, ingr.positions[0])
+#        for i in range(len(pos)):#
+#            posc = pos[i]
+#            radc = rad[i]
+        for radc, posc in zip(rad,pos):
             shape = BulletSphereShape(radc)
             inodenp.node().addShape(shape, TransformState.makePos(Point3(posc[0],posc[1],posc[2])))#
         return inodenp
@@ -3999,6 +4172,54 @@ h1 = Environment()
         inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
         return inodenp
 
+    def addMeshRBOrganelle(self,o):
+        helper = AutoFill.helper
+        geom =   helper.getObject(o.gname)      
+        if geom is None :
+            o.gname = '%s_Mesh'%o.name            
+            geom = helper.getObject(o.gname)
+
+        inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(o.name))
+        inodenp.node().setMass(1.0)
+
+        faces,vertices,vnormals = helper.DecomposeMesh(geom,
+                               edit=False,copy=False,tri=True,transform=True)        
+        from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
+        from panda3d.core import GeomVertexReader
+        from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
+        #step 1) create GeomVertexData and add vertex information
+        format=GeomVertexFormat.getV3()
+        vdata=GeomVertexData("vertices", format, Geom.UHStatic)        
+        vertexWriter=GeomVertexWriter(vdata, "vertex")
+        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in vertices]
+
+        #step 2) make primitives and assign vertices to them
+        tris=GeomTriangles(Geom.UHStatic)
+        [self.setGeomFaces(tris,face) for face in faces]
+
+        #step 3) make a Geom object to hold the primitives
+        geom=Geom(vdata)
+        geom.addPrimitive(tris)
+        #step 4) create the bullet mesh and node
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)    
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape
+        #or
+        #shape = BulletConvexHullShape()
+        #shape.add_geom(geom)
+        print ("shape ok",shape)
+        #inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
+        #inodenp.node().setMass(1.0)
+        inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
+
+        if self.panda_solver == "bullet":
+            inodenp.setCollideMask(BitMask32.allOn())
+            inodenp.node().setAngularDamping(1.0)
+            inodenp.node().setLinearDamping(1.0)
+#            inodenp.setMat(pmat)
+            self.world.attachRigidBody(inodenp.node())
+            inodenp = inodenp.node()
+        return inodenp
 
     def pandaMatrice(self,mat):
         mat = mat.transpose().reshape((16,))
