@@ -1750,8 +1750,8 @@ class SubdialogFiller(uiadaptor):
         fbuild = True
         doPts = False
         doSphere = False
-        if self.guimode != "Simple":
-            fbuild = self.getVal(self.Widget["options"]["forceBuild"])
+#        if self.guimode != "Simple":
+        fbuild = self.getVal(self.Widget["options"]["forceBuild"])
         if self.guimode != "Simple" and self.guimode != "Intermediate":
             pFill = self.getVal(self.Widget["options"]["prevFill"]) 
             pIngr = self.getVal(self.Widget["options"]["prevIngr"])
@@ -3458,20 +3458,18 @@ Copyright: Graham Johnson ©2010
             liste_version.sort()
             self.resetPMenu(self.WidgetViewer["recipeversion"] )
             [self.addItemToPMenu(self.WidgetViewer["recipeversion"],n) for n in liste_version]
-            self.setVal(self.WidgetViewer["recipeversion"],0)
+            self.setVal(self.WidgetViewer["recipeversion"],len(liste_version)-1)
 
     def updateRVersionFiller(self,*args):
         recipe = self.getVal(self.WidgetFiller["menuscene"])
         if recipe != "Load" and recipe != "Fetch" and recipe != "Custom":
-            #get the recipe version..mean there is older version ?
+            #get the recipe version
             liste_version = list(self.recipe_available[recipe].keys())
             liste_version.sort()
             self.resetPMenu(self.WidgetFiller["recipeversion"] )
             [self.addItemToPMenu(self.WidgetFiller["recipeversion"],n) for n in liste_version]
-            self.setVal(self.WidgetFiller["recipeversion"],0)
+            self.setVal(self.WidgetFiller["recipeversion"],len(liste_version)-1)
     
-
-        
     def preparePreFill(self,recipe,version="1.0",forceRecipe=False):
         #need a histoVol, afviewer, and helper  
         print (recipe,version)
@@ -3544,7 +3542,7 @@ Copyright: Graham Johnson ©2010
         self.histoVol[n].load_XML(filename)
         afviewer = AutopackViewer(ViewerType=self.helper.host,helper=self.helper)
         self.histoVol[n].name=n
-        afviewer.SetHistoVol(self.histoVol[n],20.0,display=False)
+        afviewer.SetHistoVol(self.histoVol[n],0.0,display=False)#padding !
         self.histoVol[n].host=self.helper.host
 #        afviewer.doSpheres = True
 #        afviewer.doPoints = True

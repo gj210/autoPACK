@@ -2592,7 +2592,7 @@ class Ingredient(Agent):
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None)
         #freePoints and distance are changed .. return them and see if they aredifferent
-        print ("multiprocessor",usePP)
+#        print ("multiprocessor",usePP)
         if usePP :
             return success, nbFreePoints, freePoints ,distance, histoVol.molecules         
         else :
@@ -3187,22 +3187,22 @@ class Ingredient(Agent):
 #                histoVol.close_ingr_bhtree.MoveRBHPoint(histoVol.nb_ingredient,jtrans,0)
                 histoVol.nb_ingredient+=1
 #                histoVol.close_ingr_bhtree.InsertRBHPoint((jtrans[0],jtrans[1],jtrans[2]),radius,None,histoVol.nb_ingredient)
-                self.counter += 1
-                self.completion = float(self.counter)/float(self.nbMol)
-    
-                if jitterPos>0:
-                    histoVol.successfullJitter.append(
-                        (self, jitterList, collD1, collD2) )
-                   
-                #if verbose :
-                print('Success nbfp:%d %d/%d dpad %.2f'%(
-                    nbFreePoints, self.counter, self.nbMol, dpad))
-                if self.name=='in  inside':
-                    histoVol.jitterVectors.append( (trans, jtrans) )
-    
-                success = True
-                self.rejectionCounter = 0
                 if usePP :
+                    self.counter += 1
+                    self.completion = float(self.counter)/float(self.nbMol)
+        
+                    if jitterPos>0:
+                        histoVol.successfullJitter.append(
+                            (self, jitterList, collD1, collD2) )
+                       
+                    #if verbose :
+                    print('Success nbfp:%d %d/%d dpad %.2f'%(
+                        nbFreePoints, self.counter, self.nbMol, dpad))
+                    if self.name=='in  inside':
+                        histoVol.jitterVectors.append( (trans, jtrans) )
+        
+                    success = True
+                    self.rejectionCounter = 0
                     return True, insidePoints, newDistPoints
             # update free points
             if verbose:
@@ -5112,6 +5112,18 @@ class SingleSphereIngr(Ingredient):
         self.minRadius = self.radii[0][0]
         self.encapsulatingRadius = radius
         #make a sphere ?->rapid ?
+        if self.mesh is None and autopack.helper is not None  :
+            if not autopack.helper.nogui :
+                #build a cylinder and make it length uLength, radius radii[0]
+                #this mesh is used bu RAPID for collision
+                p=autopack.helper.getObject("autopackHider")
+                if p is None:
+                    p = autopack.helper.newEmpty("autopackHider")
+                    if autopack.helper.host.find("blender") == -1 :
+                        autopack.helper.toggleDisplay(p,False)
+                self.mesh = autopack.helper.Sphere(self.name+"_basic",
+                                radius=self.radii[0][0],color=self.color,
+                                parent="autopackHider")[0]
         
 class SingleCubeIngr(Ingredient):
     """

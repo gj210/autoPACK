@@ -973,7 +973,7 @@ class Environment(CompartmentList):
         #debug with timer function
         self._timer = False
         self._hackFreepts = False   #hack for speed up ?
-        self.freePtsUpdateThrehod = 0.15
+        self.freePtsUpdateThrehod = 0.0
         self.nb_ingredient=0
         self.totalNbIngr = 0
         self.treemode = "cKDTree"# "bhtree"
@@ -1147,7 +1147,7 @@ class Environment(CompartmentList):
             #check for include list of ingredients
             ingredients_xmlfile = str(rnode.getAttribute("include"))
             if ingredients_xmlfile :#open the file and parse the ingredient:
-                xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
                 if xmlfile :
                     xmlinclude = parse(xmlfile).documentElement
                     self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
@@ -1196,7 +1196,7 @@ class Environment(CompartmentList):
                 rsnodes=rsnodes[0]
                 ingredients_xmlfile = str(rsnodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
-                    xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                    xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
                     if xmlfile :
                         xmlinclude = parse(xmlfile).documentElement
                         self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
@@ -1218,7 +1218,7 @@ class Environment(CompartmentList):
                 rinodes=rinodes[0]
                 ingredients_xmlfile = str(rinodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
-                    xmlfile = AutoFill.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
+                    xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
                     if xmlfile :
                         xmlinclude = parse(xmlfile).documentElement
                         self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
@@ -1262,7 +1262,7 @@ class Environment(CompartmentList):
             return "None"
         if attrname == "color" :
             if type(value) != list and type(value) != tuple :
-                if AutoFill.helper is not None : 
+                if autopack.helper is not None : 
                     value=helper.getMaterialProperty(value,["color"])[0]
                 else :
                     value = [1.,0.,0.]
@@ -1424,7 +1424,7 @@ class Environment(CompartmentList):
         """
         Save the current environment setup as a python script file.
         """
-        from AutoFill.Ingredient import IOingredientTool
+        from autopack.Ingredient import IOingredientTool
         io_ingr = IOingredientTool()
         self.setupfile = setupfile
         pathout=os.path.dirname(os.path.abspath(self.setupfile))
@@ -3970,9 +3970,9 @@ h1 = Environment()
 
     def setupOctree(self,):
         if self.octree is None :
-#            from AutoFill.octree import Octree
-            from AutoFill import octree_exteneded as octree
-            from AutoFill.octree_exteneded import Octree
+#            from autopack.octree import Octree
+            from autopack import octree_exteneded as octree
+            from autopack.octree_exteneded import Octree
             octree.MINIMUM_SIZE=self.smallestProteinSize
             octree.MAX_OBJECTS_PER_NODE=10
             self.octree = Octree(self.grid.getRadius(),helper=helper)#Octree((0,0,0),self.grid.getRadius())   #0,0,0 or center of grid?         
@@ -4178,7 +4178,7 @@ h1 = Environment()
         return inodenp
 
     def addMeshRBOrganelle(self,o):
-        helper = AutoFill.helper
+        helper = autopack.helper
         geom =   helper.getObject(o.gname)      
         if geom is None :
             o.gname = '%s_Mesh'%o.name            

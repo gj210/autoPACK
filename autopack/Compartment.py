@@ -13,7 +13,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK.
+# This file "Compartment.py" is part of autoPACK, cellPACK.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ class CompartmentList:
         self.parent = None
 
     def addCompartment(self, compartment):
-        """get the center of the gradient grid"""
+        """add a new compartment to the list"""
         assert compartment.parent == None
         assert isinstance(compartment, Compartment)
         self.compartments.append(compartment)
@@ -451,7 +451,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
         self.innerRecipe.number= self.number
-        recipe.compartment = self#weakref.ref(self)
+        recipe.compartment = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
 
@@ -461,7 +461,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
         self.surfaceRecipe.number= self.number
-        recipe.compartment = self#weakref.ref(self)
+        recipe.compartment = weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
 
@@ -986,18 +986,19 @@ class  Compartment(CompartmentList):
             #should check if in compartment bounding box
             #should check only if closed geom
             insideBB = True
-            if self.closed :
-                insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
+#            if self.closed :#??
+            insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
             r=False
             if insideBB:
                 #should use an optional direction for the ray, which will help for unclosed surface....
-                #intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
-                intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
+                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
+                #intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
                 r= ((count % 2) == 1)
                 if ray == 3 :
                     intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
-                    #center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
-                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
+                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
+                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
+                    #intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
                     if r :
                        if (count2 % 2) == 1 and (count3 % 2) == 1 :
                            r=True
@@ -1043,7 +1044,7 @@ class  Compartment(CompartmentList):
 
         self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
                                       self.insidePoints,areas=vSurfaceArea)
-        bhtreelib.freeBHtree(bht)
+        #bhtreelib.freeBHtree(bht)
         return self.insidePoints, self.surfacePoints
         
     def BuildGrid(self, histoVol):
