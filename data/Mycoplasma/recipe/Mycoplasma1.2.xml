@@ -122,7 +122,7 @@
       </ingredient>
 	</interior>
 	</organelle>
-	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Enveloppe.dae" name="Enveloppe" rep="None" rep_file="None">
+	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Envelope.dae" name="Envelope" rep="None" rep_file="None">
     </organelle>
 	<!-- compartments order is important-->
 	</autopackSetup>
