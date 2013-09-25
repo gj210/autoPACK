@@ -451,7 +451,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.innerRecipe = recipe
         self.innerRecipe.number= self.number
-        recipe.compartment = weakref.ref(self)
+        recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
 
@@ -461,7 +461,7 @@ class  Compartment(CompartmentList):
         assert isinstance(recipe, Recipe)
         self.surfaceRecipe = recipe
         self.surfaceRecipe.number= self.number
-        recipe.compartment = weakref.ref(self)
+        recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
 

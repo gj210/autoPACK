@@ -3515,6 +3515,7 @@ class Ingredient(Agent):
                     else : 
                         liste_nodes = self.get_rbNondes(closesbody_indice,jtrans)
                         print ("len(liste_nodes) ",len(liste_nodes) )
+                        #could use multiprocessor here and just wait for the first result
 #                        result2 = self.histoVol.world.contactTest(rbnode)
 #                        r = [( result2.getNumContacts() > 0),] 
                         for node in liste_nodes:

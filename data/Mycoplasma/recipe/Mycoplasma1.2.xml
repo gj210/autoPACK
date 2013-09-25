@@ -15,8 +15,6 @@
                 pick_mode="sub" radius="10.0" weight_mode="gauss"/>
 	</gradients>
 	<cytoplasme/>
-	<organelle geom="http://autofill.googlecode.com/git/data/HIV/geoms/Envelope.dae" name="Envelope" rep="None" rep_file="None">
-   </organelle>
 	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Mmycoides_PackingSurf_1_Med.dae" 
                 name="MycoplasmaPackSurf_1_med" rep="MycoplasmaRepSurf_1_med" rep_file="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Mmycoides_RepSurf_1_Med.dae">
 	<!--surface include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/SynapticVesicle_ingredients.xml"-->
@@ -124,4 +122,7 @@
       </ingredient>
 	</interior>
 	</organelle>
+	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Enveloppe.dae" name="Enveloppe" rep="None" rep_file="None">
+    </organelle>
+	<!-- compartments order is important-->
 	</autopackSetup>
