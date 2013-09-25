@@ -101,6 +101,11 @@
         <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
         <resultfile>http://autofill.googlecode.com/git/data/Test_Spheres2D/results/SpherefillResult.apr</resultfile>
     </recipe>
+    <recipe name="Test_Spheres2D" version="1.1">
+      <setupfile>http://autofill.googlecode.com/git/data/Test_Spheres2D/recipe/Test_Spheres2D1.1.xml</setupfile>
+        <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
+        <resultfile>http://autofill.googlecode.com/git/data/Test_Spheres2D/results/SpherefillResult.apr</resultfile>
+    </recipe>
     <recipe name="Mycoplasma" version="1.0">
         <setupfile>http://autofill.googlecode.com/git/data/Mycoplasma/recipe/Mycoplasma1.0.xml</setupfile>
         <wrkdir>autoFillRecipeScripts/Mycoplasma</wrkdir>
