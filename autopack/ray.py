@@ -251,7 +251,7 @@ def ray_intersect_polyhedron(pRayStartPos, pRayEndPos, vertices, faces,
                             vTriPt0[1] + u*vE1[1] + v*vE2[1],
                             vTriPt0[2] + u*vE1[2] + v*vE2[2])
 
-            print('COllission', fn, vCollidePos)
+            print('COllision', fn, vCollidePos)
             # The ray is hitting a triangle, now test to see if its a
             # triangle hit by the ray.
             vBackface = False

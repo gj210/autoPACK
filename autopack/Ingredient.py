@@ -48,7 +48,7 @@
 try :
     from scipy import spatial
 except :
-    spatial = None
+    autopack = None
 import numpy, weakref
 from math import sqrt, pi,sin, cos, asin
 from bhtree import bhtreelib
@@ -369,7 +369,25 @@ def ApplyMatrix(coords,mat):
     c = numpy.concatenate( (coords, one), 1 )
     return numpy.dot(c, numpy.transpose(mat))[:, :3]
 
-
+def bullet_checkCollision_mp(world, node1, node2):
+#    world = 
+#    node1 = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
+#    node2 = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
+    return world.contactTestPair(node1, node2).getNumContacts() > 0
+    
+def rapid_checkCollision_mp(v1,f1,rot1,trans1,v2,f2,rot2,trans2):
+    from RAPID import RAPIDlib
+    node1 = RAPIDlib.RAPID_model()
+    node1.addTriangles(numpy.array(v1,'f'), numpy.array(f1,'i'))
+    node2 = RAPIDlib.RAPID_model()
+    node2.addTriangles(numpy.array(v2,'f'), numpy.array(f2,'i'))
+    RAPIDlib.RAPID_Collide_scaled(rot1,trans1, 1.0,node1, rot2, trans2, 1.0,
+                                  node2,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
+#    print ("Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
+#    print ("Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
+    #data3 = RAPIDlib.RAPID_Get_All_Pairs()
+    return RAPIDlib.cvar.RAPID_num_contacts != 0
+    
 class Partner:
     def __init__(self,name,weight=0.0,properties=None):
         self.name = name
@@ -810,7 +828,7 @@ class Ingredient(Agent):
         #TODO : "med":{"method":"cms","parameters":{"gridres":30}}
         #TODO : "high":{"method":"msms","parameters":{"gridres":30}}
         #TODO : etc...
-        
+
         self.coordsystem="left"
         if "coordsystem" in kw:
             self.coordsystem = kw["coordsystem"]
@@ -864,6 +882,10 @@ class Ingredient(Agent):
         self.centT = None #transformed position
 
         self.results =[]
+        self.vertices=[]
+        self.faces=[]
+        if self.mesh is not None :
+            self.getData()
         self.KWDS = {   "molarity":{"type":"float"}, 
                         "encapsulatingRadius":{"type":"float","name":"encapsulatingRadius","default":5,"value":5,"min":0,"max":500,"description":"encapsulatingRadius"}, 
                         "radii":{"type":"float"}, 
@@ -1045,6 +1067,41 @@ class Ingredient(Agent):
             self.packingPriority = kw["priority"]
         if "packingMode" in kw :
             self.packingMode = kw["packingMode"]
+
+    def getData(self):
+        if not self.vertices :
+            if self.mesh :
+                helper = autopack.helper
+                #should get the mesh
+                if helper.host == "dejavu" :
+                    m = helper.getMesh(self.mesh)
+                    tr=False
+                else :
+                    m = helper.getMesh(helper.getName(self.mesh))
+                    tr=True
+                print ("Decompose Mesh")
+                self.faces,self.vertices,vnormals = helper.DecomposeMesh(m,
+                                   edit=True,copy=False,tri=True,transform=tr) 
+        
+
+    def rapid_model(self):
+        rapid_model = RAPIDlib.RAPID_model()
+        if not self.vertices :
+            if self.mesh :
+                helper = autopack.helper
+                #should get the mesh
+                if helper.host == "dejavu" :
+                    m = helper.getMesh(self.mesh)
+                    tr=False
+                else :
+                    m = helper.getMesh(helper.getName(self.mesh))
+                    tr=True
+                print ("Decompose Mesh")
+                self.faces,self.vertices,vnormals = helper.DecomposeMesh(m,
+                                   edit=True,copy=False,tri=True,transform=tr) 
+                print ("create the triangle",len(faces))
+            rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        return rapid_model       
             
     def create_rapid_model(self):
         self.rapid_model = RAPIDlib.RAPID_model()
@@ -1052,18 +1109,28 @@ class Ingredient(Agent):
         if self.mesh :
             helper = autopack.helper
             #should get the mesh
-            m = helper.getMesh(helper.getName(self.mesh))
+            if helper.host == "dejavu" :
+                m = helper.getMesh(self.mesh)
+                tr=False
+            else :
+                m = helper.getMesh(helper.getName(self.mesh))
+                tr=True
+            print ("Decompose Mesh")
             faces,vertices,vnormals = helper.DecomposeMesh(m,
-                               edit=True,copy=False,tri=True,transform=True) 
+                               edit=True,copy=False,tri=True,transform=tr) 
+            print ("create the triangle",len(faces))
             self.rapid_model.addTriangles(numpy.array(vertices,'f'), numpy.array(faces,'i'))
         else : #need vertices/faces from sphere/cylinder
             #get the primitive and extract the mesh from it
-            #what about multiSphere and multiCylinder            
+            #what about multiSphere and multiCylinder   
+            print ("empty rapid model")       
             return self.rapid_model
                    
     def get_rapid_model(self):
         if (self.rapid_model is None ):
+            print ("get rapid model, create it")
             self.create_rapid_model()
+            print ("OK")
         return self.rapid_model 
             
     def getMesh(self, filename, geomname):
@@ -1087,7 +1154,7 @@ class Ingredient(Agent):
 #        print('TODO: getMesh need safety check for no internet connection')
 #        print ("helper in Ingredient is "+str(helper))
         #should wetry to see if it already exist inthescene 
-        if helper is not None:
+        if helper is not None and not helper.nogui:
             o = helper.getObject(geomname)
             print ("retrieve ",geomname,o)
             if o is not None :
@@ -1177,7 +1244,22 @@ class Ingredient(Agent):
         elif fileExtension == ".dae":
             print ("read dae withHelper",filename,helper,autopack.helper)
             #use the host helper if any to read
-            if helper is not None:#neeed the helper
+            if helper is None :
+                from upy.dejavuTk.dejavuHelper import dejavuHelper
+                #need to get the mesh directly. Only possible if dae or dejavu format
+                #get the dejavu heper but without the View, and in nogui mode
+                h =  dejavuHelper(vi="nogui")
+                dgeoms = h.read(filename)
+                v,vn,f = dgeoms.values()[0]["mesh"]
+                geom = h.createsNmesh(geomname,v,None,f)[0]
+                return geom
+            else : #if helper is not None:#neeed the helper
+                if helper.host == "dejavu" and helper.nogui:
+                    dgeoms = helper.read(filename)
+                    v,vn,f = dgeoms.values()[0]["mesh"]
+#                    vn = self.getVertexNormals(v,f)     
+                    geom = helper.createsNmesh(geomname,v,None,f)[0]
+                    return geom
                 helper.read(filename)
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
@@ -2071,8 +2153,8 @@ class Ingredient(Agent):
         ptID = self.histoVol.grid.getPointFrom3D(point)
         if self.compNum > 0 : #surface authorized outside and surface:
             #ray cast ? is inside
-            if self.histoVol.grid.gridPtId[ptID] < 0 :
-                return False
+#            if self.histoVol.grid.gridPtId[ptID] < 0 : #
+#                return False
             if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
                 return False
             return True
@@ -2432,13 +2514,13 @@ class Ingredient(Agent):
                 continue
             node = ingr.get_rapid_model()
             #distance ? should be < ingrencapsRadius+self.encradius
-            nodes.append([node,numpy.array(jtrans),numpy.array(rotMat[:3,:3],'f')])
+            nodes.append([node,numpy.array(jtrans),numpy.array(rotMat[:3,:3],'f'),ingr])
         #append organelle rb nodes
         if self.compNum < 0 or self.compNum == 0 :     
             for o in self.histoVol.compartments:
                 node = o.get_rapid_model() 
                 if node is not None : 
-                    nodes.append([node,numpy.zeros((3), 'f'),numpy.zeros((3, 3), 'f')])
+                    nodes.append([node,numpy.zeros((3), 'f'),numpy.zeros((3, 3), 'f'),o])
 #        print len(nodes),nodes
         self.histoVol.nodes = nodes
         return nodes
@@ -2565,22 +2647,22 @@ class Ingredient(Agent):
             success, nbFreePoints = self.jitter_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "spring" or self.placeType == "rigid-body":
             success, nbFreePoints = self.rigid_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaDev":
             success, nbFreePoints = self.pandaBullet_place_dev(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaBullet":
             success, nbFreePoints = self.pandaBullet_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaBulletRelax" or self.placeType == "pandaBulletSpring":
             success, nbFreePoints = self.pandaBullet_relax(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
@@ -2590,13 +2672,13 @@ class Ingredient(Agent):
             success, nbFreePoints = self.rapid_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None)
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         #freePoints and distance are changed .. return them and see if they aredifferent
 #        print ("multiprocessor",usePP)
-        if usePP :
-            return success, nbFreePoints, freePoints ,distance, histoVol.molecules         
-        else :
-            return success, nbFreePoints
+#        if usePP :
+#            return success, nbFreePoints, freePoints ,distance, histoVol.molecules         
+#        else :
+        return success, nbFreePoints
  
     def place_mp(self,histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
@@ -3187,7 +3269,7 @@ class Ingredient(Agent):
 #                histoVol.close_ingr_bhtree.MoveRBHPoint(histoVol.nb_ingredient,jtrans,0)
                 histoVol.nb_ingredient+=1
 #                histoVol.close_ingr_bhtree.InsertRBHPoint((jtrans[0],jtrans[1],jtrans[2]),radius,None,histoVol.nb_ingredient)
-                if usePP :
+                if False :#usePP
                     self.counter += 1
                     self.completion = float(self.counter)/float(self.nbMol)
         
@@ -3270,8 +3352,8 @@ class Ingredient(Agent):
                 #if verbose :
                 print('PREMATURE ENDING of ingredient', self.name)
                 self.completion = 1.0
-            if usePP :
-                return False,None,None
+#            if usePP :
+#                return False,None,None
         if sphGeom is not None:
             sphGeom.Set(vertices=sphCenters, radii=sphRadii,
                         materials=sphColors)
@@ -3318,7 +3400,7 @@ class Ingredient(Agent):
     def pandaBullet_place(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None,drop=True):
+              sphCenters=None,  sphRadii=None, sphColors=None,drop=True,usePP=False):
         """
         drop the ingredient on grid point ptInd
         """
@@ -3515,14 +3597,32 @@ class Ingredient(Agent):
                     else : 
                         liste_nodes = self.get_rbNondes(closesbody_indice,jtrans)
                         print ("len(liste_nodes) ",len(liste_nodes) )
-                        #could use multiprocessor here and just wait for the first result
-#                        result2 = self.histoVol.world.contactTest(rbnode)
-#                        r = [( result2.getNumContacts() > 0),] 
-                        for node in liste_nodes:
-                            col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
-                            r=[col]
-                            if col :
-                                break
+                        if usePP :
+                            #use self.grab_cb and self.pp_server
+                            ## Divide the task or just submit job
+                            n=0
+                            self.histoVol.grab_cb.reset()#can't pickle bullet world 
+                            print ("usePP ",autopack.ncpus)
+                            for i in range(len(liste_nodes)/autopack.ncpus):
+                                for c in range(autopack.ncpus):
+                                    print ("submit job",i,c,n)
+                                    self.histoVol.pp_server.submit(checkCollision_mp,
+                                                (self.histoVol.world,rbnode, liste_nodes[n]),
+                                            callback=self.histoVol.grab_cb.grab)
+#                                    self.histoVol.pp_server.submit(self.histoVol.world.contactTestPair, 
+#                                                          (rbnode, liste_nodes[n]), 
+#                                            callback=self.histoVol.grab_cb.grab)
+                                    n+=1
+                                self.histoVol.pp_server.wait()
+                                r.extend(self.histoVol.grab_cb.collision[:])
+                                if True in r :
+                                    break
+                        else :
+                            for node in liste_nodes:
+                                col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
+                                r=[col]
+                                if col :
+                                    break
                         #r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                        
 #                        r=[ (self.histoVol.world.contactTestPair(rbnode, self.histoVol.static[n]).getNumContacts() > 0 ) for n in closesbody_indice if n < len(self.histoVol.static)]  #except last one  that should be last drop fragment
             else :
@@ -4306,7 +4406,7 @@ class Ingredient(Agent):
     def rapid_place(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None,drop=True):
+              sphCenters=None,  sphRadii=None, sphColors=None,drop=True,usePP=False):
         """
         drop the ingredient on grid point ptInd
         """
@@ -4496,20 +4596,46 @@ class Ingredient(Agent):
                         liste_nodes = self.get_rapid_nodes(closesbody_indice,jtrans)
                         print ("len(liste_nodes) ",len(liste_nodes) )#[node,jtrans,rotMat]
                         r=[]
-                        for node,trans,rot in liste_nodes:
-                            print (node,trans,rot)
-                            #should I transpose the rotation ?
-                            RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f'), numpy.array(jtrans,'f'), 1.0,rbnode, rot, trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
-                            print ("Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
-                            print ("Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
-                            #data3 = RAPIDlib.RAPID_Get_All_Pairs()
-                            collision2 = RAPIDlib.cvar.RAPID_num_contacts!=0
-                            #RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f').transpose(), numpy.array(jtrans,'f'), 1.0,rbnode, rot.transpose(), trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
-                            #print ("tr Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
-                            #print ("tr Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
-                            #data3 = RAPIDlib.RAPID_Get_All_Pairs()
-                            if collision2 :
-                                break
+                        if usePP :
+                            #rapid_model should be None
+                            #use self.grab_cb and self.pp_server
+                            ## Divide the task or just submit job
+                            n=0
+#                            self.rapid_model = None
+                            self.histoVol.grab_cb.reset()
+                            print ("usePP ",autopack.ncpus)
+                            for i in range(len(liste_nodes)/autopack.ncpus):
+                                for c in range(autopack.ncpus):
+                                    v1=self.vertices
+                                    f1=self.faces
+                                    v2=liste_nodes[n][3].vertices
+                                    f2=liste_nodes[n][3].faces
+#                                    liste_nodes[n][3].rapid_model = None
+                                    self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
+                                    (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+                                     v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+                                            callback=self.histoVol.grab_cb.grab,
+                                            modules=("numpy",))
+                                    n+=1
+                                self.histoVol.pp_server.wait()
+                                r.extend(self.histoVol.grab_cb.collision[:])
+                                if True in r :
+                                    break
+                        else :                                                
+                            for node,trans,rot,ingr in liste_nodes:
+                                print (node,trans,rot)
+                                #should I transpose the rotation ?
+                                RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f'), numpy.array(jtrans,'f'), 1.0,rbnode, rot, trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
+                                print ("Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
+                                print ("Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
+                                #data3 = RAPIDlib.RAPID_Get_All_Pairs()
+                                collision2 = RAPIDlib.cvar.RAPID_num_contacts!=0
+                                #RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f').transpose(), numpy.array(jtrans,'f'), 1.0,rbnode, rot.transpose(), trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
+                                #print ("tr Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
+                                #print ("tr Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
+                                #data3 = RAPIDlib.RAPID_Get_All_Pairs()
+                                if collision2 :
+                                    break
                         #r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                                                
                         #r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                        
 #                        r=[ (self.histoVol.world.contactTestPair(rbnode, self.histoVol.static[n]).getNumContacts() > 0 ) for n in closesbody_indice if n < len(self.histoVol.static)]  #except last one  that should be last drop fragment
@@ -5125,6 +5251,10 @@ class SingleSphereIngr(Ingredient):
                 self.mesh = autopack.helper.Sphere(self.name+"_basic",
                                 radius=self.radii[0][0],color=self.color,
                                 parent="autopackHider")[0]
+            else :
+                self.mesh = autopack.helper.Icosahedron(self.name+"_basic",
+                                radius=self.radii[0][0])[0]
+            self.getData()
         
 class SingleCubeIngr(Ingredient):
     """
@@ -5362,9 +5492,20 @@ class GrowIngrediant(MultiCylindersIngr):
             if not autopack.helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
                 #this mesh is used bu RAPID for collision
+                p=autopack.helper.getObject("autopackHider")
+                if p is None:
+                    p = autopack.helper.newEmpty("autopackHider")
+                    if autopack.helper.host.find("blender") == -1 :
+                        autopack.helper.toggleDisplay(p,False)
                 self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
                                 res= 5, parent="autopackHider")[0]
+            else :
+                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+                                radius=self.radii[0][0]*1.24, length=self.uLength,
+                                res= 5, parent="autopackHider")[0]                
+            self.getData()
+
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -5752,7 +5893,8 @@ class GrowIngrediant(MultiCylindersIngr):
         self.histoVol.rb_panda.append(inodenp)
         return inodenp
         
-    def walkSpherePanda(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True):
+    def walkSpherePanda(self,pt1,pt2,distance,histoVol,marge = 90.0,
+                        checkcollision=True,usePP=False):
         """ use a random point on a sphere of radius uLength, and useCylinder collision on the grid """ 
 #        print ("walkSpherePanda ",pt1,pt2  )      
         v,d = self.vi.measure_distance(pt1,pt2,vec=True)
@@ -5808,7 +5950,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         if marge >=175 :
                             print ("no second point not constraintMarge 1 ", marge)
                             return None,False
-                        print ("increase marge because inside,closeS ",inside,closeS,inComp,newPt,marge)
+                        #print ("increase marge because inside,closeS ",inside,closeS,inComp,newPt,marge)
                         marge+=1
                     else :
                         print ("inside,closeS ",inside,closeS,inComp,newPt,marge)
@@ -5853,12 +5995,28 @@ class GrowIngrediant(MultiCylindersIngr):
 #                            print("get_rbNondes",closesbody_indice)
                             #print ("collision RB ",len(closesbody_indice))
                             liste_nodes = self.get_rbNondes(closesbody_indice,jtrans,prevpoint=prev)
-                            
-                            #print ("collision test ")
-                            #self.checkDistance(liste_nodes,b/2.,cutoff)
-#                            result2 = self.histoVol.world.contactTest(rbnode)
-#                            r = [( result2.getNumContacts() > 0),]    
-                            r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                    
+                            if usePP :
+                                #use self.grab_cb and self.pp_server
+                                ## Divide the task or just submit job
+                                n=0
+                                self.histoVol.grab_cb.reset()
+                                for i in range(len(liste_nodes)/autopack.ncpus):
+                                    for c in range(autopack.ncpus):
+                                        self.histoVol.pp_server.submit(self.histoVol.world.contactTestPair, 
+                                                              (rbnode, liste_nodes[n]), 
+                                                callback=self.histoVol.grab_cb.grab)
+                                        n+=1
+                                    self.histoVol.pp_server.wait()
+                                    r.extend(self.histoVol.grab_cb.collision[:])
+                                    if True in r :
+                                        break
+                            else :
+                                for node in liste_nodes:
+                                    col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
+                                    r=[col]
+                                    if col :
+                                        break
+                                #r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                    
                     #closesbody_indice = self.getClosestIngredient(newPt,histoVol,cutoff=self.uLength)
                     #r=[ (histoVol.world.contactTestPair(rbnode, self.histoVol.static[n]).getNumContacts() > 0 ) for n in closesbody_indice]  #except last one  that should be last drop fragment
                     #result2 = histoVol.world.contactTest(rbnode)
@@ -5881,24 +6039,24 @@ class GrowIngrediant(MultiCylindersIngr):
                         histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
                         histoVol.callFunction(histoVol.delRB,(rbnode,))
                         #histoVol.close_ingr_bhtree.InsertRBHPoint((jtrans[0],jtrans[1],jtrans[2]),radius,None,histoVol.nb_ingredient)
-                        print ("update bhtree")
+#                        print ("update bhtree")
                         if histoVol.treemode == "bhtree":# "cKDTree"
                             if len(histoVol.rTrans) > 1 : bhtreelib.freeBHtree(histoVol.close_ingr_bhtree)
                             histoVol.close_ingr_bhtree=bhtreelib.BHtree( histoVol.rTrans, None, 10)
                         else :
                             #rebuild kdtree
                             if len(self.histoVol.rTrans) > 1 :histoVol.close_ingr_bhtree= spatial.cKDTree(histoVol.rTrans, leafsize=10)
-                        print ("bhtree updated")
+#                        print ("bhtree updated")
                         return numpy.array(pt2).flatten()+numpy.array(pt),True
                     else : #increment the range
                         if not self.constraintMarge :
                             if marge >=180 : #pi
-                                print ("no second point not constraintMarge 2 ", marge)
+                                #print ("no second point not constraintMarge 2 ", marge)
                                 return None,False
-                            print ("upate marge because collision ", marge)
+                            #print ("upate marge because collision ", marge)
                             marge+=1
                         else :
-                            print ("collision")
+                            #print ("collision")
                             attempted +=1
                         continue
                 else :
@@ -5916,7 +6074,7 @@ class GrowIngrediant(MultiCylindersIngr):
         histoVol.callFunction(histoVol.delRB,(rbnode,))
         return numpy.array(pt2).flatten()+numpy.array(pt),True
 
-    def walkSphereRAPID(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True):
+    def walkSphereRAPID(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True,usePP=False):
         """ use a random point on a sphere of radius uLength, and useCylinder collision on the grid """ 
 #        print ("walkSpherePanda ",pt1,pt2  )      
         v,d = self.vi.measure_distance(pt1,pt2,vec=True)
@@ -5935,7 +6093,7 @@ class GrowIngrediant(MultiCylindersIngr):
             #sp.SetAbsPos(self.vi.FromVec(startingPoint))
             self.vi.update()
         while not found :
-            print ("attempt ", attempted, marge)
+            #print ("attempt ", attempted, marge)
             #main loop thattryto found the next point (similar to jitter)
             if attempted >= safetycutoff:
                 print ("break too much attempt ", attempted, safetycutoff)
@@ -5972,7 +6130,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         if marge >=175 :
                             print ("no second point not constraintMarge 1 ", marge)
                             return None,False
-                        print ("increase marge because inside,closeS ",inside,closeS,inComp,newPt,marge)
+#                        print ("increase marge because inside,closeS ",inside,closeS,inComp,newPt,marge)
                         marge+=1
                     else :
                         print ("inside,closeS ",inside,closeS,inComp,newPt,marge)
@@ -6004,23 +6162,49 @@ class GrowIngrediant(MultiCylindersIngr):
                         if len(closesbody_indice) == 0: r =[False]         #closesbody_indice[0] == -1            
                         else : 
                             liste_nodes = self.get_rapid_nodes(closesbody_indice,jtrans,prevpoint=prev)
-                            print ("len(liste_nodes) ",len(liste_nodes) )#[node,jtrans,rotMat]
+                            #print ("len(liste_nodes) ",len(liste_nodes) )#[node,jtrans,rotMat]
                             r=[]
-                            for node,trans,rot in liste_nodes:
-                                print (node,trans,rot)
-                                #should I transpose the rotation ?
-                                RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f'), numpy.array(jtrans,'f'), 1.0,rbnode, rot, trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
-                                print ("Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
-                                print ("Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
-                                #data3 = RAPIDlib.RAPID_Get_All_Pairs()
-                                collision2 = RAPIDlib.cvar.RAPID_num_contacts!=0
-                                #RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f').transpose(), numpy.array(jtrans,'f'), 1.0,rbnode, rot.transpose(), trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
-                                #print ("tr Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
-                                #print ("tr Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
-                                #data3 = RAPIDlib.RAPID_Get_All_Pairs()
-                                r=[collision2]
-                                if collision2 :
-                                    break
+                            if usePP :
+                                #rapid_model should be None
+                                #use self.grab_cb and self.pp_server
+                                ## Divide the task or just submit job
+                                n=0
+    #                            self.rapid_model = None
+                                self.histoVol.grab_cb.reset()
+                                #print ("usePP ",autopack.ncpus)
+                                for i in range(len(liste_nodes)/autopack.ncpus):
+                                    for c in range(autopack.ncpus):
+                                        v1=self.vertices
+                                        f1=self.faces
+                                        v2=liste_nodes[n][3].vertices
+                                        f2=liste_nodes[n][3].faces
+    #                                    liste_nodes[n][3].rapid_model = None
+                                        self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
+                                        (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+                                         v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+                                                callback=self.histoVol.grab_cb.grab,
+                                                modules=("numpy",))
+                                        n+=1
+                                    self.histoVol.pp_server.wait()
+                                    r.extend(self.histoVol.grab_cb.collision[:])
+                                    if True in r :
+                                        break
+                            else :                                                
+                                for node,trans,rot,ingr in liste_nodes:
+                                    #print (node,trans,rot)
+                                    #should I transpose the rotation ?
+                                    RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f'), numpy.array(jtrans,'f'), 1.0,rbnode, rot, trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
+                                    #print ("Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
+                                    #print ("Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
+                                    #data3 = RAPIDlib.RAPID_Get_All_Pairs()
+                                    collision2 = RAPIDlib.cvar.RAPID_num_contacts!=0
+                                    #RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3,:3],'f').transpose(), numpy.array(jtrans,'f'), 1.0,rbnode, rot.transpose(), trans, 1.0,node,RAPIDlib.cvar.RAPID_FIRST_CONTACT);
+                                    #print ("tr Num box tests: %d" % RAPIDlib.cvar.RAPID_num_box_tests)
+                                    #print ("tr Num contact pairs: %d" % RAPIDlib.cvar.RAPID_num_contacts)
+                                    #data3 = RAPIDlib.RAPID_Get_All_Pairs()
+                                    r=[collision2]
+                                    if collision2 :
+                                        break
                     collision=( True in r)
                     #print (" collide ?",collision)
                     if not collision :
@@ -6037,24 +6221,24 @@ class GrowIngrediant(MultiCylindersIngr):
                         histoVol.rIngr.append(self)
                         histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
                         #histoVol.close_ingr_bhtree.InsertRBHPoint((jtrans[0],jtrans[1],jtrans[2]),radius,None,histoVol.nb_ingredient)
-                        print ("update bhtree")
+#                        print ("update bhtree")
                         if histoVol.treemode == "bhtree":# "cKDTree"
                             if len(histoVol.rTrans) > 1 : bhtreelib.freeBHtree(histoVol.close_ingr_bhtree)
                             histoVol.close_ingr_bhtree=bhtreelib.BHtree( histoVol.rTrans, None, 10)
                         else :
                             #rebuild kdtree
                             if len(self.histoVol.rTrans) > 1 :histoVol.close_ingr_bhtree= spatial.cKDTree(histoVol.rTrans, leafsize=10)
-                        print ("bhtree updated")
+#                        print ("bhtree updated")
                         return numpy.array(pt2).flatten()+numpy.array(pt),True
                     else : #increment the range
                         if not self.constraintMarge :
                             if marge >=180 : #pi
-                                print ("no second point not constraintMarge 2 ", marge)
+#                                print ("no second point not constraintMarge 2 ", marge)
                                 return None,False
-                            print ("upate marge because collision ", marge)
+#                            print ("upate marge because collision ", marge)
                             marge+=1
                         else :
-                            print ("collision")
+#                            print ("collision")
                             attempted +=1
                         continue
                 else :
@@ -6092,7 +6276,7 @@ class GrowIngrediant(MultiCylindersIngr):
     def grow(self,previousPoint,startingPoint,secondPoint,listePtCurve,
               listePtLinear,histoVol, ptInd, 
               freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,r=False):
+              stepByStep=False, verbose=False,r=False,usePP=False):
         #r is for reverse growing
         Done = False
         runTimeDisplay = histoVol.runTimeDisplay
@@ -6114,7 +6298,7 @@ class GrowIngrediant(MultiCylindersIngr):
         levelreset = 1
         levelresetcutoff = 5
         while not Done:
-            print ("attempt K ",k)
+            #print ("attempt K ",k)
             if k > safetycutoff :
                 print ("break safetycutoff",k)
                 self.listePtCurve.append(listePtCurve)
@@ -6145,12 +6329,12 @@ class GrowIngrediant(MultiCylindersIngr):
                     secondPoint,success = self.walkSpherePanda(previousPoint,startingPoint,
                                                       distance,histoVol,
                                                       marge = self.marge,
-                                                      checkcollision=True)  
+                                                      checkcollision=True,usePP=usePP)  
                 elif self.placeType == "RAPID" :
                     secondPoint,success = self.walkSphereRAPID(previousPoint,startingPoint,
                                                       distance,histoVol,
                                                       marge = self.marge,
-                                                      checkcollision=True)  
+                                                      checkcollision=True,usePP=usePP)  
                 else :
                     secondPoint,success = self.walkSphere(previousPoint,startingPoint,
                                                       distance,histoVol,
@@ -6305,6 +6489,10 @@ class GrowIngrediant(MultiCylindersIngr):
                 if histoVol.afviewer is not None and hasattr(histoVol.afviewer,"vi"):
                     histoVol.afviewer.vi.progressBar(progress=int((self.currentLength / self.length)*100),
                                                          label=self.name+str(self.currentLength / self.length)+" "+str(self.nbCurve)+"/"+str(self.nbMol))
+                else :
+                    autopack.helper.progressBar(progress=int((self.currentLength / self.length)*100),
+                                                         label=self.name+str(self.currentLength / self.length)+" "+str(self.nbCurve)+"/"+str(self.nbMol))
+  
             #Start Graham on 5/16/12 This progress bar doesn't work properly... compare with my version in HistoVol
                 if self.currentLength >= self.length:
                     Done = True
@@ -6395,7 +6583,7 @@ class GrowIngrediant(MultiCylindersIngr):
     def jitter_place(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
-              sphCenters=None,  sphRadii=None, sphColors=None):
+              sphCenters=None,  sphRadii=None, sphColors=None,usePP=False):
         #ptInd is the starting point
         #loop over until length reach or cant grow anymore
 #        self.nbMol = 1               
@@ -6472,10 +6660,11 @@ class GrowIngrediant(MultiCylindersIngr):
         v=[0.,0.,0.]
         d=0.
         #loop 1 Forward
+
         success, nbFreePoints,freePoints = self.grow(previousPoint,startingPoint,secondPoint,
                                           listePtCurve,listePtLinear,histoVol, 
                                           ptInd, freePoints, nbFreePoints, distance, 
-                                          dpad,stepByStep=False, verbose=False)
+                                          dpad,stepByStep=False, verbose=False,usePP=usePP)
         nbFreePoints,freePoints = self.updateGrid(2,histoVol,dpad,freePoints, nbFreePoints, distance, 
                         gridPointsCoords, verbose)
         if self.seedOnMinus :

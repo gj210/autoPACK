@@ -51,7 +51,7 @@ autoPACKserver="http://autofill.googlecode.com/git/data/"
 
 LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev","RAPID"]
 afdir = os.path.abspath(__path__[0])
-
+ncpus = 2
 forceFetch = False
 checkAtstartup = True
 messag = '''Welcome to autoPACK.

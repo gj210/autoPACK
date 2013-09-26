@@ -7,6 +7,27 @@ Created on Sun Jan 27 09:04:10 2013
 import numpy
 import autopack
 
+class GrabResult(object):
+    """Class for callbacks
+    """
+
+    def __init__(self):
+        self.collision = []
+        #self.lock = thread.allocate_lock()
+    
+    def reset(self):
+        self.collision = []
+        
+    def grab(self, value):
+        """
+        the callback function
+        """
+        # we must use lock here because += is not atomic
+        #self.lock.acquire()
+        self.collision.append(value)
+        #self.lock.release()
+
+
 def getValueToXMLNode(vtype,node,attrname):
 #        print "getValueToXMLNode ",attrname
     value = node.getAttribute(attrname)

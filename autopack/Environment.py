@@ -59,6 +59,7 @@ from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 from autopack.ray import vlen, vdiff, vcross
+from autopack.IOutils import GrabResult
 
 import math
 import sys
@@ -953,6 +954,9 @@ class Environment(CompartmentList):
 
         #cancel dialog-> need to be develop more
         self.cancelDialog = False
+
+        self.grab_cb = None 
+        self.pp_server = None
         
         #
         self.nFill = 0
@@ -1004,7 +1008,7 @@ class Environment(CompartmentList):
                     "placeMethod": {"name":"placeMethod","value":"jitter","values":self.listPlaceMethod,"default":"placeMethod","type":"liste","description":"     Overriding Packing Method = ","width":30},
                     "use_gradient":{"name":"use_gradient","value":False,"default":False,"type":"bool","description":"Use gradients if defined","width":150},
                     "gradients":{"name":"gradients","value":"","values":[],"default":"","type":"liste","description":"Gradients available","width":150},
-                    "innerGridMethod": {"name":"innerGridMethod","value":"bhtree","values":["bhtree","sdf","jordan","jordan3"],"default":"innerGridMethod","type":"liste","description":"     Method to calculate the inner grid:","width":30},
+                    "innerGridMethod": {"name":"innerGridMethod","value":"bhtree","values":["bhtree","sdf","jordan","jordan3","pyray"],"default":"innerGridMethod","type":"liste","description":"     Method to calculate the inner grid:","width":30},
                     "overwritePlaceMethod":{"name":"overwritePlaceMethod","value":False,"default":False,"type":"bool","description":"Overwrite per-ingredient packing method with Overriding Packing Method:","width":300},
                     "saveResult": {"name":"saveResult","value":False,"default":False,"type":"bool","description":"Save packing result to .apr file (enter full path below):","width":200},
                     "resultfile": {"name":"resultfile","value":"fillResult","default":"fillResult","type":"filename","description":"result filename","width":200},
@@ -1715,11 +1719,15 @@ h1 = Environment()
                     
     def writeArraysToFile(self, f):
         """write self.gridPtId and self.distToClosestSurf to file. (pickle) """
+        pickle.dump(self.grid.masterGridPositions, f)
         pickle.dump(self.grid.gridPtId, f)
         pickle.dump(self.grid.distToClosestSurf, f)
 
     def readArraysFromFile(self, f):
         """write self.gridPtId and self.distToClosestSurf to file. (pickle) """
+        pos = pickle.load(f)
+        self.grid.masterGridPositions   = pos     
+        
         id = pickle.load(f)
         #assert len(id)==len(self.gridPtId)
         self.grid.gridPtId = id
@@ -1727,8 +1735,9 @@ h1 = Environment()
         dist = pickle.load(f)
         #assert len(dist)==len(self.distToClosestSurf)
         self.grid.distToClosestSurf = dist#grid+organelle+surf
-
-
+        self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:]
+        self.grid.freePoints = list(range(len(id)))
+        
     def saveGridToFile(self,gridFileOut):
         """
         Save the current grid and the compartment grid information in a file. (pickle) 
@@ -1744,12 +1753,23 @@ h1 = Environment()
         """
         Read and setup the grid from the given filename. (pickle) 
         """
+        from bhtree import bhtreelib
         aInteriorGrids = []
         aSurfaceGrids = []
         f = open(gridFileName,'rb')
         self.readArraysFromFile(f) #read gridPtId and distToClosestSurf
-        self.BuildGrids()        
-
+        #self.BuildGrids()        
+        for compartment in self.compartments:
+            compartment.readGridFromFile(f) 
+            aInteriorGrids.append(compartment.insidePoints)
+            aSurfaceGrids.append(compartment.surfacePoints)
+            compartment.OGsrfPtsBht = bhtreelib.BHtree(tuple(compartment.vertices), None, 10)
+        f.close()
+        self.grid.aInteriorGrids = aInteriorGrids
+        self.grid.aSurfaceGrids = aSurfaceGrids
+ 
+    
+    
     def setMinMaxProteinSize(self):
         """
         Retrieve and store mini and maxi ingredient size
@@ -1996,6 +2016,8 @@ h1 = Environment()
                 a, b = compartment.BuildGridJordan(self)
             elif self.innerGridMethod == "jordan3" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
                 a, b = compartment.BuildGridJordan(self,ray=3)
+            elif self.innerGridMethod == "pyray" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+                a, b = compartment.BuildGrid_pyray(self)    
             aInteriorGrids.append(a)
             print("I'm ruther in the loop")
             aSurfaceGrids.append(b)
@@ -2068,7 +2090,7 @@ h1 = Environment()
         if hasattr(self,"afviewer"):
             if self.afviewer is not None and hasattr(self.afviewer,"vi"):
                 self.afviewer.vi.progressBar(label="Computing the number of grid points")
-        if rebuild :
+        if rebuild or gridFileIn is not None:
             # save bb for current fill
             self.fillBB = boundingBox
             grid = Grid()
@@ -2082,7 +2104,7 @@ h1 = Environment()
         nbPoints = self.grid.gridVolume
         print("$$$$$$$$  gridVolume = nbPoints = ", nbPoints, " grid.nbGridPoints = ", self.grid.nbGridPoints)
         # compute 3D point coordiantes for all grid points
-        if rebuild :
+        if rebuild or gridFileIn is not None:
             self.callFunction(grid.create3DPointLookup) #generate grid.masterGridPositions 
 #            print('grid size', grid.nbGridPoints)
             grid.nbSurfacePoints = 0
@@ -2095,12 +2117,14 @@ h1 = Environment()
         xr,yr,zr = boundingBox[1]
         # distToClosestSurf is set to self.diag initially
         self.grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
-        if rebuild :
+        if rebuild or gridFileIn is not None:
             self.grid.distToClosestSurf = [diag]*nbPoints#surface point too?
+            self.grid.distToClosestSurf = numpy.array(self.grid.distToClosestSurf)
             self.grid.freePoints = list(range(nbPoints))
         else :
             #just reset
             self.grid.distToClosestSurf = [diag]*len(self.grid.distToClosestSurf)#surface point too?
+            self.grid.distToClosestSurf = numpy.array(self.grid.distToClosestSurf)
             self.grid.freePoints = list(range(len(self.grid.freePoints)))
             nbPoints = len(self.grid.freePoints)
         #print 'DIAG', diag
@@ -2114,10 +2138,11 @@ h1 = Environment()
 
 #        if rebuild :
             #this restore/store the grid information of the organelle.
-        if gridFileIn is not None and not rebuild:
+        if gridFileIn is not None :#and not rebuild:
             print ("file in for building grid but it doesnt work well")
             self.grid.filename = gridFileIn
-            if self.nFill == 0 :
+            if self.nFill == 0 :#?:
+                print ("restore from file")
                 self.restoreGridFromFile(gridFileIn)
         elif gridFileIn is None and rebuild:
             # assign ids to grid points
@@ -2133,6 +2158,7 @@ h1 = Environment()
  #       nbPoints = nbPoints-1          #Graham Turned this one off on 5/16/12 to match August repair in Hybrid
         grid.nbFreePoints = nbPoints#-1
         grdPts = grid.masterGridPositions
+        grid.nbFreePoints = len(grdPts)
         # build BHTree for surface points (off grid)
         if rebuild :
             verts = []            
@@ -2715,12 +2741,12 @@ h1 = Environment()
             else :
                 #use periodic update according size ration grid
                 update = self.checkIfUpdate(ingr,nbFreePoints)
-#                print("in update else")
+#                print("in update ",update)
 #                print "update ", update,nbFreePoints,hasattr(ingr,"allIngrPts"),cut
                 if update :
 #                    print("in update loop")
                     for i in range(nbFreePoints):
-#                        print("in i range of update loop")
+#                        print("in i range of update loop",i,freePoints[i],distance[i])
                         pt = freePoints[i]
                         d = distance[pt]
 #                        print("in update for/if")
@@ -2733,6 +2759,7 @@ h1 = Environment()
 #                    if verbose:
 #                    print("getPointToDrop len(allIngrPts) = ", len(allIngrPts))
                 else :
+#                    print ("else")
                     if hasattr(ingr,"allIngrPts"):
 #                        print("allIngrPts = ingr.allIngrPts two elses deep")
                         allIngrPts = ingr.allIngrPts
@@ -2915,7 +2942,9 @@ h1 = Environment()
         # create a list of active ingredients indices in all recipes to allow
         # removing inactive ingredients when molarity is reached
         allIngredients = self.callFunction(self.getActiveIng)
-
+        usePP = False
+        if "usePP" in kw :
+            usePP = kw["usePP"]
         nbIngredients = len(allIngredients)
         self.cFill = self.nFill
         if name == None :
@@ -3020,16 +3049,20 @@ h1 = Environment()
             for o in self.compartments:
                 if o.rbnode is None :
                     o.rbnode = self.addMeshRBOrganelle(o)
+        if usePP :
+            import pp
+            self.grab_cb = GrabResult() 
+            self.pp_server = pp.Server(ncpus=autopack.ncpus)
 #==============================================================================
 #         #the big loop
 #==============================================================================
         while nbFreePoints:
-#            print (".........At start of while loop, with vRangeStart = ", vRangeStart)
+            print (".........At start of while loop, with vRangeStart = ", vRangeStart)
 #            for o in self.compartments:
 #                print ("compartments = ", o.name)
 #            print("freePoints = ", freePoints, "nbFreePoints = ", nbFreePoints)
             if verbose > 1:
-                print('Points Remaining', nbFreePoints, id(freePoints))
+                print('Points Remaining', nbFreePoints, len(freePoints))
                 print('len(self.activeIngr)', len(self.activeIngr))                
             
             #breakin test
@@ -3100,6 +3133,7 @@ h1 = Environment()
                                         freePoints,nbFreePoints,
                                         distance,compId,compNum,vRangeStart,vThreshStart))
 #                                        distance,compId,compNum,vRangeStart))   # Replaced this with Sept 25, 2011 thesis version on July 5, 2012
+            print ("drop point res",res)
             if res[0] :
                 ptInd = res[1]
                 if ptInd > len(distance):
@@ -3109,7 +3143,7 @@ h1 = Environment()
                 print ("vRangeStart coninue ",res)
                 vRangeStart = res[1]
                 continue
-#            print ("picked ",ptInd)
+            print ("picked ",ptInd)
             #place the ingrediant
             if self.overwritePlaceMethod :
                 ingr.placeType = self.placeMethod
@@ -3119,7 +3153,7 @@ h1 = Environment()
             #histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,usePP,
             #  stepByStep=False, verbose=False,
             success, nbFreePoints = self.callFunction(ingr.place,(self, ptInd, 
-                                freePoints, nbFreePoints, distance, dpad,False,
+                                freePoints, nbFreePoints, distance, dpad,usePP,
                                 stepByStep, verbose),
                                 {"debugFunc":debugFunc})
 #            print("nbFreePoints after PLACE ",nbFreePoints)
@@ -3646,11 +3680,13 @@ h1 = Environment()
     def getOneIngrJson(self,ingr,ingrdic):
         for r in ingr.results:  
             ingrdic[ingr.name]["results"].append([r[0]],r[1],)
+#        print ("growingr?",ingr,ingr.name,isinstance(ingr, GrowIngrediant))
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             ingr.nbCurve = ingrdic["nbCurve"]
             ingr.listePtLinear = []
             for i in range(ingr.nbCurve):
                 ingr.listePtLinear.append( ingrdic["curve"+str(i)] )
+#            print ("nbCurve?",ingr.nbCurve,ingrdic["nbCurve"])
         return ingrdic["results"], ingr.name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
 
     def load_asTxt(self,resultfilename=None):
