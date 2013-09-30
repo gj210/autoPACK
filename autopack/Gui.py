@@ -332,7 +332,7 @@ class SubdialogIngrdient(uiadaptor):
         if self.ingr is None :
             return
         if isinstance(self.ingr, GrowIngrediant) or isinstance(self.ingr, ActinIngrediant):
-            self.listAttrOrdered.extend(["length","uLength","marge","constraintMarge","orientation","walkingMode"])#"biased",
+            self.listAttrOrdered.extend(["length","uLength","marge","constraintMarge","orientation","walkingMode","useHalton"])#"biased",
         for option in self.listAttrOrdered:#sqelf.histoVol.OPTIONS:
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector" :

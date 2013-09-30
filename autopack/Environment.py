@@ -1133,10 +1133,11 @@ class Environment(CompartmentList):
                 pick_mode = str(grnode.getAttribute("pick_mode"))
                 direction = str(grnode.getAttribute("direction"))#vector
                 description=str(grnode.getAttribute("description"))
+                radius=float(str(grnode.getAttribute("radius")))
 #                print "weight_mode",weight_mode
                 self.setGradient(name=name,mode=mode, direction=eval(direction),
                             weight_mode=weight_mode,description=description,
-                            pick_mode=pick_mode)
+                            pick_mode=pick_mode,radius=radius)
 
         gridnode=root.getElementsByTagName("grid")
         if len(gridnode) :
@@ -1734,8 +1735,9 @@ h1 = Environment()
 
         dist = pickle.load(f)
         #assert len(dist)==len(self.distToClosestSurf)
-        self.grid.distToClosestSurf = dist#grid+organelle+surf
         self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:]
+        if len(dist):
+            self.grid.distToClosestSurf = dist#grid+organelle+surf       
         self.grid.freePoints = list(range(len(id)))
         
     def saveGridToFile(self,gridFileOut):
@@ -2127,8 +2129,8 @@ h1 = Environment()
             self.grid.distToClosestSurf = numpy.array(self.grid.distToClosestSurf)
             self.grid.freePoints = list(range(len(self.grid.freePoints)))
             nbPoints = len(self.grid.freePoints)
-        #print 'DIAG', diag
-        
+#        print 'DIAG', diag,self.grid.distToClosestSurf
+        self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:] 
 #        if gridFileIn is None :
 #            gridFileIn = self.grid_filename
 #        if gridFileOut is None :
@@ -2865,6 +2867,7 @@ h1 = Environment()
             elif ingr.packingMode=='gradient' and self.use_gradient:  
                 #get the most probable point using the gradient                
                 #use the gradient weighted map and get mot probabl point
+                print ("pick point from gradients",(len(allIngrPts)))
                 ptInd = self.gradients[ingr.gradient].pickPoint(allIngrPts) 
             else:
                 # pick a point randomly among free points

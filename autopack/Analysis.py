@@ -296,9 +296,9 @@ class AnalyseAP:
     def axis_distribution(self,ingr):
         basename = self.env.basename
         px,py,pz = self.getAxesValues(self.env.ingrpositions[ingr.name])
-        self.histo(px,basename+ingr.name+"_histo_X.png",bins=100)
-        self.histo(py,basename+ingr.name+"_histo_Y.png",bins=100)
-        self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=100)
+        self.histo(px,basename+ingr.name+"_histo_X.png",bins=20)
+        self.histo(py,basename+ingr.name+"_histo_Y.png",bins=20)
+        self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=20)
         
     def correlation(self,ingr):
         basename = self.env.basename
@@ -410,12 +410,13 @@ class AnalyseAP:
 #        bb=self.helper.getCornerPointCube(box)
         gridFileIn=None
         gridFileOut=None
-        if forceBuild :
-            gridFileOut=wrkDir+"fill_grid"
-        else :
-            gridFileIn=wrkDir+"fill_grid"
-        self.env.buildGrid(boundingBox=bb,gridFileIn=None,rebuild=True ,
-                          gridFileOut=None,previousFill=False)
+#        if forceBuild :
+#            gridFileOut=wrkDir+os.sep+"fill_grid"
+#        else :
+#            gridFileIn=wrkDir+os.sep+"fill_grid"
+        print (gridFileIn,gridFileOut)
+        self.env.buildGrid(boundingBox=bb,gridFileIn=gridFileIn,rebuild=forceBuild ,
+                          gridFileOut=gridFileOut,previousFill=False)
     #    h.buildGrid(gridFileIn=gridFileIn, 
     #                  gridFileOut=gridFileOut)
         t2 = time()
@@ -429,6 +430,7 @@ class AnalyseAP:
     
     def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0):
         t1 = time()
+        print "seed is ",seed
         self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis)
         t2 = time()
         print('time to run Fill5', t2-t1)
@@ -457,7 +459,9 @@ class AnalyseAP:
         distances={}
         ingrpositions={}
         self.bbox = bbox
+        rebuild = True
         for i in rangeseed:
+            if i > 0 : rebuild = False
             basename = output+os.sep+"results_seed_"+str(i)
 #            self.env.saveResult = False
             resultfilename = self.env.resultfile = basename  
@@ -466,7 +470,12 @@ class AnalyseAP:
                 self.afviewer.clearFill("Test_Spheres2D")
             else :
                 self.env.reset()
-            self.grid_pack(bbox,wrkDir,seed=i, fill=1,vTestid = i,vAnalysis = 1)#build grid and fill
+            #no need to rebuild the grid ?
+            self.env.saveResult = True
+            self.env.resultfile = basename
+            self.grid_pack(bbox,output,seed=i, fill=1,vTestid = i,vAnalysis = 1,forceBuild=rebuild)#build grid and fill
+            #store the result 
+#            self.env.store_asJson(resultfilename=basename)
             self.center = self.env.grid.getCenter()
             if render :
                 #render/save scene if hosted otherwise nothing
@@ -551,9 +560,10 @@ class AnalyseAP:
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
         self.env.basename = basename
-        if twod : self.env.loopThroughIngr(self.rdf_2d)
-        else : self.env.loopThroughIngr(self.rdf_3d)
-        #do the X Y histo averge !        
+#        if rdf :
+#            if twod : self.env.loopThroughIngr(self.rdf_2d)
+#            else : self.env.loopThroughIngr(self.rdf_3d)
+#            do the X Y histo averge !        
         self.env.loopThroughIngr(self.axis_distribution)
 #        self.env.loopThroughIngr(self.correlation)
         return distances

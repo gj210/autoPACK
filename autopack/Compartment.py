@@ -847,7 +847,9 @@ class  Compartment(CompartmentList):
         insideBB  = self.checkPointInsideBB(point)#cutoff?
         r=False
         if insideBB:
-            helper = AutoFill.helper
+            helper = autopack.helper
+            if helper.host == "dejavu":
+                return insideBB
             geom =   helper.getObject(self.gname)      
             if geom is None :
                 self.gname = '%s_Mesh'%self.name            

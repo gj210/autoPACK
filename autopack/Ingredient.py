@@ -133,6 +133,111 @@ KWDS = {   "molarity":{"type":"float"},
                         "proba_binding":{"name":"proba_binding","value":0.5,"default":0.5,"min":0.,"max":1.0,"type":"float","description":"proba_binding"},
                         "proba_not_binding":{"name":"proba_not_binding","value":0.5,"default":0.5,"min":0.0,"max":1.,"type":"float","description":"proba_not_binding"},
                     }
+#should use transform.py instead
+def angle_between_vectors(v0, v1, directed=True, axis=0):
+    """Return angle between vectors.
+    If directed is False, the input vectors are interpreted as undirected axes,
+    i.e. the maximum angle is pi/2.
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3])
+    >>> numpy.allclose(a, math.pi)
+    True
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3], directed=False)
+    >>> numpy.allclose(a, 0)
+    True
+    >>> v0 = [[2, 0, 0, 2], [0, 2, 0, 2], [0, 0, 2, 2]]
+    >>> v1 = [[3], [0], [0]]
+    >>> a = angle_between_vectors(v0, v1)
+    >>> numpy.allclose(a, [0, 1.5708, 1.5708, 0.95532])
+    True
+    >>> v0 = [[2, 0, 0], [2, 0, 0], [0, 2, 0], [2, 0, 0]]
+    >>> v1 = [[0, 3, 0], [0, 0, 3], [0, 0, 3], [3, 3, 3]]
+    >>> a = angle_between_vectors(v0, v1, axis=1)
+    >>> numpy.allclose(a, [1.5708, 1.5708, 1.5708, 0.95532])
+    True
+    """
+    v0 = numpy.array(v0, dtype=numpy.float64, copy=False)
+    v1 = numpy.array(v1, dtype=numpy.float64, copy=False)
+    dot = numpy.sum(v0 * v1, axis=axis)
+    dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
+    return numpy.arccos(dot if directed else numpy.fabs(dot))
+def vector_norm(data, axis=None, out=None):
+    """Return length, i.e. Euclidean norm, of ndarray along axis.
+    >>> v = numpy.random.random(3)
+    >>> n = vector_norm(v)
+    >>> numpy.allclose(n, numpy.linalg.norm(v))
+    True
+    >>> v = numpy.random.rand(6, 5, 3)
+    >>> n = vector_norm(v, axis=-1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=2)))
+    True
+    >>> n = vector_norm(v, axis=1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> v = numpy.random.rand(5, 4, 3)
+    >>> n = numpy.empty((5, 3))
+    >>> vector_norm(v, axis=1, out=n)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> vector_norm([])
+    0.0
+    >>> vector_norm([1])
+    1.0
+    """
+    data = numpy.array(data, dtype=numpy.float64, copy=True)
+    if out is None:
+        if data.ndim == 1:
+            return math.sqrt(numpy.dot(data, data))
+        data *= data
+        out = numpy.atleast_1d(numpy.sum(data, axis=axis))
+        numpy.sqrt(out, out)
+        return out
+    else:
+        data *= data
+        numpy.sum(data, axis=axis, out=out)
+        numpy.sqrt(out, out)
+
+def SphereHalton(n, p2,marge=math.pi):
+    p=0.0
+    t=0.0
+    st=0.0
+    phi=0.0
+    phirad=0.0
+    ip=0.0
+    k=0
+    kk=0
+#    pos=0
+    result=[]
+    a=0
+    for k in range(n):  
+        #for (k=0, pos=0 ; k<n ; k++)
+        t = 0;   
+        p=0.5
+        kk=k
+#        for (p=0.5, kk=k ; kk ; p*=0.5, kk>>=1)
+        while (kk):            
+            if (kk & 1): #// kk mod 2 == 1
+                t += p
+            kk>>=1
+            p*=0.5
+        t = 2.0 * t - 1.0; #// map from [0,1] to [-1,1]
+        st = math.sqrt(1.0-t*t);
+        phi = 0;
+        ip = 1.0/p2; #// inverse of p2
+#        for (p=ip, kk=k ; kk ; p*=ip, kk/=p2) #// kk = (int)(kk/p2)
+        p=ip
+        kk=k        
+        while(kk):
+            a=kk % p2
+            if (a):
+                phi += a * p;
+            kk/=p2
+            p*=ip
+        phirad = phi * 4.0 * marge; #// map from [0,0.5] to [0, 2 pi)
+        px = st * math.cos(phirad);
+        py = st * math.sin(phirad);
+        pz = t;
+        result.append([px,py,pz])
+    return result
 
 #from mglutil.math.rotax import rotax, rotVectToVect
 def rotax( a, b, tau, transpose=1 ):
@@ -374,6 +479,22 @@ def bullet_checkCollision_mp(world, node1, node2):
 #    node1 = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #    node2 = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
     return world.contactTestPair(node1, node2).getNumContacts() > 0
+
+#(v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),v2,f2,liste_nodes[n][2],liste_nodes[n][1],liste_nodes[n][3].name) 
+def rapid_checkCollision_rmp(liste_input):
+    from RAPID import RAPIDlib
+    node1 = RAPIDlib.RAPID_model()
+    node1.addTriangles(numpy.array(liste_input[0][0],'f'), numpy.array(liste_input[0][1],'i'))
+    node2={}
+    for inp in liste_input :
+        if inp[-1] not in node2:
+            node2[inp[-1]] = RAPIDlib.RAPID_model()
+            node2[inp[-1]].addTriangles(numpy.array(inp[4],'f'), numpy.array(inp[5],'i'))
+        RAPIDlib.RAPID_Collide_scaled(inp[2],inp[3], 1.0,node1, inp[6], inp[7], 1.0,
+                                  node2[inp[-1]],RAPIDlib.cvar.RAPID_FIRST_CONTACT);              	
+        if RAPIDlib.cvar.RAPID_num_contacts != 0 :
+            return True
+    return False
     
 def rapid_checkCollision_mp(v1,f1,rot1,trans1,v2,f2,rot2,trans2):
     from RAPID import RAPIDlib
@@ -2155,6 +2276,8 @@ class Ingredient(Agent):
             #ray cast ? is inside
 #            if self.histoVol.grid.gridPtId[ptID] < 0 : #
 #                return False
+#            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
+#                return False
             if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
                 return False
             return True
@@ -2525,7 +2648,8 @@ class Ingredient(Agent):
         self.histoVol.nodes = nodes
         return nodes
         
-    def get_rbNondes(self,close_indice,currentpt,removelast=False,prevpoint=None):
+    def get_rbNondes(self,close_indice,currentpt,removelast=False,prevpoint=None,
+                     getInfo=False):
         #move around the rbnode and return it
         #self.histoVol.loopThroughIngr( self.histoVol.reset_rbnode )   
         nodes = self.histoVol.rb_panda[:-1]
@@ -2592,12 +2716,16 @@ class Ingredient(Agent):
 #                print ("set ",jtrans," get ", rTrans)
 #                print ("move",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
             ingrCounter[ingr.name]+=1
-            nodes.append(rbnode)
+            if getInfo :
+                nodes.append([rbnode, jtrans, rotMat,ingr])
+            else :
+                nodes.append(rbnode)
         #append organelle rb nodes
         if self.compNum < 0 or self.compNum == 0 :     
             for o in self.histoVol.compartments:
                 if o.rbnode is not None : 
-                    nodes.append(o.rbnode)
+                    if not getInfo :
+                        nodes.append(o.rbnode)
 #        print len(nodes),nodes
         self.histoVol.nodes = nodes
         return nodes
@@ -4604,23 +4732,45 @@ class Ingredient(Agent):
 #                            self.rapid_model = None
                             self.histoVol.grab_cb.reset()
                             print ("usePP ",autopack.ncpus)
-                            for i in range(len(liste_nodes)/autopack.ncpus):
+                            inputp={}
+                            for c in range(autopack.ncpus): inputp[c]=[]
+                            while n < len(liste_nodes):
                                 for c in range(autopack.ncpus):
+                                    if n == len(liste_nodes) : continue
                                     v1=self.vertices
                                     f1=self.faces
                                     v2=liste_nodes[n][3].vertices
-                                    f2=liste_nodes[n][3].faces
-#                                    liste_nodes[n][3].rapid_model = None
-                                    self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
-                                    (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
-                                     v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+                                    f2=liste_nodes[n][3].faces  
+                                    inp=(v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+                                     v2,f2,liste_nodes[n][2],liste_nodes[n][1],liste_nodes[n][3].name)                           
+                                    inputp[c].append(inp)
+                                    n+=1
+                            jobs=[]                                                                                
+                            for c in range(autopack.ncpus):
+                                j=self.histoVol.pp_server.submit(rapid_checkCollision_rmp,(inputp[c],),
                                             callback=self.histoVol.grab_cb.grab,
                                             modules=("numpy",))
-                                    n+=1
-                                self.histoVol.pp_server.wait()
-                                r.extend(self.histoVol.grab_cb.collision[:])
-                                if True in r :
-                                    break
+                                jobs.append(j)
+                            self.histoVol.pp_server.wait()
+                            r.extend(self.histoVol.grab_cb.collision[:])                             
+
+#                            for i in range(len(liste_nodes)/autopack.ncpus):
+#                                for c in range(autopack.ncpus):
+#                                    v1=self.vertices
+#                                    f1=self.faces
+#                                    v2=liste_nodes[n][3].vertices
+#                                    f2=liste_nodes[n][3].faces
+##                                    liste_nodes[n][3].rapid_model = None
+#                                    self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
+#                                    (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+#                                     v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+#                                            callback=self.histoVol.grab_cb.grab,
+#                                            modules=("numpy",))
+#                                    n+=1
+#                                self.histoVol.pp_server.wait()
+#                                r.extend(self.histoVol.grab_cb.collision[:])
+#                                if True in r :
+#                                    break
                         else :                                                
                             for node,trans,rot,ingr in liste_nodes:
                                 print (node,trans,rot)
@@ -5474,6 +5624,9 @@ class GrowIngrediant(MultiCylindersIngr):
         self.constraintMarge = False
         self.cutoff_boundary = 1.0
         self.cutoff_surface = 5.0
+        self.useHalton = True        
+        if "useHalton" in kw :
+            self.useHalton = kw["useHalton"]
         if "constraintMarge" in kw :
             self.constraintMarge = kw["constraintMarge"]
         if "cutoff_boundary" in kw :
@@ -5506,6 +5659,10 @@ class GrowIngrediant(MultiCylindersIngr):
                                 res= 5, parent="autopackHider")[0]                
             self.getData()
 
+        self.sphere_points = SphereHalton(1000,5)
+        self.sphere_points_mask = numpy.array(range(1000))
+        self.sphere_points_masked = None
+        
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -5514,7 +5671,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.KWDS["orientation"]={}
         self.KWDS["walkingMode"]={}
         self.KWDS["constraintMarge"]={}
-        
+        self.KWDS["useHalton"]={}
         self.OPTIONS["length"]={"name":"length","value":self.length,"default":self.length,"type":"float","min":0,"max":10000,"description":"snake total length"}
         self.OPTIONS["uLength"]={"name":"uLength","value":self.uLength,"default":self.uLength,"type":"float","min":0,"max":10000,"description":"snake unit length"}
         self.OPTIONS["closed"]={"name":"closed","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"closed snake"}                          
@@ -5523,8 +5680,39 @@ class GrowIngrediant(MultiCylindersIngr):
         self.OPTIONS["constraintMarge"]={"name":"constraintMarge","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"lock the marge"}                          
         self.OPTIONS["orientation"]={"name":"orientation","value":[0.,1.,0.],"default":[0.,1.,0.],"min":0,"max":1,"type":"vector","description":"snake orientation"}
         self.OPTIONS["walkingMode"]={"name":"walkingMode","value":"random","values":['sphere', 'lattice'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"snake mode"}
+        self.OPTIONS["useHalton"]={"name":"useHalton","value":True,"default":True,"type":"bool","min":0.,"max":0.,"description":"use spherica halton distribution"}                          
 
-                        
+    def resetSphereDistribution(self):
+        #given a radius, create the sphere distribution
+        self.sphere_points = SphereHalton(10000,5)
+        self.sphere_points_mask = numpy.array(range(10000))
+        
+    def getNextPoint(self):
+        #pick a random point from the sphere point distribution
+        if not len(self.sphere_points_mask):
+            return None
+        ptIndr = int(uniform(0.0,1.0)*len(self.sphere_points_mask))
+        sp_pt_indice = self.sphere_points_mask[ptIndr]
+        return self.sphere_points[sp_pt_indice]                              
+    
+    def mask_sphere_points(self,v,marge,liseclosest,cutoff):
+        #mask first with angle
+        #adjust the points to current transfomation? or normalize current vector ?
+        a=angle_between_vectors(self.vi.unit_vector(v),self.sphere_points, axis=1)
+        mask = a < math.radians(marge )
+        self.sphere_points_mask = numpy.nonzero(mask)[0]#points to keep
+        #mask using neighboors if any
+        if len(liseclosest):
+            indices=[]
+            points = numpy.array(liseclosest)[:,1]
+            ingrs = numpy.array(liseclosest)[:,3]
+            radius = [ingr.encapsulatingRadius for ingr in ingrs]
+            distances=spatial.distance.cdist(points,self.sphere_points[self.sphere_points_mask])
+            mask = distances >= radius # cutoff should the ingr.radius 
+            indices = numpy.nonzero(mask)[0]#ponts to keep
+            i = self.sphere_points_mask[indices]
+            self.sphere_points_mask = i
+                
     def reset(self):
         self.nbCurve=0
         self.results=[]
@@ -5533,6 +5721,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.Ptis=[]    #snakePts
         self.currentLength=0.#snakelength        
         #update he cylinder ?
+        
     def getNextPtIndCyl(self,jtrans, rotMatj,freePoints,histoVol):
 #        print jtrans, rotMatj
         cent2T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
@@ -5903,6 +6092,7 @@ class GrowIngrediant(MultiCylindersIngr):
         pt = [0.,0.,0.]
         angle=0.
         safetycutoff = 1000
+        mask=None
         if self.constraintMarge:
             safetycutoff = 200
         if self.runTimeDisplay:
@@ -5913,27 +6103,42 @@ class GrowIngrediant(MultiCylindersIngr):
             #sp.SetAbsPos(self.vi.FromVec(startingPoint))
             self.vi.update()
         while not found :
+            liste_nodes=[]
             print ("attempt ", attempted, marge)
             #main loop thattryto found the next point (similar to jitter)
             if attempted >= safetycutoff:
                 print ("break too much attempt ", attempted, safetycutoff)
                 return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False
             #pt = numpy.array(self.vi.randpoint_onsphere(self.uLength,biased=(uniform(0.,1.0)*marge)/360.0))*numpy.array([1,1,0])
-            p = self.vi.advance_randpoint_onsphere(self.uLength,
+            test=False
+            if self.useHalton:
+                self.mask_sphere_points(v,marge+2.0,liste_nodes,0)
+                p = self.getNextPoint()
+                if p is None :
+                    print ("no sphere points available")
+                    return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False                    
+                p=numpy.array(p)*self.uLength
+                pt = numpy.array(p)*numpy.array(self.jitterMax)#?
+                newPt = numpy.array(pt2).flatten()+numpy.array(pt)
+                if self.runTimeDisplay  >= 2:
+                    self.vi.setTranslation(sp,newPt)
+                    self.vi.update()
+                test = True
+            else :
+                p = self.vi.advance_randpoint_onsphere(self.uLength,
                                                    marge=math.radians(marge),
                                                     vector=v)
-            pt = numpy.array(p)*numpy.array(self.jitterMax)
-            #the new position is the previous point (pt2) plus the random point
-            newPt = numpy.array(pt2).flatten()+numpy.array(pt)
-            if self.runTimeDisplay  >= 2:
-                self.vi.setTranslation(sp,newPt)
-                self.vi.update()
-            #compute the angle between the previous direction (pt1->pt2) and the new random one (pt)
-            angle=self.vi.angle_between_vectors(numpy.array(v),numpy.array(pt))
-#            print angle,math.degrees(angle),marge
-#            print self.histoVol.grid.boundingBox #left-bottom to right-top
-            #first test angle less than the constraint angle
-            if abs(math.degrees(angle)) <= marge+2.0 :
+                pt = numpy.array(p)*numpy.array(self.jitterMax)#?
+                #the new position is the previous point (pt2) plus the random point
+                newPt = numpy.array(pt2).flatten()+numpy.array(pt)
+                if self.runTimeDisplay  >= 2:
+                    self.vi.setTranslation(sp,newPt)
+                    self.vi.update()
+                #compute the angle between the previous direction (pt1->pt2) and the new random one (pt)
+                angle=self.vi.angle_between_vectors(numpy.array(v),numpy.array(pt))
+                test= abs(math.degrees(angle)) <= marge+2.0
+            if test :
+                r=[False]
 #                print "ok"
                 #check if in bounding box
                 inComp = True
@@ -5994,7 +6199,8 @@ class GrowIngrediant(MultiCylindersIngr):
                         else : 
 #                            print("get_rbNondes",closesbody_indice)
                             #print ("collision RB ",len(closesbody_indice))
-                            liste_nodes = self.get_rbNondes(closesbody_indice,jtrans,prevpoint=prev)
+                            liste_nodes = self.get_rbNondes(closesbody_indice,
+                                            jtrans,prevpoint=prev,getInfo=True)
                             if usePP :
                                 #use self.grab_cb and self.pp_server
                                 ## Divide the task or just submit job
@@ -6003,7 +6209,7 @@ class GrowIngrediant(MultiCylindersIngr):
                                 for i in range(len(liste_nodes)/autopack.ncpus):
                                     for c in range(autopack.ncpus):
                                         self.histoVol.pp_server.submit(self.histoVol.world.contactTestPair, 
-                                                              (rbnode, liste_nodes[n]), 
+                                                              (rbnode, liste_nodes[n][0]), 
                                                 callback=self.histoVol.grab_cb.grab)
                                         n+=1
                                     self.histoVol.pp_server.wait()
@@ -6012,7 +6218,7 @@ class GrowIngrediant(MultiCylindersIngr):
                                         break
                             else :
                                 for node in liste_nodes:
-                                    col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
+                                    col = (self.histoVol.world.contactTestPair(rbnode, node[0]).getNumContacts() > 0 )
                                     r=[col]
                                     if col :
                                         break
@@ -6093,27 +6299,42 @@ class GrowIngrediant(MultiCylindersIngr):
             #sp.SetAbsPos(self.vi.FromVec(startingPoint))
             self.vi.update()
         while not found :
+            liste_nodes=[]
             #print ("attempt ", attempted, marge)
             #main loop thattryto found the next point (similar to jitter)
             if attempted >= safetycutoff:
                 print ("break too much attempt ", attempted, safetycutoff)
                 return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False
             #pt = numpy.array(self.vi.randpoint_onsphere(self.uLength,biased=(uniform(0.,1.0)*marge)/360.0))*numpy.array([1,1,0])
-            p = self.vi.advance_randpoint_onsphere(self.uLength,
-                                                   marge=math.radians(marge),
-                                                    vector=v)
-            pt = numpy.array(p)*numpy.array(self.jitterMax)
-            #the new position is the previous point (pt2) plus the random point
-            newPt = numpy.array(pt2).flatten()+numpy.array(pt)
-            if self.runTimeDisplay  >= 2:
-                self.vi.setTranslation(sp,newPt)
-                self.vi.update()
-            #compute the angle between the previous direction (pt1->pt2) and the new random one (pt)
-            angle=self.vi.angle_between_vectors(numpy.array(v),numpy.array(pt))
-#            print angle,math.degrees(angle),marge
-#            print self.histoVol.grid.boundingBox #left-bottom to right-top
-            #first test angle less than the constraint angle
-            if abs(math.degrees(angle)) <= marge+2.0 :
+            test=False
+            if self.useHalton:
+                self.mask_sphere_points(v,marge+2.0,liste_nodes,0)
+                p = self.getNextPoint()
+                if p is None :
+                    print ("no sphere points available")
+                    return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False                    
+                p=numpy.array(p)*self.uLength
+                pt = numpy.array(p)*numpy.array(self.jitterMax)#?
+                newPt = numpy.array(pt2).flatten()+numpy.array(pt)
+                if self.runTimeDisplay  >= 2:
+                    self.vi.setTranslation(sp,newPt)
+                    self.vi.update()
+                test = True
+            else :
+                p = self.vi.advance_randpoint_onsphere(self.uLength,
+                                                       marge=math.radians(marge),
+                                                        vector=v)
+                pt = numpy.array(p)*numpy.array(self.jitterMax)
+                #the new position is the previous point (pt2) plus the random point
+                newPt = numpy.array(pt2).flatten()+numpy.array(pt)
+                if self.runTimeDisplay  >= 2:
+                    self.vi.setTranslation(sp,newPt)
+                    self.vi.update()
+                #compute the angle between the previous direction (pt1->pt2) and the new random one (pt)
+                angle=self.vi.angle_between_vectors(numpy.array(v),numpy.array(pt))
+                test= abs(math.degrees(angle)) <= marge+2.0
+            if test :
+                r=[False]
 #                print "ok"
                 #check if in bounding box
                 inComp = True
@@ -6172,23 +6393,44 @@ class GrowIngrediant(MultiCylindersIngr):
     #                            self.rapid_model = None
                                 self.histoVol.grab_cb.reset()
                                 #print ("usePP ",autopack.ncpus)
-                                for i in range(len(liste_nodes)/autopack.ncpus):
+                                inputp={}
+                                for c in range(autopack.ncpus): inputp[c]=[]
+                                while n < len(liste_nodes):
                                     for c in range(autopack.ncpus):
+                                        if n == len(liste_nodes) : continue
                                         v1=self.vertices
                                         f1=self.faces
                                         v2=liste_nodes[n][3].vertices
-                                        f2=liste_nodes[n][3].faces
-    #                                    liste_nodes[n][3].rapid_model = None
-                                        self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
-                                        (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
-                                         v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+                                        f2=liste_nodes[n][3].faces  
+                                        inp=(v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+                                         v2,f2,liste_nodes[n][2],liste_nodes[n][1],liste_nodes[n][3].name)                           
+                                        inputp[c].append(inp)
+                                        n+=1
+                                jobs=[]                                                                                
+                                for c in range(autopack.ncpus):
+                                    j=self.histoVol.pp_server.submit(rapid_checkCollision_rmp,(inputp[c],),
                                                 callback=self.histoVol.grab_cb.grab,
                                                 modules=("numpy",))
-                                        n+=1
-                                    self.histoVol.pp_server.wait()
-                                    r.extend(self.histoVol.grab_cb.collision[:])
-                                    if True in r :
-                                        break
+                                    jobs.append(j)
+                                self.histoVol.pp_server.wait()
+                                r.extend(self.histoVol.grab_cb.collision[:])                             
+#                                for i in range(len(liste_nodes)/autopack.ncpus):
+#                                    for c in range(autopack.ncpus):
+#                                        v1=self.vertices
+#                                        f1=self.faces
+#                                        v2=liste_nodes[n][3].vertices
+#                                        f2=liste_nodes[n][3].faces
+#    #                                    liste_nodes[n][3].rapid_model = None
+#                                        self.histoVol.pp_server.submit(rapid_checkCollision_mp, 
+#                                        (v1,f1,numpy.array(rotMatj[:3,:3],'f'),numpy.array(jtrans,'f'),
+#                                         v2,f2,liste_nodes[n][2],liste_nodes[n][1]),
+#                                                callback=self.histoVol.grab_cb.grab,
+#                                                modules=("numpy",))
+#                                        n+=1
+#                                    self.histoVol.pp_server.wait()
+#                                    r.extend(self.histoVol.grab_cb.collision[:])
+#                                    if True in r :
+#                                        break
                             else :                                                
                                 for node,trans,rot,ingr in liste_nodes:
                                     #print (node,trans,rot)
