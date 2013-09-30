@@ -91,6 +91,11 @@
         <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
         <resultfile>http://autofill.googlecode.com/git/data/Test_Spheres2Dgradients/results/SphereGradientResult.apr</resultfile>
     </recipe>
+    <recipe name="Test_Spheres2Dgradients" version="1.1">
+      <setupfile>http://autofill.googlecode.com/git/data/Test_Spheres2Dgradients/recipe/Test_Spheres2DGradients1.0.xml</setupfile>
+        <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
+        <resultfile>http://autofill.googlecode.com/git/data/Test_Spheres2Dgradients/results/SphereGradientResult.apr</resultfile>
+    </recipe>
     <!--recipe name="Test_Spheres2Ddebug" version="1.0">
         <setupfile>autoFillRecipeScripts/2DsphereFill/2DSpheres_setup_recipeDebug.py</setupfile>
         <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
@@ -103,7 +108,7 @@
     </recipe>
     <recipe name="Test_Spheres2D" version="1.1">
       <setupfile>http://autofill.googlecode.com/git/data/Test_Spheres2D/recipe/Test_Spheres2D1.1.py</setupfile>
-        <wrkdir>autopackRecipeScripts/2DsphereFill</wrkdir>
+        <wrkdir>autoFillRecipeScripts/2DsphereFill</wrkdir>
         <resultfile>http://autofill.googlecode.com/git/data/Test_Spheres2D/results/SpherefillResult.apr</resultfile>
     </recipe>
     <recipe name="Mycoplasma" version="1.0">
