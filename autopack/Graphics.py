@@ -60,6 +60,8 @@ from upy.colors import red, aliceblue, antiquewhite, aqua, \
      blue, cyan, mediumslateblue, steelblue, darkcyan, \
      limegreen, darkorchid, tomato, khaki, gold, magenta, green
 
+from DejaVu.colorTool import Map
+
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -173,6 +175,7 @@ class AutopackViewer:
         """    
          
         self.histo = histo
+        self.env = self.histo
         self.name = self.histo.name
         print (self.name,self.histo.name)
         self.histo.afviewer = self
@@ -1828,7 +1831,7 @@ class AutopackViewer:
         print("datas",len(datas))
         print("objs",len(listeObjs))
         if datas and datas is not None :
-            from DejaVu.colorTool import Map
+#            from DejaVu.colorTool import Map
             lcol = Map(datas, ramp,mini=mini, maxi=maxi)
             for i,io in enumerate(listeObjs) :
                 #print io
@@ -2239,10 +2242,41 @@ class AutopackViewer:
         """
         Display the given gradient as sphere at each grid position with radius = weight
         """
-        parent = self.vi.newEmpty("gradient")
+#        from upy import colors as col
+#        from DejaVu.colorTool import Map
+        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        parent = self.vi.getObject(self.histo.name+"gradient")
+        if parent is None :
+            parent = self.vi.newEmpty(self.histo.name+"gradient")
         #filter only non zero value
         gw= numpy.array(gradient.weight)
+#        mask = distances > 0.0001
+#        ind=numpy.nonzero(mask)[0]
+#        distances[ind]=cutoff   
         pindices = numpy.nonzero(numpy.greater(gw,0.0001))[0]
-        self.vi.instancesSphere("gradientSphere",numpy.take(positions,pindices,0),numpy.take(gw,pindices,0)*100.0,
-                                    self.pesph,[[1,0,0]],self.sc,parent=parent)
-        
+        colors = Map(numpy.take(gw,pindices,0), ramp)
+        self.vi.instancesSphere(self.histo.name+"gradientSphere",numpy.take(positions,pindices,0),numpy.take(gw,pindices,0)*100.0,
+                                    self.pesph,colors,self.sc,parent=parent)
+ 
+    def displayDistance(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
+                        ramp_color3=None,cutoff=60.0):
+        distances = self.env.grid.distToClosestSurf[:]
+        positions = self.env.grid.masterGridPositions[:]
+        #map the color as well ?
+        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < -cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff   
+        colors = Map(distances, ramp)
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        base=self.helper.getObject(self.env.name+"distances_base")
+        if base is None :
+            base=self.helper.Sphere(self.env.name+"distances_base")[0]
+        p=self.helper.getObject(self.env.name+"distances")
+        if p is not None :
+            self.helper.deleteObject(p)#recursif?
+        p = self.helper.newEmpty(self.env.name+"distances")
+        sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=self.env.name+"distances")

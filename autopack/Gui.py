@@ -700,6 +700,10 @@ class AnalysisTab:
                         width=150,height=10,type="button",icon=None,
                     action=self.export_result,label="Export Result as ",
                                      variable=self.afgui.addVariable("int",0))
+        self.widget["display_distance"]=self.afgui._addElemt(name="display_distance",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.dsdist,label="Disply grid closest distance",
+                                     variable=self.afgui.addVariable("int",0)) 
                                      
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
@@ -726,6 +730,7 @@ class AnalysisTab:
         elemframe.append([self.widget["colordist"], self.widget["btn_color_dist"],])
         elemframe.append([self.widget["savedist"], self.widget["btn_save_dist"],])
         elemframe.append([self.widget["saveclosestdist"], self.widget["btn_save_closest_dist"],])
+        elemframe.append([self.widget["display_distance"],])
         elemframe.append([self.widget["gradients"], self.widget["btn_ds_gradient"],])        
         return elemframe
 
@@ -739,6 +744,11 @@ class AnalysisTab:
                                   useMaterial=True,
                                   usePoint=self.afgui.getVal(self.widget["usePoint"]))
 
+    def dsdist(self,):
+        self.aap.displayDistance(self.afgui.histoVol)
+        #or
+        #self.afgui.afviewer.displayDistance(self.afgui.histoVol)
+        
     def displayGradient(self,):
         """
         Display the given gradient as sphere at each grid position with radius = weight        
