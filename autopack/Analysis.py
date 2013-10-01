@@ -157,6 +157,31 @@ class AnalyseAP:
                     listeDistance[i] = d
         return listeDistance
 
+    def displayDistance(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
+                        ramp_color3=None,cutoff=60.0):
+        distances = self.env.grid.distToClosestSurf[:]
+        positions = self.env.grid.masterGridPositions[:]
+        #map the color as well ?
+        from upy import colors as col
+        from DejaVu.colorTool import Map
+        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < -cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff   
+        colors = Map(distances, ramp)
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        base=self.helper.getObject(self.env.name+"distances_base")
+        if base is None :
+            base=self.helper.Sphere(self.env.name+"distances_base")[0]
+        p=self.helper.getObject(self.env.name+"distances")
+        if p is not None :
+            self.helper.deleteObject(p)#recursif?
+        p = self.helper.newEmpty(self.env.name+"distances")
+        sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=self.env.name+"distances")
+
     def loadJSON(self,filename):
         import json
         with open(filename) as data_file:    
@@ -277,14 +302,20 @@ class AnalyseAP:
         # the bin should be not less than the biggest ingredient radius
 #        b=int(distances.max()/self.largest)
         b=100
-        new_rdf, edges = numpy.histogramdd(distances, bins=b, range=[(distances.min(), distances.max())],normed=0)
+        new_rdf, edges = numpy.histogramdd(distances)#, bins=b, range=[(distances.min(), distances.max())],normed=0)
         radii = edges[0]
+#        r=radii.tolist()
+#        r.insert(0,0.0)
+#        radii = numpy.array(r)
+#        rdf= new_rdf.tolist()
+#        rdf.insert(0,0)
+#        new_rdf = numpy.array(rdf)
         #from http://isaacs.sourceforge.net/phys/rdfs.html
-        dnr=new_rdf
+        dnr=new_rdf[:]
         N=len(distances)
         V=self.env.grid.nbGridPoints[0]*self.env.grid.nbGridPoints[1]*self.env.grid.gridSpacing**2
         density = 1#len(x)/1000.0**2
-        Vshell = numpy.array(self.getAreaShell(self.bbox,radii,self.center))        
+        Vshell = numpy.array(self.getAreaShell(self.bbox,radii,self.center))       
 #        print Vshell
 #        Vshell1 = numpy.pi*density*(numpy.power(radii[1:],2)-numpy.power(radii[:-1], 2))
 #        print Vshell1   
@@ -292,7 +323,12 @@ class AnalyseAP:
         gr = (dnr*V)/(N*Vshell)
         numpy.savetxt(basename+ingr.name+"_rdf.csv", numpy.array(gr), delimiter=",")
         self.plot(gr,radii[:-1],basename+ingr.name+"_rdf.png")
-
+        #simpl approach Ni/Areai
+        G=dnr/Vshell
+        numpy.savetxt(basename+ingr.name+"_rdf_simple.csv", numpy.array(G), delimiter=",")
+        self.plot(numpy.array(G),radii[:-1],basename+ingr.name+"_rdf_simple.png")
+        print G
+        
     def axis_distribution(self,ingr):
         basename = self.env.basename
         px,py,pz = self.getAxesValues(self.env.ingrpositions[ingr.name])
@@ -495,7 +531,7 @@ class AnalyseAP:
                             distances[ingr.name]=[]
                             ingrpositions[ingr.name]=[]
                         if ingr.packingMode=='gradient' and self.env.use_gradient:
-                            center = self.env.gradients[ingr.gradient].direction
+                            self.center = center = self.env.gradients[ingr.gradient].direction
                         ingrpos,d=self.getDistance(ingr.name, center)
                         distances[ingr.name].extend(d)
                         ingrpositions[ingr.name].extend(ingrpos)
@@ -560,9 +596,9 @@ class AnalyseAP:
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
         self.env.basename = basename
-#        if rdf :
-#            if twod : self.env.loopThroughIngr(self.rdf_2d)
-#            else : self.env.loopThroughIngr(self.rdf_3d)
+        if rdf :
+            if twod : self.env.loopThroughIngr(self.rdf_2d)
+            else : self.env.loopThroughIngr(self.rdf_3d)
 #            do the X Y histo averge !        
         self.env.loopThroughIngr(self.axis_distribution)
 #        self.env.loopThroughIngr(self.correlation)

@@ -922,6 +922,8 @@ class Ingredient(Agent):
 
         self.recipe = None # will be set when added to a recipe
         self.compNum = None 
+        self.compId_accepted=[]#if this list is defined, point picked outise the list are rejected
+        #should be self.compNum per default
         # will be set when recipe is added to HistoVol 
         #added to a compartment
         self.overwrite_nbMol = False
@@ -2272,19 +2274,25 @@ class Ingredient(Agent):
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
         ptID = self.histoVol.grid.getPointFrom3D(point)
-        if self.compNum > 0 : #surface authorized outside and surface:
-            #ray cast ? is inside
-#            if self.histoVol.grid.gridPtId[ptID] < 0 : #
-#                return False
-#            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
-#                return False
-            if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
+        if len(self.compId_accepted):
+            if self.histoVol.grid.gridPtId[ptID] not in self.compId_accepted:
                 return False
-            return True
-        if self.compNum != self.histoVol.grid.gridPtId[ptID]:
-            return False
+            else :
+                return True
         else :
-            return True
+            if self.compNum > 0 : #surface authorized outside and surface:
+                #ray cast ? is inside
+    #            if self.histoVol.grid.gridPtId[ptID] < 0 : #
+    #                return False
+    #            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
+    #                return False
+                if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
+                    return False
+                return True
+            if self.compNum != self.histoVol.grid.gridPtId[ptID]:
+                return False
+            else :
+                return True
 
     def checkPointSurface(self,point,cutoff):
         if not hasattr(self,"histoVol") :
