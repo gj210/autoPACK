@@ -835,7 +835,10 @@ class SubdialogFiller(uiadaptor):
         self.wicolumn = [W,35,35,30,25,50,50,30]
         self.w=sum(self.wicolumn)+5
         self.SetTitle(self.title)
-        self.grid_filename = self.recipe+"_gridSetup"
+#        if self.histoVol.grid_filename is not None :
+#            self.grid_filename = self.histoVol.grid_filename
+#        else :
+        self.grid_filename = self.histoVol.grid_filename#self.recipe+"_gridSetup"
         self.initWidget()
         self.setupLayout_tab()
 
@@ -859,9 +862,12 @@ class SubdialogFiller(uiadaptor):
         #and also to add it to the available liste of recipe
         self.menuorder = ["File",]
         self._menu = self.MENU_ID = {"File":
-                      [self._addElemt(name="Save",action=self.save),
-                      self._addElemt(name="Save as",action=self.saveas),#self.buttonLoad},
+                      [
+                      self._addElemt(name="Save Recipe",action=self.save),
+                      self._addElemt(name="Save Recipe as",action=self.saveas),#self.buttonLoad},
                       self._addElemt(name="Append to available recipe as",action=self.appendtoRECIPES),
+                      self._addElemt(name="Save Result",action=self.saveResult),
+                      self._addElemt(name="Save Grid",action=self.saveGrid),
                       ],#self.buttonLoadData
                        }
         if self.helper.host.find("blender") != -1:
@@ -1785,18 +1791,19 @@ class SubdialogFiller(uiadaptor):
 #            print (self.recipe,autopack.RECIPES[self.recipe]["wrkdir"])
 #            print (self.gridresultfile)
 #        print "grid"
-        if self.recipe in autopack.RECIPES and self.recipe_version in autopack.RECIPES[self.recipe]:
-            self.gridresultfile = autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
-            if not os.path.isdir(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results") :
-                os.makedirs(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results")                
-        else :
-            self.gridresultfile =  self.grid_filename#or grid_filename?
+#        if self.recipe in autopack.RECIPES and self.recipe_version in autopack.RECIPES[self.recipe]:
+#            self.gridresultfile = autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+#            if not os.path.isdir(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results") :
+#                os.makedirs(autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results")                
+#        else :
+        self.gridresultfile =  self.grid_filename#or grid_filename?
  
-        if not os.path.isfile(self.gridresultfile) and not fbuild :
-            self.gridresultfile = None
-            fbuid = True
-        else :
-            print ("gridFileIn ",self.gridresultfile)
+        if self.gridresultfile is not None :
+            if not os.path.isfile(self.gridresultfile) and not fbuild :
+                self.gridresultfile = None
+                fbuid = True
+#        else :
+#            print ("gridFileIn ",self.gridresultfile)
         box = self.helper.getObject(bname)
         fbox_bb = None  #Graham Oct 20: Should we set fbox_bb = box here, then replace if fbox_name !=bname on next line?
         if fbox_name != bname :
@@ -1951,6 +1958,19 @@ class SubdialogFiller(uiadaptor):
         #for appending to recipes we need :name + ["setupfile","resultfile","wrkdir"]
         #ask for a name?
         self.drawInputQuestion(title="append",question="name and version of recipe. e.g myRecipe 1.0",callback=self.append2recipe)
+
+    def saveResult_cb(self,filename):
+        self.histoVol.store_asJson(resultfilename=filename) 
+    
+    def saveResult(self,*args):
+        self.saveDialog(label="save result as json",callback=self.saveResult_cb)
+
+    def saveGrid_cb(self,filename):
+        self.histoVol.writeArraysToFile(filename)
+        
+    def saveGrid(self,*args):
+        self.saveDialog(label="save grid as",callback=self.saveGrid_cb)
+        
 
 class SubdialogIngredientViewer(uiadaptor):
     def CreateLayout(self):
