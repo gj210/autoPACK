@@ -2274,25 +2274,31 @@ class Ingredient(Agent):
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
         ptID = self.histoVol.grid.getPointFrom3D(point)
-        if len(self.compId_accepted):
-            if self.histoVol.grid.gridPtId[ptID] not in self.compId_accepted:
+        if self.compNum > 0 : #surface authorized ?
+            #ray cast ? is inside
+#            if self.histoVol.grid.gridPtId[ptID] < 0 : #
+#                return False
+#            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
+#                return False
+            if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
                 return False
-            else :
-                return True
+            elif self.histoVol.grid.gridPtId[ptID] < 0 : #inside an organelle
+                #depends on the ingredient if he grow or not
+                if self.Type == "Grow":
+                    #look at the direction ? or define it as "inside, outside, cross"
+                    if self.growside == "inside" and self.histoVol.grid.gridPtId[ptID] == -self.compNum:               
+                        #accept surface point id , and compartment <0 id
+                        return True
+                    elif self.growside == "outside" and self.histoVol.grid.gridPtId[ptID] != -self.compNum:
+                        return True
+                    elif self.growside == "cross"  :
+                    	return True
+            return True
+        if self.compNum != self.histoVol.grid.gridPtId[ptID]:
+            return False
         else :
-            if self.compNum > 0 : #surface authorized outside and surface:
-                #ray cast ? is inside
-    #            if self.histoVol.grid.gridPtId[ptID] < 0 : #
-    #                return False
-    #            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
-    #                return False
-                if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
-                    return False
-                return True
-            if self.compNum != self.histoVol.grid.gridPtId[ptID]:
-                return False
-            else :
-                return True
+            return True
+
 
     def checkPointSurface(self,point,cutoff):
         if not hasattr(self,"histoVol") :
@@ -5647,6 +5653,9 @@ class GrowIngrediant(MultiCylindersIngr):
         self.unitParentLength = 0.
         self.walkingMode = walkingMode #["sphere","lattice"]
         self.walkingType = "stepbystep" #or atonce
+        self.growside = "outside"
+        if "growside" in kw :
+            self.growside = kw["growside"]
         #create a simple geom if none pass?        
         
         if self.mesh is None and autopack.helper is not None  :
@@ -5680,6 +5689,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.KWDS["walkingMode"]={}
         self.KWDS["constraintMarge"]={}
         self.KWDS["useHalton"]={}
+        self.KWDS["growside"]={}
         self.OPTIONS["length"]={"name":"length","value":self.length,"default":self.length,"type":"float","min":0,"max":10000,"description":"snake total length"}
         self.OPTIONS["uLength"]={"name":"uLength","value":self.uLength,"default":self.uLength,"type":"float","min":0,"max":10000,"description":"snake unit length"}
         self.OPTIONS["closed"]={"name":"closed","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"closed snake"}                          
@@ -5689,7 +5699,8 @@ class GrowIngrediant(MultiCylindersIngr):
         self.OPTIONS["orientation"]={"name":"orientation","value":[0.,1.,0.],"default":[0.,1.,0.],"min":0,"max":1,"type":"vector","description":"snake orientation"}
         self.OPTIONS["walkingMode"]={"name":"walkingMode","value":"random","values":['sphere', 'lattice'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"snake mode"}
         self.OPTIONS["useHalton"]={"name":"useHalton","value":True,"default":True,"type":"bool","min":0.,"max":0.,"description":"use spherica halton distribution"}                          
-
+		self.OPTIONS["growside"]={"name":"growside","value":"outside","values":['outside', 'inside','cross'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"growing direction"}
+		
     def resetSphereDistribution(self):
         #given a radius, create the sphere distribution
         self.sphere_points = SphereHalton(10000,5)
