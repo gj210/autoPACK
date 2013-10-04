@@ -327,12 +327,13 @@ class SubdialogIngrdient(uiadaptor):
          "cutoff_boundary","cutoff_surface",
          "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold",]
 
-        dic={"int":"inputInt","float":"inputFloat","bool":"checkbox","liste":"pullMenu","filename":"inputStr"}
+        dic={"int":"inputInt","float":"inputFloat","bool":"checkbox",
+             "liste":"pullMenu","filename":"inputStr",}
         dic2={"int":"int","float":"float","bool":"int","liste":"int","filename":"str"}  
         if self.ingr is None :
             return
         if isinstance(self.ingr, GrowIngrediant) or isinstance(self.ingr, ActinIngrediant):
-            self.listAttrOrdered.extend(["length","uLength","marge","constraintMarge","orientation","walkingMode","useHalton"])#"biased",
+            self.listAttrOrdered.extend(["length","uLength","marge","constraintMarge","orientation","walkingMode","useHalton","compMask"])#"biased",
         for option in self.listAttrOrdered:#sqelf.histoVol.OPTIONS:
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector" :

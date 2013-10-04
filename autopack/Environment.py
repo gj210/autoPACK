@@ -752,6 +752,7 @@ class Grid:
         #ptInd = k*(sizex)*(sizey)+j*(sizex)+i;#want i,j,k
         return self.ijkPtIndice[ptInd]
 
+
     def checkPointInside(self,pt3d,dist=None,jitter=[1,1,1]):
         """
         Check if the given 3d points is inside the grid

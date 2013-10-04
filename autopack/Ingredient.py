@@ -132,6 +132,8 @@ KWDS = {   "molarity":{"type":"float"},
                         "weight":{"name":"weight","value":0.2,"default":0.2,"min":0.,"max":50.,"type":"float","description":"weight"},
                         "proba_binding":{"name":"proba_binding","value":0.5,"default":0.5,"min":0.,"max":1.0,"type":"float","description":"proba_binding"},
                         "proba_not_binding":{"name":"proba_not_binding","value":0.5,"default":0.5,"min":0.0,"max":1.,"type":"float","description":"proba_not_binding"},
+                        "compMask":{"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"},
+		
                     }
 #should use transform.py instead
 def angle_between_vectors(v0, v1, directed=True, axis=0):
@@ -2274,27 +2276,25 @@ class Ingredient(Agent):
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
         ptID = self.histoVol.grid.getPointFrom3D(point)
-        if self.compNum > 0 : #surface authorized ?
-            #ray cast ? is inside
-#            if self.histoVol.grid.gridPtId[ptID] < 0 : #
-#                return False
-#            if self.histoVol.grid.gridPtId[ptID] == -self.compNum : #Going inside ?
-#                return False
-            if self.histoVol.grid.gridPtId[ptID] > 0 and self.histoVol.grid.gridPtId[ptID] != self.compNum:
+        cID = self.histoVol.grid.gridPtId[ptID]
+        if self.compNum > 0 : #surface ingredient
+            #r=compartment.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
+            if self.Type == "Grow":
+                #need a list of accepted compNum
+                if len(self.compMask):
+                    if cID not in self.compMask:
+                        return False
+                    else :
+                        return True
+                else :
+                    return True
+        for i,o in self.histoVol.compartments:
+            inside = o.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
+            if inside and self.compNum >=0 :
                 return False
-            elif self.histoVol.grid.gridPtId[ptID] < 0 : #inside an organelle
-                #depends on the ingredient if he grow or not
-                if self.Type == "Grow":
-                    #look at the direction ? or define it as "inside, outside, cross"
-                    if self.growside == "inside" and self.histoVol.grid.gridPtId[ptID] == -self.compNum:               
-                        #accept surface point id , and compartment <0 id
-                        return True
-                    elif self.growside == "outside" and self.histoVol.grid.gridPtId[ptID] != -self.compNum:
-                        return True
-                    elif self.growside == "cross"  :
-                    	return True
-            return True
-        if self.compNum != self.histoVol.grid.gridPtId[ptID]:
+            if not inside and self.compNum < 0 :
+                return False                
+        if self.compNum != cID:
             return False
         else :
             return True
@@ -2314,37 +2314,19 @@ class Ingredient(Agent):
             res = organelle.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
             if len(res) == 2 :
                 pt,d = res
-                #print ("distance is ",d,res)
+                print ("distance is ",d,res)
                 if d[0] < cutoff :
                     return True
-                if d[0] <= self.histoVol.grid.gridSpacing :
-                    inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
-                    if not inside : 
-                        return True
-                    
-#            closest = organelle.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#returnNullIfFail
-#            #print closest        
-#            if closest[0] != -1 :
-#                return True
-#            else :
-#                inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
-#                if not inside : 
-#                    return True
-#                return False 
-#            sfpts = organelle.surfacePointsCoords
-#            delta = numpy.array(sfpts)-numpy.array(point)
-#            delta *= delta
-#            distA = numpy.sqrt( delta.sum(1) )
-##            print len(distA)
-#            test = numpy.less(abs(distA) , cutoff )# doest give the directionality...
-#            if True in test:
-#                return True
-#        elif compNum == 0 :
+#                if d[0] <= self.histoVol.grid.gridSpacing :
+                inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
+                print("inside ? ",inside) 
+                if not inside : 
+                    return True
         else :
             #chec oustide / inside depdening the principalVector ?
             for o in self.histoVol.compartments:
                 #add some jitter to the cutoff ?
-                closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#returnNullIfFail
+                closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#default cutoff is 0.0
                 #print closest        
                 if closest[0] != -1 :
                     return True
@@ -3716,6 +3698,7 @@ class Ingredient(Agent):
                 afvi.vi.update()
             closeS = self.checkPointSurface(jtrans,cutoff=self.cutoff_surface)
             if closeS :
+                print ("ok reject once")
                 self.rejectOnce(None,moving,afvi)
                 continue
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
@@ -3760,6 +3743,8 @@ class Ingredient(Agent):
                                 if True in r :
                                     break
                         else :
+                            #why will it be not woking with organelle ? 
+                            #tranformation prolem ?
                             for node in liste_nodes:
                                 col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
                                 r=[col]
@@ -5653,11 +5638,15 @@ class GrowIngrediant(MultiCylindersIngr):
         self.unitParentLength = 0.
         self.walkingMode = walkingMode #["sphere","lattice"]
         self.walkingType = "stepbystep" #or atonce
-        self.growside = "outside"
-        if "growside" in kw :
-            self.growside = kw["growside"]
+        self.compMask = []
+        #default should be compId
+        if "compMask" in kw :
+            if type(kw["compMask"]) is str :
+                self.compMask = eval(kw["compMask"])    
+            else :
+                self.compMask = kw["compMask"]
         #create a simple geom if none pass?        
-        
+        self.compMask=[]
         if self.mesh is None and autopack.helper is not None  :
             if not autopack.helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
@@ -5689,7 +5678,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.KWDS["walkingMode"]={}
         self.KWDS["constraintMarge"]={}
         self.KWDS["useHalton"]={}
-        self.KWDS["growside"]={}
+        self.KWDS["compMask"]={}
         self.OPTIONS["length"]={"name":"length","value":self.length,"default":self.length,"type":"float","min":0,"max":10000,"description":"snake total length"}
         self.OPTIONS["uLength"]={"name":"uLength","value":self.uLength,"default":self.uLength,"type":"float","min":0,"max":10000,"description":"snake unit length"}
         self.OPTIONS["closed"]={"name":"closed","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"closed snake"}                          
@@ -5699,7 +5688,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.OPTIONS["orientation"]={"name":"orientation","value":[0.,1.,0.],"default":[0.,1.,0.],"min":0,"max":1,"type":"vector","description":"snake orientation"}
         self.OPTIONS["walkingMode"]={"name":"walkingMode","value":"random","values":['sphere', 'lattice'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"snake mode"}
         self.OPTIONS["useHalton"]={"name":"useHalton","value":True,"default":True,"type":"bool","min":0.,"max":0.,"description":"use spherica halton distribution"}                          
-		self.OPTIONS["growside"]={"name":"growside","value":"outside","values":['outside', 'inside','cross'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"growing direction"}
+        self.OPTIONS["compMask"]={"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"}
 		
     def resetSphereDistribution(self):
         #given a radius, create the sphere distribution
@@ -6169,7 +6158,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         #check how far from surface ?
                         closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
                 if not inside or closeS or not inComp:
-#                    print "inside,closeS ",not inside,closeS,not inComp,newPt,marge
+                    print "inside,closeS ",not inside,closeS,not inComp,newPt,marge
                     if not self.constraintMarge :
                         if marge >=175 :
                             print ("no second point not constraintMarge 1 ", marge)

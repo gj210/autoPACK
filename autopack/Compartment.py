@@ -126,6 +126,7 @@ class  Compartment(CompartmentList):
         CompartmentList.__init__(self)
         #print ("compartment init",name,kw)
         self.name = name
+        self.center= None
         self.vertices = vertices
         self.faces = faces
         self.vnormals = vnormals
@@ -137,6 +138,7 @@ class  Compartment(CompartmentList):
         self.gname= ""
         self.ghost =False
         self.bb = None
+        self.diag = 9999.9
         if "ghost" in kw :
             self.ghost = kw["ghost"]
         self.ref_obj = None
@@ -468,7 +470,10 @@ class  Compartment(CompartmentList):
         recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = -self.number
-
+            if hasattr(ingr,"compMask"):
+                if not ingr.compMask :
+                    ingr.compMask=[ingr.compNum]
+                    
     def setSurfaceRecipe(self, recipe):
         """set the inner recipe that define the ingredient to pack at the surface"""
         assert self.number is not None
@@ -478,16 +483,18 @@ class  Compartment(CompartmentList):
         recipe.compartment = self#weakref.ref(self)
         for ingr in recipe.ingredients:
             ingr.compNum = self.number
+            
 
     def getCenter(self):
         """get the center of the mesh (vertices barycenter)"""
-        coords = numpy.array(self.vertices)#self.allAtoms.coords
-        center = sum(coords)/(len(coords)*1.0)
-        center = list(center)
-        for i in range(3):
-            center[i] = round(center[i], 4)
-#        print "center =", center
-        self.center = center
+        if self.center is None :
+            coords = numpy.array(self.vertices)#self.allAtoms.coords
+            center = sum(coords)/(len(coords)*1.0)
+            center = list(center)
+            for i in range(3):
+                center[i] = round(center[i], 4)
+    #        print "center =", center
+            self.center = center
     
     def getRadius(self):
         """get the radius as the distance between vertices center and bottom left bouding box"""
@@ -498,8 +505,12 @@ class  Compartment(CompartmentList):
         
     def getBoundingBox(self):
         """get the bounding box"""
+        from autopack.Environment import vlen,vdiff
         mini = numpy.min(self.vertices, 0)
         maxi = numpy.max(self.vertices, 0)
+        xl,yl,zl = mini
+        xr,yr,zr = maxi
+        self.diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )    
         return (mini, maxi)
 
     def getSizeXYZ(self):
@@ -842,7 +853,50 @@ class  Compartment(CompartmentList):
         self.ogsurfacePoints = points
         self.ogsurfacePointsNormals = normals
 
-    def checkPointInside(self,point,diag):
+    def one_rapid_ray(self,pt1,pt2,diag):
+        helper = autopack.helper
+        rm = self.get_rapid_model()
+        v1=numpy.array(pt1)
+        direction = helper.unit_vector(pt2-pt1)*diag
+        v2=v1+direction
+        if sum(v1) == 0.0 :
+            v3 = v2+numpy.array([0.,1.,0.])
+        else :
+            v3=v2+helper.unit_vector(numpy.cross(v1,v2))
+        f=[0,1,2]
+        ray_model = RAPIDlib.RAPID_model()
+        ray_model.addTriangles(numpy.array([v1,v2,v3],'f'), numpy.array([f,],'i'))
+        RAPIDlib.RAPID_Collide_scaled(numpy.identity(3), numpy.array([0.0,0.0,0.0],'f'), 
+                                      1.0,rm, numpy.identity(3), 
+                                    numpy.array([0.0,0.0,0.0],'f'), 1.0,ray_model,
+                                      RAPIDlib.cvar.RAPID_ALL_CONTACTS);
+        #could display it ?
+        #print numpy.array([v1,v2,v3],'f')
+        return RAPIDlib.cvar.RAPID_num_contacts
+        
+
+    def checkPointInside_rapid(self,point,diag,ray=1):
+        #we want to be sure to cover the organelle
+        if diag < self.diag :
+            diag = self.diag
+        inside = False
+        v1=numpy.array(point)
+        self.getCenter()
+        count1 = self.one_rapid_ray(v1,numpy.array(self.center),diag)
+        r= ((count1 % 2) == 1)
+        if ray == 3 :    
+            count2 = self.one_rapid_ray(v1, v1+numpy.array([0.,0.0,1.1]),diag )
+            count3 = self.one_rapid_ray(v1, v1+numpy.array([0.0,1.1,0.]),diag )
+            if r :
+               if (count2 % 2) == 1 and (count3 % 2) == 1 :
+                   r=True
+               else : 
+                   r=False
+        if r : # odd inside
+            inside = True
+        return inside
+        
+    def checkPointInside(self,point,diag,ray=1):
         inside = False
         insideBB  = self.checkPointInsideBB(point)#cutoff?
         r=False
@@ -857,13 +911,14 @@ class  Compartment(CompartmentList):
             center = helper.getTranslation( geom )
             intersect, count = helper.raycast(geom, point, center, diag, count = True )
             r= ((count % 2) == 1)
-            intersect2, count2 = helper.raycast(geom, point, point+[0.,0.,1.1], diag, count = True )
-            intersect3, count3 = helper.raycast(geom, point, point+[0.,1.1,0.], diag, count = True )
-            if r :
-               if (count2 % 2) == 1 and (count3 % 2) == 1 :
-                   r=True
-               else : 
-                   r=False
+            if ray == 3 :    
+                intersect2, count2 = helper.raycast(geom, point, point+[0.,0.,1.1], diag, count = True )
+                intersect3, count3 = helper.raycast(geom, point, point+[0.,1.1,0.], diag, count = True )
+                if r :
+                   if (count2 % 2) == 1 and (count3 % 2) == 1 :
+                       r=True
+                   else : 
+                       r=False
         if r : # odd inside
             inside = True
         return inside
@@ -1006,33 +1061,30 @@ class  Compartment(CompartmentList):
             insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=d)
             r=False
             if insideBB:
+                r=self.checkPointInside_rapid(grdPos[ptInd],diag,ray=ray)
+                #r=self.checkPointInside(grdPos[ptInd],diag,ray=ray)                
                 #should use an optional direction for the ray, which will help for unclosed surface....
-                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
-                #intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
-                r= ((count % 2) == 1)
-                if ray == 3 :
-                    intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
-                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
-                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
-                    #intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
-                    if r :
-                       if (count2 % 2) == 1 and (count3 % 2) == 1 :
-                           r=True
-                       else : 
-                           r=False
+#                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
+#                #intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
+#                r= ((count % 2) == 1)
+#                if ray == 3 :
+#                    intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
+#                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
+#                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
+#                    #intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
+#                    if r :
+#                       if (count2 % 2) == 1 and (count3 % 2) == 1 :
+#                           r=True
+#                       else : 
+#                           r=False
             if r : # odd inside
-                inside = True
-#
-#            # check if ptInd in inside
-#            intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[1.001,0.,0.], diag, count = True )
-#            if (count % 2) == 1: # odd inside
-                #and the point is actually inside the mesh bounding box
                 inside = True
                 if inside :
                     insidePoints.append(ptInd)
                     idarray[ptInd] = -number
             p=(ptInd/float(len(grdPos)))*100.0
             helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
+            print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
         print('time to update distance field and idarray', time()-t1)
         
         t1 = time()
