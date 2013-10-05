@@ -4735,7 +4735,7 @@ class Ingredient(Agent):
                             for c in range(autopack.ncpus): inputp[c]=[]
                             while n < len(liste_nodes):
                                 for c in range(autopack.ncpus):
-                                    if n == len(liste_nodes) : continue
+                                    if n == len(liste_nodes) : break
                                     v1=self.vertices
                                     f1=self.faces
                                     v2=liste_nodes[n][3].vertices
@@ -4746,6 +4746,8 @@ class Ingredient(Agent):
                                     n+=1
                             jobs=[]                                                                                
                             for c in range(autopack.ncpus):
+                                #print ("submit "+str(len(inputp[c]))+" pairs to test on cpu "+str( c)    ) 
+                                if not len(inputp[c]) : continue                                
                                 j=self.histoVol.pp_server.submit(rapid_checkCollision_rmp,(inputp[c],),
                                             callback=self.histoVol.grab_cb.grab,
                                             modules=("numpy",))
@@ -6405,7 +6407,7 @@ class GrowIngrediant(MultiCylindersIngr):
                                 for c in range(autopack.ncpus): inputp[c]=[]
                                 while n < len(liste_nodes):
                                     for c in range(autopack.ncpus):
-                                        if n == len(liste_nodes) : continue
+                                        if n == len(liste_nodes) : break
                                         v1=self.vertices
                                         f1=self.faces
                                         v2=liste_nodes[n][3].vertices
@@ -6416,6 +6418,8 @@ class GrowIngrediant(MultiCylindersIngr):
                                         n+=1
                                 jobs=[]                                                                                
                                 for c in range(autopack.ncpus):
+                                    #print ("walk submit "+str(len(inputp[c]))+" pairs to test on cpu "+str( c)  ) 
+                                    if not len(inputp[c]) : continue        
                                     j=self.histoVol.pp_server.submit(rapid_checkCollision_rmp,(inputp[c],),
                                                 callback=self.histoVol.grab_cb.grab,
                                                 modules=("numpy",))

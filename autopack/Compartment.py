@@ -1018,7 +1018,11 @@ class  Compartment(CompartmentList):
         if geom is None :
             self.gname = '%s_Mesh'%self.name            
             geom = helper.getObject(self.gname)
-        center = helper.getTranslation( geom )
+        if geom is not None :
+            center = helper.getTranslation( geom )
+        else :
+            self.getCenter()        
+            center = self.center        
 #        print len(closest),diag,closest[0]
 #        print closest
 #        bhtreelib.freeBHtree(bht)
