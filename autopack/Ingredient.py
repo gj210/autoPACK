@@ -988,6 +988,8 @@ class Ingredient(Agent):
         self.rotRange = 6.2831
         if "rotRange" in kw:
             self.rotRange = kw["rotRange"]
+        if "encapsulatingRadius" in kw:
+            self.encapsulatingRadius = kw["encapsulatingRadius"]
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
         self.cutoff_surface = self.encapsulatingRadius
@@ -995,7 +997,6 @@ class Ingredient(Agent):
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw:
             self.cutoff_surface = kw["cutoff_surface"]
-
         self.compareCompartment = False
         self.compareCompartmentTolerance = 0
         self.compareCompartmentThreshold = 0.0
@@ -1192,6 +1193,11 @@ class Ingredient(Agent):
             self.packingPriority = kw["priority"]
         if "packingMode" in kw :
             self.packingMode = kw["packingMode"]
+        if "compMask" in kw :
+            if type(kw["compMask"]) is str :
+                self.compMask = eval(kw["compMask"])    
+            else :
+                self.compMask = kw["compMask"]
 
     def getData(self):
         if not self.vertices :
@@ -5658,7 +5664,7 @@ class GrowIngrediant(MultiCylindersIngr):
             else :
                 self.compMask = kw["compMask"]
         #create a simple geom if none pass?        
-        self.compMask=[]
+        #self.compMask=[]
         if self.mesh is None and autopack.helper is not None  :
             if not autopack.helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
@@ -6852,6 +6858,9 @@ class GrowIngrediant(MultiCylindersIngr):
         #loop over until length reach or cant grow anymore
 #        self.nbMol = 1               
 #        print("JitterPlace ingr Grow....................................................................")
+        if type(self.compMask) is str :
+            self.compMask = eval(self.compMask) 
+
         success = True
         self.vi = autopack.helper
 #        if histoVol.afviewer != None :

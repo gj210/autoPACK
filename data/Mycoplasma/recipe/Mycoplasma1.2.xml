@@ -72,7 +72,7 @@ spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
                 molarity="1" name="hair" nbJitter="1" nbMol="3800" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
-                positions2="[[[50.0, 0.0, 0.0]]]" uLength ="50" principalVector="(0, 1, 0)" 
+                positions2="[[[0.0, 50.0, 0.0]]]" uLength ="50" principalVector="(0, 1, 0)" 
                 radii="[[8.0]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False" compMask="[-1,2]"/>
     </surface>

@@ -328,8 +328,9 @@ class SubdialogIngrdient(uiadaptor):
          "compareCompartment","compareCompartmentTolerance","compareCompartmentThreshold",]
 
         dic={"int":"inputInt","float":"inputFloat","bool":"checkbox",
-             "liste":"pullMenu","filename":"inputStr",}
-        dic2={"int":"int","float":"float","bool":"int","liste":"int","filename":"str"}  
+             "liste":"pullMenu","filename":"inputStr","string":"inputStr"}
+        dic2={"int":"int","float":"float","bool":"int","liste":"int","filename":"str",
+              "string":"str"}
         if self.ingr is None :
             return
         if isinstance(self.ingr, GrowIngrediant) or isinstance(self.ingr, ActinIngrediant):
