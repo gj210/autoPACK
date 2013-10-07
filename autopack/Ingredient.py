@@ -2277,6 +2277,10 @@ class Ingredient(Agent):
         #if grid too sparse this will not work.
         ptID = self.histoVol.grid.getPointFrom3D(point)
         cID = self.histoVol.grid.gridPtId[ptID]
+        if self.compNum == 0 :
+            organelle = self.histoVol
+        else :
+            organelle = self.histoVol.compartments[abs(self.compNum)-1]
         if self.compNum > 0 : #surface ingredient
             #r=compartment.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
             if self.Type == "Grow":
@@ -2288,12 +2292,18 @@ class Ingredient(Agent):
                         return True
                 else :
                     return True
-        for i,o in self.histoVol.compartments:
-            inside = o.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
+#        for i,o in self.histoVol.compartments:
+        if self.compNum < 0 :#     
+            inside = organelle.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
             if inside and self.compNum >=0 :
                 return False
             if not inside and self.compNum < 0 :
                 return False                
+        if self.compNum == 0 :
+            for i,o in self.histoVol.compartments:
+                inside = o.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
+                if inside :
+                    return True
         if self.compNum != cID:
             return False
         else :

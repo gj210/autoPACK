@@ -101,6 +101,7 @@ class Recipe:
             #ingredients an increasing chance to add one more molecule
                 # based on modulus proximity to the next integer
             #Molarity = No. of molecules /(N X V)
+            #doesnt seem to work anymore    
             nbr = ingr.molarity * volume * .000602 #Mod by Graham 8/18/11
             nbi = int(nbr)              #Mod by Graham 8/18/11
 #            print 'ingr.molarity = ', ingr.molarity
@@ -118,7 +119,7 @@ class Recipe:
 #            print 'nbi = ', nbi         #Mod by Graham 8/18/11
             nb = nbi                    #Mod by Graham 8/18/11
 #            print'nb = ', nb            #Mod by Graham 8/18/11
-            if ingr.overwrite_nbMol  :#DEPREATED
+            if ingr.overwrite_nbMol  :#DEPRECATED
                 ingr.vol_nbmol = nb
                 ingr.nbMol = ingr.overwrite_nbMol_value
             else :

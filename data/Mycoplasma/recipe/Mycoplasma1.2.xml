@@ -5,7 +5,7 @@
 	<options EnviroOnly="False" _hackFreepts="False" _timer="False" 
             boundingBox="[[-2482, -2389.0, 100.0], [2495, 2466, 2181.0]]" 
             cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" 
-            gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan" 
+            gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan3" 
             largestProteinSize="100" overwritePlaceMethod="True" pickRandPt="True" 
             pickWeightedIngr="True" placeMethod="pandaBullet" 
             runTimeDisplay="False" saveResult="False" smallestProteinSize="100." 
@@ -16,33 +16,33 @@
                 pick_mode="sub" radius="10.0" weight_mode="gauss"/>
 	</gradients>
 	<cytoplasme/>
+	<!--enveloppe to constraint lypoglycan-->
 	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Envelope.dae" name="Envelope" rep="None" rep_file="None">
     </organelle>
 	<!-- compartments order is important-->
 	<organelle geom="http://autofill.googlecode.com/git/data/Mycoplasma/geoms/Mmycoides_PackingSurf_1_Med.dae" 
                 name="MycoplasmaPackSurf_1_med" rep="None" rep_file="None">
-	<!--surface include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/SynapticVesicle_ingredients.xml"-->
+	
 	<surface>
-<!--17. ATP synthase-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml">
-        <overwrite principalVector="[0.0, 0.0, 1.0]"/>
-	</ingredient>
-<!--18. secretory proteins PDB OPM 2zjs-->
-	<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_2zjs.xml"/-->
-<!--19. sodium pump PDB OPM 4av3-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4av3.xml"/>
-<!--20. zinc transporter PDB OPM 3j1z-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3j1z.xml"/>
-<!--21. magnesium transporter PDB OPM 4i0u  0.0, 1.0, 0.0 // 1.0 0.0 0.0 ?-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml">
-        <overwrite principalVector="[1.0, 0.0, 0.0]"/>
-	</ingredient>
-<!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
-	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml">
-        <overwrite principalVector="[0.0, 0.0, 1.0]"/>
-	</ingredient>
-
-<!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane) radii 5 L2350
+		<!--17. ATP synthase-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml">
+        	<overwrite principalVector="[0.0, 0.0, 1.0]"/>
+		</ingredient>
+		<!--18. secretory proteins PDB OPM 2zjs-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_2zjs.xml"/>
+		<!--19. sodium pump PDB OPM 4av3-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4av3.xml"/>
+		<!--20. zinc transporter PDB OPM 3j1z-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3j1z.xml"/>
+		<!--21. magnesium transporter PDB OPM 4i0u  0.0, 1.0, 0.0 // 1.0 0.0 0.0 ?-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4i0u.xml">
+        	<overwrite principalVector="[0.0, 0.0, 1.0]"/>
+		</ingredient>
+		<!--22. ABC transporter (different ABC transporters transport different types of molecules-ABC is short for "ATP-binding cassette") PDB OPM 1l7v-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1l7v.xml">
+        	<overwrite principalVector="[0.0, 0.0, 1.0]"/>
+		</ingredient>
+		<!--24. lypoglycan (long carbohydrate chains connected to lipid in the membrane) radii 5 L2350
 3800 for the whole cell based on 
 I based the painting on P. F. Smith "Lipoglycans from Mycoplasmas" Crit Rev Microbiol 11, 157-186.
 The lipoglycan has a MW 100,000. Assuming galactose=180, this is about 550 sugars. Measuring from PDB entry 3hya, 7 sugars are about 3 nm, so the whole thing should be about 235 nm long. As we found out today, they are quite flexible. It looks like it's tethered in the membrane by a typical lipid with two fatty acid tails. The only thing I found about concentration is that it comprises 10% of the dry weight of the cell so there is a lot of it
@@ -53,11 +53,11 @@ MW = 100,000 (Smith CRC Crit Rev Micro)
 diameter of cell at the membrane = 0.3 micron 
 cell composition:  30% macromolecule/70% water
 density of protein = 1.35 g /cm**3 
-
 radius of cell = 0.15 e-6 m
 volume of cell = 4/3 pi r**3 = 1.4 e -20 m**3
-volume of macromolecule in cell = 4.2 e -21 m**3
+volume of macromolecule in cell = 4.2 e -21 m**3 //30%
 mass of macromolecule in cell = 1.35 e6 g/m**3 * 4.2 e-21 m**3 = 5.7 e -15 g
+
 if this mass is 90% of the dry wt of the cell, and lipoglycan is the remaining 10%:
 mass of lipoglycan = 6.35 e -16 g
 number of lipoglycan = 6.35 e -16 g /100,000 * 6.022 e 23 = *** 3800 molecules/cell ***
@@ -65,7 +65,6 @@ number of lipoglycan = 6.35 e -16 g /100,000 * 6.022 e 23 = *** 3800 molecules/c
 surface area of the cell = 4 pi r**2 = 2.82 e -13 m**2
 spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
 --> 
-
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
                 cutoff_boundary="0.0" cutoff_surface="55.0" gradient="" 
@@ -77,9 +76,23 @@ spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
                 radii="[[8.0]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False" compMask="[-1,2]"/>
     </surface>
-	<!--interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml"-->
-	<interior>
-<!--1. DNA 1500kb->4119790A-->
+    
+	<interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
+	<!--interior-->
+	<!--generic cytoplasme ?-->
+	
+		<!--1. DNA 1500kb->4119790A 411979nm
+MW = 660 (AVGed MW of 1 bp) 
+mass of macromolecule in cell = 1.35 e6 g/m**3 * 4.2 e-21 m**3 = 5.7 e -15 g
+1 500 000 bp x 2 (diploid) x 660 (AVGed MW of 1 bp) x 1.67x10^-12 = 1.6 e-15 g = 28%
+n = (0.0016532999999999999 * 1e-12)/660.0 * 6.022e23 = 1508511.0
+volume of cell = 4/3 pi r**3 = 1.4 e -20 m**3
+volume of macromolecule in cell = 4.2 e -21 m**3
+volume DNA :  4.2 e -21 m**3 * 0.28 = 1.17e-21m**3
+volume for rest 3e-21m**3
+DNA density is 0.13 - 0.18 pg/micrometer**3 = 1.8 e-7 g/m**3
+4.2e-21*1.8e-7 = 7.6e-29g
+-->
        	<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
                 cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
@@ -89,14 +102,14 @@ spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
                 positions2="[[[100.0, 0.0, 0.0]]]" uLength ="100" principalVector="(0, 1, 0)" 
                 radii="[[10.0]]" useLength="False" walkingMode="sphere" 
-                constraintMarge="False"  compMask="[-2]"/> 
-<!--2. DNA polymerase PDB 1kln-->
+                constraintMarge="False"/> 
+		<!--2. DNA polymerase PDB 1kln-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1kln.xml"/>
-<!--3. single-stranded-DNA binding protein (protects single-stranded portions during replication) pdb 3AFP-->
+		<!--3. single-stranded-DNA binding protein (protects single-stranded portions during replication) pdb 3AFP-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml"/>
-<!--4. RNA polymerase pdb 4KMU-->
+		<!--4. RNA polymerase pdb 4KMU-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml"/>
-<!--5. messenger RNA 2/1000A^3-->
+		<!--5. messenger RNA 2/1000A^3-->
        	<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
                 cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
@@ -106,47 +119,30 @@ spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
                 positions2="[[[100.0, 0.0, 0.0]]]" uLength ="100" principalVector="(0, 1, 0)" 
                 radii="[[10.0]]" useLength="False" walkingMode="sphere" 
-                constraintMarge="False"  compMask="[-2]"/> 
+                constraintMarge="False"/> 
 
-<!--6. ribosome pdb 4KBT 30/1000A^3-->
+		<!--6. ribosome pdb 4KBT 30/1000A^3 also in cytoplasme recipe need to compare both-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kbt.xml"/>
-<!--7. transfer RNA (in pink) 4tna 174/1000A^3 and elongation factor Tu (in blue)-->
-<!--8. elongation factor Tu and Ts 60/1000A^3 20 alone-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_prot.xml">       
-        <overwrite encapsulatingRadius="40"/>
-      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
-	
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT_rna.xml">       
-        <overwrite encapsulatingRadius="41"/>
-      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
-	
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1TTT.xml">
-       <overwrite encapsulatingRadius="60"/>
-      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
-<!--9. elongation factor G pdb 1EFG  1dar 20-->
+		<!--7. transfer RNA (in pink) 4tna 174/1000A^3 and elongation factor Tu (in blue)in cytoplasme recipe-->
+		<!--8. elongation factor Tu and Ts 60/1000A^3 20 alone in cytoplasme recipe-->
+		<!--9. elongation factor G pdb 1EFG  1dar 20-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1efg.xml"/>
-<!--10. aminoacyl-tRNA synthetases 30-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml">
-       <overwrite encapsulatingRadius="66"/>
-     </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
-<!--11. topoisomerases pdb 1A36-->
-		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_BC.xml"/>
-		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_A.xml"/-->
+		<!--10. aminoacyl-tRNA synthetases 30 in cytoplasme recipe-->
+		<!--11. topoisomerases pdb 1A36-->
+		<!--
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_BC.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_A.xml"/>
+		-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36.xml"/>
-<!--12. Rec system for DNA repair: a) RecA pdb 1REA, b) RecBC pdb 1W36-->
+		<!--12. Rec system for DNA repair: a) RecA pdb 1REA, b) RecBC pdb 1W36-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1rea.xml"/>
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1w36.xml"/>
-<!--13. chaperonin GroEL (helps folding of new proteins) pdb 1AON-->
+		<!--13. chaperonin GroEL (helps folding of new proteins) pdb 1AON there is another chaperone in cytoplasme recipe-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1aon.xml"/>
-<!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
+		<!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1r6b.xml"/>
-<!--15. glycolytic enymes 200-->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml">
-         <overwrite encapsulatingRadius="54"/>
-      </ingredient><!--16. pyruvate dehydrogenase complex 1 -->
-		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml">
-         <overwrite encapsulatingRadius="69"/>
-      </ingredient>
+		<!--15. glycolytic enymes 200 in cytoplasme recipe-->
+		<!--16. pyruvate dehydrogenase complex 1 in cytoplasme recipe-->
 	</interior>
 	</organelle>
 	</autopackSetup>
