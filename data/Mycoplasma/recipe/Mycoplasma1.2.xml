@@ -78,7 +78,10 @@ spacing of lipoglycans = sqrt(SA/nlipoglycans) = 8.6 nm
     </surface>
     
 	<interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
-	<!--interior-->
+	<!--
+	interior Could we add an overwrite tag so we can apply some parameters to all ingredients in recipe ?
+	<overwrite principalVector="[0.0, 0.0, 1.0]"/>
+	-->
 	<!--generic cytoplasme ?-->
 	
 		<!--1. DNA 1500kb->4119790A 411979nm
