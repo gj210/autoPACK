@@ -996,7 +996,8 @@ class Ingredient(Agent):
         if "cutoff_boundary" in kw:
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw:
-            self.cutoff_surface = kw["cutoff_surface"]
+            if kw["cutoff_surface"] != 0.0 :
+                self.cutoff_surface = kw["cutoff_surface"]
         self.compareCompartment = False
         self.compareCompartmentTolerance = 0
         self.compareCompartmentThreshold = 0.0
@@ -2326,12 +2327,14 @@ class Ingredient(Agent):
         compNum = self.compNum
 #        print "compNum ",compNum
         
-        if compNum < 0 : #inside object
+        if compNum < 0 : #inside object:
+            #need to migrate to ckdtree
             res = organelle.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
             if len(res) == 2 :
                 pt,d = res
-                print ("distance is ",d,res)
-                if d[0] < cutoff :
+                print ("distance is ",d,res)#d can be wrond for some reason,
+                d = autopack.helper.measure_distance(point,organelle.vertices[res[0][0]])
+                if d < cutoff :
                     return True
 #                if d[0] <= self.histoVol.grid.gridSpacing :
                 inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
@@ -5666,6 +5669,7 @@ class GrowIngrediant(MultiCylindersIngr):
         #create a simple geom if none pass?        
         #self.compMask=[]
         if self.mesh is None and autopack.helper is not None  :
+            p=None
             if not autopack.helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
                 #this mesh is used bu RAPID for collision
@@ -5674,13 +5678,17 @@ class GrowIngrediant(MultiCylindersIngr):
                     p = autopack.helper.newEmpty("autopackHider")
                     if autopack.helper.host.find("blender") == -1 :
                         autopack.helper.toggleDisplay(p,False)
-                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
-                                radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 5, parent="autopackHider")[0]
-            else :
-                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
-                                radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 5, parent="autopackHider")[0]                
+#                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+#                                radius=self.radii[0][0]*1.24, length=self.uLength,
+#                                res= 5, parent="autopackHider",axis="+X")[0]
+#            else :
+#            self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+#                                radius=self.radii[0][0]*1.24, length=self.uLength,
+#                                res= 5, parent="autopackHider",axis="+X")[0]                
+            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
+                                self.positions[0],self.positions2[0],
+                                radius=self.radii[0][0]*1.24,
+                                parent = p,color=self.color)
             self.getData()
 
         self.sphere_points = SphereHalton(1000,5)
