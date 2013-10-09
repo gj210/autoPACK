@@ -87,8 +87,11 @@ if helper is not None:
 
 import numpy.oldnumeric as N
 degtorad = pi/180.
-KWDS = {   "molarity":{"type":"float"}, 
-            "encapsulatingRadius":{"type":"float","name":"encapsulatingRadius","default":5,"value":5,"min":0,"max":500,"description":"encapsulatingRadius"}, 
+KWDS = {   
+                        "molarity":{"type":"float","name":"molarity","default":0,"value":0,"min":0,"max":500,"description":"molarity"}, 
+                        "nbMol":{"type":"int","name":"nbMol","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},
+                        "overwrite_nbMol_value":{"type":"int","name":"overwrite_nbMol_value","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},                        
+                        "encapsulatingRadius":{"type":"float","name":"encapsulatingRadius","default":5,"value":5,"min":0,"max":500,"description":"encapsulatingRadius"}, 
                         "radii":{"type":"float"}, 
                         "positions":{"type":"vector"}, 
                         "positions2":{"type":"vector"},
@@ -99,7 +102,6 @@ KWDS = {   "molarity":{"type":"float"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
-                        "nbMol":{"type":"int"},
                         "Type":{"type":"string"},
                         "jitterMax":{"name":"jitterMax","value":[1.,1.,1.],"default":[1.,1.,1.],"min":0,"max":1,"type":"vector","description":"jitterMax"},
                         "nbJitter":{"name":"nbJitter","value":5,"default":5,"type":"int","min":0,"max":50,"description":"nbJitter"},
@@ -133,6 +135,7 @@ KWDS = {   "molarity":{"type":"float"},
                         "proba_binding":{"name":"proba_binding","value":0.5,"default":0.5,"min":0.,"max":1.0,"type":"float","description":"proba_binding"},
                         "proba_not_binding":{"name":"proba_not_binding","value":0.5,"default":0.5,"min":0.0,"max":1.,"type":"float","description":"proba_not_binding"},
                         "compMask":{"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"},
+                        "use_rbsphere":{"name":"use_rbsphere","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use sphere instead of cylinder for collision"},                             
 		
                     }
 #should use transform.py instead
@@ -1013,7 +1016,10 @@ class Ingredient(Agent):
         self.faces=[]
         if self.mesh is not None :
             self.getData()
-        self.KWDS = {   "molarity":{"type":"float"}, 
+        self.KWDS = { 
+                        "overwrite_nbMol_value":{"type":"int","name":"overwrite_nbMol_value","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},
+                        "molarity":{"type":"float","name":"molarity","default":0,"value":0,"min":0,"max":500,"description":"molarity"}, 
+                        "nbMol":{"type":"int","name":"nbMol","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},
                         "encapsulatingRadius":{"type":"float","name":"encapsulatingRadius","default":5,"value":5,"min":0,"max":500,"description":"encapsulatingRadius"}, 
                         "radii":{"type":"float"}, 
                         "positions":{}, "positions2":{},
@@ -1026,7 +1032,6 @@ class Ingredient(Agent):
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
-                        "nbMol":{"type":"int"},
                         "Type":{"type":"string"},
                         "jitterMax":{"name":"jitterMax","value":[1.,1.,1.],"default":[1.,1.,1.],"min":0,"max":1,"type":"vector","description":"jitterMax"},
                         "nbJitter":{"name":"nbJitter","value":5,"default":5,"type":"int","min":0,"max":50,"description":"nbJitter"},
@@ -1053,15 +1058,21 @@ class Ingredient(Agent):
                         
                         }
         self.OPTIONS = {
-                        "molarity":{}, 
+                        "molarity":{"type":"float","name":"molarity","default":0,"value":0,"min":0,"max":500,"description":"molarity"}, 
+                        "nbMol":{"type":"int","name":"nbMol","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},
+                        "overwrite_nbMol_value":{"type":"int","name":"overwrite_nbMol_value","default":0,"value":0,"min":0,"max":50000,"description":"overwrite_nbMol_value"},
                         "radii":{}, 
                         "encapsulatingRadius":{"type":"float","name":"encapsulatingRadius","default":5,"value":5,"min":0,"max":500,"description":"encapsulatingRadius"}, 
-                        "positions":{}, "positions2":{},
+                        "positions":{}, 
+                        "positions2":{},
                         "sphereFile":{}, 
-                        "packingPriority":{}, "name":{}, "pdb":{}, 
+                        "packingPriority":{}, 
+                        "name":{}, 
+                        "pdb":{}, 
                         "color":{},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
-                        "meshFile":{}, "meshObject":{},"nbMol":{},
+                        "meshFile":{}, 
+                        "meshObject":{},
                         "coordsystem":{"name":"coordsystem","type":"string","value":"right","default":"right","description":"coordinate system of the files"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
                         "rejectionThreshold":{"name":"rejectionThreshold","value":30,"default":30,"type":"int","min":0,"max":10000,"description":"rejectionThreshold"},
@@ -1187,7 +1198,7 @@ class Ingredient(Agent):
 #            else :
 #                self.overwrite_nbMol =False
             self.overwrite_nbMol_value = nbMol
-            self.nbMol = nbMol
+            #self.nbMol = nbMol
         if "molarity" in kw :
             self.molarity  = kw["molarity"]  
         if "priority" in kw :
@@ -5629,7 +5640,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.biased = biased
         self.absoluteLengthMax =99999999.9999#(default value is infinite or some safety number like 1billion)
         self.probableLengthEquation = None 
-        self.use_rbsphere = False
+
         #(this can be a number or an equation, e.g., every actin should grow to 
         #10 units long, or this actin fiber seed instance should grow to (random*10)^2
         #actually its a function of self.uLength like self.uLength * 10. or *(random*10)^2
@@ -5645,6 +5656,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.cutoff_boundary = 1.0
         self.cutoff_surface = 5.0
         self.useHalton = True        
+        self.use_rbsphere = False #use sphere instead of cylinder or collision with bullet
         if "useHalton" in kw :
             self.useHalton = kw["useHalton"]
         if "constraintMarge" in kw :
@@ -5653,7 +5665,8 @@ class GrowIngrediant(MultiCylindersIngr):
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw :
             self.cutoff_surface = kw["cutoff_surface"]
-
+        if "use_rbsphere" in kw :
+            self.use_rbsphere = kw["use_rbsphere"]
         #mesh object representing one uLength? or a certain length
         self.unitParent = None
         self.unitParentLength = 0.
@@ -5682,13 +5695,13 @@ class GrowIngrediant(MultiCylindersIngr):
 #                                radius=self.radii[0][0]*1.24, length=self.uLength,
 #                                res= 5, parent="autopackHider",axis="+X")[0]
 #            else :
-#            self.mesh = autopack.helper.Cylinder(self.name+"_basic",
-#                                radius=self.radii[0][0]*1.24, length=self.uLength,
-#                                res= 5, parent="autopackHider",axis="+X")[0]                
-            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
-                                self.positions[0],self.positions2[0],
-                                radius=self.radii[0][0]*1.24,
-                                parent = p,color=self.color)
+            self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+                                radius=self.radii[0][0]*1.24, length=self.uLength,
+                                res= 5, parent="autopackHider",axis="+X")[0]                
+#            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
+#                                self.positions[0][0],self.positions2[0][0],
+#                                radius=self.radii[0][0]*1.24,
+#                                parent = p,color=self.color)
             self.getData()
 
         self.sphere_points = SphereHalton(1000,5)
@@ -5705,6 +5718,8 @@ class GrowIngrediant(MultiCylindersIngr):
         self.KWDS["constraintMarge"]={}
         self.KWDS["useHalton"]={}
         self.KWDS["compMask"]={}
+        self.KWDS["use_rbsphere"]={}
+        
         self.OPTIONS["length"]={"name":"length","value":self.length,"default":self.length,"type":"float","min":0,"max":10000,"description":"snake total length"}
         self.OPTIONS["uLength"]={"name":"uLength","value":self.uLength,"default":self.uLength,"type":"float","min":0,"max":10000,"description":"snake unit length"}
         self.OPTIONS["closed"]={"name":"closed","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"closed snake"}                          
@@ -5715,6 +5730,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.OPTIONS["walkingMode"]={"name":"walkingMode","value":"random","values":['sphere', 'lattice'],"min":0.,"max":0.,"default":'sphere',"type":"liste","description":"snake mode"}
         self.OPTIONS["useHalton"]={"name":"useHalton","value":True,"default":True,"type":"bool","min":0.,"max":0.,"description":"use spherica halton distribution"}                          
         self.OPTIONS["compMask"]={"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"}
+        self.OPTIONS["use_rbsphere"]={"name":"use_rbsphere","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use sphere instead of cylinder wih bullet"}                          
 		
     def resetSphereDistribution(self):
         #given a radius, create the sphere distribution
@@ -6274,7 +6290,7 @@ class GrowIngrediant(MultiCylindersIngr):
 #                        r,j=self.getJtransRot(numpy.array(pt2).flatten(),newPt)
                         histoVol.rTrans.append(numpy.array(pt2).flatten())
 #                        m=autopack.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
-                        histoVol.rRot.append(numpy.array(r))#rotMatj 
+                        histoVol.rRot.append(numpy.array(rotMatj))#rotMatj r 
                         histoVol.rIngr.append(self)
                         histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
                         histoVol.callFunction(histoVol.delRB,(rbnode,))

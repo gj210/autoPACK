@@ -319,7 +319,7 @@ class SubdialogIngrdient(uiadaptor):
         self.Widget["labeloptions"]={}
         self.Widget["edit"]={}
         #what are the option we want from the ingredient
-        self.listAttrOrdered = ["encapsulatingRadius","rejectionThreshold","nbJitter", 
+        self.listAttrOrdered = ["molarity","overwrite_nbMol_value","encapsulatingRadius","rejectionThreshold","nbJitter", 
         "perturbAxisAmplitude", "principalVector","jitterMax",#"principalVector",
          "useRotAxis","rotAxis","rotRange",                      
          "packingMode","gradient","placeType",
@@ -334,7 +334,9 @@ class SubdialogIngrdient(uiadaptor):
         if self.ingr is None :
             return
         if isinstance(self.ingr, GrowIngrediant) or isinstance(self.ingr, ActinIngrediant):
-            self.listAttrOrdered.extend(["length","uLength","marge","constraintMarge","orientation","walkingMode","useHalton","compMask"])#"biased",
+            self.listAttrOrdered.extend(["length","uLength","marge",
+                    "constraintMarge","orientation","walkingMode","useHalton",
+                    "compMask","use_rbsphere"])#"biased",
         for option in self.listAttrOrdered:#sqelf.histoVol.OPTIONS:
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector" :
@@ -380,8 +382,14 @@ class SubdialogIngrdient(uiadaptor):
                                      variable=self.addVariable("int",0))
         
         self.Close_btn=self._addElemt(name="Close",width=100,height=10,
-                         action=self.close,type="button",icon=None,
+                         action=self.close_cb,type="button",icon=None,
                                      variable=self.addVariable("int",0))
+
+
+    def close_cb(self,*args):
+        #update the Filler windows to account change
+#        self.parent.updateNBMOLwidget()
+        self.close()
         
     def setupLayout(self):
         """    
@@ -393,6 +401,7 @@ class SubdialogIngrdient(uiadaptor):
             if type(self.Widget["options"][wname]) == list: 
                 widget =[self.Widget["labeloptions"][wname]]
                 widget.extend(self.Widget["options"][wname])
+                widget.append(self.Widget["edit"][wname])                
             self._layout.append(widget) #
         
         self._layout.append([self.Apply_btn,self.Apply_to_All_btn,self.ResetToDefault_btn,self.Close_btn])
@@ -439,7 +448,7 @@ class SubdialogIngrdient(uiadaptor):
 #                self.setVal(w,v)
 
     def ApplyToAll(self, *args, **kw):
-        r = self.ingr.recipe()
+        r = self.ingr.recipe
         for ingre in r.ingredients :
             for option in self.listAttrOrdered:
                 o = self.ingr.OPTIONS[option]
@@ -454,7 +463,7 @@ class SubdialogIngrdient(uiadaptor):
     def getFunctionForWidgetCallBack(self,name):
         #inr_cb = self.getFunctionForWidgetCallBack(ingr)
         aStr  = "def Apply"+name+"ToAllIngredient(*args):\n"
-        aStr += '   r = self.ingr.recipe()\n'        
+        aStr += '   r = self.ingr.recipe\n'        
         aStr += '   o = self.ingr.OPTIONS["'+name+'"]\n'
         aStr += '   for ingre in r.ingredients :\n'
         aStr += '       if o["type"] == "vector" :\n'
@@ -1001,6 +1010,10 @@ class SubdialogFiller(uiadaptor):
                          action=self.updateNBMOL,type="button",icon=None,
                              #label = "Approximate total to attempt",
                                      variable=self.addVariable("int",0))
+        self.BTN["updateNMolingr"]=self._addElemt(name="Update from edit",width=widthButton+30,height=10,
+                         action=self.updateNBMOLwidget,type="button",icon=None,
+                             #label = "Approximate total to attempt",
+                                     variable=self.addVariable("int",0))
 
         self.BTN["resetAll"]=self._addElemt(name="Clear Recipe",width=widthButton+30,height=10,
                          action=self.clearAll,type="button",icon=None,
@@ -1122,7 +1135,7 @@ class SubdialogFiller(uiadaptor):
                   value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
 #                print "molarity",ingr.molarity,str(ingr.molarity)
                 self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                  value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=1000)   
+                  value=ingr.overwrite_nbMol_value,type="inputInt",variable=self.addVariable("int",ingr.overwrite_nbMol_value),mini=0,maxi=1000)   
                 self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                 self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                   value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 
@@ -1295,7 +1308,7 @@ class SubdialogFiller(uiadaptor):
     
         elemFrame.append([self.LABELS["RecipeColumnsEmptySpace100"],self.LABELS["RecipeColumnsEmptySpace100"],
                           self.LABELS["RecipeColumnsEmptySpace100"],self.BTN["updateNMol"], 
-                          self.LABELS["RecipeColumnsEmptySpace100"],self.LABELS["RecipeColumnsEmptySpace100"],
+                          self.LABELS["RecipeColumnsEmptySpace100"],self.BTN["updateNMolingr"],#self.LABELS["RecipeColumnsEmptySpace100"],
                           self.LABELS["RecipeColumnsEmptySpace100"],self.LABELS["RecipeColumnsEmptySpace100"] ])
 #        elemFrame.append([self.BTN["updateNMol"],])
         frame = self._addLayout(id=196,name="Recipe options",elems=elemFrame,collapse=False,scrolling=True, type="tab")
@@ -1502,7 +1515,10 @@ class SubdialogFiller(uiadaptor):
             
     def togleRecipeIngrInc(self,recipe, includeTog):
         if recipe :
+            #should befor all ingredient available not only previously active
             for ingr in recipe.ingredients:
+                self.setVal(self.ingr_include[ingr.name],includeTog)  
+            for ingr in recipe.exclude:
                 self.setVal(self.ingr_include[ingr.name],includeTog)  
 
     def toggleIngrIncExterior(self,*args):
@@ -1727,6 +1743,13 @@ class SubdialogFiller(uiadaptor):
 #                self.histoVol.setCompartmentMesh(o,cname)
 #                self.afviewer.createOrganelMesh(o)#this will update the mesh
 
+    def updateNBMOLwidget(self,*args):
+        for wkey in self.ingr_vol_nbmol:
+            ingr = self.histoVol.getIngrFromName(wkey)
+            if ingr is not None :
+                self.setVal(self.ingr_nMol[wkey],"%d"%(ingr.overwrite_nbMol_value))
+                self.setVal(self.ingr_molarity[wkey],"%d"%(ingr.molarity))
+
     def updateNBMOL(self,*args):
         bname= self.getVal(self.fbox_name)#bbox_name)
         if self.guimode == "Advanced" or self.guimode == "Debug":
@@ -1752,7 +1775,8 @@ class SubdialogFiller(uiadaptor):
                     return
 #        print box
         bb=self.afviewer.vi.getCornerPointCube(box)
-        #update the molarity       
+        #update the molarity 
+        #we should build the grid to get the proper value
         self.histoVol.estimateVolume(bb, spacing)#update the value        
         #update the widget
         
@@ -2596,7 +2620,7 @@ class SubdialogViewer(uiadaptor):
     def delIngrPrim(self,ingr):
         if hasattr(ingr,"isph") : ingr.isph = None
         if hasattr(ingr,"icyl") : ingr.icyl = None
-        orga = ingr.recipe().compartment()
+        orga = ingr.recipe.compartment
         name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
         parent = self.helper.getObject(name)
 #        print (name,parent)            
@@ -2641,7 +2665,7 @@ class SubdialogViewer(uiadaptor):
             del ingr.ipoly
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
         if self.afviewer.doSpheres :
-            orga = ingr.recipe().compartment()
+            orga = ingr.recipe.compartment
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
 #            print (name,parent)            
@@ -2658,7 +2682,7 @@ class SubdialogViewer(uiadaptor):
                 self.helper.deleteObject(parent)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().compartment()
+            o = ingr.recipe.compartment
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
@@ -2679,7 +2703,7 @@ class SubdialogViewer(uiadaptor):
 #            self.delIngrPrim(ingr)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
-            o = ingr.recipe().compartment()
+            o = ingr.recipe.compartment
             for i in range(ingr.nbCurve):
                 name = o.name+str(i)+"snake_"+ingr.name.replace(" ","_")
                 snake = self.helper.getObject(name)
