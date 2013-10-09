@@ -102,7 +102,15 @@ class Recipe:
                 # based on modulus proximity to the next integer
             #Molarity = No. of molecules /(N X V)
             #doesnt seem to work anymore    
-            nbr = ingr.molarity * volume * .000602 #Mod by Graham 8/18/11
+            #=B7*POWER(10, 27)/100/1000/(6.0221415*POWER(10,23))
+            #this eqauation seems wrong, it work for volume unit in m^3
+#            nbr = ingr.molarity * volume * .000602 #Mod by Graham 8/18/11
+            #we work in angstrom->L->m
+            #vnm is volume in nm^3
+            #replace by 10e30 for angstrom^3
+            # molarity = (nbr*10e27)/vnm/1000.0/(6.022*10e23) M
+            # nbr = molarity*((6.022*10e23)*vnm*1000)/10e27   molecule
+            nbr = ingr.molarity * (volume/10e6) * 1000 * 0.000602 #Mod by Graham 8/18/11
             nbi = int(nbr)              #Mod by Graham 8/18/11
 #            print 'ingr.molarity = ', ingr.molarity
 #            print 'volume = ', volume

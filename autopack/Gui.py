@@ -1775,6 +1775,7 @@ class SubdialogFiller(uiadaptor):
                     return
 #        print box
         bb=self.afviewer.vi.getCornerPointCube(box)
+        print ("current BB",bb) 
         #update the molarity 
         #we should build the grid to get the proper value
         self.histoVol.estimateVolume(bb, spacing)#update the value        
