@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+<autopackSetup name="SynapticVesicle" version="1.2">
+	<options EnviroOnly="False" _freePtsUpdateThrehod="0.00999999977648" _hackFreepts="False" _timer="False" boundingBox="[[-309.45399284362793, -286.72900438308716, -327.947], [290.65599250793457, 295.24200391769409, 306.82100000000003]]" cancelDialog="False" computeGridParams="True" gradients="[]" ingrLookForNeighbours="False" innerGridMethod="jordan3" largestProteinSize="180.0" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="jitter" resultfile="autoFillRecipeScripts/SynapticVesicle/results/SynapticVesiclefillResult.afr" runTimeDisplay="False" saveResult="True" smallestProteinSize="10" use_gradient="False" windowsSize="500.0"/>
+	<organelle geom="http://autofill.googlecode.com/git/data/SynapticVesicle/geoms/SynapticVesicleSurfaceMesh1.dae" name="vesicle_Mesh" rep="None" rep_file="None">
+    	<surface>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves128MeshsParent.xml">
+        		<overwrite molarity="0.004144" nbMol="2" packingPriority="-8"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves133MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="2" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves135MeshsParent.xml">
+        		<overwrite molarity="0.107744" nbMol="33" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves161MeshsParent.xml">
+        		<overwrite molarity="0.004144" nbMol="1" packingPriority="-100"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves167MeshsParent.xml">
+        		<overwrite molarity="0.0414456" nbMol="13" packingPriority="-20"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves187MeshsParent.xml">
+        		<overwrite molarity="0.0248696" nbMol="8" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves188MeshsParent.xml">
+        		<overwrite molarity="0.0248696" nbMol="8" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves199MeshsParent.xml">
+        		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves203MeshsParent.xml">
+        		<overwrite molarity="0.0056" nbMol="2" packingPriority="-20"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves252MeshsParent.xml">
+        		<overwrite molarity="0.0414456" nbMol="13" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves262MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="3" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves264MeshsParent.xml">
+        		<overwrite molarity="0.004144" nbMol="1" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves8MeshsParent.xml">
+        		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves22MeshsParent.xml">
+        		<overwrite molarity="0.0414456" nbMol="13" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves32MeshsParent.xml">
+        		<overwrite molarity="0.0621712" nbMol="19" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves50MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="3" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves64MeshsParent.xml">
+        		<overwrite molarity="0.0663152" nbMol="21" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves80MeshsParent.xml">
+        		<overwrite molarity="0.0331576" nbMol="10" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves88MeshsParent.xml">
+        		<overwrite molarity="0.0455896" nbMol="14" packingPriority="-100"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves99MeshsParent.xml">
+        		<overwrite molarity="0.0663152" nbMol="21" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves115MeshsParent.xml">
+        		<overwrite molarity="0.0538832" nbMol="17" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves47MeshsParent.xml">
+        		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves54MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="3" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves52MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="2" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves5MeshsParent.xml">
+        		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves17MeshsParent.xml">
+        		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves56MeshsParent.xml">
+        		<overwrite molarity="0.0331576" nbMol="11" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves34MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="3" packingPriority="-10"/>
+        	</ingredient>
+        	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves20MeshsParent.xml">
+        		<overwrite molarity="0.008288" nbMol="2" packingPriority="-10"/>
+        	</ingredient>
+    	</surface>
+	</organelle>
+</autopackSetup>
