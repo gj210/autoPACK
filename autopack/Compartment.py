@@ -882,10 +882,10 @@ class  Compartment(CompartmentList):
         inside = False
         v1=numpy.array(point)
         self.getCenter()
-        count1 = self.one_rapid_ray(v1,numpy.array(self.center),diag)
+        count1 = self.one_rapid_ray(v1,v1+numpy.array([0.,0.0,1.1]),diag)
         r= ((count1 % 2) == 1)
         if ray == 3 :    
-            count2 = self.one_rapid_ray(v1, v1+numpy.array([0.,0.0,1.1]),diag )
+            count2 = self.one_rapid_ray(v1, numpy.array(self.center) ,diag )
             count3 = self.one_rapid_ray(v1, v1+numpy.array([0.0,1.1,0.]),diag )
             if r :
                if (count2 % 2) == 1 and (count3 % 2) == 1 :

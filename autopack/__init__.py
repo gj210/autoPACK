@@ -99,6 +99,8 @@ def retrieveFile(filename,destination=os.sep):
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
         name = filename.split("/")[-1]
         tmpFileName = afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination+name
+        if not os.path.exists(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination):
+		    os.makedirs(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination)
         #check if exist first
         if not os.path.isfile(tmpFileName) or forceFetch :
             if checkURL(filename):

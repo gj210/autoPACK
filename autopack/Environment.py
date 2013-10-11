@@ -1153,22 +1153,15 @@ class Environment(CompartmentList):
             #check for include list of ingredients
             ingredients_xmlfile = str(rnode.getAttribute("include"))
             if ingredients_xmlfile :#open the file and parse the ingredient:
-                xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
-                if xmlfile :
-                    xmlinclude = parse(xmlfile).documentElement
-                    self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
+                #check if multiple include filename, aumngo',' in the path
+                liste_xmlfile = ingredients_xmlfile.split(",")
+                for xmlf in liste_xmlfile :                    
+                    xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                    if xmlfile :
+                        xmlinclude = parse(xmlfile).documentElement
+                        self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
                 
             self.set_recipe_ingredient(rnode,rCyto,io_ingr)                
-#            ingrnodes = rnode.getElementsByTagName("ingredient")
-#            for ingrnode in ingrnodes:
-#                ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                rCyto.addIngredient(ingre) 
-#            #check for includes 
-#            ingrnodes_include = rnode.getElementsByTagName("include")
-#            for inclnode in ingrnodes_include:
-#                xmlfile = str(inclnode.getAttribute("filename"))
-#                ingre = io_ingr.makeIngredientFromXml(filename = xmlfile, recipe=self.name)
-#                rCyto.addIngredient(ingre)
             #setup recipe
             self.setExteriorRecipe(rCyto)
             
@@ -1202,21 +1195,14 @@ class Environment(CompartmentList):
                 rsnodes=rsnodes[0]
                 ingredients_xmlfile = str(rsnodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
-                    xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
-                    if xmlfile :
-                        xmlinclude = parse(xmlfile).documentElement
-                        self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
+                    #check if multiple include filename, aumngo',' in the path
+                    liste_xmlfile = ingredients_xmlfile.split(",")
+                    for xmlf in liste_xmlfile :                    
+                        xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                        if xmlfile :
+                            xmlinclude = parse(xmlfile).documentElement
+                            self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
                 self.set_recipe_ingredient(rsnodes,rSurf,io_ingr)                
-
-#                ingrnodes = rsnodes.getElementsByTagName("ingredient")
-#                for ingrnode in ingrnodes:
-#                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                    rSurf.addIngredient(ingre) 
-#                ingrnodes_include = rsnodes.getElementsByTagName("include")
-#                for inclnode in ingrnodes_include:
-#                    xmlfile = str(inclnode.getAttribute("filename"))
-#                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
-#                    rSurf.addIngredient(ingre)
                 o.setSurfaceRecipe(rSurf)                
             rinodes = onode.getElementsByTagName("interior")
             if len(rinodes) :
@@ -1224,21 +1210,14 @@ class Environment(CompartmentList):
                 rinodes=rinodes[0]
                 ingredients_xmlfile = str(rinodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
-                    xmlfile = autopack.retrieveFile(ingredients_xmlfile,destination = self.name+os.sep+"recipe"+os.sep)
-                    if xmlfile :
-                        xmlinclude = parse(xmlfile).documentElement
-                        self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
+                    #check if multiple include filename, aumngo',' in the path
+                    liste_xmlfile = ingredients_xmlfile.split(",")
+                    for xmlf in liste_xmlfile :
+                        xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                        if xmlfile :
+                            xmlinclude = parse(xmlfile).documentElement
+                            self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
                 self.set_recipe_ingredient(rinodes,rMatrix,io_ingr)                
-
-#                ingrnodes = rinodes.getElementsByTagName("ingredient")
-#                for ingrnode in ingrnodes:
-#                    ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
-#                    rMatrix.addIngredient(ingre) 
-#                ingrnodes_include = rinodes.getElementsByTagName("include")
-#                for inclnode in ingrnodes_include:
-#                    xmlfile = str(inclnode.getAttribute("filename"))
-#                    ingre = io_ingr.makeIngredientFromXml(filename = xmlfile , recipe=self.name)
-#                    rMatrix.addIngredient(ingre)
                 o.setInnerRecipe(rMatrix)
         #Go through all ingredient and setup the partner  
         self.loopThroughIngr(self.set_partners_ingredient)

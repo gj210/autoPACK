@@ -3696,11 +3696,11 @@ class Ingredient(Agent):
         #getListCloseIngredient
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
-        closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
-            cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
         if histoVol.ingrLookForNeighbours:
             targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
                                                  closest_indice=closesbody_indice)
+            closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
+                cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
             #if partner:pickNewPoit like in fill3
             if runTimeDisplay and self.mesh:
                 mat = rotMat.copy()
@@ -4117,8 +4117,6 @@ class Ingredient(Agent):
             return success, nbFreePoints
         else :
             return success, nbFreePoints,jtrans, rotMatj
-
-
             
     def pandaBullet_place_dev(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
