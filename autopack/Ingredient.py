@@ -956,7 +956,8 @@ class Ingredient(Agent):
         #TODO : "med":{"method":"cms","parameters":{"gridres":30}}
         #TODO : "high":{"method":"msms","parameters":{"gridres":30}}
         #TODO : etc...
-
+        if "encapsulatingRadius" in kw:
+            self.encapsulatingRadius = kw["encapsulatingRadius"]
         self.coordsystem="left"
         if "coordsystem" in kw:
             self.coordsystem = kw["coordsystem"]
@@ -974,6 +975,8 @@ class Ingredient(Agent):
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
+        if self.mesh is not None :
+           self.getEncapsulatingRadius()
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -991,8 +994,6 @@ class Ingredient(Agent):
         self.rotRange = 6.2831
         if "rotRange" in kw:
             self.rotRange = kw["rotRange"]
-        if "encapsulatingRadius" in kw:
-            self.encapsulatingRadius = kw["encapsulatingRadius"]
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
         self.cutoff_surface = self.encapsulatingRadius
@@ -1211,6 +1212,25 @@ class Ingredient(Agent):
             else :
                 self.compMask = kw["compMask"]
 
+    def getEncapsulatingRadius(self,mesh=None):
+        helper = autopack.helper
+        if mesh is None :
+            mesh = self.mesh
+        if helper.host == "dejavu" :
+            m = helper.getMesh(self.mesh)
+            tr=False
+        else :
+            m = helper.getMesh(helper.getName(self.mesh))
+            tr=True
+        print ("Decompose Mesh")
+        faces,vertices,vnormals = helper.DecomposeMesh(m,
+                           edit=True,copy=False,tri=True,transform=tr) 
+        #print ("create the triangle",len(faces))
+        #encapsulating radius ?
+        v=numpy.array(vertices,'f')
+        l=numpy.sqrt((v*v).sum(axis=1))
+        self.encapsulatingRadius = max(l)   
+
     def getData(self):
         if not self.vertices :
             if self.mesh :
@@ -1262,6 +1282,10 @@ class Ingredient(Agent):
             faces,vertices,vnormals = helper.DecomposeMesh(m,
                                edit=True,copy=False,tri=True,transform=tr) 
             print ("create the triangle",len(faces))
+            #encapsulating radius ?
+#            v=numpy.array(vertices,'f')
+#            l=numpy.sqrt((v*v).sum(axis=1))
+#            self.encapsulatingRadius = max(l)
             self.rapid_model.addTriangles(numpy.array(vertices,'f'), numpy.array(faces,'i'))
         else : #need vertices/faces from sphere/cylinder
             #get the primitive and extract the mesh from it
@@ -2337,29 +2361,44 @@ class Ingredient(Agent):
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
         compNum = self.compNum
 #        print "compNum ",compNum
-        
-        if compNum < 0 : #inside object:
-            #need to migrate to ckdtree
-            res = organelle.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
+        #shoud it be closest distance from centeringredient or vertices ingredients        
+#        if compNum < 0 : #inside object:
+#            #need to migrate to ckdtree
+#            res = organelle.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
+#            if len(res) == 2 :
+#                pt,d = res
+#                print ("distance is ",d,res)#d can be wrond for some reason,
+#                d = autopack.helper.measure_distance(point,organelle.vertices[res[0][0]])
+#                if d < cutoff :
+#                    return True
+##                if d[0] <= self.histoVol.grid.gridSpacing :
+#                inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
+#                print("inside ? ",inside) 
+#                if not inside : 
+#                    return True
+#        else :
+            #chec oustide / inside depdening the principalVector ?
+        for o in self.histoVol.compartments:
+            if self.compNum > 0 and o.name == organelle.name:
+                continue
+            #add some jitter to the cutoff ?
+            #closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#default cutoff is 0.0
+            res = o.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
             if len(res) == 2 :
                 pt,d = res
-                print ("distance is ",d,res)#d can be wrond for some reason,
+                print ("distance is ",d,res,o.name,organelle.name)#d can be wrond for some reason,
                 d = autopack.helper.measure_distance(point,organelle.vertices[res[0][0]])
                 if d < cutoff :
                     return True
-#                if d[0] <= self.histoVol.grid.gridSpacing :
-                inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
-                print("inside ? ",inside) 
-                if not inside : 
-                    return True
-        else :
-            #chec oustide / inside depdening the principalVector ?
-            for o in self.histoVol.compartments:
-                #add some jitter to the cutoff ?
-                closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#default cutoff is 0.0
-                #print closest        
-                if closest[0] != -1 :
-                    return True
+                if compNum < 0 and o.name == organelle.name :
+                    inside = o.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
+                    print("inside ? ",inside) 
+                    if not inside : 
+                        return True
+                    
+    #                        #print closest        
+#                if closest[0] != -1 :
+#                    return True
 #                else :
 #                    return False 
 #                sfpts = o.surfacePointsCoords
@@ -2637,6 +2676,10 @@ class Ingredient(Agent):
             print ("checkDistance",d,d<cutoff)        
 
     def get_rapid_nodes(self,close_indice,curentpt,removelast=False,prevpoint=None):
+        if self.compNum == 0 :
+            organelle = self.histoVol
+        else :
+            organelle = self.histoVol.compartments[abs(self.compNum)-1]
         nodes = []
         ingrCounter={}
         a=numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]]
@@ -2659,17 +2702,20 @@ class Ingredient(Agent):
                     c = len(self.histoVol.rIngr)
                     if (n==c) or n==(c-1) or  (n==c-2):
                         continue
-            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius):
+            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
                 continue
             node = ingr.get_rapid_model()
             #distance ? should be < ingrencapsRadius+self.encradius
             nodes.append([node,numpy.array(jtrans),numpy.array(rotMat[:3,:3],'f'),ingr])
         #append organelle rb nodes
-        if self.compNum < 0 or self.compNum == 0 :     
-            for o in self.histoVol.compartments:
-                node = o.get_rapid_model() 
-                if node is not None : 
-                    nodes.append([node,numpy.zeros((3), 'f'),numpy.zeros((3, 3), 'f'),o])
+        node = None    
+        for o in self.histoVol.compartments:
+            node = None
+            if self.compNum > 0 and o.name == organelle.name:
+                continue
+            node = o.get_rapid_model() 
+            if node is not None : 
+                nodes.append([node,numpy.zeros((3), 'f'),numpy.identity(3, 'f'),o])
 #        print len(nodes),nodes
         self.histoVol.nodes = nodes
         return nodes
@@ -2678,6 +2724,10 @@ class Ingredient(Agent):
                      getInfo=False):
         #move around the rbnode and return it
         #self.histoVol.loopThroughIngr( self.histoVol.reset_rbnode )   
+        if self.compNum == 0 :
+            organelle = self.histoVol
+        else :
+            organelle = self.histoVol.compartments[abs(self.compNum)-1]
         nodes = self.histoVol.rb_panda[:-1]
         for n in nodes:
             #reset everything 
@@ -2707,7 +2757,7 @@ class Ingredient(Agent):
                 ingrCounter[ingr.name]=0
 #            print n,distances[nid][0],(ingr.encapsulatingRadius+self.encapsulatingRadius)
 #            d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(currentpt))
-            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius):
+            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
                 continue
             if ingrCounter[ingr.name] >= len(ingr.rb_nodes):
                 if ingr.Type == "Grow":
@@ -2747,11 +2797,19 @@ class Ingredient(Agent):
             else :
                 nodes.append(rbnode)
         #append organelle rb nodes
-        if self.compNum < 0 or self.compNum == 0 :     
-            for o in self.histoVol.compartments:
-                if o.rbnode is not None : 
-                    if not getInfo :
-                        nodes.append(o.rbnode)
+        for o in self.histoVol.compartments:
+            if self.compNum > 0 and o.name == organelle.name:
+                continue
+            if o.rbnode is not None : 
+                if not getInfo :
+                    nodes.append(o.rbnode)
+                else :
+                    nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
+#        if self.compNum < 0 or self.compNum == 0 :     
+#            for o in self.histoVol.compartments:
+#                if o.rbnode is not None : 
+#                    if not getInfo :
+#                        nodes.append(o.rbnode)
 #        print len(nodes),nodes
         self.histoVol.nodes = nodes
         return nodes
@@ -3726,11 +3784,13 @@ class Ingredient(Agent):
                 afvi.vi.setObjectMatrix(moving,mat,transpose=True)
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
-            closeS = self.checkPointSurface(jtrans,cutoff=self.cutoff_surface)
-            if closeS :
-                print ("ok reject once")
-                self.rejectOnce(None,moving,afvi)
-                continue
+                
+#            closeS = self.checkPointSurface(jtrans,cutoff=float(self.cutoff_surface))
+#            if closeS :
+#                print ("ok reject once")
+#                self.rejectOnce(None,moving,afvi)
+#                continue
+                
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
             rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
@@ -4645,9 +4705,9 @@ class Ingredient(Agent):
         #do we get the list of neighbours first > and give a different trans...closer to the partner
         #we should look up for an available ptID around the picked partner if any
         #getListPartner
-        closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
-            cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
         if histoVol.ingrLookForNeighbours:
+            closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
+                cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
             targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
                                                  closest_indice=closesbody_indice)
         tx, ty, tz = jtrans = targetPoint
@@ -4727,10 +4787,12 @@ class Ingredient(Agent):
                 afvi.vi.setObjectMatrix(moving,mat,transpose=True)
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
-            #closeS = self.checkPointSurface(jtrans,cutoff=self.cutoff_surface)
-            #if closeS :
-            #    self.rejectOnce(None,moving,afvi)
-            #    continue
+            
+#            closeS = self.checkPointSurface(jtrans,cutoff=float(self.cutoff_surface))
+#            if closeS :
+#                self.rejectOnce(None,moving,afvi)
+#                continue
+
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
             rbnode = self.get_rapid_model()            
             #rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)

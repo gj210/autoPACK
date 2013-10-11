@@ -2280,3 +2280,14 @@ class AutopackViewer:
             self.helper.deleteObject(p)#recursif?
         p = self.helper.newEmpty(self.env.name+"distances")
         sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=self.env.name+"distances")
+
+    def checkIngrSpheres(self,ingr):
+        o = ingr.recipe.compartment
+        if ingr.modelType=='Spheres':
+            name = "SpheresRep_"+ingr.name.replace(" ","_")
+            parent = self.vi.getObject(name)
+            names="SpheresRep_"+ingr.name.replace(" ","_")+"S"
+            if parent is None:
+                parent=self.vi.newEmpty(name,parent=self.orgaToMasterGeom[ingr])
+            ingr.bsph=self.vi.instancesSphere(names,ingr.positions[0],ingr.radii[0],
+                            self.pesph,[ingr.color],self.sc,parent=parent)

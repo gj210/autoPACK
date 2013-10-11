@@ -900,7 +900,7 @@ class Environment(CompartmentList):
         # smallest and largest protein radii acroos all recipes
         self.smallestProteinSize = 99999999
         self.largestProteinSize = 0
-
+        self.scaleER = 1.0 # hack in case problem with encapsulating radius
         self.computeGridParams = True
         
         self.EnviroOnly = False
@@ -1198,7 +1198,7 @@ class Environment(CompartmentList):
             self.addCompartment(o)
             rsnodes = onode.getElementsByTagName("surface")
             if len(rsnodes) :
-                rSurf = Recipe()
+                rSurf = Recipe(name=o.name+"_surf")
                 rsnodes=rsnodes[0]
                 ingredients_xmlfile = str(rsnodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
@@ -1220,7 +1220,7 @@ class Environment(CompartmentList):
                 o.setSurfaceRecipe(rSurf)                
             rinodes = onode.getElementsByTagName("interior")
             if len(rinodes) :
-                rMatrix = Recipe()
+                rMatrix = Recipe(name=o.name+"_int")
                 rinodes=rinodes[0]
                 ingredients_xmlfile = str(rinodes.getAttribute("include"))
                 if ingredients_xmlfile :#open the file and parse the ingredient:
@@ -1518,7 +1518,7 @@ h1 = Environment()
             setupStr+="h1.addCompartment("+o.name+")\n"
             rs = o.surfaceRecipe
             if rs :
-                setupStr+=o.name+"_surface = Recipe()\n"
+                setupStr+=o.name+"_surface = Recipe(name='"+o.name+"_surf')\n"
                 for ingr in rs.ingredients:                
                     if useXref :
                         io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
@@ -1529,7 +1529,7 @@ h1 = Environment()
                 setupStr+=o.name+".setSurfaceRecipe("+o.name+"_surface)\n"
             ri = o.innerRecipe
             if ri :
-                setupStr+=o.name+"_inner = Recipe()\n"
+                setupStr+=o.name+"_inner = Recipe(name='"+o.name+"_int')\n"
                 for ingr in rs.ingredients:                
                     if useXref :
                         io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
@@ -3937,7 +3937,7 @@ h1 = Environment()
         grid.gridVolume,grid.nbGridPoints = self.callFunction(self.computeGridNumberOfPoint,(boundingBox,spacing))
         unitVol = spacing**3
         realTotalVol = grid.gridVolume*unitVol
-
+        
         r = self.exteriorRecipe
         if r :
             r.setCount(realTotalVol,reset=False)

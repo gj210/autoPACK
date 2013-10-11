@@ -51,7 +51,7 @@ class Recipe:
     a recipe provides ingredients that are each defining a protein identity
     along with radius and molarity for this protein.
     """
-    def __init__(self):
+    def __init__(self,name="ext"):
         
         self.ingredients = []
         self.activeIngredients = []
@@ -59,6 +59,7 @@ class Recipe:
         # will be set when recipe is added to compartment
         self.exclude = []
         self.number=0
+        self.name = name
         
     def delIngredient(self, ingr):
         """ remove the given ingredient from the recipe """ 
@@ -73,6 +74,9 @@ class Recipe:
         """ add the given ingredient from the recipe """ 
 #        assert isinstance(ingr, Ingredient)
 #        print ingr,ingr.name
+        #we need ingredient unique name
+        if ingr.name.find(self.name) == -1 :
+            ingr.name = self.name+"__"+ingr.name
         if ingr not in self.ingredients :
             self.ingredients.append(ingr)
 #        ingr.recipe = weakref.ref(self)
@@ -110,6 +114,7 @@ class Recipe:
             #replace by 10e30 for angstrom^3
             # molarity = (nbr*10e27)/vnm/1000.0/(6.022*10e23) M
             # nbr = molarity*((6.022*10e23)*vnm*1000)/10e27   molecule
+            #specific for M (mol / L) in a volume in Angstrom
             nbr = ingr.molarity * (volume/10e6) * 1000 * 0.000602 #Mod by Graham 8/18/11
             nbi = int(nbr)              #Mod by Graham 8/18/11
 #            print 'ingr.molarity = ', ingr.molarity

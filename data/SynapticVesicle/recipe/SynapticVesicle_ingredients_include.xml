@@ -39,12 +39,14 @@
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves8MeshsParent.xml">
 		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
 	</ingredient>
+	<!-- problem spheresTree-->
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves22MeshsParent.xml">
 		<overwrite molarity="0.0414456" nbMol="13" packingPriority="-10"/>
 	</ingredient>
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves32MeshsParent.xml">
 		<overwrite molarity="0.0621712" nbMol="19" packingPriority="-10"/>
 	</ingredient>
+	<!-- problem spheresTree-->
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves50MeshsParent.xml">
 		<overwrite molarity="0.008288" nbMol="3" packingPriority="-10"/>
 	</ingredient>
@@ -72,6 +74,7 @@
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves52MeshsParent.xml">
 		<overwrite molarity="0.008288" nbMol="2" packingPriority="-10"/>
 	</ingredient>
+	<!-- problem spheresTree-->
 	<ingredient include="http://autofill.googlecode.com/git/data/SynapticVesicle/recipe/ingredients/Ves5MeshsParent.xml">
 		<overwrite molarity="0.012432" nbMol="4" packingPriority="-10"/>
 	</ingredient>

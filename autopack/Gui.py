@@ -715,6 +715,7 @@ class AnalysisTab:
                         width=150,height=10,type="button",icon=None,
                     action=self.dsdist,label="Disply grid closest distance",
                                      variable=self.afgui.addVariable("int",0)) 
+        #show sphere tree of ingredients ?
                                      
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
@@ -1094,6 +1095,9 @@ class SubdialogFiller(uiadaptor):
         return l_dict["toggleIngrInc"+oname+rname]
                                           
     def setupRecipeMenu(self,):
+        #Problem when two compartments share the same ingredient...
+        #also for getting ingredient per name...
+        #should we change ingredient name by : compartment name + ingr.name?
         self.LABELS={}
         self.Label_spacer={}
         self.ingr_include={}
