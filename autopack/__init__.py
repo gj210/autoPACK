@@ -54,6 +54,7 @@ afdir = os.path.abspath(__path__[0])
 ncpus = 2
 forceFetch = False
 checkAtstartup = True
+verbose = 0 
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
 '''

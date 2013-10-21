@@ -923,9 +923,72 @@ class  Compartment(CompartmentList):
             inside = True
         return inside
 
+    def BuildGrid(self, env):
+        if self.isOrthogonalBoudingBox==1:
+            self.prepare_buildgrid_box(env)
+        if env.innerGridMethod =="sdf" and self.isOrthogonalBoudingBox!=1: # A fillSelection can now be a mesh too... it can use either of these methods
+            a, b = self.BuildGrid_utsdf(self) # to make the outer most selection from the master and then the compartment
+        elif env.innerGridMethod == "bhtree" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_bhtree(self)
+        elif env.innerGridMethod == "jordan" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_jordan(self)
+        elif env.innerGridMethod == "jordan3" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_jordan(self,ray=3)
+        elif env.innerGridMethod == "pyray" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_pyray(self)    
+        return a,b 
 
+    def prepare_buildgrid_box(self,env):
+        a = env.grid.getPointsInCube(self.bb, None, None) #This is the highspeed shortcut for inside points! and no surface! that gets used if the fillSelection is an orthogonal box and there are no other compartments.
+        b = []
+        env.grid.gridPtId[a] = -self.number
+        self.surfacePointsCoords = None
+        bb0x, bb0y, bb0z = self.bb[0]
+        bb1x, bb1y, bb1z = self.bb[1]
+        AreaXplane = (bb1y-bb0y)*(bb1z-bb0z)
+        AreaYplane = (bb1x-bb0x)*(bb1z-bb0z)
+        AreaZplane = (bb1y-bb0y)*(bb1x-bb0x)
+        vSurfaceArea = abs(AreaXplane)*2+abs(AreaYplane)*2+abs(AreaZplane)*2
+        if autopack.verbose :
+            print("vSurfaceArea = ", vSurfaceArea)
+        self.insidePoints = a
+        self.surfacePoints = []
+        self.surfacePointsCoords = []
+        self.surfacePointsNormals = []
+        if autopack.verbose :
+            print(' %d inside pts, %d tot grid pts, %d master grid'%( len(a),len(a), len(self.grid.masterGridPositions)))
+        self.computeVolumeAndSetNbMol(env, b, a,areas=vSurfaceArea)               
+        #print("I've built a grid in the compartment test with no surface", a)
+        if autopack.verbose :
+            print("The size of the grid I build = ", len(a))
+        return a,b,vSurfaceArea
+
+    def BuildGrid_box(self, env,vSurfaceArea):
+        nbGridPoints = len(env.grid.masterGridPositions)
+        insidePoints = env.grid.getPointsInCube(self.bb, None, 
+                                            None,addSP=False)     
+        for p in insidePoints : 
+            env.grid.gridPtId[p]=-self.number
+        if autopack.verbose :
+            print('is BOX Total time', time()-t0)
+        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(self.ogsurfacePoints,env)
+        srfPts = surfPtsBB
+        surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,
+                                    srfPts, surfPtsBBNorms, histoVol)
+        self.insidePoints = insidePoints
+        self.surfacePoints = surfacePoints
+        self.surfacePointsCoords = surfPtsBB
+        self.surfacePointsNormals = surfacePointsNormals
+        if autopack.verbose :
+            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+            len(self.surfacePoints), len(self.insidePoints),
+            nbGridPoints, len(env.grid.masterGridPositions)))
+    
+        self.computeVolumeAndSetNbMol(env, self.surfacePoints,
+                                      self.insidePoints,areas=vSurfaceArea)    
+      
     #Jordan Curve Theorem
-    def BuildGridJordan(self, histoVol,ray=1):
+    def BuildGrid_jordan(self, env,ray=1):
         """Build the compartment grid ie surface and inside point using jordan theorem and host raycast"""
         # create surface points 
         if self.ghost : return
@@ -936,85 +999,52 @@ class  Compartment(CompartmentList):
             self.ogsurfacePoints = self.vertices[:]
             self.ogsurfacePointsNormals = self.vnormals[:]
         else :
-            self.createSurfacePoints(maxl=histoVol.grid.gridSpacing)
-#        helper = None
-#        afvi = None
-#        if hasattr(histoVol,"afviewer"):
-#            if histoVol.afviewer is not None and hasattr(histoVol.afviewer,"vi"):
-#                helper = histoVol.afviewer.vi
-#            afvi = histoVol.afviewer       
+            self.createSurfacePoints(maxl=env.grid.gridSpacing)
         
         # Graham Sum the SurfaceArea for each polyhedron
         vertices = self.vertices  #NEED to make these limited to selection box, not whole compartment
         faces = self.faces #         Should be able to use self.ogsurfacePoints and collect faces too from above
         normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=histoVol.fillBB)
         vSurfaceArea = sum(areas)
-        #for gnum in range(len(normalList2)):
-        #    vSurfaceArea = vSurfaceArea + areas[gnum]
-#        print 'Graham says Surface Area is %d' %(vSurfaceArea)
-#        print 'Graham says the last triangle area is is %d' %(areas[-1])
-        #print '%d surface points %.2f unitVol'%(len(surfacePoints), unitVol)
         
         # build a BHTree for the vertices
         if self.isBox :
-            nbGridPoints = len(histoVol.grid.masterGridPositions)
-            insidePoints = histoVol.grid.getPointsInCube(self.bb, None, 
-                                                None,addSP=False)     
-            for p in insidePoints : histoVol.grid.gridPtId[p]=-self.number
-            print('is BOX Total time', time()-t0)
-            surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(self.ogsurfacePoints,histoVol)
-            srfPts = surfPtsBB
-            surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,srfPts,
-                        surfPtsBBNorms,histoVol)
-            self.insidePoints = insidePoints
-            self.surfacePoints = surfacePoints
-            self.surfacePointsCoords = surfPtsBB
-            self.surfacePointsNormals = surfacePointsNormals
-            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
-                len(self.surfacePoints), len(self.insidePoints),
-                nbGridPoints, len(histoVol.grid.masterGridPositions)))
-        
-            self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
-                                          self.insidePoints,areas=vSurfaceArea)    
-            print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
+            self.BuildGrid_box(env,vSurfaceArea)
             return self.insidePoints, self.surfacePoints
         
-        print('time to create surface points', time()-t1, len(self.ogsurfacePoints))
+        if autopack.verbose :
+            print('time to create surface points', 
+                  time()-t1, len(self.ogsurfacePoints))
 
-        distances = histoVol.grid.distToClosestSurf
-        idarray = histoVol.grid.gridPtId
-        diag = histoVol.grid.diag
+        distances = env.grid.distToClosestSurf
+        idarray = env.grid.gridPtId
+        diag = env.grid.diag
 
         t1 = time()
 
         #build BHTree for off grid surface points
+        #or scipy ckdtree ?
         from bhtree import bhtreelib
         srfPts = self.ogsurfacePoints
-#        print len(srfPts),srfPts[0]
-#        stemp = afvi.vi.Points("surfacePts", vertices=self.ogsurfacePoints, materials=[[0,1,0],],
-#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
-#                   visible=1,parent=None)
-#        stemp = afvi.vi.Points("surfacePts2", vertices=histoVol.grid.masterGridPositions, materials=[[0,1,0],],
-#                   inheritMaterial=0, pointWidth=5., inheritPointWidth=0,
-#                   visible=1,parent=None)
-        #??why the bhtree behave like this
         self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
         res = numpy.zeros(len(srfPts),'f')
         dist2 = numpy.zeros(len(srfPts),'f')
-#        print "nspt",len(srfPts)
-#        print srfPts
+
         number = self.number
         ogNormals = self.ogsurfacePointsNormals
         insidePoints = []
 
         # find closest off grid surface point for each grid point 
         #FIXME sould be diag of compartment BB inside fillBB
-        grdPos = histoVol.grid.masterGridPositions
+        grdPos = env.grid.masterGridPositions
         returnNullIfFail = 0
-        print ("compartment build grid ",grdPos,"XX",diag,"XX",len(grdPos))#[],None
-        closest = bht.closestPointsArray(tuple(grdPos), diag, returnNullIfFail)
+        if autopack.verbose :
+            print ("compartment build grid ",grdPos,"XX",
+                   diag,"XX",len(grdPos))#[],None
+        closest = bht.closestPointsArray(tuple(grdPos), diag, 
+                                         returnNullIfFail)
         helper = autopack.helper
-        geom =   helper.getObject(self.gname)      
+        geom = helper.getObject(self.gname)      
         if geom is None :
             self.gname = '%s_Mesh'%self.name            
             geom = helper.getObject(self.gname)
@@ -1023,14 +1053,9 @@ class  Compartment(CompartmentList):
         else :
             self.getCenter()        
             center = self.center        
-#        print len(closest),diag,closest[0]
-#        print closest
-#        bhtreelib.freeBHtree(bht)
+
         self.closestId = closest
-#        print len(self.closestId)
-#would it be faster using c4d vector ? or hots system?
-##        import c4d
-#        c4d.StatusSetBar(0)
+
         helper.resetProgressBar()
         for ptInd in range(len(grdPos)):#len(grdPos)):
             # find closest OGsurfacepoint
@@ -1066,21 +1091,6 @@ class  Compartment(CompartmentList):
             r=False
             if insideBB:
                 r=self.checkPointInside_rapid(grdPos[ptInd],diag,ray=ray)
-                #r=self.checkPointInside(grdPos[ptInd],diag,ray=ray)                
-                #should use an optional direction for the ray, which will help for unclosed surface....
-#                intersect, count = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )
-#                #intersect, count = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.,0.], diag, count = True )
-#                r= ((count % 2) == 1)
-#                if ray == 3 :
-#                    intersect2, count2 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
-#                    center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
-#                    intersect3, count3 = helper.raycast(geom, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
-#                    #intersect3, count3 = helper.raycast(geom, grdPos[ptInd], center, diag, count = True )#grdPos[ptInd]+[0.,1.1,0.]
-#                    if r :
-#                       if (count2 % 2) == 1 and (count3 % 2) == 1 :
-#                           r=True
-#                       else : 
-#                           r=False
             if r : # odd inside
                 inside = True
                 if inside :
@@ -1088,35 +1098,41 @@ class  Compartment(CompartmentList):
                     idarray[ptInd] = -number
             p=(ptInd/float(len(grdPos)))*100.0
             helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
-            print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
-        print('time to update distance field and idarray', time()-t1)
+            if autopack.verbose:
+                print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
+        if autopack.verbose:
+            print('time to update distance field and idarray', time()-t1)
         
         t1 = time()
-        nbGridPoints = len(histoVol.grid.masterGridPositions)
+        nbGridPoints = len(env.grid.masterGridPositions)
         
-        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(srfPts,histoVol)
+        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(srfPts,env)
         srfPts = surfPtsBB
-        print ("compare length id distances",nbGridPoints,(nbGridPoints == len(idarray)),(nbGridPoints == len(distances)))
+        if autopack.verbose:
+            print ("compare length id distances",nbGridPoints,
+                   (nbGridPoints == len(idarray)),
+                        (nbGridPoints == len(distances)))
         ex = True#True if nbGridPoints == len(idarray) else False
         surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,
-                                            srfPts,surfPtsBBNorms,histoVol,extended=ex)
+                                            srfPts,surfPtsBBNorms,
+                                            env,extended=ex)
 
         insidePoints = insidePoints
-        print('time to extend arrays', time()-t1)
-
-        print('Total time', time()-t0)
+        if autopack.verbose:
+            print('time to extend arrays', time()-t1)
+            print('Total time', time()-t0)
 
         self.insidePoints = insidePoints
         self.surfacePoints = surfacePoints
         self.surfacePointsCoords = surfPtsBB
         self.surfacePointsNormals = surfacePointsNormals
-        print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
-            len(self.surfacePoints), len(self.insidePoints),
-            nbGridPoints, len(histoVol.grid.masterGridPositions)))
+        if autopack.verbose:
+            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+                len(self.surfacePoints), len(self.insidePoints),
+                nbGridPoints, len(histoVol.grid.masterGridPositions)))
 
         self.computeVolumeAndSetNbMol(histoVol, self.surfacePoints,
                                       self.insidePoints,areas=vSurfaceArea)
-        #bhtreelib.freeBHtree(bht)
         return self.insidePoints, self.surfacePoints
 
 
@@ -1267,7 +1283,7 @@ class  Compartment(CompartmentList):
         bhtreelib.freeBHtree(bht)
         return self.insidePoints, self.surfacePoints
         
-    def BuildGrid(self, histoVol):
+    def BuildGrid_bhtree(self, histoVol):
         """Build the compartment grid ie surface and inside point using bhtree"""
         # create surface points 
         if self.ghost : return
