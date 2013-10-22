@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+	<autopackSetup name="PartnersTest" version="1.0">
+	<options EnviroOnly="False" _hackFreepts="False" _timer="False" 
+            boundingBox="[[-450, -450.0, -500.0], [450.0, 450.0, 500.0]]" 
+            cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" 
+            gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan" 
+            largestProteinSize="100" overwritePlaceMethod="True" pickRandPt="True" 
+            pickWeightedIngr="True" placeMethod="pandaBullet" 
+            runTimeDisplay="False" saveResult="False" smallestProteinSize="100." 
+            resultfile=""
+            use_gradient="True" version="1.0" windowsSize="100"/>
+	<cytoplasme>
+		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1kln.xml">
+			<overwrite partners_name="['CoarseMS_4kmu']" packingMode="closePartner" molarity="0" nbMol="25" packingPriority="1.0"/>
+		</ingredient>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml">
+			<overwrite weight="1.0" molarity="0" nbMol="1" packingPriority="0.0"/>
+		</ingredient>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml">	
+			<overwrite weight="1.0"  molarity="0" nbMol="9" packingPriority="0.0" isAttractor="True" excluded_partners_name="['tetramer1ASY']"/>
+		</ingredient>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/hu.xml">
+			<overwrite weight="1.0" molarity="0" nbMol="1" packingPriority="0.0"/>
+		</ingredient-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml">
+			<overwrite  packingMode="random"  weight="1.0" molarity="0" nbMol="0" packingPriority="-1"/>
+		</ingredient>
+		<!-- 1 HU/550 bp dna is 1,211,703 bp -> 2203 nmol:
+		(550.*100.0)/1211703.0 -> 0.04539066091278143
+		-->
+		<ingredient Type="MultiSphere" color="(1.0, 0.0, 0.0)" coordsystem="left" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" meshFile="/Users/ludo/DEV/autopack_git/data/Mycoplasma/geoms/hu_prot.dae" molarity="0.00" name="hu_prot" nbJitter="5" nbMol="0" packingMode="random" packingPriority="0" pdb="1p71" perturbAxisAmplitude="0.1" placeType="jitter" principalVector="(1, 0, 0)" rotRange="6.2831" positions="[[[0, 0, 0]]]" radii="[[40.0]]" useRotAxis="False" weight="0.25" proba_binding="0.64539066091278143" properties="{'bend':True,'pt1':[9.022707973986017294e+01,-9.239264935980688875e+00,-2.188526998026647519e+01],'pt2':[8.564161460711616769e+01,-5.383876808116801271e+01,-1.135032694602748080e+02],'marge_in':[74,94],'marge_out':[82,86],'length':45.859,'diehdral':[40,73]}"/>
+		<!--4. RNA polymerase pdb 4KMU molarity 0.099632331787621 p2 [32.84,23.693,24.668]-->
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/rna_polymerase.xml">
+			<overwrite molarity="0.0" nbMol="0"  packingPriority="2" weight="0.00" proba_binding="0.00" properties="{'bend':True, 'pt1':[1.184650673625681065e+02,-2.525032952516583862e+01,-1.624756557046652361e+01], 'pt2':[1.619176488153012201e+02,-1.170527742609380795e+02,-2.563822435073382167e+01],'marge_in':[22,26],'marge_out':[44,46],'length':73.845,'diehdral':[60,66], 'st_pt1':[21.527,23.404,22.784], 'st_pt2':[120.0,25.92,39.206], 'st_ingr':'ext__mRNA'}"/>
+		</ingredient>
+		<!--persistent length 500Angstrom 1,211,703 bp-->
+       	<ingredient Type="Grow" biased="0.5" randomd="False" 
+                color="(1.0, 0.498, 0.314)" 
+                cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
+                jitterMax="(1, 1, 1)" length="5000" marge="25.0" 
+                molarity="0" name="DNA" nbJitter="1" nbMol="1" 
+                orientation="(1, 0, 0)" packingMode="random" packingPriority="-2" 
+                perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[-51.0, 0, 0]]]" 
+                positions2="[[[51.0, 0.0, 0.0]]]" uLength ="102" principalVector="(1, 0, 0)" 
+                radii="[[11.85]]" useLength="False" walkingMode="sphere" 
+                constraintMarge="False"
+                partners_name="['ext__hu_prot','ext__rna_polymerase']" 
+              	partners_position="[[[-1.626347154378886550e-01,9.200605750083922230e-01,-3.564245700836183861e-01,0.000000000000000000e+00],
+[-9.674034707351469864e-01,-2.197560077686876168e-01,-1.258483575544036559e-01,0.000000000000000000e+00],
+[-1.941145493779352638e-01,3.243390530924736281e-01,9.258097444614127314e-01,0.000000000000000000e+00],
+[2.939394712448118341e+00,2.455430984497069868e+00,3.667966127395629883e+00,1.000000000000000000e+00]],[[-2.352485542413270958e-01,5.931729028421921512e-01,7.699376702296096830e-01,0.000000000000000000e+00],
+[-9.715785101882734587e-01,-1.220582309601337540e-01,-2.028226553094548412e-01,0.000000000000000000e+00],
+[-2.633167312458636888e-02,-7.957685849795854693e-01,6.050280724569925273e-01,0.000000000000000000e+00],
+[1.516170284795746248e+01,4.064341205918172761e+01,9.914882937516022565e+00,1.000000000000000000e+00]]]"/>
+
+<!--5. messenger RNA 2/1000A^3-->
+       	<ingredient Type="Grow" biased="0.5" randomd="False" 
+                color="(1.0, 0.498, 0.314)" 
+                cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
+                jitterMax="(1, 1, 1)" length="200" marge="65.0" 
+                molarity="0" name="mRNA" nbJitter="1" nbMol="4" 
+                orientation="(1, 0, 0)" packingMode="random" packingPriority="-1" 
+                perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[-50, 0, 0]]]" 
+                positions2="[[[50.0, 0.0, 0.0]]]" uLength ="100" principalVector="(1, 0, 0)" 
+                radii="[[8.0]]" useLength="False" walkingMode="sphere" 
+                constraintMarge="False"  compMask="[-2]"
+                /> 
+
+	</cytoplasme>
+	<!--organelle geom="http://autofill.googlecode.com/git/data/planeWave/planeWave.dae" name="Plane" rep="None" rep_file="None">
+	<surface>
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml">
+		<overwrite partners_name="['CoarseMS_4av3']" packingMode="closePartner"/>
+	</ingredient>
+	<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4av3.xml">
+		<overwrite weight="0.5"/>
+	</ingredient>
+    </surface>
+	<interior>
+       	<ingredient Type="Grow" biased="0.5" randomd="False" 
+                color="(1.0, 0.498, 0.314)" 
+                cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
+                jitterMax="(1, 1, 1)" length="4119790" marge="45.0" 
+                molarity="0" name="DNA" nbJitter="1" nbMol="1" 
+                orientation="(1, 0, 0)" packingMode="random" packingPriority="-10000.0" 
+                perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
+                positions2="[[[100.0, 0.0, 0.0]]]" uLength ="100" principalVector="(0, 1, 0)" 
+                radii="[[10.0]]" useLength="False" walkingMode="sphere" 
+                constraintMarge="False"/> 
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1kln.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kmu.xml"/>
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml"/>
+	</interior>
+	</organelle-->
+	</autopackSetup>
