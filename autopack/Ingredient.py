@@ -2345,8 +2345,10 @@ class Ingredient(Agent):
 
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
-        ptID = self.histoVol.grid.getPointFrom3D(point)
+        #ptID = self.histoVol.grid.getPointFrom3D(point)
+        dist,ptID = self.histoVol.grid.getClosestGridPoint(point)
         cID = self.histoVol.grid.gridPtId[ptID]
+               
         if self.compNum == 0 :
             organelle = self.histoVol
         else :
@@ -2355,13 +2357,20 @@ class Ingredient(Agent):
             #r=compartment.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
             if self.Type == "Grow":
                 #need a list of accepted compNum
+                check = False
                 if len(self.compMask):
                     if cID not in self.compMask:
-                        return False
+                        check =  False
                     else :
-                        return True
+                        check =  True
                 else :
-                    return True
+                    check =  True
+#                if cID > 0 : #surface point look at surface cutoff 
+#                    if dist < self.cutoff_surface :
+#                        check = False
+#                    else :
+#                        check = True #grid probably too sparse, need to check where we are 
+                return check
 #        for i,o in self.histoVol.compartments:
         if self.compNum < 0 :#     
             inside = organelle.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
@@ -5803,8 +5812,8 @@ class GrowIngrediant(MultiCylindersIngr):
 #                                parent = p,color=self.color)
             self.getData()
 
-        self.sphere_points = SphereHalton(50000,5)
-        self.sphere_points_mask = numpy.array(range(50000))
+        self.sphere_points = SphereHalton(10000,5)
+        self.sphere_points_mask = numpy.array(range(10000))
         self.sphere_points_masked = None
 
         #need to define the binder/modifier. This is different from partner
@@ -5878,7 +5887,7 @@ class GrowIngrediant(MultiCylindersIngr):
         #adjust the points to current transfomation? or normalize current vector ?
         a=angle_between_vectors(self.vi.unit_vector(v),self.sphere_points, axis=1)
         if type(marge_in) is float :
-            mask = a<math.radians(marge_in)
+            mask = numpy.less (a,math.radians(marge_in))
         else :
             mask = numpy.logical_and(a<math.radians(marge_in[1]), a > math.radians(marge_in[0]))                   
 #        print len(mask),marge_in,v
@@ -5891,6 +5900,8 @@ class GrowIngrediant(MultiCylindersIngr):
             self.mask_sphere_points_angle(v,marge)
 #        print len(self.sphere_points_mask),self.sphere_points_mask
         #self.sphere_points_mask = numpy.nonzero(mask)[0]#points to keep
+        #mask using the grid bounding box ?
+        #mask using the surface ?    
         #mask using neighboors if any
         listeclosest=[elem for elem in listeclosest if not isinstance(elem[3],autopack.Compartment.Compartment)]
         if len(listeclosest) and len(self.sphere_points_mask):
@@ -5944,7 +5955,7 @@ class GrowIngrediant(MultiCylindersIngr):
         #where is this point in the grid
         #ptInd = histoVol.grid.getPointFrom3D(nexPt)
         t,r = self.oneJitter(histoVol.smallestProteinSize,cent2T,rotMatj)
-        ptInd = histoVol.grid.getPointFrom3D(t)
+        dist,ptInd = histoVol.grid.getClosestGridPoint(t)
         dv = numpy.array(nexPt) - numpy.array(cent2T)
         d = numpy.sum(dv*dv)
         return ptInd,dv,sqrt(d)
@@ -7055,7 +7066,9 @@ class GrowIngrediant(MultiCylindersIngr):
 
         self.currentLength = 0.
         counter = self.counter
-        self.Ptis=[ptInd,histoVol.grid.getPointFrom3D(secondPoint)]
+#        self.Ptis=[ptInd,histoVol.grid.getPointFrom3D(secondPoint)]
+        dist,pid = histoVol.grid.getClosestGridPoint(secondPoint)
+        self.Ptis=[ptInd,pid]
         listePtCurve=[jtrans]
         listePtLinear=[startingPoint,secondPoint]
         Done = False
@@ -7086,7 +7099,7 @@ class GrowIngrediant(MultiCylindersIngr):
             print("res",len(self.results))
         for i in range(len(self.results)):
             jtrans, rotMatj = self.results[-i]
-            ptInd = histoVol.grid.getPointFrom3D(jtrans)
+            dist,ptInd = histoVol.grid.getClosestGridPoint(jtrans)
             compartment.molecules.append([ jtrans, rotMatj, self, ptInd ])
             #reset the result ?
         self.results=[]

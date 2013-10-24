@@ -1075,18 +1075,21 @@ class  Compartment(CompartmentList):
         #now check if point inside 
         
         helper.resetProgressBar()
-        for ptInd in range(len(grdPos)):#len(grdPos)):
-            insideBB  = self.checkPointInsideBB(grdPos[ptInd],dist=new_distances[ptInd])
+        for ptInd in xrange(len(grdPos)):#len(grdPos)):
+            coord = [grdPos.item((ptInd,0)),grdPos.item((ptInd,1)),grdPos.item((ptInd,2))]
+            insideBB  = self.checkPointInsideBB(coord,dist=new_distances.item(ptInd))
             r=False
             if insideBB:
-                r=self.checkPointInside_rapid(grdPos[ptInd],diag,ray=ray)
+                r=self.checkPointInside_rapid(coord,diag,ray=ray)
             if r : # odd inside
                 insidePoints.append(ptInd)
-                idarray[ptInd] = -number
-            p=(ptInd/float(len(grdPos)))*100.0
-            helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
-            if autopack.verbose:
-                print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
+                idarray.itemset(ptInd,-number)
+                #idarray[ptInd] = -number
+            p=(ptInd/float(len(grdPos)))*100.0 
+            if (ptInd % 100 ) != -1 :
+                helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
+                if autopack.verbose:
+                    print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
         if autopack.verbose:
             print('time to update distance field and idarray', time()-t1)
         
