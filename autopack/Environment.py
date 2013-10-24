@@ -1098,7 +1098,7 @@ class Environment(CompartmentList):
         for ingrnode in ingrnodes:
             ingre = io_ingr.makeIngredientFromXml(inode = ingrnode , recipe=self.name)
             if ingre : recipe.addIngredient(ingre) 
-            else : print ("PROBLEM creating ingredient from ",ingrnode) 
+            else : print ("PROBLEM creating ingredient from ",ingrnode,) 
         #check for includes 
         ingrnodes_include = xmlnode.getElementsByTagName("include")
         for inclnode in ingrnodes_include:
@@ -2001,7 +2001,7 @@ h1 = Environment()
                    len(self.grid.aSurfaceGrids))
  
 
-    def buildGridClean(self, boundingBox=None, gridFileIn=None, rebuild=True,
+    def buildGrid(self, boundingBox=None, gridFileIn=None, rebuild=True,
                   gridFileOut=None, previousFill=False,previousfreePoint=None):
         """
         The main build grid function. Setup the main grid and merge the 
@@ -2034,8 +2034,8 @@ h1 = Environment()
             if rebuild :
                 verts = []            
                 for orga in self.compartments:
-                    if orga.surfacePointsCoords:
-                        for pt3d in orga.surfacePointsCoords:
+                    if len(orga.vertices):
+                        for pt3d in orga.vertices:
                             verts.append( pt3d )
                 self.grid.set_surfPtsBht(verts)
                 self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:] 
@@ -2065,7 +2065,7 @@ h1 = Environment()
         if gridFileOut is not None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
-        self.exteriorVolume = self.grid.computeExteriorVolume(space=space,fbox_bb=self.fbox_bb)
+        self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
         r = self.exteriorRecipe
         if r:
             r.setCount(self.exteriorVolume)#should actually use the fillBB
@@ -2077,7 +2077,7 @@ h1 = Environment()
 
         if self.use_gradient and len(self.gradients) and rebuild :
             for g in self.gradients:
-                self.gradients[g].buildWeigthMap(boundingBox,grid.masterGridPositions)
+                self.gradients[g].buildWeigthMap(boundingBox,self.grid.masterGridPositions)
         if previousFill:
             distance = self.grid.distToClosestSurf#[:]
             nbFreePoints = nbPoints#-1              #Graham turned this off on 5/16/12 to match August Repair for May Hybrid
@@ -2129,9 +2129,9 @@ h1 = Environment()
             elif self.innerGridMethod == "bhtree" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
                 a, b = compartment.BuildGrid(self)
             elif self.innerGridMethod == "jordan" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = compartment.BuildGridJordan(self)
+                a, b = compartment.BuildGrid_jordan(self)
             elif self.innerGridMethod == "jordan3" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = compartment.BuildGridJordan(self,ray=3)
+                a, b = compartment.BuildGrid_jordan(self,ray=3)
             elif self.innerGridMethod == "pyray" and compartment.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
                 a, b = compartment.BuildGrid_pyray(self)    
             aInteriorGrids.append(a)
@@ -2143,7 +2143,7 @@ h1 = Environment()
         self.grid.aSurfaceGrids = aSurfaceGrids
         print ("build Grids",self.innerGridMethod,len(self.grid.aSurfaceGrids))
        
-    def buildGrid(self, boundingBox=None, gridFileIn=None, rebuild=True,
+    def buildGridOld(self, boundingBox=None, gridFileIn=None, rebuild=True,
                   gridFileOut=None, previousFill=False,previousfreePoint=None):
         """
         The main build grid function. Setup the main grid and merge the 

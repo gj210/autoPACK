@@ -2411,11 +2411,13 @@ class Ingredient(Agent):
                 continue
             #add some jitter to the cutoff ?
             #closest = o.OGsrfPtsBht.closestPointsArray(tuple(numpy.array([point,])), cutoff, 0)#default cutoff is 0.0
-            res = o.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
+#            res = o.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
+            res = o.OGsrfPtsBht.query(tuple(numpy.array([point,])))
             if len(res) == 2 :
-                pt,d = res
-                print ("distance is ",d,res,o.name,organelle.name)#d can be wrond for some reason,
-                d = autopack.helper.measure_distance(point,organelle.vertices[res[0][0]])
+                d = res[0][0]
+                #pt=res[1][0]
+                print ("distance is ",d,cutoff,res,o.name,organelle.name)#d can be wrond for some reason,
+                #d = autopack.helper.measure_distance(point,o.vertices[pt])
                 if d < cutoff :
                     return True
                 if compNum < 0 and o.name == organelle.name :
@@ -2491,8 +2493,9 @@ class Ingredient(Agent):
              
                 rad = radc + dpad
                 x,y,z = posc
-
+                
                 bb = ( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
+                print ("pointsInCube",bb, posc, rad,radc,dpad)
                 pointsInCube = grid.getPointsInCube(bb, posc, rad)
 
                 delta = numpy.take(gridPointsCoords,pointsInCube,0)-posc
@@ -5532,6 +5535,7 @@ class SingleSphereIngr(Ingredient):
                                 radius=self.radii[0][0])[0]
             self.getData()
         
+        
 class SingleCubeIngr(Ingredient):
     """
     This Ingredient is represented by a single cube
@@ -5888,8 +5892,10 @@ class GrowIngrediant(MultiCylindersIngr):
 #        print len(self.sphere_points_mask),self.sphere_points_mask
         #self.sphere_points_mask = numpy.nonzero(mask)[0]#points to keep
         #mask using neighboors if any
+        listeclosest=[elem for elem in listeclosest if not isinstance(elem[3],autopack.Compartment.Compartment)]
         if len(listeclosest) and len(self.sphere_points_mask):
             indices=[]
+            #remove compartments from the list
             points = numpy.array(listeclosest)[:,1]
             ingrs = numpy.array(listeclosest)[:,3]
             radius = [float(ingr.encapsulatingRadius) for ingr in ingrs]
@@ -5984,7 +5990,7 @@ class GrowIngrediant(MultiCylindersIngr):
             if inComp :
                 #check how far from surface ?
                 closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
-        #print "test",not inside, closeS,not inComp,(not inside or closeS or not inComp)
+        print "test",self.name,newPt,not inside, closeS,not inComp,(not inside or closeS or not inComp)
         return not inside or closeS or not inComp
 
     def walkLatticeSurface(self,pts,distance,histoVol, size,mask,marge=999.0,
@@ -6517,6 +6523,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 if self.prev_alt_pt is not None :
                     self.prev_alt_pt=None 
                 alternate = None
+            t1 = time()
             if newPt is not None :
                 test = True
 #            elif autopack.helper.measure_distance(pt1,pt2) == 0.0:
@@ -6569,6 +6576,7 @@ class GrowIngrediant(MultiCylindersIngr):
             if self.runTimeDisplay  >= 2:
                 self.vi.setTranslation(sp,newPt)
                 self.vi.update()
+            print ("time to pick point ",time()-t1)
             if test :
                 r=[False]
                 test =  self.testPoint(newPt)
@@ -6754,10 +6762,13 @@ class GrowIngrediant(MultiCylindersIngr):
                                                       marge = self.marge,
                                                       checkcollision=True,usePP=usePP)  
                 elif self.placeType == "RAPID" :
+                    #call function
+                    t1 = time()
                     secondPoint,success = self.walkSphereRAPID(previousPoint,startingPoint,
                                                       distance,histoVol,
                                                       marge = self.marge,
-                                                      checkcollision=True,usePP=usePP)  
+                                                      checkcollision=True,usePP=usePP) 
+                    print ("wlak rapid ",time()-t1)
                 else :
                     secondPoint,success = self.walkSphere(previousPoint,startingPoint,
                                                       distance,histoVol,
@@ -7110,7 +7121,7 @@ class GrowIngrediant(MultiCylindersIngr):
         ar =  uniform(0,1.0)
         #weights = self.alternates_weight[:]
         proba = self.alternates_proba[:]
-        alti = int(round(r*(len(self.alternates_names)-1)))
+        alti = int((r*(len(self.alternates_names))))#round?
         #print (alti,proba[alti],ar,self.alternates_names[alti])
         if ar < proba[alti]:
             return self.alternates_names[alti],alti
@@ -7125,7 +7136,7 @@ class GrowIngrediant(MultiCylindersIngr):
         #dice = uniform(0.0,1.0)
         #int(uniform(0.0,1.0)*len(self.sphere_points_mask))
         alt_name = None
-        return self.pick_random_alternate()
+#        return self.pick_random_alternate()
         weights = self.alternates_weight#python3?#dict.copy().keys()
         rnd = uniform(0,1.0) * sum(weights)# * (self.currentLength / self.length)
 #        print ("alter",weights,rnd) 
@@ -7540,6 +7551,7 @@ class IOingredientTool:
         elif inode is not None:
             ingrnode = inode
         else :
+            print ("filename is None")
             return None
         kw=self.parseIngrXmlNode(ingrnode)
         #check for overwritten parameter
@@ -7624,7 +7636,7 @@ class IOingredientTool:
 #        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
 #        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
         ingr = None
-
+        print ("make ingredient of type ",kw["Type"])
         if kw["Type"]=="SingleSphere":
             kw["position"] = kw["positions"][0][0]
             kw["radius"]=kw["radii"][0][0]

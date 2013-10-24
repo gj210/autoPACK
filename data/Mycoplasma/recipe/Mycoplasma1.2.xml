@@ -71,9 +71,11 @@
          </ingredient>
     </surface>
     
-	<interior include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
-	<!--
-	interior Could we add an overwrite tag so we can apply some parameters to all ingredients in recipe ? or only to some but how ?
+	<interior >
+		<!--
+	include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/GenerycCytoplasm_ingredients.xml">
+
+interior Could we add an overwrite tag so we can apply some parameters to all ingredients in recipe ? or only to some but how ?
 	<overwrite principalVector="[0.0, 0.0, 1.0]"/>
 	-->
 	<!--generic cytoplasme ?-->
@@ -83,7 +85,7 @@
 		<ingredient Type="MultiSphere" color="(1.0, 0.0, 0.0)" coordsystem="left" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" meshFile="/Users/ludo/DEV/autopack_git/data/Mycoplasma/geoms/hu_prot.dae" molarity="0.00" name="hu_prot" nbJitter="5" nbMol="0" packingMode="random" packingPriority="0" pdb="1p71" perturbAxisAmplitude="0.1" placeType="jitter" principalVector="(1, 0, 0)" rotRange="6.2831" positions="[[[0, 0, 0]]]" radii="[[40.0]]" useRotAxis="False" weight="0.25" proba_binding="0.04539066091278143" properties="{'bend':True,'pt1':[9.022707973986017294e+01,-9.239264935980688875e+00,-2.188526998026647519e+01],'pt2':[8.564161460711616769e+01,-5.383876808116801271e+01,-1.135032694602748080e+02],'marge_in':[74,94],'marge_out':[82,86],'length':45.859,'diehdral':[40,73]}"/>
 		<!--4. RNA polymerase pdb 4KMU molarity 0.099632331787621 p2 [32.84,23.693,24.668]-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/rna_polymerase.xml">
-			<overwrite molarity="0.0" nbMol="0"  packingPriority="2" weight="0.20" proba_binding="0.00082528474386875329" properties="{'bend':True, 'pt1':[1.184650673625681065e+02,-2.525032952516583862e+01,-1.624756557046652361e+01], 'pt2':[1.619176488153012201e+02,-1.170527742609380795e+02,-2.563822435073382167e+01],'marge_in':[22,26],'marge_out':[44,46],'length':73.845,'diehdral':[60,66], 'st_pt1':[21.527,23.404,22.784], 'st_pt2':[120.0,25.92,39.206], 'st_ingr':'ext__mRNA'}"/>
+			<overwrite molarity="0.0" nbMol="0"  packingPriority="2" weight="0.25" proba_binding="0.00082528474386875329" properties="{'bend':True, 'pt1':[1.184650673625681065e+02,-2.525032952516583862e+01,-1.624756557046652361e+01], 'pt2':[1.619176488153012201e+02,-1.170527742609380795e+02,-2.563822435073382167e+01],'marge_in':[22,26],'marge_out':[44,46],'length':73.845,'diehdral':[60,66], 'st_pt1':[21.527,23.404,22.784], 'st_pt2':[120.0,25.92,39.206], 'st_ingr':'MycoplasmaPackSurf_1_med_int__mRNA'}"/>
 		</ingredient>
 			
 		<!--1. DNA 1,211,703 bp->4119790A 411979nm
@@ -109,7 +111,7 @@ highly coiled circular chromosome
                 positions2="[[[51.0, 0.0, 0.0]]]" uLength ="102" principalVector="(1, 0, 0)" 
                 radii="[[11.85]]" useLength="False" walkingMode="sphere" 
                 constraintMarge="False"
-                partners_name="['ext__hu_prot','ext__rna_polymerase']" 
+                partners_name="['MycoplasmaPackSurf_1_med_int__hu_prot','MycoplasmaPackSurf_1_med_int__rna_polymerase']" 
               	compMask="[-2]"
               	partners_position="[[[-1.626347154378886550e-01,9.200605750083922230e-01,-3.564245700836183861e-01,0.000000000000000000e+00],
 [-9.674034707351469864e-01,-2.197560077686876168e-01,-1.258483575544036559e-01,0.000000000000000000e+00],
@@ -124,8 +126,8 @@ highly coiled circular chromosome
 		</ingredient-->
 		<!--3. single-stranded-DNA binding protein (protects single-stranded portions during replication) pdb 3AFP-->
 		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml">
-			<overwrite molarity="0.166053886312701" nbMol="0"  packingPriority="2"/-->
-		</ingredient>
+			<overwrite molarity="0.166053886312701" nbMol="0"  packingPriority="2"/>
+		</ingredient-->
 		<!--5. messenger RNA 2/1000A^3-->
        	<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
@@ -178,4 +180,3 @@ highly coiled circular chromosome
 	</interior>
 	</organelle>
 	</autopackSetup>
-5,50,22
