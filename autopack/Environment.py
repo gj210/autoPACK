@@ -1880,6 +1880,27 @@ h1 = Environment()
             self.boundingBox = bb
         CompartmentList.addCompartment(self, compartment)
 
+    def getPointCompartmentId(self,point,ray=3):
+        #check if point inside  of the compartments
+        #closest grid point is 
+        d,pid=self.grid.getClosestGridPoint(point)
+        cid = self.grid.gridPtId[pid]
+        return cid
+        ncomp = len(self.compartments)
+        if ncomp:
+            comp = ncomp
+            for i in range(ncomp):                
+                inside = self.compartments[comp-1].checkPointInside_rapid(point,self.grid.diag,ray=ray)
+                if inside :
+                    return -(comp)
+                comp=comp-1
+            #the point is not inside , is it on the surface ? ie distance to surface < X?
+            for i in range(ncomp):                
+                distance,nb = self.compartments[i].OGsrfPtsBht.query(point)
+                if distance < 1.0 :
+                    return i+1
+        return 0
+
     def longestIngrdientName(self):
         """
         Helper function for gui. Return the size of the longest ingredient name
@@ -2623,7 +2644,7 @@ h1 = Environment()
         self.rIngr=[] 
         self.rRot=[] 
         self.result = []
-        
+        #rapid node ?
         
     def resetIngrRecip(self,recip):
         """Reset all ingredient of the given recipe"""
@@ -2634,6 +2655,8 @@ h1 = Environment()
                 ingr.counter = 0
                 ingr.rejectionCounter = 0
                 ingr.completion= 0.0
+                ingr.prev_alt = None
+                ingr.start_positions=[]
                 if hasattr(ingr,"allIngrPts"):  #Graham here on 5/16/12 are these two lines safe?
                     del ingr.allIngrPts         #Graham here on 5/16/12 are these two lines safe?
                 if hasattr(ingr,"isph"):  
@@ -2643,6 +2666,8 @@ h1 = Environment()
                 if hasattr(ingr,"allIngrPts"):
                     delattr(ingr, "allIngrPts")
             for ingr in recip.exclude:
+                ingr.start_positions=[]
+                ingr.prev_alt = None
                 ingr.results=[]
                 ingr.firstTimeUpdate = True
                 ingr.counter = 0
@@ -3173,6 +3198,7 @@ h1 = Environment()
             ## pick an ingredient
             
             ingr =  self.callFunction(self.pickIngredient,(vThreshStart,))
+            print("picked Ingr ",ingr.name)
             #if ingr.completion >= 1.0 or ingr.is_previous:
             #    continue
 #            ingr =  self.callFunction(self.pickIngredient,(vRangeStart,))   # Replaced this with previous line from Sept 25, 2011 thesis version on July 5, 2012
@@ -3210,7 +3236,7 @@ h1 = Environment()
             dpad = ingr.minRadius + mr + jitter
 
             if verbose > 2:
-                print('picked Ingr radius compNum dpad',ingr.name,radius,compNum,dpad)
+                print('picked Ingr radius compNum dpad',radius,compNum,dpad)
             
             ## find the points that can be used for this ingredients
             ##
@@ -3218,7 +3244,8 @@ h1 = Environment()
                                         freePoints,nbFreePoints,
                                         distance,compId,compNum,vRangeStart,vThreshStart))
 #                                        distance,compId,compNum,vRangeStart))   # Replaced this with Sept 25, 2011 thesis version on July 5, 2012
-            print ("drop point res",res)
+            if autopack.verbose : 
+                print ("get drop point res",res)
             if res[0] :
                 ptInd = res[1]
                 if ptInd > len(distance):
@@ -3243,12 +3270,15 @@ h1 = Environment()
                                 {"debugFunc":debugFunc})
 #            print("nbFreePoints after PLACE ",nbFreePoints)
             if success:
+                print ("success",ingr.completion)
                 #update largest protein size
                 #problem when the encapsulatingRadius is actually wrong
                 if ingr.encapsulatingRadius > self.largestProteinSize : 
                     self.largestProteinSize = ingr.encapsulatingRadius
                 PlacedMols+=1
 #                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
+            else :
+                print ("rejected",ingr.rejectionCounter)
             if ingr.completion >= 1.0 :
                 print('completed***************', ingr.name)
                 print('PlacedMols = ', PlacedMols)

@@ -861,6 +861,7 @@ class  Compartment(CompartmentList):
         self.ogsurfacePointsNormals = normals
 
     def one_rapid_ray(self,pt1,pt2,diag):
+        #return number of triangle /triangle contact
         helper = autopack.helper
         rm = self.get_rapid_model()
         v1=numpy.array(pt1)
@@ -890,15 +891,34 @@ class  Compartment(CompartmentList):
         v1=numpy.array(point)
         self.getCenter()
         count1 = self.one_rapid_ray(v1,v1+numpy.array([0.,0.0,1.1]),diag)
-        r= ((count1 % 2) == 1)
+        r= ((count1 % 2) == 1) #inside ?
+        #we need 2 out of 3 ?
         if ray == 3 :    
             count2 = self.one_rapid_ray(v1, numpy.array(self.center) ,diag )
+            if (count2 % 2) == 1 and r :
+                return True
             count3 = self.one_rapid_ray(v1, v1+numpy.array([0.0,1.1,0.]),diag )
-            if r :
-               if (count2 % 2) == 1 and (count3 % 2) == 1 :
-                   r=True
-               else : 
-                   r=False
+            if (count3 % 2) == 1 and r :
+                return True
+            return False
+#            c = count1+count2+count3
+#            if c == 3 : #1 1 1 
+#                r = True
+#            elif c == 4 : # 1 2 1
+#                r = True
+#            elif c == 5 : #2 2 1 or 3 1 1 or 3 2 0
+#                r = False
+#            elif c == 6 : # 2 2 2 or 3 3 0 or ...
+#                r = False
+#            if r < 5 :
+#                r = True
+#            else :
+#                r = False
+#            if r :
+#               if (count2 % 2) == 1 and (count3 % 2) == 1 :
+#                   r=True
+#               else : 
+#                   r=False
         if r : # odd inside
             inside = True
         return inside
@@ -1086,7 +1106,7 @@ class  Compartment(CompartmentList):
                 idarray.itemset(ptInd,-number)
                 #idarray[ptInd] = -number
             p=(ptInd/float(len(grdPos)))*100.0 
-            if (ptInd % 100 ) != -1 :
+            if (ptInd % 100 ) == 0 :
                 helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
                 if autopack.verbose:
                     print (str(ptInd)+"/"+str(len(grdPos))+" inside "+str(r))
@@ -1466,7 +1486,7 @@ class  Compartment(CompartmentList):
                 histoVol.grid.distToClosestSurf = numpy.hstack((histoVol.grid.distToClosestSurf,distCS))
             else :
                 histoVol.grid.distToClosestSurf.extend( [histoVol.grid.diag,]*length )
-            ptId = numpy.ones(length,'i')*self.number
+            ptId = numpy.ones(length,'i')*self.number#surface point
             histoVol.grid.gridPtId=numpy.hstack((histoVol.grid.gridPtId,ptId))
             #histoVol.grid.gridPtId=numpy.append(numpy.array(histoVol.grid.gridPtId), [self.number]*length ,axis=0)#surface point ID
             histoVol.grid.freePoints = numpy.arange(nbGridPoints+length)

@@ -139,7 +139,7 @@ KWDS = {
                         "proba_not_binding":{"name":"proba_not_binding","value":0.5,"default":0.5,"min":0.0,"max":1.,"type":"float","description":"proba_not_binding"},
                         "compMask":{"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"},
                         "use_rbsphere":{"name":"use_rbsphere","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use sphere instead of cylinder for collision"},                             
-                        "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},		
+                        "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},        
                     }
 #should use transform.py instead
 def getNormedVector(a,b):
@@ -511,7 +511,7 @@ def rapid_checkCollision_rmp(liste_input):
             node2[inp[-1]] = RAPIDlib.RAPID_model()
             node2[inp[-1]].addTriangles(numpy.array(inp[4],'f'), numpy.array(inp[5],'i'))
         RAPIDlib.RAPID_Collide_scaled(inp[2],inp[3], 1.0,node1, inp[6], inp[7], 1.0,
-                                  node2[inp[-1]],RAPIDlib.cvar.RAPID_FIRST_CONTACT);              	
+                                  node2[inp[-1]],RAPIDlib.cvar.RAPID_FIRST_CONTACT);                  
         if RAPIDlib.cvar.RAPID_num_contacts != 0 :
             return True
     return False
@@ -2346,13 +2346,14 @@ class Ingredient(Agent):
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
         #ptID = self.histoVol.grid.getPointFrom3D(point)
-        dist,ptID = self.histoVol.grid.getClosestGridPoint(point)
-        cID = self.histoVol.grid.gridPtId[ptID]
-               
+        cID = self.histoVol.getPointCompartmentId(point)
+        #dist,ptID = self.histoVol.grid.getClosestGridPoint(point)
+        #cID = self.histoVol.grid.gridPtId[ptID]              
         if self.compNum == 0 :
             organelle = self.histoVol
         else :
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
+
         if self.compNum > 0 : #surface ingredient
             #r=compartment.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
             if self.Type == "Grow":
@@ -2372,17 +2373,25 @@ class Ingredient(Agent):
 #                        check = True #grid probably too sparse, need to check where we are 
                 return check
 #        for i,o in self.histoVol.compartments:
+#        if self.compNum != cID:
+#            return False
+#        else :
+#            return True
         if self.compNum < 0 :#     
             inside = organelle.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
-            if inside and self.compNum >=0 :
+            if inside :#and cID < 0:
+                return True
+            else :
                 return False
-            if not inside and self.compNum < 0 :
-                return False                
-        if self.compNum == 0 :
+#            if inside and self.compNum >=0 :
+#                return False
+#            if not inside and self.compNum < 0 :
+#                return False                
+        if self.compNum == 0 : #shouldnt be in any compartments
             for i,o in self.histoVol.compartments:
                 inside = o.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
                 if inside :
-                    return True
+                    return False
         if self.compNum != cID:
             return False
         else :
@@ -2425,13 +2434,15 @@ class Ingredient(Agent):
             if len(res) == 2 :
                 d = res[0][0]
                 #pt=res[1][0]
-                print ("distance is ",d,cutoff,res,o.name,organelle.name)#d can be wrond for some reason,
+                if autopack.verbose :
+                    print ("distance is ",d,cutoff,res,o.name,organelle.name)#d can be wrond for some reason,
                 #d = autopack.helper.measure_distance(point,o.vertices[pt])
                 if d < cutoff :
                     return True
                 if compNum < 0 and o.name == organelle.name :
                     inside = o.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
-                    print("inside ? ",inside) 
+                    if autopack.verbose :
+                        print("inside ? ",inside) 
                     if not inside : 
                         return True
                     
@@ -2451,6 +2462,20 @@ class Ingredient(Agent):
 
         return False
 
+    def testPoint(self,newPt):
+        inComp = True
+        closeS = False
+        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=self.jitterMax)
+        if inside :
+            inComp = self.checkPointComp(newPt)
+            if inComp :
+                #check how far from surface ?
+                closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
+        if autopack.verbose :
+            print ("test",self.name,newPt,not inside, closeS,not inComp,
+                   (not inside or closeS or not inComp))
+        return not inside or closeS or not inComp
+        
     def oneJitter(self,spacing,trans,rotMat):
 #        spacing = histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
@@ -2769,8 +2794,9 @@ class Ingredient(Agent):
         node = None    
         for o in self.histoVol.compartments:
             node = None
-            if self.compNum > 0 and o.name == organelle.name:
-                continue
+            if self.Type != "Grow":
+                if self.compNum > 0 and o.name == organelle.name:
+                    continue
             node = o.get_rapid_model() 
             if node is not None : 
                 nodes.append([node,numpy.zeros((3), 'f'),numpy.identity(3, 'f'),o])
@@ -4707,7 +4733,7 @@ class Ingredient(Agent):
         #histoVol.setupPanda()
         afvi = histoVol.afviewer
         rejectionCount = 0
-        spacing = histoVol.smallestProteinSize
+        spacing = histoVol.grid.gridSpacing#histoVol.smallestProteinSize#or the gridSpace?
         jx, jy, jz = self.jitterMax
         jitter = spacing#histoVol.callFunction(self.getMaxJitter,(spacing,))
         jitter2 = jitter * jitter
@@ -4869,14 +4895,15 @@ class Ingredient(Agent):
 #            if closeS :
 #                self.rejectOnce(None,moving,afvi)
 #                continue
-
-            collision2,liste_nodes = self.collision_rapid(jtrans,rotMatj,usePP=usePP)
-            collisionComp = False
-
-            print ("contactTestPair",collision2)
+            r=self.testPoint(jtrans)
+            if not r :
+                collision2,liste_nodes = self.collision_rapid(jtrans,rotMatj,usePP=usePP)
+                collisionComp = False
+            if autopack.verbose:
+                print ("collision",collision2,r)
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
-            if not collision2 :# and not collision2:
+            if not collision2 and not r:# and not collision2:
                 if self.compareCompartment:
                     if self.modelType=='Spheres':
         #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
@@ -4926,7 +4953,7 @@ class Ingredient(Agent):
 #        if verbose: 
 #        print("jitter loop ",time()-t1)
 #            self.histoVol.callFunction(self.histoVol.delRB,(rbnode,)) 
-        if not collision2 :# and not collision2:
+        if not collision2 and not r:# and not collision2:
             insidePoints = {}
             newDistPoints = {}
             t3=time()
@@ -5188,7 +5215,6 @@ class Ingredient(Agent):
                     jobs.append(j)
                 self.histoVol.pp_server.wait()
                 r.extend(self.histoVol.grab_cb.collision[:])                             
-
             else :    
 #                    print jtrans, rotMatj                                        
                 for node,trans,rot,ingr in liste_nodes:
@@ -5198,8 +5224,8 @@ class Ingredient(Agent):
                                         rbnode, rot, trans, 1.0,node,
                                         RAPIDlib.cvar.RAPID_FIRST_CONTACT);
                     collision2 = RAPIDlib.cvar.RAPID_num_contacts!=0
-                    if collision2 :
-                        r.append(collision2)
+                    r.append(collision2)
+                    if collision2 :                        
                         break
         return True in r,liste_nodes
 
@@ -5811,9 +5837,9 @@ class GrowIngrediant(MultiCylindersIngr):
 #                                radius=self.radii[0][0]*1.24,
 #                                parent = p,color=self.color)
             self.getData()
-
-        self.sphere_points = SphereHalton(10000,5)
-        self.sphere_points_mask = numpy.array(range(10000))
+        self.sphere_points_nb = 50000    
+        self.sphere_points = numpy.array(SphereHalton(self.sphere_points_nb,5))
+        self.sphere_points_mask = numpy.ones(self.sphere_points_nb,'i')
         self.sphere_points_masked = None
 
         #need to define the binder/modifier. This is different from partner
@@ -5853,23 +5879,65 @@ class GrowIngrediant(MultiCylindersIngr):
         self.OPTIONS["useHalton"]={"name":"useHalton","value":True,"default":True,"type":"bool","min":0.,"max":0.,"description":"use spherica halton distribution"}                          
         self.OPTIONS["compMask"]={"name":"compMask","value":"0","values":"0","min":0.,"max":0.,"default":'0',"type":"string","description":"allowed compartments"}
         self.OPTIONS["use_rbsphere"]={"name":"use_rbsphere","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use sphere instead of cylinder wih bullet"}                          
-		
+        
     def resetSphereDistribution(self):
         #given a radius, create the sphere distribution
-        self.sphere_points = SphereHalton(10000,5)
-        self.sphere_points_mask = numpy.array(range(10000))
+        self.sphere_points = SphereHalton(self.sphere_points_nb,5)
+        self.sphere_points_mask = numpy.ones(self.sphere_points_nb,'i')
         
     def getNextPoint(self):
         #pick a random point from the sphere point distribution
-        if not len(self.sphere_points_mask):
+        pointsmask=numpy.nonzero(self.sphere_points_mask)[0]
+        if not len(pointsmask):
+            print ("no sphere point available from mask")
             return None
-        ptIndr = int(uniform(0.0,1.0)*len(self.sphere_points_mask))
-        sp_pt_indice = self.sphere_points_mask[ptIndr]
+        ptIndr = int(uniform(0.0,1.0)*len(pointsmask))
+        sp_pt_indice = pointsmask[ptIndr]
         return numpy.array(self.sphere_points[sp_pt_indice])*self.uLength                            
 
+    def mask_sphere_points_boundary(self,pt,boundingBox = None):
+        if boundingBox is None :
+            boundingBox = self.histoVol.fillBB
+        pts =  (numpy.array(self.sphere_points)*self.uLength)+pt
+        points_mask = numpy.nonzero(self.sphere_points_mask)[0]
+        if len(points_mask):
+            mask = [not self.testPoint(pt) for pt in pts[points_mask]]
+            if len(mask) :
+                self.sphere_points_mask[points_mask]=numpy.logical_and(mask,
+                                self.sphere_points_mask[points_mask])
+
+    def mask_sphere_points_ingredients(self,pt,listeclosest):
+        listeclosest=[elem for elem in listeclosest if not isinstance(elem[3],autopack.Compartment.Compartment)]
+        points_mask = numpy.nonzero(self.sphere_points_mask)[0]
+        if len(listeclosest) and len(points_mask):
+            points = numpy.array(listeclosest)[:,1]
+            ingrs = numpy.array(listeclosest)[:,3]
+            radius = [float(ingr.encapsulatingRadius) for ingr in ingrs]
+            #this distance is between unit vector and 3d points...
+            #translate and scale the spheres points
+            sp=numpy.array(self.sphere_points, dtype=numpy.float64, copy=False)
+            dp = sp[points_mask]*self.uLength+pt
+            pts = numpy.array(points.tolist(), dtype=numpy.float64, copy=False)
+            #distance between sphere point and ingredient positions
+            distances=spatial.distance.cdist(pts,dp)
+            #empty mask for the point
+            mask = numpy.nonzero(numpy.ones(len(dp)))[0]
+            #mas cumulative ?for 
+            for i in range(len(distances)):
+                 #if distance is >= to ingredient encapsulatingRadius we keep the point
+                 m=numpy.greater_equal(distances[i],radius[i])   
+                 mask = numpy.logical_and(mask,m)
+            #ponts to keep
+            self.sphere_points_mask[points_mask]=numpy.logical_and(mask,
+                                self.sphere_points_mask[points_mask])
+            #indices = numpy.nonzero(mask)[0]#indice f
+            #i = self.sphere_points_mask[indices]
+            #self.sphere_points_mask = i  
+                                
     def mask_sphere_points_dihedral(self,v1,v2,marge_out,marge_diedral):
-        a=angle_between_vectors(self.vi.unit_vector(v2),self.sphere_points, axis=1)
-        b=angle_between_vectors(-self.vi.unit_vector(v1),self.sphere_points, axis=1)
+        points_mask = numpy.nonzero(self.sphere_points_mask)[0]
+        a=angle_between_vectors(self.vi.unit_vector(v2),self.sphere_points[points_mask], axis=1)
+        b=angle_between_vectors(self.vi.unit_vector(v1),self.sphere_points[points_mask], axis=1)
         if type(marge_out) is float :
             marge_out = [0.0,marge_out]
         if type(marge_diedral) is float :
@@ -5877,57 +5945,36 @@ class GrowIngrediant(MultiCylindersIngr):
         mask1 = numpy.logical_and(a<math.radians(marge_out[1]), a > math.radians(marge_out[0]))
         mask2 = numpy.logical_and(b<math.radians(marge_diedral[1]), b > math.radians(marge_diedral[0]))
         mask3 = numpy.logical_and(mask1,mask2)
-#        print (len(numpy.nonzero(mask1)[0]),len(numpy.nonzero(mask2)[0]),
-#            len(numpy.nonzero(mask3)[0]),marge_out,marge_diedral)
-#        print v1,v2
-        self.sphere_points_mask = numpy.nonzero(mask3)[0]
-
+        self.sphere_points_mask[points_mask]=numpy.logical_and(mask3,
+                                self.sphere_points_mask[points_mask])
+                                
     def mask_sphere_points_angle(self,v,marge_in):
         #mask first with angle
         #adjust the points to current transfomation? or normalize current vector ?
-        a=angle_between_vectors(self.vi.unit_vector(v),self.sphere_points, axis=1)
+        points_mask = numpy.nonzero(self.sphere_points_mask)[0]
+        a=angle_between_vectors(self.vi.unit_vector(v),self.sphere_points[points_mask], axis=1)
         if type(marge_in) is float :
             mask = numpy.less (a,math.radians(marge_in))
         else :
             mask = numpy.logical_and(a<math.radians(marge_in[1]), a > math.radians(marge_in[0]))                   
 #        print len(mask),marge_in,v
-        self.sphere_points_mask = numpy.nonzero(mask)[0]#points to keep
+#        self.sphere_points_mask = mask#numpy.nonzero(mask)[0]#points to keep
+        self.sphere_points_mask[points_mask]=numpy.logical_and(mask,
+                                self.sphere_points_mask[points_mask])
 
     def mask_sphere_points(self,v,pt,marge,listeclosest,cutoff,pv=None,marge_diedral=None):
+        #self.sphere_points_mask=numpy.ones(10000,'i') 
+        print ("attemask_sphere_pointsmpted ",marge_diedral,marge,len(listeclosest))
         if marge_diedral is not None :
             self.mask_sphere_points_dihedral(pv,v,marge,marge_diedral)        
         else :            
             self.mask_sphere_points_angle(v,marge)
-#        print len(self.sphere_points_mask),self.sphere_points_mask
-        #self.sphere_points_mask = numpy.nonzero(mask)[0]#points to keep
-        #mask using the grid bounding box ?
-        #mask using the surface ?    
-        #mask using neighboors if any
-        listeclosest=[elem for elem in listeclosest if not isinstance(elem[3],autopack.Compartment.Compartment)]
-        if len(listeclosest) and len(self.sphere_points_mask):
-            indices=[]
-            #remove compartments from the list
-            points = numpy.array(listeclosest)[:,1]
-            ingrs = numpy.array(listeclosest)[:,3]
-            radius = [float(ingr.encapsulatingRadius) for ingr in ingrs]
-            #this distance is between unit vector and 3d points...
-            #translate and scale the spheres points
-            sp=numpy.array(self.sphere_points, dtype=numpy.float64, copy=False)
-            pt = numpy.array(pt)
-            dp = sp[self.sphere_points_mask]*self.uLength+pt
-            #print ("currenpt is",type(pt),pt.shape,type(dp),dp.shape)
-            pts = numpy.array(points.tolist(), dtype=numpy.float64, copy=False)
-            #print (type(points.tolist()),points.tolist(),pts)
-            distances=spatial.distance.cdist(pts,dp)
-            ##print (distances.shape,numpy.array(radius).shape)#2,328 / 2
-            mask = numpy.nonzero(numpy.ones(len(dp)))[0]
-            #mas cumulative ?for 
-            for i in range(len(distances)):
-                 m=numpy.greater_equal(distances[i],radius[i])   
-                 mask = numpy.logical_and(mask,m)
-            indices = numpy.nonzero(mask)[0]#ponts to keep
-            i = self.sphere_points_mask[indices]
-            self.sphere_points_mask = i
+        #storethe mask point
+        sphere_points_mask_copy = numpy.copy(self.sphere_points_mask)
+        self.mask_sphere_points_ingredients(pt,listeclosest)
+        if not len( numpy.nonzero(self.sphere_points_mask)[0] ):
+            self.sphere_points_mask=numpy.copy(sphere_points_mask_copy)
+        #self.mask_sphere_points_boundary(pt)              
                 
     def reset(self):
         self.nbCurve=0
@@ -5991,18 +6038,6 @@ class GrowIngrediant(MultiCylindersIngr):
         matrix = self.vi.ToMat(mx).transpose()#
         rotMatj = matrix.reshape((4,4))
         return rotMatj.transpose(),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans
-
-    def testPoint(self,newPt):
-        inComp = True
-        closeS = False
-        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=self.jitterMax)
-        if inside :
-            inComp = self.checkPointComp(newPt)
-            if inComp :
-                #check how far from surface ?
-                closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
-        print "test",self.name,newPt,not inside, closeS,not inComp,(not inside or closeS or not inComp)
-        return not inside or closeS or not inComp
 
     def walkLatticeSurface(self,pts,distance,histoVol, size,mask,marge=999.0,
                     checkcollision=True,saw=True):
@@ -6492,7 +6527,7 @@ class GrowIngrediant(MultiCylindersIngr):
         return numpy.array(pt2).flatten()+numpy.array(pt),True
         
 
-    def walkSphereRAPID(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True,usePP=False):
+    def walkSphereRAPIDold(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True,usePP=False):
         """ use a random point on a sphere of radius uLength, and useCylinder collision on the grid """ 
 #        print ("walkSphereRapid ",pt1,pt2  )      
         v,d = self.vi.measure_distance(pt1,pt2,vec=True)
@@ -6500,9 +6535,9 @@ class GrowIngrediant(MultiCylindersIngr):
         attempted = 0
         pt = [0.,0.,0.]
         angle=0.
-        safetycutoff = 30
+        safetycutoff = 50
         if self.constraintMarge:
-            safetycutoff = 30
+            safetycutoff = 50
         if self.runTimeDisplay:
             name = "walking"+self.name
             sp = self.vi.getObject(name)
@@ -6512,7 +6547,15 @@ class GrowIngrediant(MultiCylindersIngr):
             self.vi.update()
         #do we use the cylindr or the alternate / partner
         liste_nodes=[]     
+        cutoff=self.histoVol.largestProteinSize+self.uLength
+        closesbody_indice = self.getClosestIngredient(pt2,self.histoVol,cutoff=cutoff)
+        liste_nodes = self.get_rapid_nodes(closesbody_indice,pt2,prevpoint=pt1)  
+        #mask using boundary and ingredient 
+        #self.mask_sphere_points_boundary(pt2)
+        #self.mask_sphere_points_ingredients(pt2,liste_nodes)
+        #mask_sphere_points_start = self.sphere_points_mask[:]
         while not found :
+            self.sphere_points_mask = numpy.ones(10000,'i') #mask_sphere_points_start[:]
             dihedral= None
             nextPoint = None
             #liste_nodes=[]
@@ -6552,7 +6595,10 @@ class GrowIngrediant(MultiCylindersIngr):
                     p = self.getNextPoint()
                     if p is None :
                         print ("no sphere points available with marge_in")
-                        return None,False
+                        #try again ?
+                        attempted +=1
+                        continue
+                        #return None,False
                     if length is not None:
                         p=(p/self.uLength)*length
                     newPt = numpy.array(pt2).flatten()+numpy.array(p)
@@ -6567,8 +6613,11 @@ class GrowIngrediant(MultiCylindersIngr):
                 self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0)
                 p = self.getNextPoint()
                 if p is None :
-                    print ("no sphere points available with halton")
-                    return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False                    
+                    print ("no sphere points available with halton",pt2,v)
+                    marge+=1
+                    attempted +=1
+                    continue
+                    #return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False                    
                 p=numpy.array(p)#*self.uLength
                 pt = numpy.array(p)#*numpy.array(self.jitterMax)#?
                 newPt = numpy.array(pt2).flatten()+numpy.array(pt)
@@ -6702,6 +6751,295 @@ class GrowIngrediant(MultiCylindersIngr):
             attempted += 1
         return numpy.array(pt2).flatten()+numpy.array(pt),True
 
+    def pickHalton(self,pt1,pt2):
+        p = self.getNextPoint()
+        if p is None :
+            return None                
+        p=numpy.array(p)#*self.uLength
+        pt = numpy.array(p)#*numpy.array(self.jitterMax)#?
+        return numpy.array(pt2).flatten()+numpy.array(pt)
+
+    def pickRandomSphere(self,pt1,pt2,marge,v):
+        p = self.vi.advance_randpoint_onsphere(self.uLength,
+                                               marge=math.radians(marge),
+                                               vector=v)
+        pt = numpy.array(p)*numpy.array(self.jitterMax)
+        #the new position is the previous point (pt2) plus the random point
+        newPt = numpy.array(pt2).flatten()+numpy.array(pt)
+        #compute the angle between the previous direction (pt1->pt2) and the new random one (pt)
+#        angle=self.vi.angle_between_vectors(numpy.array(v),numpy.array(pt))
+#        test= abs(math.degrees(angle)) <= marge+2.0
+        return newPt
+        
+    def pickAlternateHalton(self,pt1,pt2,length):
+        p = self.getNextPoint()
+        if p is None :
+            return None
+            #return None,False
+        if length is not None:
+            p=(p/self.uLength)*length
+        newPt = numpy.array(pt2).flatten()+numpy.array(p)
+        return newPt
+       
+    def walkSphereRAPID(self,pt1,pt2,distance,histoVol,marge = 90.0,checkcollision=True,usePP=False):
+        """ use a random point on a sphere of radius uLength, and useCylinder collision on the grid """ 
+#        print ("walkSphereRapid ",pt1,pt2  )      
+        v,d = self.vi.measure_distance(pt1,pt2,vec=True)
+        found = False
+        attempted = 0
+        pt = [0.,0.,0.]
+        angle=0.
+        safetycutoff = self.rejectionThreshold#angle  / 360
+        sp=None
+        pc=None
+        if self.constraintMarge:
+            safetycutoff = self.rejectionThreshold
+        if histoVol.runTimeDisplay:
+            name = "walking"+self.name
+            sp = self.vi.getObject(name)
+            if sp is None :
+                sp=self.vi.Sphere(name,radius=2.0)[0]
+            #sp.SetAbsPos(self.vi.FromVec(startingPoint))
+            self.vi.update()
+        #do we use the cylinder or the alternate / partner
+        liste_nodes=[]     
+        cutoff=self.histoVol.largestProteinSize+self.uLength
+        closesbody_indice = self.getClosestIngredient(pt2,self.histoVol,cutoff=cutoff)
+        liste_nodes = self.get_rapid_nodes(closesbody_indice,pt2,prevpoint=pt1)  
+        #mask using boundary and ingredient 
+        #self.mask_sphere_points_boundary(pt2)
+        #self.mask_sphere_points_ingredients(pt2,liste_nodes)
+        #mask_sphere_points_start = self.sphere_points_mask[:]
+        alternate,ia = self.pick_alternate()
+        print ("pick alternate",alternate,ia,self.prev_alt)
+        p_alternate = None#self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
+        #if p_alternate.getProperties("bend"):
+        nextPoint= None#p_alternate.getProperties("pt2")
+        marge_in= None#p_alternate.getProperties("marge_in")            
+        dihedral= None#p_alternate.getProperties("diehdral")#for next point
+        length= None#p_alternate.getProperties("length")#for next point
+        #prepare halton if needed
+        newPt = None
+        newPts=[]
+        #thats the name of the ingedient used as alternate
+        if self.prev_alt is not None :#and self.prev_alt_pt is not None:
+            p_alternate = self.partners[self.prev_alt]
+            dihedral= p_alternate.getProperties("diehdral")
+            nextPoint= p_alternate.getProperties("pt2")
+            marge_in= p_alternate.getProperties("marge_out")  #marge out ? 
+            if dihedral is not None :
+                self.mask_sphere_points(v,pt1,marge_in,liste_nodes,0,
+                                        pv=self.prev_vec,marge_diedral=dihedral)
+            alternate = None
+        t1 = time()
+        if self.prev_alt is not None :
+            test = True
+        elif alternate :
+            p_alternate = self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
+            #if p_alternate.getProperties("bend"):
+            nextPoint=p_alternate.getProperties("pt2")
+            marge_in=p_alternate.getProperties("marge_in")            
+            dihedral=p_alternate.getProperties("diehdral")#for next point
+            length=p_alternate.getProperties("length")#for next point
+            if marge_in is not None :
+                self.mask_sphere_points(v,pt2,marge_in,liste_nodes,0,pv=None,marge_diedral=None)
+        elif self.useHalton: 
+            self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0)
+        if histoVol.runTimeDisplay:
+            points_mask=numpy.nonzero(self.sphere_points_mask)[0]
+            verts=self.sphere_points[points_mask]*self.uLength+pt2            
+            name = "Hcloud"+self.name
+            pc = self.vi.getObject(name)
+            if pc is None :
+                pc=self.vi.PointCloudObject(name,vertices=verts)[0]
+            else :
+                self.vi.updateMesh(pc,vertices=verts)
+            self.vi.update()
+
+        while not found :
+            #try to drop at newPoint, 
+#            self.sphere_points_mask = numpy.ones(10000,'i') #mask_sphere_points_start[:]
+            #dihedral= None
+            #nextPoint = None
+            #liste_nodes=[]
+            print ("attempt ", attempted, marge)
+            #main loop thattryto found the next point (similar to jitter)
+            if attempted > safetycutoff:   
+                print ("break too much attempt ", attempted, safetycutoff)
+                return None,False#numpy.array(pt2).flatten()+numpy.array(pt),False
+            #pt = numpy.array(self.vi.randpoint_onsphere(self.uLength,biased=(uniform(0.,1.0)*marge)/360.0))*numpy.array([1,1,0])
+            test=True
+            newPt = None
+            if self.prev_alt is not None :
+                if dihedral is not None :
+                    newPt = self.pickAlternateHalton(pt1,pt2,None)
+                elif nextPoint is not None :                                              
+                    newPt= self.prev_alt_pt
+                if newPt is None :
+                    print ("no sphere points available with prev_alt",dihedral,nextPoint)
+                    self.prev_alt = None
+                    return None,False
+                    attempted+=1
+                    continue
+            elif alternate :
+                if marge_in is not None :
+                    newPt = self.pickAlternateHalton(pt1,pt2,length)
+                    if newPt is None :
+                        print ("no sphere points available with marge_in")
+                        return None,False
+                    jtrans,rotMatj = self.get_alternate_position(alternate,ia,v,pt2,newPt)
+                else :
+                    newPts,jtrans,rotMatj = self.place_alternate(alternate,ia,v,pt1,pt2)    
+                    #found = self.check_alternate_collision(pt2,newPts,jtrans,rotMatj)
+                    newPt = newPts[0]
+                    if newPt is None :
+                        print ("no  points available place_alternate")
+                        return None,False
+            elif self.useHalton:
+                newPt = self.pickHalton(pt1,pt2)
+                if newPt is None :
+                    print ("no sphere points available with marge_in")
+                    return None,False
+            else :
+                newPt = self.pickRandomSphere(self,pt1,pt2,marge,v)                 
+            if histoVol.runTimeDisplay :
+                self.vi.setTranslation(sp,newPt)
+                self.vi.update()
+            print ("picked point",newPt)
+            if newPt is None :
+                print ("no  points available")
+                return None,False
+            r=[False]
+            test =  self.testPoint(newPt)
+            if test :
+                if not self.constraintMarge :
+                    if marge >=175 :
+                        attempted +=1
+                        continue
+                        #print ("no second point not constraintMarge 1 ", marge)
+                        #self.prev_alt = None
+                        #return None,False
+                    if attempted % (self.rejectionThreshold/3) == 0 :
+                        marge+=1
+                        attempted = 0
+                        #need to recompute the mask
+                        if not alternate and self.useHalton and self.prev_alt is None:
+                            self.sphere_points_mask=numpy.ones(self.sphere_points_nb,'i') 
+                            self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0)
+                            if histoVol.runTimeDisplay:
+                                points_mask=numpy.nonzero(self.sphere_points_mask)[0]
+                                verts=self.sphere_points[points_mask]*self.uLength+pt2            
+                                name = "Hcloud"+self.name
+                                pc = self.vi.getObject(name)
+                                if pc is None :
+                                    pc=self.vi.PointCloudObject(name,vertices=verts)[0]
+                                else :
+                                    self.vi.updateMesh(pc,vertices=verts)
+                                self.vi.update()
+                attempted +=1
+                print ("rejected boundary")
+                continue
+            #optionally check for collision
+            if checkcollision:  
+#                    print ("check collision",alternate)                     
+                collision=False
+                cutoff=histoVol.largestProteinSize+self.uLength
+                if not alternate :
+                    prev=None
+                    if len(histoVol.rTrans) > 2:
+                        prev = histoVol.rTrans[-1]
+                    a=numpy.array(newPt)-numpy.array(pt2).flatten()
+                    b=numpy.array(pt2).flatten()+a
+                    #this s where we use panda
+                    rotMatj=[[ 1.,  0.,  0.,  0.],
+                       [ 0.,  1.,  0.,  0.],
+                       [ 0.,  0.,  1.,  0.],
+                       [ 0.,  0.,  0.,  1.]]
+                    jtrans = [0.,0.,0.]
+#                    rbnode = self.get_rapid_model()
+                    rotMatj,jtrans=self.getJtransRot(numpy.array(pt2).flatten(),newPt)                    
+                    collision,liste_nodes = self.collision_rapid(jtrans,rotMatj,
+                                    cutoff=cutoff,usePP=usePP,point=newPt,
+                                    prevpoint=prev)
+#                        print "collision",collision,cutoff
+#                        raw_input()
+                    if not collision :
+                        self.prev_alt = None
+                        self.prev_vec = None
+                        self.update_data_tree(jtrans,rotMatj,pt1=pt2,pt2=newPt)
+                        return newPt,True
+                else :
+                    rotMatj1,jtrans1=self.getJtransRot_r(numpy.array(pt2).flatten(),newPt) 
+                    collision,liste_nodes = self.collision_rapid(jtrans1,rotMatj1,cutoff=cutoff,usePP=usePP,point=newPt)
+                    #the collision shouldnt look for previous cylinder                        
+                    collision_alternate,liste_nodes = self.partners[alternate].ingr.collision_rapid(jtrans,rotMatj,usePP=usePP,liste_nodes=liste_nodes)
+                    collision = collision_alternate#(collision or collision_alternate)
+#                        print "collision",collision,collision_alternate,len(liste_nodes)
+                    if not collision :
+                        #what about point in curve and result
+                        #self.update_data_tree(jtrans1,rotMatj1,pt1=pt2,pt2=newPt)
+                        #self.update_data_tree(jtrans1,rotMatj1,pt1=newPt,pt2=newPts[1])
+                        self.partners[alternate].ingr.update_data_tree(jtrans,rotMatj)
+                        self.compartment.molecules.append([ jtrans, rotMatj.transpose(), self.partners[alternate].ingr, 0 ])     
+                        newv,d1 = self.vi.measure_distance(pt2,newPt,vec=True)
+                        #v,d2 = self.vi.measure_distance(newPt,newPts[1],vec=True)
+                        #self.currentLength += d1
+                        self.prev_alt=alternate
+                        self.prev_vec = v
+                        if nextPoint is not None and dihedral is None:                                              
+                            self.prev_alt_pt = newPts[1]
+                        #treat special case of starting other ingr
+                        start_ingr_name = self.partners[alternate].getProperties("st_ingr")
+                        if start_ingr_name is not None :
+                            #add new starting positions
+                            start_ingr = self.histoVol.getIngrFromName(start_ingr_name)
+                            matrice = numpy.array(rotMatj)#.transpose()
+                            matrice[3,:3] = jtrans
+                            newPts = self.get_alternate_starting_point(matrice.transpose(),alternate)
+                            start_ingr.start_positions.append([newPts[0],newPts[1]])
+                            start_ingr.nbMol+=1
+                            #add a mol
+                        return newPt,True
+                    else : 
+                        self.prev_alt_pt = None
+                if collision : #increment the range
+                    if not self.constraintMarge :
+                        if marge >=180 : #pi
+                            attempted +=1
+                            continue
+                            #print ("no second point not constraintMarge 2 ", marge)
+                            #return None,False
+#                            print ("upate marge because collision ", marge)
+                        if attempted %  (self.rejectionThreshold/3) == 0 :
+                            marge+=1
+                            attempted = 0 
+                            #need to recompute the mask
+                            if not alternate and self.useHalton and self.prev_alt is None:
+                                self.sphere_points_mask=numpy.ones(self.sphere_points_nb,'i') 
+                                self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0)
+                                if self.runTimeDisplay:
+                                    points_mask=numpy.nonzero(self.sphere_points_mask)[0]
+                                    v=self.sphere_points[points_mask]*self.uLength+pt2            
+                                    name = "Hcloud"+self.name
+                                    sp = self.vi.getObject(name)
+                                    if sp is None :
+                                        pc=self.vi.PointCloudObject("bbpoint",vertices=v)[0]
+                                    else :
+                                        self.vi.updateMesh(pc,vertices=v)
+                                    self.vi.update()
+                        else :
+                            attempted +=1
+                    else :
+                        attempted +=1
+                    print ("rejected collision")
+                    continue
+            else :
+                found = True
+                return numpy.array(pt2).flatten()+numpy.array(pt),True
+            print ("end loop add attempt ",attempted)
+            attempted += 1
+        return numpy.array(pt2).flatten()+numpy.array(pt),True
+        
     def resetLastPoint(self,listePtCurve):
         self.histoVol.nb_ingredient-=1
         self.histoVol.rTrans.pop(len(self.histoVol.rTrans)-1)
@@ -6733,7 +7071,7 @@ class GrowIngrediant(MultiCylindersIngr):
             parent = histoVol.afviewer.orgaToMasterGeom[self]
         k=0
         success = False
-        safetycutoff = 30
+        safetycutoff = 50
         if self.constraintMarge:
             safetycutoff = 50
         counter = 0
@@ -6745,6 +7083,8 @@ class GrowIngrediant(MultiCylindersIngr):
         alternate=False
         previousPoint_store = None
         while not Done:
+            #rest the mask 
+            self.sphere_points_mask=numpy.ones(10000,'i') 
             alternate=False
             print ("attempt K ",k)
             if k > safetycutoff :
@@ -6763,7 +7103,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 #sp=self.vi.newInstance(name,histoVol.afviewer.pesph,
 #                                       location=startingPoint,parent=parent)
                 #self.vi.scaleObj(sp,self.radii[0][0])                
-                if runTimeDisplay : self.vi.update()
+                self.vi.update()
 #            print "ok,p,start",previousPoint,startingPoint
             #pick next point and test collision.
             if self.walkingMode == "sphere":
@@ -6779,7 +7119,9 @@ class GrowIngrediant(MultiCylindersIngr):
                                                       distance,histoVol,
                                                       marge = self.marge,
                                                       checkcollision=True,usePP=usePP) 
-                    print ("wlak rapid ",time()-t1)
+                    print ("walk rapid ",time()-t1)
+                    if secondPoint is None :
+                        return False, nbFreePoints,freePoints
                 else :
                     secondPoint,success = self.walkSphere(previousPoint,startingPoint,
                                                       distance,histoVol,
@@ -6798,7 +7140,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 startingPoint = previousPoint_store
                 k+=1
                 continue
-#            print ("here is output of walk",secondPoint,success,len(secondPoint))
+
             if len(secondPoint) == 2 :
                 alternate=True
                 startingPoint = secondPoint[0]
@@ -6813,7 +7155,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 rotMatj,jtrans=self.getJtransRot(secondPoint,startingPoint)
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-             
+            print ("here is output of walk",secondPoint,startingPoint,success,alternate,len(secondPoint))             
             if success:
                 print ("success grow")
                 self.results.append([jtrans,rotMatj])
@@ -6836,6 +7178,7 @@ class GrowIngrediant(MultiCylindersIngr):
                     cent2T=cent2T[0]
 #                print cent1T,cent2T
                 if runTimeDisplay:
+                    print ("cylinder with",cent1T,cent2T) 
                     name = str(len(listePtLinear))+self.name + str(ptInd)+"cyl"
                     if r :
                         name = str(len(listePtLinear)+1)+self.name + str(ptInd)+"cyl"                    
@@ -6946,7 +7289,8 @@ class GrowIngrediant(MultiCylindersIngr):
                 seed="F"
             inside = self.histoVol.grid.checkPointInside(secondPoint,dist=self.cutoff_boundary,jitter=self.jitterMax)
             closeS=False
-            if inside : 
+            if inside and self.compNum<=0: 
+                #only if not surface ingredient
                 closeS = self.checkPointSurface(secondPoint,cutoff=self.cutoff_surface)
             success = False
             if not inside or closeS:
@@ -6964,7 +7308,7 @@ class GrowIngrediant(MultiCylindersIngr):
                     pt = numpy.array(p)*numpy.array(self.jitterMax)
                     secondPoint = self.startingpoint+numpy.array(pt)
                     inside = self.histoVol.grid.checkPointInside(secondPoint,dist=self.cutoff_boundary,jitter=self.jitterMax)
-                    closeS = self.checkPointSurface(secondPoint,cutoff=self.cutoff_surface)
+                    if self.compNum<=0 : closeS = self.checkPointSurface(secondPoint,cutoff=self.cutoff_surface)
             if self.runTimeDisplay:
                 parent = self.histoVol.afviewer.orgaToMasterGeom[self]
                 name = "Startsp"+self.name+seed
