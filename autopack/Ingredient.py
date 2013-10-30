@@ -935,7 +935,6 @@ class Ingredient(Agent):
         self.rbnode =  {} #keep the rbnode if any
         self.collisionLevel = self.maxLevel 
         # first level used for collision detection
-        self.rejectionThreshold = 30
         self.jitterMax = jitterMax 
         # (1,1,1) means 1/2 grid spacing in all directions
         self.nbJitter = nbJitter 
@@ -981,6 +980,10 @@ class Ingredient(Agent):
         self.coordsystem="left"
         if "coordsystem" in kw:
             self.coordsystem = kw["coordsystem"]
+        self.rejectionThreshold = 30
+        if "rejectionThreshold" in kw:
+            self.rejectionThreshold = kw["rejectionThreshold"]
+
         self.meshFile = None
         self.mesh = None
         self.meshObject= None

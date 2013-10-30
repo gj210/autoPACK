@@ -2,6 +2,7 @@
 	<autopackSetup name="Mycoplasma" version="1.2">
 	<!-- inspired from David Goodsell Mycoplasma mycoides complete cell (3000A diameter minimum)
 	[[-1445.0, -1445.0, -2200.0], [1445.0, 1445.0, 2200.0]]
+	[[-2482, -2389.0, -350], [2495, 2466, 350]]
 	see ref
 		http://mic.sgmjournals.org/content/147/4/1045.long
 		cytoskeleton-like structure for mycoplasma pulmonia
@@ -12,9 +13,9 @@
             boundingBox="[[-2482, -2389.0, 100.0], [2495, 2466, 2181.0]]" 
             cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" 
             gradients="['gX']" ingrLookForNeighbours="True" innerGridMethod="jordan3" 
-            largestProteinSize="100" overwritePlaceMethod="True" pickRandPt="True" 
+            largestProteinSize="300" overwritePlaceMethod="True" pickRandPt="True" 
             pickWeightedIngr="True" placeMethod="pandaBullet" 
-            runTimeDisplay="False" saveResult="False" smallestProteinSize="100." 
+            runTimeDisplay="False" saveResult="False" smallestProteinSize="300." 
             resultfile="/Users/ludo/DEV/autofill_svn/trunk/AutoFillClean/autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult.apr"
             use_gradient="True" version="1.0" windowsSize="100"/>
 	<gradients>
@@ -34,7 +35,7 @@
 		<!--http://mic.sgmjournals.org/content/33/3/477.full.pdf-->
 		<!-- mycoplasma is bounded by a single lipoprotein membrane about 80-100A-->
 		<!-- 50-60% dry wieght mb is protein,some mb bounded ribosome-->
-		<!--polar lipids + cholesterol-->
+		<!--polar lipids + cholesterol 3800 lypoglycan-->
 		<!-- membrane in liquid crystal state-->
 		<!--17. ATP synthase-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/Ves203MeshsParent.xml">
@@ -60,14 +61,15 @@
 		
 		<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
-                cutoff_boundary="0.0" cutoff_surface="55.0" gradient="" 
-                jitterMax="(1, 1, 1)" length="2350" marge="45.0" 
-                molarity="1" name="hair" nbJitter="1" nbMol="3800" 
+                cutoff_boundary="0.0" cutoff_surface="10.0" gradient="" 
+                jitterMax="(0.01, 0.01, 0.01)" length="2350" marge="45.0" 
+                molarity="0" name="hair" nbJitter="1" nbMol="13" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-10" 
-                perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, 0, 0]]]" 
-                positions2="[[[0.0, 50.0, 0.0]]]" uLength ="50" principalVector="(0, 1, 0)" 
+                perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[-25, 0, 0]]]" 
+                positions2="[[[25, 0., 0.0]]]" uLength ="50" principalVector="(1, 0, 0)" 
                 radii="[[8.0]]" useLength="False" walkingMode="sphere" 
-                constraintMarge="False" compMask="[-1,2]" />
+                constraintMarge="False" compMask="[-1]" 
+                rejectionThreshold="300"/>
          </ingredient>
     </surface>
     
@@ -85,7 +87,7 @@ interior Could we add an overwrite tag so we can apply some parameters to all in
 		<ingredient Type="MultiSphere" color="(1.0, 0.0, 0.0)" coordsystem="left" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" meshFile="/Users/ludo/DEV/autopack_git/data/Mycoplasma/geoms/hu_prot.dae" molarity="0.00" name="hu_prot" nbJitter="5" nbMol="0" packingMode="random" packingPriority="0" pdb="1p71" perturbAxisAmplitude="0.1" placeType="jitter" principalVector="(1, 0, 0)" rotRange="6.2831" positions="[[[0, 0, 0]]]" radii="[[40.0]]" useRotAxis="False" weight="0.25" proba_binding="0.04539066091278143" properties="{'bend':True,'pt1':[9.022707973986017294e+01,-9.239264935980688875e+00,-2.188526998026647519e+01],'pt2':[8.564161460711616769e+01,-5.383876808116801271e+01,-1.135032694602748080e+02],'marge_in':[74,94],'marge_out':[82,86],'length':45.859,'diehdral':[40,73]}"/>
 		<!--4. RNA polymerase pdb 4KMU molarity 0.099632331787621 p2 [32.84,23.693,24.668]-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/rna_polymerase.xml">
-			<overwrite molarity="0.0" nbMol="0"  packingPriority="2" weight="0.25" proba_binding="0.00082528474386875329" properties="{'bend':True, 'pt1':[1.184650673625681065e+02,-2.525032952516583862e+01,-1.624756557046652361e+01], 'pt2':[1.619176488153012201e+02,-1.170527742609380795e+02,-2.563822435073382167e+01],'marge_in':[22,26],'marge_out':[44,46],'length':73.845,'diehdral':[60,66], 'st_pt1':[21.527,23.404,22.784], 'st_pt2':[120.0,25.92,39.206], 'st_ingr':'MycoplasmaPackSurf_1_med_int__mRNA'}"/>
+			<overwrite molarity="0.0" nbMol="0"  packingPriority="2" weight="0.25" proba_binding="0.0082528474386875329" properties="{'bend':True, 'pt1':[1.184650673625681065e+02,-2.525032952516583862e+01,-1.624756557046652361e+01], 'pt2':[1.619176488153012201e+02,-1.170527742609380795e+02,-2.563822435073382167e+01],'marge_in':[22,26],'marge_out':[44,46],'length':73.845,'diehdral':[60,66], 'st_pt1':[21.527,23.404,22.784], 'st_pt2':[120.0,25.92,39.206], 'st_ingr':'MycoplasmaPackSurf_1_med_int__mRNA'}"/>
 		</ingredient>
 			
 		<!--1. DNA 1,211,703 bp->4119790A 411979nm
@@ -106,11 +108,11 @@ highly coiled circular chromosome
                 cutoff_boundary="55.0" cutoff_surface="55" gradient="" 
                 jitterMax="(1, 1, 1)" length="4119790" marge="25.0" 
                 molarity="0" name="DNA" nbJitter="1" nbMol="1" 
-                orientation="(1, 0, 0)" packingMode="random" packingPriority="-2" 
+                orientation="(1, 0, 0)" packingMode="random" packingPriority="-200" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[-51.0, 0, 0]]]" 
                 positions2="[[[51.0, 0.0, 0.0]]]" uLength ="102" principalVector="(1, 0, 0)" 
                 radii="[[11.85]]" useLength="False" walkingMode="sphere" 
-                constraintMarge="False"
+                constraintMarge="False" rejectionThreshold="300" 
                 partners_name="['MycoplasmaPackSurf_1_med_int__hu_prot','MycoplasmaPackSurf_1_med_int__rna_polymerase']" 
               	compMask="[-2]"
               	partners_position="[[[-1.626347154378886550e-01,9.200605750083922230e-01,-3.564245700836183861e-01,0.000000000000000000e+00],
@@ -128,55 +130,85 @@ highly coiled circular chromosome
 		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_3afp.xml">
 			<overwrite molarity="0.166053886312701" nbMol="0"  packingPriority="2"/>
 		</ingredient-->
-		<!--5. messenger RNA 2/1000A^3-->
+		<!--5. messenger RNA 2/1000A^3 molarity 0.03321077726254-->
        	<ingredient Type="Grow" biased="0.5" randomd="False" 
                 color="(1.0, 0.498, 0.314)" 
                 cutoff_boundary="55.0" cutoff_surface="25.0" gradient="" 
                 jitterMax="(1, 1, 1)" length="3700" marge="80.0" 
-                molarity="0.03321077726254" name="mRNA" nbJitter="1" nbMol="0" 
+                molarity="0" name="mRNA" nbJitter="1" nbMol="0" 
                 orientation="(1, 0, 0)" packingMode="random" packingPriority="-1" 
                 perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[-50, 0, 0]]]" 
                 positions2="[[[50.0, 0.0, 0.0]]]" uLength ="100" principalVector="(1,0, 0)" 
                 radii="[[8.0]]" useLength="False" walkingMode="sphere" 
-                constraintMarge="False"  compMask="[-2]"/> 
+                constraintMarge="False" rejectionThreshold="300" compMask="[-2]"/> 
 
 		<!--6. ribosome pdb 4KBT 30/1000A^3 also in cytoplasme recipe need to compare both should be along mRNA-->
 		<!--ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_4kbt.xml">
 			<overwrite molarity="0.498161658938104" nbMol="0"  packingPriority="2"/>
 		</ingredient-->
-		<!--7. transfer RNA (in pink) 4tna 174/1000A^3 and elongation factor Tu (in blue)in cytoplasme recipe-->
+		<!--7. transfer RNA (in pink) 4tna 174/1000A^3 and elongation factor Tu (in blue)in cytoplasme recipe close to ribosome-->
 		<!--8. elongation factor Tu and Ts 60/1000A^3 20 alone in cytoplasme recipe-->
 		<!--9. elongation factor G pdb 1EFG  1dar 20-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1efg.xml">
-			<overwrite molarity="0.332107772625402" nbMol="0"  packingPriority="2"/>
+			<overwrite molarity="0.332107772625402" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
 		<!--10. aminoacyl-tRNA synthetases 30 in cytoplasme recipe-->
+			<!-- TRNA SYNTHETASE RNA-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1GAX_rna.xml">
+			<overwrite molarity="0.498" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
+			<!-- TRNA SYNTHETASE PROTEIN-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/onemer1GAX_prot.xml">
+			<overwrite molarity="0.498" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
+		<!--AMINOACYL TRANSFER RNA SYNTHETASES-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1ASY.xml">
+			<overwrite molarity="0.498" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
+		<!--PHENYLALANYL-TRNA SYNTHETASE-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/hexamer1EIY.xml">
+			<overwrite molarity="0.498" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
 		
 		<!--11. topoisomerases pdb 1A36-->
 		<!--
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_BC.xml"/>
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36_A.xml"/>
-		-->
+		
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1a36.xml">
-			<overwrite molarity="0.03321077726254" nbMol="0" packingPriority="2"/>
+		
+			<overwrite molarity="0.03321077726254" nbMol="0" packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
+		-->
 		<!--12. Rec system for DNA repair: a) RecA pdb 1REA, b) RecBC pdb 1W36-->
+		<!--
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1rea.xml">
-			<overwrite molarity="0.083026943156351" nbMol="0" packingPriority="2"/>
+			<overwrite molarity="0.083026943156351" nbMol="0" packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1w36.xml">
-			<overwrite molarity="0.01660538863127" nbMol="0" packingPriority="2"/>
+			<overwrite molarity="0.01660538863127" nbMol="0" packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
+		-->
 		<!--13. chaperonin GroEL (helps folding of new proteins) pdb 1AON there is another chaperone in cytoplasme recipe-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1aon.xml">
-			<overwrite molarity="0.04981616589381" nbMol="0" packingPriority="2"/>
+			<overwrite molarity="0.04981616589381" nbMol="0" packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
 		<!--14. proteasome ClpA (destroys old proteins) pdb 1R6B-->
 		<ingredient include="http://autofill.googlecode.com/git/data/Mycoplasma/recipe/ingredients/CoarseMS_1r6b.xml">
-			<overwrite molarity="0.01660538863127" nbMol="0" packingPriority="2"/>
+			<overwrite molarity="0.01660538863127" nbMol="0" packingPriority="2" jitterMax="(1,1,1)"/>
 		</ingredient>
 		<!--15. glycolytic enymes 200 in cytoplasme recipe molarity="3.32107772625402"-->
+		<!--PHOSPHOFRUCTOKINASE-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1PFK.xml">
+			<overwrite molarity="1.15870052206512" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
+		
 		<!--16. pyruvate dehydrogenase complex 1 in cytoplasme recipe 0.01660538863127-->
+		<!--BIS MG-ATP-K-OXALATE COMPLEX OF PYRUVATE KINASE-->
+		<ingredient include="http://autofill.googlecode.com/git/data/GenericCytoplasm/recipe/ingredients/tetramer1A49.xml">
+			<overwrite molarity="0.0733688987" nbMol="0"  packingPriority="2" jitterMax="(1,1,1)"/>
+		</ingredient>
+		
 	</interior>
 	</organelle>
 	</autopackSetup>
