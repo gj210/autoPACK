@@ -49,7 +49,7 @@ from autopack.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngredian
 from autopack.Compartment import Compartment
 from autopack.Recipe import Recipe
 from autopack.Environment import Environment
-from autopack import Gui
+from autopack.Gui import AutoPackGui
 
 #Directory
 
@@ -106,18 +106,18 @@ rgbVeryDarkGrey = helper.addMaterial("gVeryDarkGreyMat", (0.298, 0.298, 0.298))
 if forcedPriority:
     d={}
     d["10_c25"] = {"rad":25,"height":400,
-                    "dic":{"packingPriority":-30,"nMol":20,
+                    "dic":{"packingPriority":-30,"nbMol":20,
                         "color":rgbOrange,"useLength":False}}#,"cBound":200.
-    d["10_s25"] ={"rad":25,"dic":{"packingPriority":-20,"nMol":150,"color":rgbDarkGrey,}}
-    d["10_s15"] ={"rad":15,"dic":{"packingPriority":-10,"nMol":150,"color":rgbVeryDarkGrey,}}
+    d["10_s25"] ={"rad":25,"dic":{"packingPriority":-20,"nbMol":150,"color":rgbDarkGrey,}}
+    d["10_s15"] ={"rad":15,"dic":{"packingPriority":-10,"nbMol":150,"color":rgbVeryDarkGrey,}}
 else:
     d={}
     d["10_c25"] = {"rad":25,"height":400,
-                    "dic":{"packingPriority":0,"nMol":20,
+                    "dic":{"packingPriority":0,"nbMol":20,
                         "color":rgbOrange,"useLength":False}}#,"cBound":200.
 
-    d["10_s25"] ={"rad":25,"dic":{"packingPriority":0,"nMol":150,"color":rgbDarkGrey,}}
-    d["10_s15"] ={"rad":15,"dic":{"packingPriority":0,"nMol":150,"color":rgbVeryDarkGrey,}}
+    d["10_s25"] ={"rad":25,"dic":{"packingPriority":0,"nbMol":100 ,"color":rgbDarkGrey,}}
+    d["10_s15"] ={"rad":15,"dic":{"packingPriority":0,"nbMol":100,"color":rgbVeryDarkGrey,}}
 
 #===============================================================================
 # ingredient setup
@@ -305,9 +305,9 @@ afviewer.SetHistoVol(h1,pad,display=False)
 
 
 #
-bbox = afviewer.helper.getObject("EnvironmentBB")
+bbox = afviewer.helper.getObject("histoVolBB")
 ##print ("bbox",bbox)
-if bbox is None : bbox = afviewer.helper.box("EnvironmentBB",cornerPoints=[[-500.,-500.,-.5],[500.,500.,.5]])#cornerPoints=h1.boundingBox)
+if bbox is None : bbox = afviewer.helper.box("histoVolBB",cornerPoints=[[-500.,-500.,-.5],[500.,500.,.5]])#cornerPoints=h1.boundingBox)
 print ("bbox",bbox)
 
 #h1.host='c4d'
@@ -373,7 +373,7 @@ if h1.placeMethod == "spring":
     
 h1.saveResult = True
 #resultfilename = h1.resultfile = "/Users/Shared/fillResult.af"
-resultfilename = h1.resultfile =wrkDir+os.sep+"autopackRecipeScripts/2DcylinderSphereFill/results/CylSpherefillResult.apr"
+resultfilename = h1.resultfile =wrkDir+os.sep+"cache_results/CylSpherefillResult.apr"
 print ("names are", h1.name, afviewer.name)
 afviewer.displayPreFill()
 afviewer.printIngrediants()
@@ -384,7 +384,7 @@ helper.toggleDisplay(vBaseGeometryHider,False)
 # functions
 #===============================================================================
 try :
-    Gui.Set("Test_CylindersSpheres2D",helper=afviewer.helper,afviewer=afviewer,Environment=h1,bbox=bbox)
+    AFGui.Set("Test_CylindersSpheres2D",helper=afviewer.helper,afviewer=afviewer,histoVol=h1,bbox=bbox)
 except:
     print ("no GUI")
 
@@ -396,7 +396,7 @@ def GRID(h,forceBuild=True,fill=True):
     t1 = time()
     doc =helper.getCurrentScene()
     #box = doc.get_selection()[0]
-    box = helper.getObject("EnvironmentBB")#doc.GetSelection()[0]
+    box = helper.getObject("histoVolBB")#doc.GetSelection()[0]
     #box = doc.GetSelection()[0]
     bb=helper.getCornerPointCube(box)
     gridFileIn=None

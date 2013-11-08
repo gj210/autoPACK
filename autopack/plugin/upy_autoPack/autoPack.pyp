@@ -178,7 +178,7 @@ class af_Dialog(plugTypeClass):
         self.gui.display()
         
     def resetgui(self,dname):
-        self.gui = AFGui.AFGui()
+        self.gui = Gui.AutoPackGui()
         self.gui.setup(rep=dname,host=upy.host)
         #self.hasGui = True
         self.gui.display()
