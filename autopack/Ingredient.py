@@ -5680,7 +5680,9 @@ class MultiCylindersIngr(Ingredient):
         self.collisionLevel = 0
         self.minRadius = radii[0][0]
 #        self.encapsulatingRadius = radii[0][0]  #Graham worry: 9/8/11 This is incorrect... shoudl be max(radii[0]) or radii[0][1] 
-        self.encapsulatingRadius = radii[0][0]
+#        self.encapsulatingRadius = radii[0][0]#nope should be  half length ?
+        self.length= 1.0
+        
 #        print('encapsulating Radius is probably wrong- fix the array')
         self.useLength = False
         if "useLength" in kw:
@@ -5695,6 +5697,32 @@ class MultiCylindersIngr(Ingredient):
 #            #build a cylinder and make it length uLength, radius radii[0]
 #            self.mesh = autopack.helper.Cylinder(self.name+"_basic",radius=self.radii[0][0],
 #                                       length=self.uLength,parent="autopackHider")[0]
+        if self.mesh is None and autopack.helper is not None  :
+            p=None
+            if not autopack.helper.nogui :
+                #build a cylinder and make it length uLength, radius radii[0]
+                #this mesh is used bu RAPID for collision
+                p=autopack.helper.getObject("autopackHider")
+                if p is None:
+                    p = autopack.helper.newEmpty("autopackHider")
+                    if autopack.helper.host.find("blender") == -1 :
+                        autopack.helper.toggleDisplay(p,False)
+#                self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+#                                radius=self.radii[0][0]*1.24, length=self.uLength,
+#                                res= 5, parent="autopackHider",axis="+X")[0]
+            length = 1
+            if positions2 is not None and positions is not None:
+                d = numpy.array(positions2[0][0])-numpy.array(positions[0][0])
+                s = numpy.sum(d*d)
+                length  = math.sqrt(s ) #diagonal
+            self.mesh = autopack.helper.Cylinder(self.name+"_basic",
+                                radius=self.radii[0][0]*1.24, length=length,
+                                res= 5, parent="autopackHider",axis=self.principalVector)[0]                
+#            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
+#                                self.positions[0][0],self.positions2[0][0],
+#                                radius=self.radii[0][0]*1.24,
+#                                parent = p,color=self.color)
+            self.getData()
 
         self.KWDS["useLength"]={}
 
