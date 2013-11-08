@@ -1333,7 +1333,7 @@ class Ingredient(Agent):
             
     def getMesh(self, filename, geomname):
         """
-        Create a mesh representaton from a filename for the ingredient
+        Create a mesh representation from a filename for the ingredient
     
         @type  filename: string
         @param filename: the name of the input file
@@ -2765,7 +2765,7 @@ class Ingredient(Agent):
                 if d==0.0:#distances[nid] == 0 : #same point
                     #print ("continue d=0",numpy.array(jtrans),numpy.array(prevpoint),d)
                     continue
-            if ingr.Type == "Grow":
+            if self.Type == "Grow":
                 #shouldnt we use sphere instead
                 if self.name == ingr.name :
                     #dont want last n-2  point?
@@ -2774,7 +2774,7 @@ class Ingredient(Agent):
 #                    print ("whats ",n,nid,c,(n==c) or n==(c-1) or  (n==c-2),
 #                                (nid==c) or nid==(c-1) or  (nid==c-2))
 #                    raw_input()
-                    if (n==c) or n==(c-1) or  (n==c-2):
+                    if (n==c) or n==(c-1) :#or  (n==(c-2)):
                         continue
             if ingr.name in self.partners and self.Type == "Grow":
                 #for now just do nothing
@@ -2783,7 +2783,7 @@ class Ingredient(Agent):
 #                print ("whats ",n,nid,c,(n==c) or n==(c-1) or  (n==c-2),
 #                            (nid==c) or nid==(c-1) or  (nid==c-2))
 #                    raw_input()
-                if (n==c) or n==(c-1) or  (n==c-2):
+                if (n==c) or n==(c-1) or (n==c-2):
                     continue                              
             #else :
             #   print (self.name+" is close to "+ingr.name,jtrans,curentpt)            
@@ -5858,7 +5858,13 @@ class GrowIngrediant(MultiCylindersIngr):
         if "alternates_weight" in kw :
             self.alternates_weight = kw["alternates_weight"]
         self.prev_alt=None
+        self.prev_was_alternate=False
         self.prev_alt_pt=None        
+        self.mini_interval = 2
+        self.alternate_interval = 0
+        #keep record of point Id that are bound to alternate and change the 
+        #representation according.
+
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -6815,6 +6821,8 @@ class GrowIngrediant(MultiCylindersIngr):
         #mask_sphere_points_start = self.sphere_points_mask[:]
         alternate,ia = self.pick_alternate()
         print ("pick alternate",alternate,ia,self.prev_alt)
+        if self.prev_was_alternate :
+            alternate = None
         p_alternate = None#self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
         #if p_alternate.getProperties("bend"):
         nextPoint= None#p_alternate.getProperties("pt2")
@@ -6837,7 +6845,8 @@ class GrowIngrediant(MultiCylindersIngr):
         t1 = time()
         if self.prev_alt is not None :
             test = True
-        elif alternate :
+        elif alternate and not self.prev_was_alternate :
+            #next point shouldnt be an alternate
             p_alternate = self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
             #if p_alternate.getProperties("bend"):
             nextPoint=p_alternate.getProperties("pt2")
@@ -6846,6 +6855,9 @@ class GrowIngrediant(MultiCylindersIngr):
             length=p_alternate.getProperties("length")#for next point
             if marge_in is not None :
                 self.mask_sphere_points(v,pt2,marge_in,liste_nodes,0,pv=None,marge_diedral=None)
+            else :
+                self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0) 
+            self.prev_was_alternate = True
         elif self.useHalton: 
             self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0)
         if histoVol.runTimeDisplay:
@@ -6891,13 +6903,19 @@ class GrowIngrediant(MultiCylindersIngr):
                         print ("no sphere points available with marge_in")
                         return None,False
                     jtrans,rotMatj = self.get_alternate_position(alternate,ia,v,pt2,newPt)
-                else :
+                elif nextPoint is not None :
                     newPts,jtrans,rotMatj = self.place_alternate(alternate,ia,v,pt1,pt2)    
                     #found = self.check_alternate_collision(pt2,newPts,jtrans,rotMatj)
                     newPt = newPts[0]
                     if newPt is None :
                         print ("no  points available place_alternate")
                         return None,False
+                else : #no constraint we just place alternate relatively to the given halton new points
+                    newPt = self.pickAlternateHalton(pt1,pt2,length)
+                    if newPt is None :
+                        print ("no sphere points available with marge_in")
+                        return None,False
+                    jtrans,rotMatj = self.get_alternate_position(alternate,ia,v,pt2,newPt)                        
             elif self.useHalton:
                 newPt = self.pickHalton(pt1,pt2)
                 if newPt is None :
@@ -6967,15 +6985,18 @@ class GrowIngrediant(MultiCylindersIngr):
 #                        print "collision",collision,cutoff
 #                        raw_input()
                     if not collision :
+                        self.alternate_interval+=1
+                        if self.alternate_interval >= self.mini_interval:
+                            self.prev_was_alternate = False
                         self.prev_alt = None
                         self.prev_vec = None
                         self.update_data_tree(jtrans,rotMatj,pt1=pt2,pt2=newPt)
                         return newPt,True
                 else :
                     rotMatj1,jtrans1=self.getJtransRot_r(numpy.array(pt2).flatten(),newPt) 
-                    collision,liste_nodes = self.collision_rapid(jtrans1,rotMatj1,cutoff=cutoff,usePP=usePP,point=newPt)
+                    #collision,liste_nodes = self.collision_rapid(jtrans1,rotMatj1,cutoff=cutoff,usePP=usePP,point=newPt)
                     #the collision shouldnt look for previous cylinder                        
-                    collision_alternate,liste_nodes = self.partners[alternate].ingr.collision_rapid(jtrans,rotMatj,usePP=usePP,liste_nodes=liste_nodes)
+                    collision_alternate,liste_nodes = self.partners[alternate].ingr.collision_rapid(jtrans,rotMatj,usePP=usePP)#,liste_nodes=liste_nodes)
                     collision = collision_alternate#(collision or collision_alternate)
 #                        print "collision",collision,collision_alternate,len(liste_nodes)
                     if not collision :
@@ -6987,7 +7008,8 @@ class GrowIngrediant(MultiCylindersIngr):
                         newv,d1 = self.vi.measure_distance(pt2,newPt,vec=True)
                         #v,d2 = self.vi.measure_distance(newPt,newPts[1],vec=True)
                         #self.currentLength += d1
-                        self.prev_alt=alternate
+                        if dihedral is not None :
+                            self.prev_alt=alternate
                         self.prev_vec = v
                         if nextPoint is not None and dihedral is None:                                              
                             self.prev_alt_pt = newPts[1]
@@ -7002,6 +7024,8 @@ class GrowIngrediant(MultiCylindersIngr):
                             start_ingr.start_positions.append([newPts[0],newPts[1]])
                             start_ingr.nbMol+=1
                             #add a mol
+                        #we need to store 
+                        self.alternate_interval = 0    
                         return newPt,True
                     else : 
                         self.prev_alt_pt = None
@@ -7161,7 +7185,9 @@ class GrowIngrediant(MultiCylindersIngr):
             print ("here is output of walk",secondPoint,startingPoint,success,alternate,len(secondPoint))             
             if success:
                 print ("success grow")
-                self.results.append([jtrans,rotMatj])
+                #do not append if alternate was used
+                if self.prev_alt is None :
+                    self.results.append([jtrans,rotMatj])
                 if r :
                     if alternate :
                         listePtLinear.insert(0,startingPoint)
@@ -7545,18 +7571,27 @@ class GrowIngrediant(MultiCylindersIngr):
 #        distance,mat = autopack.helper.getTubePropertiesMatrix(pt1,pt2)
 #        prevMat = numpy.array(mat)
         #rotMatj,jtrans=self.getJtransRot(numpy.array(pt2).flatten(),numpy.array(pt1).flatten())
-        rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
-                                           numpy.array(pt2).flatten())
-        prevMat = numpy.array(rotMatj)
-        #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
-        prevMat[3,:3] = jtrans   
-        rotMatj = numpy.identity(4)
         #should apply first to get the new list of point, and length
         p_alternate = self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
         #if p_alternate.getProperties("bend"):
         out1=p_alternate.getProperties("pt1")
-        out2=p_alternate.getProperties("pt2")            
-        newPts = autopack.helper.ApplyMatrix([out1,out2],prevMat.transpose()) #partner positions ?
+        out2=p_alternate.getProperties("pt2")   
+        if out1 is not None :         
+            rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
+                                               numpy.array(pt2).flatten())
+            prevMat = numpy.array(rotMatj)
+            #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
+            prevMat[3,:3] = jtrans   
+            newPts = autopack.helper.ApplyMatrix([out1,out2],prevMat.transpose()) #partner positions ?
+        else :
+            newPt = self.pickHalton(pt1,pt2)
+            newPts=[newPt]
+            rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt2).flatten(),
+                                               numpy.array(newPt).flatten())
+            prevMat = numpy.array(rotMatj)
+            #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
+            prevMat[3,:3] = jtrans   
+        rotMatj = numpy.identity(4)
         #print ("som math",out1,out2,newPts)
         #need also to get the alternate_ingredint new position and add it.
         localMR = self.partners_position[alti]
