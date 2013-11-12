@@ -196,7 +196,8 @@ This class is main class in autopack.
           <td><span class="summary-sig"><a name="ingredient_compare1"></a><span class="summary-sig-name">ingredient_compare1</span>(<span class="summary-sig-arg">x</span>,
         <span class="summary-sig-arg">y</span>)</span><br />
       sort ingredients using decreasing priority and decreasing radii for 
-      priority ties and decreasing completion for radii ties</td>
+      priority ties and decreasing completion for radii ties for priority 
+      &gt; 0</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#ingredient_compare1">source&nbsp;code</a></span>
             
@@ -215,7 +216,8 @@ This class is main class in autopack.
           <td><span class="summary-sig"><a name="ingredient_compare0"></a><span class="summary-sig-name">ingredient_compare0</span>(<span class="summary-sig-arg">x</span>,
         <span class="summary-sig-arg">y</span>)</span><br />
       sort ingredients using decreasing priority and decreasing radii for 
-      priority ties and decreasing completion for radii ties</td>
+      priority ties and decreasing completion for radii ties for priority 
+      &lt; 0</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#ingredient_compare0">source&nbsp;code</a></span>
             
@@ -234,7 +236,7 @@ This class is main class in autopack.
           <td><span class="summary-sig"><a name="ingredient_compare2"></a><span class="summary-sig-name">ingredient_compare2</span>(<span class="summary-sig-arg">x</span>,
         <span class="summary-sig-arg">y</span>)</span><br />
       sort ingredients using decreasing radii and decresing completion for 
-      radii matches</td>
+      radii matches: priority = 0</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#ingredient_compare2">source&nbsp;code</a></span>
             
@@ -368,7 +370,14 @@ This class is main class in autopack.
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="p"></a><span class="summary-name">p</span> = <code title="'/Developer/Panda3D/lib'"><code class="variable-quote">'</code><code class="variable-string">/Developer/Panda3D/lib</code><code class="variable-quote">'</code></code>
+        <a name="p"></a><span class="summary-name">p</span> = <code title="&quot;/Developer/Panda3D/lib&quot;">&quot;/Developer/Panda3D/lib&quot;</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="panda3d"></a><span class="summary-name">panda3d</span> = <code title="None">None</code>
     </td>
   </tr>
 <tr>
@@ -380,14 +389,8 @@ This class is main class in autopack.
  'rigid-body',
  'pandaBullet',
  'pandaBulletRelax',
- 'pandaDev']"><code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBul</code><code class="variable-ellipsis">...</code></code>
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="__package__"></a><span class="summary-name">__package__</span> = <code title="'autopack'"><code class="variable-quote">'</code><code class="variable-string">autopack</code><code class="variable-quote">'</code></code>
+ 'pandaDev',
+ 'RAPID']"><code class="variable-group">[</code><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">spring</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">, </code><code class="variable-quote">'</code><code class="variable-string">pandaBul</code><code class="variable-ellipsis">...</code></code>
     </td>
   </tr>
 </table>
@@ -471,7 +474,8 @@ This class is main class in autopack.
  <code class="variable-quote">'</code><code class="variable-string">rigid-body</code><code class="variable-quote">'</code><code class="variable-op">,</code>
  <code class="variable-quote">'</code><code class="variable-string">pandaBullet</code><code class="variable-quote">'</code><code class="variable-op">,</code>
  <code class="variable-quote">'</code><code class="variable-string">pandaBulletRelax</code><code class="variable-quote">'</code><code class="variable-op">,</code>
- <code class="variable-quote">'</code><code class="variable-string">pandaDev</code><code class="variable-quote">'</code><code class="variable-group">]</code>
+ <code class="variable-quote">'</code><code class="variable-string">pandaDev</code><code class="variable-quote">'</code><code class="variable-op">,</code>
+ <code class="variable-quote">'</code><code class="variable-string">RAPID</code><code class="variable-quote">'</code><code class="variable-group">]</code>
 </pre></td></tr></table>
 </dd>
   </dl>
@@ -510,7 +514,7 @@ This class is main class in autopack.
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Fri Jun  7 12:04:46 2013
+    on Mon Nov 11 23:44:56 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

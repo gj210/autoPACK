@@ -91,8 +91,8 @@
         <tr>
           <td><span class="summary-sig"><a name="__init__"></a><span class="summary-sig-name">__init__</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">name</span>,
-        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">X</code><code class="variable-quote">'</code></span>,
-        <span class="summary-sig-arg">description</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string"></code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default">&quot;X&quot;</span>,
+        <span class="summary-sig-arg">description</span>=<span class="summary-sig-default">&quot;&quot;</span>,
         <span class="summary-sig-arg">direction</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">bb</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">**kw</span>)</span></td>
@@ -219,12 +219,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="get_gauss_weights1"></a><span class="summary-sig-name">get_gauss_weights1</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">N</span>)</span><br />
-      given a number of point compute the gaussian weight for each 
-      (alternative function)</td>
+          <td><span class="summary-sig"><a name="getDirectionLength"></a><span class="summary-sig-name">getDirectionLength</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">bb</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">direction</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.get_gauss_weights1">source&nbsp;code</a></span>
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getDirectionLength">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -238,11 +237,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getDirectionLength"></a><span class="summary-sig-name">getDirectionLength</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">bb</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">direction</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td><span class="summary-sig"><a name="get_gauss_weights1"></a><span class="summary-sig-name">get_gauss_weights1</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">N</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getDirectionLength">source&nbsp;code</a></span>
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.get_gauss_weights1">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -299,7 +297,7 @@
           <td><span class="summary-sig"><a name="buildWeigthMapAxe"></a><span class="summary-sig-name">buildWeigthMapAxe</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">bb</span>,
         <span class="summary-sig-arg">MasterPosition</span>,
-        <span class="summary-sig-arg">Axe</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">X</code><code class="variable-quote">'</code></span>)</span><br />
+        <span class="summary-sig-arg">Axe</span>=<span class="summary-sig-default">&quot;X&quot;</span>)</span><br />
       from a given axe (X,Y,Z) build a linear weigth according the choosen 
       mode (linear, gauss, etc...)</td>
           <td align="right" valign="top">
@@ -404,6 +402,23 @@
       place to insert rnd in a sorted list.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getBinaryWeighted">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getForwWeight"></a><span class="summary-sig-name">getForwWeight</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">listPts</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Gradient.getForwWeight">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -589,7 +604,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Fri Jun  7 12:04:46 2013
+    on Mon Nov 11 23:44:56 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

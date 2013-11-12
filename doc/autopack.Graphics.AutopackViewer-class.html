@@ -91,7 +91,7 @@
         <tr>
           <td><span class="summary-sig"><a href="autopack.Graphics.AutopackViewer-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">helper</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">ViewerType</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">dejavu</code><code class="variable-quote">'</code></span>)</span><br />
+        <span class="summary-sig-arg">ViewerType</span>=<span class="summary-sig-default">'dejavu'</span>)</span><br />
       Constructor of the AFViewer.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.__init__">source&nbsp;code</a></span>
@@ -418,7 +418,7 @@
         <span class="summary-sig-arg">name</span>,
         <span class="summary-sig-arg">points</span>,
         <span class="summary-sig-arg">parent</span>,
-        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">[</code>1<code class="variable-op">, </code>1<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code></span>)</span><br />
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">[[1,1,0]]</span>)</span><br />
       Use this function to display a pointCloud.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayPoints">source&nbsp;code</a></span>
@@ -532,6 +532,23 @@
         <span class="summary-sig-arg">visible</span>=<span class="summary-sig-default">1</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayIngrGrow">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="delIngredientGrow"></a><span class="summary-sig-name">delIngredientGrow</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ingr</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.delIngredientGrow">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -949,12 +966,12 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="color"></a><span class="summary-sig-name">color</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">distance</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default">&quot;distance&quot;</span>,
         <span class="summary-sig-arg">target</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">parents</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">data</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">(</code>1.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-op">, </code><code class="variable-group">(</code>0.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">[red,black]</span>,
         <span class="summary-sig-arg">**options</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.color">source&nbsp;code</a></span>
@@ -977,7 +994,7 @@
         <span class="summary-sig-arg">distances</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">ramp</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">(</code>1.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-op">, </code><code class="variable-group">(</code>0.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">[red,black]</span>,
         <span class="summary-sig-arg">**options</span>)</span><br />
       target : name or host object target Deprecated, need to use new name 
       rule</td>
@@ -1001,7 +1018,7 @@
         <span class="summary-sig-arg">orders</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">ramp</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">(</code>1.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-op">, </code><code class="variable-group">(</code>0.0<code class="variable-op">, </code>0.0<code class="variable-op">, </code>0.0<code class="variable-group">)</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">[red,black]</span>,
         <span class="summary-sig-arg">**options</span>)</span><br />
       target : name or host object target</td>
           <td align="right" valign="top">
@@ -1293,6 +1310,63 @@
       
     </td>
   </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayGradient"></a><span class="summary-sig-name">displayGradient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">gradient</span>,
+        <span class="summary-sig-arg">positions</span>)</span><br />
+      Display the given gradient as sphere at each grid position with 
+      radius = weight</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayGradient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="displayDistance"></a><span class="summary-sig-name">displayDistance</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ramp_color1</span>=<span class="summary-sig-default">[1,0,0]</span>,
+        <span class="summary-sig-arg">ramp_color2</span>=<span class="summary-sig-default">[0,0,1]</span>,
+        <span class="summary-sig-arg">ramp_color3</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cutoff</span>=<span class="summary-sig-default">60.0</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayDistance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="checkIngrSpheres"></a><span class="summary-sig-name">checkIngrSpheres</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ingr</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.checkIngrSpheres">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
 </table>
 <!-- ==================== METHOD DETAILS ==================== -->
 <a name="section-MethodDetails"></a>
@@ -1321,7 +1395,7 @@
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">helper</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">ViewerType</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">dejavu</code><code class="variable-quote">'</code></span>)</span>
+        <span class="sig-arg">ViewerType</span>=<span class="sig-default">'dejavu'</span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
@@ -1522,7 +1596,7 @@
         <span class="sig-arg">name</span>,
         <span class="sig-arg">points</span>,
         <span class="sig-arg">parent</span>,
-        <span class="sig-arg">colors</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">[</code>1<code class="variable-op">, </code>1<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code></span>)</span>
+        <span class="sig-arg">colors</span>=<span class="sig-default">[[1,1,0]]</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="autopack.Graphics-pysrc.html#AutopackViewer.displayPoints">source&nbsp;code</a></span>&nbsp;
@@ -1599,7 +1673,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Fri Jun  7 12:04:46 2013
+    on Mon Nov 11 23:44:57 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

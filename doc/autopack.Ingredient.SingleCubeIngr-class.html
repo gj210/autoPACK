@@ -99,21 +99,21 @@
           <td><span class="summary-sig"><a href="autopack.Ingredient.SingleCubeIngr-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">molarity</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">radii</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">positions</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">[</code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-op">, </code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-op">, </code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code><code class="variable-group">]</code></span>,
-        <span class="summary-sig-arg">positions2</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">[</code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">positions</span>=<span class="summary-sig-default">[[[0,0,0],[0,0,0],[0,0,0],]]</span>,
+        <span class="summary-sig-arg">positions2</span>=<span class="summary-sig-default">[[[0,0,0]]]</span>,
         <span class="summary-sig-arg">sphereFile</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">packingPriority</span>=<span class="summary-sig-default">0</span>,
         <span class="summary-sig-arg">name</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">pdb</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">color</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">nbJitter</span>=<span class="summary-sig-default">5</span>,
-        <span class="summary-sig-arg">jitterMax</span>=<span class="summary-sig-default"><code class="variable-group">(</code>1<code class="variable-op">, </code>1<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="summary-sig-arg">jitterMax</span>=<span class="summary-sig-default">(1,1,1)</span>,
         <span class="summary-sig-arg">perturbAxisAmplitude</span>=<span class="summary-sig-default">0.1</span>,
-        <span class="summary-sig-arg">principalVector</span>=<span class="summary-sig-default"><code class="variable-group">(</code>1<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">)</code></span>,
+        <span class="summary-sig-arg">principalVector</span>=<span class="summary-sig-default">(1,0,0)</span>,
         <span class="summary-sig-arg">meshFile</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">packingMode</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">random</code><code class="variable-quote">'</code></span>,
-        <span class="summary-sig-arg">placeType</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code></span>,
-        <span class="summary-sig-arg">Type</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">SingleCube</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">packingMode</span>=<span class="summary-sig-default">'random'</span>,
+        <span class="summary-sig-arg">placeType</span>=<span class="summary-sig-default">&quot;jitter&quot;</span>,
+        <span class="summary-sig-arg">Type</span>=<span class="summary-sig-default">&quot;SingleCube&quot;</span>,
         <span class="summary-sig-arg">meshObject</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">nbMol</span>=<span class="summary-sig-default">0</span>,
         <span class="summary-sig-arg">**kw</span>)</span></td>
@@ -139,6 +139,24 @@
         <span class="summary-sig-arg">**kw</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.Set">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="addRBsegment"></a><span class="summary-sig-name">addRBsegment</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">pt1</span>,
+        <span class="summary-sig-arg">pt2</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.addRBsegment">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -311,6 +329,60 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="checkDistance"></a><span class="summary-sig-name">checkDistance</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">liste_nodes</span>,
+        <span class="summary-sig-arg">point</span>,
+        <span class="summary-sig-arg">cutoff</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.checkDistance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="checkPointComp"></a><span class="summary-sig-name">checkPointComp</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">point</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.checkPointComp">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="checkPointSurface"></a><span class="summary-sig-name">checkPointSurface</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">point</span>,
+        <span class="summary-sig-arg">cutoff</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.checkPointSurface">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="checkSphCollisions"></a><span class="summary-sig-name">checkSphCollisions</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">centers</span>,
         <span class="summary-sig-arg">radii</span>,
@@ -345,9 +417,33 @@
         <span class="summary-sig-arg">gridPointsCoords</span>,
         <span class="summary-sig-arg">distance</span>,
         <span class="summary-sig-arg">histoVol</span>)</span><br />
-      Check spheres for collision</td>
+      Check spheres for collision TODO improve the testwhen grid stepSize 
+      is larger that size of the ingredient</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.checkSphCompart">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="collision_rapid"></a><span class="summary-sig-name">collision_rapid</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">jtrans</span>,
+        <span class="summary-sig-arg">rotMatj</span>,
+        <span class="summary-sig-arg">cutoff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">usePP</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">point</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">prevpoint</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">liste_nodes</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.collision_rapid">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -367,6 +463,22 @@
         <span class="summary-sig-arg">radc</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.correctBB">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_rapid_model"></a><span class="summary-sig-name">create_rapid_model</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.create_rapid_model">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -412,6 +524,41 @@
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getClosestIngredient"></a><span class="summary-sig-name">getClosestIngredient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">point</span>,
+        <span class="summary-sig-arg">histoVol</span>,
+        <span class="summary-sig-arg">cutoff</span>=<span class="summary-sig-default">10.0</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getClosestIngredient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getData"></a><span class="summary-sig-name">getData</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getData">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">DejaVu.IndexedPolygons</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -443,6 +590,61 @@
         <span class="summary-sig-arg">grid</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getDistancesCube">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getEncapsulatingRadius"></a><span class="summary-sig-name">getEncapsulatingRadius</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mesh</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getEncapsulatingRadius">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getIngredientsInBox"></a><span class="summary-sig-name">getIngredientsInBox</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">histoVol</span>,
+        <span class="summary-sig-arg">jtrans</span>,
+        <span class="summary-sig-arg">rotMat</span>,
+        <span class="summary-sig-arg">compartment</span>,
+        <span class="summary-sig-arg">afvi</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getIngredientsInBox">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getIngredientsInTree"></a><span class="summary-sig-name">getIngredientsInTree</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">close_indice</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getIngredientsInTree">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -501,8 +703,9 @@
         <span class="summary-sig-arg">histoVol</span>,
         <span class="summary-sig-arg">jtrans</span>,
         <span class="summary-sig-arg">rotMat</span>,
-        <span class="summary-sig-arg">compartment</span>,
-        <span class="summary-sig-arg">afvi</span>)</span></td>
+        <span class="summary-sig-arg">organelle</span>,
+        <span class="summary-sig-arg">afvi</span>,
+        <span class="summary-sig-arg">close_indice</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getListePartners">source&nbsp;code</a></span>
             
@@ -538,7 +741,7 @@
           <td><span class="summary-sig"><a href="autopack.Ingredient.Ingredient-class.html#getMesh" class="summary-sig-name">getMesh</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">filename</span>,
         <span class="summary-sig-arg">geomname</span>)</span><br />
-      Create a mesh representaton from a filename for the ingredient</td>
+      Create a mesh representation from a filename for the ingredient</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getMesh">source&nbsp;code</a></span>
             
@@ -554,15 +757,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="getNeighboursInBox"></a><span class="summary-sig-name">getNeighboursInBox</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">histoVol</span>,
-        <span class="summary-sig-arg">jtrans</span>,
-        <span class="summary-sig-arg">rotMat</span>,
-        <span class="summary-sig-arg">organelle</span>,
-        <span class="summary-sig-arg">afvi</span>,
-        <span class="summary-sig-arg">rb</span>=<span class="summary-sig-default">False</span>)</span></td>
+          <td><span class="summary-sig"><a name="getSpheres"></a><span class="summary-sig-name">getSpheres</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">sphereFile</span>)</span><br />
+      get spherical approximation of shape</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getNeighboursInBox">source&nbsp;code</a></span>
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getSpheres">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -579,6 +778,63 @@
           <td><span class="summary-sig"><a name="getTransform"></a><span class="summary-sig-name">getTransform</span>(<span class="summary-sig-arg">self</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.getTransform">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_rapid_model"></a><span class="summary-sig-name">get_rapid_model</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.get_rapid_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_rapid_nodes"></a><span class="summary-sig-name">get_rapid_nodes</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">close_indice</span>,
+        <span class="summary-sig-arg">curentpt</span>,
+        <span class="summary-sig-arg">removelast</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">prevpoint</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.get_rapid_nodes">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_rbNondes"></a><span class="summary-sig-name">get_rbNondes</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">close_indice</span>,
+        <span class="summary-sig-arg">currentpt</span>,
+        <span class="summary-sig-arg">removelast</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">prevpoint</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">getInfo</span>=<span class="summary-sig-default">False</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.get_rbNondes">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -612,7 +868,8 @@
         <tr>
           <td><span class="summary-sig"><a name="jitterPosition"></a><span class="summary-sig-name">jitterPosition</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">position</span>,
-        <span class="summary-sig-arg">spacing</span>)</span><br />
+        <span class="summary-sig-arg">spacing</span>,
+        <span class="summary-sig-arg">normal</span>=<span class="summary-sig-default">None</span>)</span><br />
       position are the 3d coordiantes of the grid point spacing is the grid
       spacing this will jitter gauss(0., 0.3) * Ingredient.jitterMax</td>
           <td align="right" valign="top">
@@ -645,10 +902,33 @@
         <span class="summary-sig-arg">sphCenters</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">sphRadii</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">sphColors</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">drop</span>=<span class="summary-sig-default">True</span>)</span><br />
+        <span class="summary-sig-arg">drop</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">usePP</span>=<span class="summary-sig-default">False</span>)</span><br />
       drop the ingredient on grid point ptInd</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.jitter_place">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="lookForNeighbours"></a><span class="summary-sig-name">lookForNeighbours</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">trans</span>,
+        <span class="summary-sig-arg">rotMat</span>,
+        <span class="summary-sig-arg">organelle</span>,
+        <span class="summary-sig-arg">afvi</span>,
+        <span class="summary-sig-arg">distance</span>,
+        <span class="summary-sig-arg">closest_indice</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.lookForNeighbours">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -696,7 +976,8 @@
         <span class="summary-sig-arg">sphCenters</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">sphRadii</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">sphColors</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">drop</span>=<span class="summary-sig-default">True</span>)</span><br />
+        <span class="summary-sig-arg">drop</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">usePP</span>=<span class="summary-sig-default">False</span>)</span><br />
       drop the ingredient on grid point ptInd</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.pandaBullet_place">source&nbsp;code</a></span>
@@ -801,6 +1082,7 @@
         <span class="summary-sig-arg">nbFreePoints</span>,
         <span class="summary-sig-arg">distance</span>,
         <span class="summary-sig-arg">dpad</span>,
+        <span class="summary-sig-arg">usePP</span>,
         <span class="summary-sig-arg">stepByStep</span>=<span class="summary-sig-default">False</span>,
         <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
         <span class="summary-sig-arg">sphGeom</span>=<span class="summary-sig-default">None</span>,
@@ -811,6 +1093,104 @@
         <span class="summary-sig-arg">sphColors</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.place">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="place_mp"></a><span class="summary-sig-name">place_mp</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">histoVol</span>,
+        <span class="summary-sig-arg">ptInd</span>,
+        <span class="summary-sig-arg">freePoints</span>,
+        <span class="summary-sig-arg">nbFreePoints</span>,
+        <span class="summary-sig-arg">distance</span>,
+        <span class="summary-sig-arg">dpad</span>,
+        <span class="summary-sig-arg">stepByStep</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">sphGeom</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">labDistGeom</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">debugFunc</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphCenters</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphRadii</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphColors</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.place_mp">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="rapid_model"></a><span class="summary-sig-name">rapid_model</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.rapid_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="rapid_place"></a><span class="summary-sig-name">rapid_place</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">histoVol</span>,
+        <span class="summary-sig-arg">ptInd</span>,
+        <span class="summary-sig-arg">freePoints</span>,
+        <span class="summary-sig-arg">nbFreePoints</span>,
+        <span class="summary-sig-arg">distance</span>,
+        <span class="summary-sig-arg">dpad</span>,
+        <span class="summary-sig-arg">stepByStep</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">sphGeom</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">labDistGeom</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">debugFunc</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphCenters</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphRadii</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sphColors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">drop</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">usePP</span>=<span class="summary-sig-default">False</span>)</span><br />
+      drop the ingredient on grid point ptInd</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.rapid_place">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="rejectOnce"></a><span class="summary-sig-name">rejectOnce</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">rbnode</span>,
+        <span class="summary-sig-arg">moving</span>,
+        <span class="summary-sig-arg">afvi</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.rejectOnce">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -873,6 +1253,23 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="testPoint"></a><span class="summary-sig-name">testPoint</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">newPt</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.testPoint">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="transformPoints"></a><span class="summary-sig-name">transformPoints</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">trans</span>,
         <span class="summary-sig-arg">rot</span>,
@@ -910,6 +1307,27 @@
       
     </td>
   </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_data_tree"></a><span class="summary-sig-name">update_data_tree</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">jtrans</span>,
+        <span class="summary-sig-arg">rotMatj</span>,
+        <span class="summary-sig-arg">ptInd</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">pt1</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">pt2</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Ingredient.update_data_tree">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
 <tr bgcolor="#e8f0f8" >
   <th colspan="2" class="group-header"
     >&nbsp;&nbsp;&nbsp;&nbsp;Inherited from <a href="autopack.Ingredient.Agent-class.html">Agent</a></th></tr>
@@ -938,7 +1356,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="addPartner"></a><span class="summary-sig-name">addPartner</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">weight</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">properties</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
@@ -1077,7 +1495,7 @@
           <td><span class="summary-sig"><a name="pickPartner"></a><span class="summary-sig-name">pickPartner</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">mingrs</span>,
         <span class="summary-sig-arg">listePartner</span>,
-        <span class="summary-sig-arg">currentPos</span>=<span class="summary-sig-default"><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code></span>)</span></td>
+        <span class="summary-sig-arg">currentPos</span>=<span class="summary-sig-default">[0,0,0]</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Agent.pickPartner">source&nbsp;code</a></span>
             
@@ -1115,7 +1533,7 @@
           <td><span class="summary-sig"><a name="pickPartner_old"></a><span class="summary-sig-name">pickPartner_old</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">mingrs</span>,
         <span class="summary-sig-arg">listePartner</span>,
-        <span class="summary-sig-arg">currentPos</span>=<span class="summary-sig-default"><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code></span>)</span></td>
+        <span class="summary-sig-arg">currentPos</span>=<span class="summary-sig-default">[0,0,0]</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Ingredient-pysrc.html#Agent.pickPartner_old">source&nbsp;code</a></span>
             
@@ -1188,21 +1606,21 @@
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">molarity</span>=<span class="sig-default">0.0</span>,
         <span class="sig-arg">radii</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">positions</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">[</code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-op">, </code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-op">, </code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code><code class="variable-group">]</code></span>,
-        <span class="sig-arg">positions2</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">[</code><code class="variable-group">[</code>0<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">]</code><code class="variable-group">]</code><code class="variable-group">]</code></span>,
+        <span class="sig-arg">positions</span>=<span class="sig-default">[[[0,0,0],[0,0,0],[0,0,0],]]</span>,
+        <span class="sig-arg">positions2</span>=<span class="sig-default">[[[0,0,0]]]</span>,
         <span class="sig-arg">sphereFile</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">packingPriority</span>=<span class="sig-default">0</span>,
         <span class="sig-arg">name</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">pdb</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">color</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">nbJitter</span>=<span class="sig-default">5</span>,
-        <span class="sig-arg">jitterMax</span>=<span class="sig-default"><code class="variable-group">(</code>1<code class="variable-op">, </code>1<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="sig-arg">jitterMax</span>=<span class="sig-default">(1,1,1)</span>,
         <span class="sig-arg">perturbAxisAmplitude</span>=<span class="sig-default">0.1</span>,
-        <span class="sig-arg">principalVector</span>=<span class="sig-default"><code class="variable-group">(</code>1<code class="variable-op">, </code>0<code class="variable-op">, </code>0<code class="variable-group">)</code></span>,
+        <span class="sig-arg">principalVector</span>=<span class="sig-default">(1,0,0)</span>,
         <span class="sig-arg">meshFile</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">packingMode</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">random</code><code class="variable-quote">'</code></span>,
-        <span class="sig-arg">placeType</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">jitter</code><code class="variable-quote">'</code></span>,
-        <span class="sig-arg">Type</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">SingleCube</code><code class="variable-quote">'</code></span>,
+        <span class="sig-arg">packingMode</span>=<span class="sig-default">'random'</span>,
+        <span class="sig-arg">placeType</span>=<span class="sig-default">&quot;jitter&quot;</span>,
+        <span class="sig-arg">Type</span>=<span class="sig-default">&quot;SingleCube&quot;</span>,
         <span class="sig-arg">meshObject</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">nbMol</span>=<span class="sig-default">0</span>,
         <span class="sig-arg">**kw</span>)</span>
@@ -1254,7 +1672,7 @@
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Fri Jun  7 12:04:47 2013
+    on Mon Nov 11 23:44:57 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

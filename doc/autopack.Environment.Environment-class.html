@@ -107,7 +107,7 @@ A environments is made of :
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">name</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">H</code><code class="variable-quote">'</code></span>)</span></td>
+        <span class="summary-sig-arg">name</span>=<span class="summary-sig-default">&quot;H&quot;</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.__init__">source&nbsp;code</a></span>
             
@@ -124,10 +124,27 @@ A environments is made of :
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="Setup"></a><span class="summary-sig-name">Setup</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">setupfile</span>)</span><br />
-      TODO</td>
+        <span class="summary-sig-arg">setupfile</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.Setup">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="reportprogress"></a><span class="summary-sig-name">reportprogress</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">progress</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.reportprogress">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -147,6 +164,42 @@ A environments is made of :
       keywords.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.makeIngredient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_partners_ingredient"></a><span class="summary-sig-name">set_partners_ingredient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ingr</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.set_partners_ingredient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_recipe_ingredient"></a><span class="summary-sig-name">set_recipe_ingredient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xmlnode</span>,
+        <span class="summary-sig-arg">recipe</span>,
+        <span class="summary-sig-arg">io_ingr</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.set_recipe_ingredient">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -336,6 +389,23 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="sortIngredient"></a><span class="summary-sig-name">sortIngredient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">reset</span>=<span class="summary-sig-default">False</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.sortIngredient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="setGradient"></a><span class="summary-sig-name">setGradient</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">**kw</span>)</span><br />
       create a grdaient assign weight to point listorganelle influenced 
@@ -374,8 +444,8 @@ A environments is made of :
         <tr>
           <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#callFunction" class="summary-sig-name">callFunction</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">function</span>,
-        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
-        <span class="summary-sig-arg">kw</span>=<span class="summary-sig-default"><code class="variable-group">{</code><code class="variable-group">}</code></span>)</span><br />
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">[]</span>,
+        <span class="summary-sig-arg">kw</span>=<span class="summary-sig-default">{}</span>)</span><br />
       helper function to callback another function with the give arguments 
       and keywords.</td>
           <td align="right" valign="top">
@@ -414,7 +484,7 @@ A environments is made of :
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="SetRBOptions"></a><span class="summary-sig-name">SetRBOptions</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">obj</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">moving</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">obj</span>=<span class="summary-sig-default">&quot;moving&quot;</span>,
         <span class="summary-sig-arg">**kw</span>)</span><br />
       Change the rigid body options</td>
           <td align="right" valign="top">
@@ -611,6 +681,24 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="getPointCompartmentId"></a><span class="summary-sig-name">getPointCompartmentId</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">point</span>,
+        <span class="summary-sig-arg">ray</span>=<span class="summary-sig-default">3</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointCompartmentId">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#longestIngrdientName" class="summary-sig-name">longestIngrdientName</a>(<span class="summary-sig-arg">self</span>)</span><br />
       Helper function for gui.</td>
           <td align="right" valign="top">
@@ -705,54 +793,11 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="BuildGrids"></a><span class="summary-sig-name">BuildGrids</span>(<span class="summary-sig-arg">self</span>)</span><br />
+          <td><span class="summary-sig"><a name="BuildCompartmentsGrids"></a><span class="summary-sig-name">BuildCompartmentsGrids</span>(<span class="summary-sig-arg">self</span>)</span><br />
       Build the comparmtents grid (intrior and surface points) to be merged
-      with the main grid Note : #New version allows for orthogonal box to 
-      be used as an organelle requireing no expensive InsidePoints test # 
-      FIXME make recursive?</td>
+      with the main grid</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.BuildGrids">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#getPointFrom3D" class="summary-sig-name">getPointFrom3D</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">pt3d</span>,
-        <span class="summary-sig-arg">bb</span>,
-        <span class="summary-sig-arg">spacing</span>,
-        <span class="summary-sig-arg">nb</span>)</span><br />
-      get point number from 3d coordinates.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointFrom3D">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="computeGridNumberOfPoint"></a><span class="summary-sig-name">computeGridNumberOfPoint</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">boundingBox</span>,
-        <span class="summary-sig-arg">space</span>)</span><br />
-      Return the grid size : total number of point and number of point per 
-      axes Note : Duplicate from the grid class.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.computeGridNumberOfPoint">source&nbsp;code</a></span>
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.BuildCompartmentsGrids">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -776,6 +821,49 @@ A environments is made of :
       The main build grid function.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.buildGrid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="BuildGrids"></a><span class="summary-sig-name">BuildGrids</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Build the comparmtents grid (intrior and surface points) to be merged
+      with the main grid Note : #New version allows for orthogonal box to 
+      be used as an organelle requireing no expensive InsidePoints test # 
+      FIXME make recursive?</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.BuildGrids">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="autopack.Environment.Environment-class.html#buildGridOld" class="summary-sig-name">buildGridOld</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">boundingBox</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">gridFileIn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">rebuild</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">gridFileOut</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">previousFill</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">previousfreePoint</span>=<span class="summary-sig-default">None</span>)</span><br />
+      The main build grid function.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.buildGridOld">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -1048,6 +1136,42 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="removeOnePoint"></a><span class="summary-sig-name">removeOnePoint</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">pt</span>,
+        <span class="summary-sig-arg">freePoints</span>,
+        <span class="summary-sig-arg">nbFreePoints</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.removeOnePoint">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getTotalNbObject"></a><span class="summary-sig-name">getTotalNbObject</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">allIngredients</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getTotalNbObject">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="fill5"></a><span class="summary-sig-name">fill5</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">seedNum</span>=<span class="summary-sig-default">14</span>,
         <span class="summary-sig-arg">stepByStep</span>=<span class="summary-sig-default">False</span>,
@@ -1065,23 +1189,6 @@ A environments is made of :
       object</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.fill5">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="build_grid_and_pack"></a><span class="summary-sig-name">build_grid_and_pack</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">seed</span>=<span class="summary-sig-default">12</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.build_grid_and_pack">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -1498,6 +1605,25 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="multiSphereRB"></a><span class="summary-sig-name">multiSphereRB</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">pos</span>,
+        <span class="summary-sig-arg">rad</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.multiSphereRB">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="addSingleCubeRB"></a><span class="summary-sig-name">addSingleCubeRB</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">pMat</span>,
@@ -1596,6 +1722,23 @@ A environments is made of :
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a name="addMeshRBOrganelle"></a><span class="summary-sig-name">addMeshRBOrganelle</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">o</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.addMeshRBOrganelle">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a name="pandaMatrice"></a><span class="summary-sig-name">pandaMatrice</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">mat</span>)</span></td>
           <td align="right" valign="top">
@@ -1617,7 +1760,7 @@ A environments is made of :
         <span class="summary-sig-arg">ingr</span>,
         <span class="summary-sig-arg">trans</span>,
         <span class="summary-sig-arg">rotMat</span>,
-        <span class="summary-sig-arg">rtype</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">SingleSphere</code><code class="variable-quote">'</code></span>,
+        <span class="summary-sig-arg">rtype</span>=<span class="summary-sig-default">&quot;SingleSphere&quot;</span>,
         <span class="summary-sig-arg">static</span>=<span class="summary-sig-default">False</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.addRB">source&nbsp;code</a></span>
@@ -1785,7 +1928,7 @@ A environments is made of :
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">name</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">H</code><code class="variable-quote">'</code></span>)</span>
+        <span class="sig-arg">name</span>=<span class="sig-default">&quot;H&quot;</span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
@@ -1877,8 +2020,8 @@ A environments is made of :
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">callFunction</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">function</span>,
-        <span class="sig-arg">args</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
-        <span class="sig-arg">kw</span>=<span class="sig-default"><code class="variable-group">{</code><code class="variable-group">}</code></span>)</span>
+        <span class="sig-arg">args</span>=<span class="sig-default">[]</span>,
+        <span class="sig-arg">kw</span>=<span class="sig-default">{}</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.callFunction">source&nbsp;code</a></span>&nbsp;
@@ -2107,30 +2250,6 @@ A environments is made of :
   </dl>
 </td></tr></table>
 </div>
-<a name="getPointFrom3D"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">getPointFrom3D</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">pt3d</span>,
-        <span class="sig-arg">bb</span>,
-        <span class="sig-arg">spacing</span>,
-        <span class="sig-arg">nb</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.getPointFrom3D">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>get point number from 3d coordinates. Note : Duplicate from the grid 
-  class.</p>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
 <a name="buildGrid"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -2152,9 +2271,36 @@ A environments is made of :
   </tr></table>
   
   <p>The main build grid function. Setup the main grid and merge the 
-  compartment grid. The setup is  de novo or restored using given file. Can
-  also used information from a previous packing. This funcion should be 
-  split in smaller function for clarity.</p>
+  compartment grid. The setup is de novo or using previously builded grid 
+  or restored using given file.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="buildGridOld"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">buildGridOld</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">boundingBox</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">gridFileIn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">rebuild</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">gridFileOut</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">previousFill</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">previousfreePoint</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="autopack.Environment-pysrc.html#Environment.buildGridOld">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>The main build grid function. Setup the main grid and merge the 
+  compartment grid. The setup is de novo or using previously builded grid 
+  or restored using given file. This funcion should be split in smaller 
+  function for clarity.</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -2365,7 +2511,7 @@ A environments is made of :
   <tr>
     <td align="left" class="footer">
     Generated by Epydoc 3.0.1
-    on Fri Jun  7 12:04:46 2013
+    on Mon Nov 11 23:44:56 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
