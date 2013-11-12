@@ -5556,8 +5556,9 @@ class SingleSphereIngr(Ingredient):
         self.minRadius = self.radii[0][0]
         self.encapsulatingRadius = radius
         #make a sphere ?->rapid ?
-        if self.mesh is None and autopack.helper is not None  :
-            if not autopack.helper.nogui :
+        if self.mesh is None and helper is not None  :
+            if not helper.nogui :
+#            if not autopack.helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
                 #this mesh is used bu RAPID for collision
                 p=autopack.helper.getObject("autopackHider")
@@ -5697,9 +5698,9 @@ class MultiCylindersIngr(Ingredient):
 #            #build a cylinder and make it length uLength, radius radii[0]
 #            self.mesh = autopack.helper.Cylinder(self.name+"_basic",radius=self.radii[0][0],
 #                                       length=self.uLength,parent="autopackHider")[0]
-        if self.mesh is None and autopack.helper is not None  :
+        if self.mesh is None and helper is not None  :
             p=None
-            if not autopack.helper.nogui :
+            if not helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
                 #this mesh is used bu RAPID for collision
                 p=autopack.helper.getObject("autopackHider")
@@ -5846,9 +5847,9 @@ class GrowIngrediant(MultiCylindersIngr):
                 self.compMask = kw["compMask"]
         #create a simple geom if none pass?        
         #self.compMask=[]
-        if self.mesh is None and autopack.helper is not None  :
+        if self.mesh is None and helper is not None  :
             p=None
-            if not autopack.helper.nogui :
+            if not helper.nogui :
                 #build a cylinder and make it length uLength, radius radii[0]
                 #this mesh is used bu RAPID for collision
                 p=autopack.helper.getObject("autopackHider")
