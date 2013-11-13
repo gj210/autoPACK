@@ -36,13 +36,13 @@ AF
 """
 packageContainsVFCommands = 1
 import os
+import json
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
     import urllib
 usePP = False
 helper = None
-autoPACKserver="http://autofill.googlecode.com/git/data/"
 #try :
 #    from panda3d.core import Mat4
 #    LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax"]
@@ -58,9 +58,16 @@ verbose = 0
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
 '''
+autoPACKserver="http://autofill.googlecode.com/git"
+replace_autoPACKserver=["autoPACKserver","http://autofill.googlecode.com/git"]
+autopackdir=afdir
+replace_autopackdir=["autopackdir",afdir]
+#we need to parse autoPACK_filePaths.xml or json to update theses path....?
+#instead of hard coded
 
 recipe_web_pref_file = afdir+os.sep+"recipe_available.xml"
 recipe_user_pref_file = afdir+os.sep+"user_recipe_available.xml"
+autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
 
 if not os.path.isfile(afdir+os.sep+"version.txt"):
     f=open(afdir+os.sep+"version.txt","w")
@@ -112,11 +119,52 @@ def retrieveFile(filename,destination=os.sep):
         filename = tmpFileName
         return filename
     return filename
-   
+
+def fixPath(adict, k, v):
+    for key in adict.keys():
+        if key == k:
+            if type(v) is list or type(v) is tuple:
+                adict[key]=adict[key].replace(v[0],v[1])
+            else :
+                adict[key] = v
+        elif type(adict[key]) is dict:
+            fixPath(adict[key], k, v)
+
+def updatePathJSON():
+    if not os.path.isfile(autopack_path_pref_file):
+        print (autopack_path_pref_file+" file is not found")
+        return
+    f=open(autopack_path_pref_file,"r")
+    pref_path = json.load(f)
+    f.close()
+    autoPACKserver=pref_path["autoPACKserver"]
+    replace_autoPACKserver[1]=autoPACKserver
+    if "autopackdir" in  pref_path:
+        if pref_path["autopackdir"] != "default" :
+            autopackdir=pref_path["autopackdir"]
+            replace_autopackdir[1]=pref_path["autopackdir"]
+            
+def updatePath():
+    #now get it
+    fileName, fileExtension = os.path.splitext(autopack_path_pref_file)
+    if fileExtension.lower() == ".xml":
+        pass#updateRecipAvailableXML(recipesfile)
+    elif fileExtension.lower() == ".json":
+        updatePathJSON()
+            
+def checkPath():
+    fname = autoPACKserver+"/autoPACK_filePaths.json"
+    try :
+        import urllib.request as urllib# , urllib.parse, urllib.error
+    except :
+        import urllib
+    if checkURL(fname):
+        urllib.urlretrieve(fname, autopack_path_pref_file)
+       
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
 #    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
-    fname = "http://autofill.googlecode.com/git/data/recipe_available.xml"
+    fname = autoPACKserver+"/autopack_recipe.xml"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :
@@ -124,7 +172,15 @@ def checkRecipeAvailable():
     if checkURL(fname):
         urllib.urlretrieve(fname, recipe_web_pref_file)
     
-def updateRecipAvailable(recipesfile):
+def updateRecipAvailableJSON(recipesfile):
+    if not os.path.isfile(recipesfile):
+        return
+    #replace shortcut pathby hard path
+    f=open(recipesfile,"r")
+    RECIPES=json.load(f) 
+    f.close()
+    
+def updateRecipAvailableXML(recipesfile):
     if not os.path.isfile(recipesfile):
         return
     from xml.dom.minidom import parse
@@ -156,6 +212,17 @@ def updateRecipAvailable(recipesfile):
                     text = afdir+os.sep+text
                 RECIPES[name][version][info] = str(text)
 
+def updateRecipAvailable(recipesfile):
+    #check format xml or json
+    fileName, fileExtension = os.path.splitext(recipesfile)
+    if fileExtension.lower() == ".xml":
+        updateRecipAvailableXML(recipesfile)
+    elif fileExtension.lower() == ".json":
+        updateRecipAvailableJSON(recipesfile)
+    fixPath(RECIPES,"setupfile",replace_autoPACKserver)
+    fixPath(RECIPES,"wrkdir",replace_autopackdir)
+    fixPath(RECIPES,"resultfile",replace_autoPACKserver)
+    
 def saveRecipeAvailable(recipe_dictionary,recipefile):
     from xml.dom.minidom import getDOMImplementation
     impl = getDOMImplementation()
@@ -175,9 +242,16 @@ def saveRecipeAvailable(recipe_dictionary,recipefile):
     f = open(recipefile,"w")        
     XML.writexml(f, indent="\t", addindent="", newl="\n")
     f.close()
+
+def saveRecipeAvailableJSON(recipe_dictionary,filename):
+    with open(filename, 'w') as fp :#doesnt work with symbol link ?
+        json.dump(recipe_dictionary,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
     
 #we should read a file to fill the RECIPE Dictionary so we can add some and write/save setup 
 #afdir  or user_pref
+if checkAtstartup :
+    checkPath()
+updatePathJSON()
 if checkAtstartup :
     checkRecipeAvailable()
 updateRecipAvailable(recipe_web_pref_file)

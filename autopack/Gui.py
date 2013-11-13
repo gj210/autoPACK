@@ -3201,7 +3201,7 @@ class AutoPackGui(uiadaptor):
         #elemFrame.append([self.WidgetViewer["forceFetchRecipe"],])
         
         elemFrame.append([self.WidgetViewer["make"],self.WidgetViewer["labelmake"],])
-        frame = self._addLayout(id=196,name="Viewer",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
+        frame = self._addLayout(id=196,name="View",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
         self._layout.append(frame)
 
         elemFrame=[]
@@ -3209,14 +3209,14 @@ class AutoPackGui(uiadaptor):
         elemFrame.append([self.WidgetFiller["labelRversion"],self.WidgetFiller["recipeversion"]])
         elemFrame.append([self.WidgetFiller["forceFetch"],])
         elemFrame.append([self.WidgetFiller["Startf"],self.WidgetFiller["labelstart"],])
-        frame = self._addLayout(id=196,name="Filler",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
+        frame = self._addLayout(id=196,name="Pack",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
         #if self.helper.host.find("blender") == -1:
         self._layout.append(frame)
 
         elemFrame=[]
         elemFrame.append([self.WidgetBuilder["CreateIngr"],])
         elemFrame.append([self.WidgetBuilder["CreateRec"],])
-        frame = self._addLayout(id=196,name="Builder",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
+        frame = self._addLayout(id=196,name="Build",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
         #if self.helper.host.find("blender") == -1:
         self._layout.append(frame)
         
@@ -3233,6 +3233,8 @@ class AutoPackGui(uiadaptor):
 
 
     def UpdateRecipesList(self,*args):
+        autopack.checkPath()
+        autopack.updatePathJSON()
         autopack.checkRecipeAvailable()
         autopack.updateRecipAvailable(autopack.recipe_web_pref_file)
         autopack.updateRecipAvailable(autopack.recipe_user_pref_file)

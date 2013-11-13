@@ -1,9 +1,16 @@
 <?xml version="1.0" ?>
-<autoPACK_FilePaths name="autoPACK_FilePaths">
+<autoPACK_FilePaths>
 	<paths
-        autoPackDataBasePath="http://autofill.googlecode.com/svn/dataRight/"
-        localDataBase=""
-        recipesData=autoPackDataBasePath+recipeName+"/"
+        autoPACKserver="http://autofill.googlecode.com/git/"
+        autoPackDataRightBasePath="http://autofill.googlecode.com/git/dataRight/"
+        autoPackDataLeftBasePath="http://autofill.googlecode.com/git/data/"
+        autoPackDataBasePath="http://autofill.googlecode.com/git/data/"
+        localDataBase="autopackdir/"
+    />
+</autoPACK_FilePaths>
+<!--
+this part should go in the recipe 
+recipesData=autoPackDataBasePath+recipeName+"/"
             resultsAprPath   = recipesData+"Results/autoPACK_ResultFiles/"
             recipesPath         = recipesData+"Recipes/HybridFiles/"
             componentsPath      = recipesData+"Components/"
@@ -18,6 +25,4 @@
                     componentsOtherDataPath         = componentsDataPath+"OtherData/"
                     componentsPackingSurfacesPath   = componentsDataPath+"PackingSurfaces/"
                     componentsPDBsPath              = componentsDataPath+"PDBs/"
-                    componentsVolumeMapsPath        = componentsDataPath+"VolumeMaps/"
-    />
-</autoPACK_FilePaths>
+                    componentsVolumeMapsPath        = componentsDataPath+"VolumeMaps/"-->
