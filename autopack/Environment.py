@@ -1748,6 +1748,10 @@ h1 = Environment()
         """
         Save the current grid and the compartment grid information in a file. (pickle) 
         """
+        d = os.path.dirname(gridFileOut)
+        if not os.path.exists(d):
+            print ("gridfilename path problem",gridFileOut)
+            return
         f = open(gridFileOut, 'wb')#'w'
         self.writeArraysToFile(f) #save self.gridPtId and self.distToClosestSurf
         

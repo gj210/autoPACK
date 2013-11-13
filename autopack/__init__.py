@@ -65,7 +65,7 @@ replace_autopackdir=["autopackdir",afdir]
 #we need to parse autoPACK_filePaths.xml or json to update theses path....?
 #instead of hard coded
 
-recipe_web_pref_file = afdir+os.sep+"recipe_available.xml"
+recipe_web_pref_file = afdir+os.sep+"recipe_available.json"
 recipe_user_pref_file = afdir+os.sep+"user_recipe_available.xml"
 autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
 
@@ -83,7 +83,9 @@ info_dic = ["setupfile","resultfile","wrkdir"]
 #change the result access to online in recipe_available.xml
 
 #hard code recipe here is possible
-RECIPES = {
+global RECIPES
+RECIPES = {}
+# = {
 #"Test_CylindersSpheres2D":{
 #    "1.0":
 #    {
@@ -92,7 +94,7 @@ RECIPES = {
 #    "wrkdir":afdir+os.sep+"autoFillRecipeScripts"+os.sep+"2DcylinderSphereFill"
 #    }
 #}
-}
+
 
 USER_RECIPES={}
 
@@ -121,7 +123,7 @@ def retrieveFile(filename,destination=os.sep):
     return filename
 
 def fixPath(adict, k, v):
-    for key in adict.keys():
+    for key in list(adict.keys()):
         if key == k:
             if type(v) is list or type(v) is tuple:
                 adict[key]=adict[key].replace(v[0],v[1])
@@ -160,6 +162,8 @@ def checkPath():
         import urllib
     if checkURL(fname):
         urllib.urlretrieve(fname, autopack_path_pref_file)
+    else :
+        print ("problem accessing "+fname)
        
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
@@ -171,14 +175,19 @@ def checkRecipeAvailable():
         import urllib
     if checkURL(fname):
         urllib.urlretrieve(fname, recipe_web_pref_file)
-    
+    else :
+        print ("problem accessing "+fname)
+        
 def updateRecipAvailableJSON(recipesfile):
     if not os.path.isfile(recipesfile):
+        print (recipesfile+" was not found")
         return
     #replace shortcut pathby hard path
     f=open(recipesfile,"r")
-    RECIPES=json.load(f) 
+    recipes=json.load(f) 
     f.close()
+    RECIPES.update(recipes)
+    print ("recipes updated "+str(len(RECIPES)))
     
 def updateRecipAvailableXML(recipesfile):
     if not os.path.isfile(recipesfile):
@@ -211,8 +220,11 @@ def updateRecipAvailableXML(recipesfile):
                 if text[0] != "/" and text.find("http") == -1:
                     text = afdir+os.sep+text
                 RECIPES[name][version][info] = str(text)
-
+    print ("recipes updated "+str(len(RECIPES)))
+    
 def updateRecipAvailable(recipesfile):
+    if not os.path.isfile(recipesfile):
+        return
     #check format xml or json
     fileName, fileExtension = os.path.splitext(recipesfile)
     if fileExtension.lower() == ".xml":
@@ -222,6 +234,7 @@ def updateRecipAvailable(recipesfile):
     fixPath(RECIPES,"setupfile",replace_autoPACKserver)
     fixPath(RECIPES,"wrkdir",replace_autopackdir)
     fixPath(RECIPES,"resultfile",replace_autoPACKserver)
+    print ("recipes updated and path fixed "+str(len(RECIPES)))
     
 def saveRecipeAvailable(recipe_dictionary,recipefile):
     from xml.dom.minidom import getDOMImplementation
@@ -252,11 +265,13 @@ def saveRecipeAvailableJSON(recipe_dictionary,filename):
 if checkAtstartup :
     checkPath()
 updatePathJSON()
+print ("path are updated ")
+
 if checkAtstartup :
     checkRecipeAvailable()
 updateRecipAvailable(recipe_web_pref_file)
 updateRecipAvailable(recipe_user_pref_file)
-
+print ("currently nb recipes is "+str(len(RECIPES)))
 #check cach directory create if doesnt exit.abs//should be in user pref?
 wkr = afdir
 #in the preefined working directory

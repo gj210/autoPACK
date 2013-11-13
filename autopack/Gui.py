@@ -3097,7 +3097,7 @@ class AutoPackGui(uiadaptor):
         self.WidgetViewer["labelRversion"]=self._addElemt(name="labelRversion",
                                                 label="Recipe version",width=120,height=10)
         self.WidgetViewer["recipeversion"] = self._addElemt(name="rversion",
-                                    value=list(self.recipe_available["HIV"].keys()),
+                                    value=[],#list(self.recipe_available["HIV"].keys()),
                                     width=180,height=10,action=self.setRVersion,
                                     variable=self.addVariable("int",0),
                                     type="pullMenu",)
