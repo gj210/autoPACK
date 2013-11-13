@@ -164,7 +164,7 @@ def checkPath():
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
 #    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
-    fname = autoPACKserver+"/autopack_recipe.xml"
+    fname = autoPACKserver+"/autopack_recipe.json"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :
