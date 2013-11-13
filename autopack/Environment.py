@@ -1952,7 +1952,13 @@ h1 = Environment()
         Given an ingredient name and a recipe, retrieve the ingredient object instance
         """
         if r :
+            #check if name start with comp name
+            #backward compatibility
+            #print name,r.name
+            if name.find(r.name) == -1 :
+                name = r.name+"__"+name
             for ingr in r.ingredients:
+                #print ingr.name
                 if name == ingr.name :
                     return ingr
             for ingr in r.exclude:
@@ -3660,6 +3666,7 @@ h1 = Environment()
         molecules=[]
         for elem in result :
             pos,rot,name,compNum,ptInd = elem
+            #needto check the name if it got the comp rule
             ingr = self.getIngrFromName(name,compNum)
             if ingr is not None:
                 molecules.append([pos, rot, ingr, ptInd])
@@ -3732,16 +3739,16 @@ h1 = Environment()
         #OR 
         #pos, rot, ingr, ptInd = self.molecules
         #pos,rot,ingr.name,ingr.compNum,ptInd
-        orgaresult=[]
-        freePoint=[]
-        for i, orga in enumerate(self.compartments):
-            orfile = open(resultfilename+"ogra"+str(i),'rb')
-            orgaresult.append(pickle.load(orfile))
-            orfile.close()
-        if restore_grid :
-            freePoint = self.loadFreePoint(resultfilename)
-            self.restoreGridFromFile(resultfilename+"grid")#restore grid distance and ptId
-        return result,orgaresult,freePoint
+#        orgaresult=[]
+#        freePoint=[]
+#        for i, orga in enumerate(self.compartments):
+#            orfile = open(resultfilename+"ogra"+str(i),'rb')
+#            orgaresult.append(pickle.load(orfile))
+#            orfile.close()
+#        if restore_grid :
+#            freePoint = self.loadFreePoint(resultfilename)
+#            self.restoreGridFromFile(resultfilename+"grid")#restore grid distance and ptId
+#        return result,orgaresult,freePoint
     
     def loadFreePoint(self,resultfilename):
         rfile = open(resultfilename+"freePoints",'rb')
