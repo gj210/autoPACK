@@ -99,7 +99,7 @@
     },
     "Test_Spheres2Dgradients": {
         "1.0": {
-            "setupfile": "autoPACKserver/data/Test_Spheres2Dgradients/recipe/Test_Spheres2DGradients1.0.xml",
+            "setupfile": "autoPACKserver/data/Test_Spheres2Dgradients/recipe/Test_Spheres2Dgradients1.0.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/2DsphereFill",
             "resultfile": "autoPACKserver/data/Test_Spheres2Dgradients/results/SphereGradientResult.apr"
         }
