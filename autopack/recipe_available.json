@@ -1,0 +1,150 @@
+{
+    "BloodSerum": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/BloodSerum/recipe/BloodSerum1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/BloodSerum",
+            "resultfile": "autoPACKserver/data/BloodSerum/results/BloodSerumfillResult.apr"
+        }
+    },
+    "HIV": {
+        "1.4": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.4.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_4.apr"
+        },
+        "1.0": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_0.apr"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_1.apr"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_2.apr"
+        },
+        "1.3": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.3.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_3.apr"
+        }
+    },
+    "planeWave": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/planeWave/planeWave1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/planeWave",
+            "resultfile": "autoPACKserver/data/planeWave/results/planeWave.apr.json"
+        }
+    },
+    "GeometricCellScape": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/GeometricCellScape/recipe/GeometricCellScape1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/GeometricCellScape",
+            "resultfile": "autoPACKserver/data/GeometricCellScape/results/GeometricCellScapeResult.apr"
+        }
+    },
+    "Test_CylindersSpheres2D": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/2DcylinderSphereFill/recipe/Test_CylindersSpheres2D1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/2DcylinderSphereFill",
+            "resultfile": "autoPACKserver/data/2DcylinderSphereFill/results/CylSpherefillResult.apr"
+        }
+    },
+    "GenericCytoplasm": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/GenericCytoplasm/recipe/GenericCytoplasm1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/GenericCytoplasm",
+            "resultfile": "autopackdir/autoFillRecipeScripts/GenericCytoplasm/results/GenericCytoplasmfillResult.apr"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/GenericCytoplasm/recipe/GenericCytoplasm1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/GenericCytoplasm",
+            "resultfile": "http://mgldev.scripps.edu/projects/AF/datas/GenericCytoplasm/results/GenericCytoplasmPACKResult.apr"
+        }
+    },
+    "Mycoplasma": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/Mycoplasma/recipe/Mycoplasma1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Mycoplasma",
+            "resultfile": "autoPACKserver/data/Mycoplasma/results/MycoplasmaPackResult.json"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/Mycoplasma/recipe/Mycoplasma1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Mycoplasma",
+            "resultfile": "autoPACKserver/data/Mycoplasma/results/MycoplasmaPackResult_2.json"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/data/Mycoplasma/recipe/Mycoplasma1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Mycoplasma",
+            "resultfile": "autoPACKserver/data/Mycoplasma/results/MycoplasmaPackResult_3.json"
+        }
+    },
+    "Lipids": {
+        "0.0": {
+            "setupfile": "autoPACKserver/data/Lipids/recipe/Lipids0.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Lipids",
+            "resultfile": "autoPACKserver/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr"
+        }
+    },
+    "HIVLipids": {
+        "0.1": {
+            "setupfile": "autoPACKserver/data/HIVLipids/recipe/HIVLipids0.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Lipids",
+            "resultfile": "autoPACKserver/data/HIV/results/HIV_1.3-1.4_LipidBilayerfrom1.2_Test.apr"
+        }
+    },
+    "Test_Spheres2Dgradients": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/Test_Spheres2Dgradients/recipe/Test_Spheres2Dgradients1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/2DsphereFill",
+            "resultfile": "autoPACKserver/data/Test_Spheres2Dgradients/results/SphereGradientResult.apr"
+        }
+    },
+    "HIVBloodSerum": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/HIVBloodSerum/recipe/HIVBloodSerum1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIVBloodSerum",
+            "resultfile": "autoPACKserver/data/HIVBloodSerum/results/HIVBloodSerum_1_0.apr"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/HIVBloodSerum/recipe/HIVBloodSerum1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIVBloodSerum",
+            "resultfile": "autoPACKserver/data/HIVBloodSerum/results/HIVBloodSerum_1_1.apr"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/data/HIVBloodSerum/recipe/HIVBloodSerum1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIVBloodSerum",
+            "resultfile": "autoPACKserver/data/HIVBloodSerum/results/HIVBloodSerum_1_2.apr"
+        }
+    },
+    "Test_Spheres2D": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/Test_Spheres2D/recipe/Test_Spheres2D1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/2DsphereFill",
+            "resultfile": "autoPACKserver/data/Test_Spheres2D/results/SpherefillResult.apr"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/Test_Spheres2D/recipe/Test_Spheres2D1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/2DsphereFill",
+            "resultfile": "autoPACKserver/data/Test_Spheres2D/results/SpherefillResult.apr"
+        }
+    },
+    "Test_Cubes2D": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/Test_Cubes2D/recipe/Test_Cubes2D1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/Test_Cubes2D",
+            "resultfile": "autoPACKserver/data/Test_Cubes2D/results/CubesResult.apr"
+        }
+    },
+    "NM_Analysis_Figure": {
+        "1.0": {
+            "setupfile": "autoPackDataRightBasePath/NatureMethodsFigures/recipes/NM_Analysis_Figure1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
+            "resultfile": "autoPackDataRightBasePath/NatureMethodsFigures/results/NManalysisFigure1.apr"
+        }
+    },
+}
