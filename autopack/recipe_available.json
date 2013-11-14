@@ -139,12 +139,5 @@
             "wrkdir": "autopackdir/autoFillRecipeScripts/Test_Cubes2D",
             "resultfile": "autoPACKserver/data/Test_Cubes2D/results/CubesResult.apr"
         }
-    },
-    "NM_Analysis_Figure": {
-        "1.0": {
-            "setupfile": "autoPackDataRightBasePath/NatureMethodsFigures/recipes/NM_Analysis_Figure1.0.xml",
-            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
-            "resultfile": "autoPackDataRightBasePath/NatureMethodsFigures/results/NManalysisFigure1.apr"
-        }
-    },
+    }
 }
