@@ -1357,6 +1357,8 @@ class Ingredient(Agent):
             print ("retrieve ",geomname,o)
             if o is not None :
                 return o
+        #test filname for autopack.keywords
+        filename=autopack.fixOnePath(filename)
         if filename.find("http") != -1 or filename.find("ftp")!= -1 :
             try :
                 import urllib.request as urllib# , urllib.parse, urllib.error
@@ -7949,7 +7951,9 @@ class IOingredientTool:
             f=str(inode.getAttribute("include"))
             if f != '':
                 filename = str(f)
+
         if filename is not None :
+            filename=autopack.fixOnePath(filename)
             if filename.find("http") != -1 or filename.find("ftp")!= -1 :
                 name = filename.split("/")[-1]
                 tmpFileName = AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients"+os.sep+name

@@ -62,6 +62,8 @@ autoPACKserver="http://autofill.googlecode.com/git"
 replace_autoPACKserver=["autoPACKserver","http://autofill.googlecode.com/git"]
 autopackdir=afdir
 replace_autopackdir=["autopackdir",afdir]
+replace_path=[replace_autoPACKserver,replace_autopackdir]
+
 #we need to parse autoPACK_filePaths.xml or json to update theses path....?
 #instead of hard coded
 
@@ -121,6 +123,11 @@ def retrieveFile(filename,destination=os.sep):
         filename = tmpFileName
         return filename
     return filename
+
+def fixOnePath(path):
+    for v in replace_path:
+        path=path.replace(v[0],v[1])
+    return path
 
 def fixPath(adict, k, v):
     for key in list(adict.keys()):
