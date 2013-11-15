@@ -66,7 +66,7 @@ replace_autopackdir=["autopackdir",afdir]
 #instead of hard coded
 
 recipe_web_pref_file = afdir+os.sep+"recipe_available.json"
-recipe_user_pref_file = afdir+os.sep+"user_recipe_available.xml"
+recipe_user_pref_file = afdir+os.sep+"user_recipe_available.json"
 autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
 
 if not os.path.isfile(afdir+os.sep+"version.txt"):
