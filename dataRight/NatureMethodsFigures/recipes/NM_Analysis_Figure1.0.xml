@@ -8,6 +8,7 @@
 	</gradients>
 	<grid grid_result="None" grid_storage="None"/>
 	<cytoplasme>
+    <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Cyl_Rad25_1.xml"/>
 	<ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Sphere_Rad25_1.xml"/>
 	<ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Sphere_Rad25_2.xml"/>
 	</cytoplasme>
