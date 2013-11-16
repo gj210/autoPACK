@@ -1,0 +1,3 @@
+<?xml version="1.0" ?>
+
+	<ingredient Type="MultiCylinder" color="[0.85799999999999998, 0.4699999988079071, 0.10599999874830246]" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1.0, 1.0, 0.0)" molarity="0.001" name="Cyl_Rad50_2" nbJitter="10" nbMol="30" packingMode="random" packingPriority="0" perturbAxisAmplitude="0.1" placeType="jitter" positions="[[[0, -50.0, 0]]]" positions2="[[[0, 50.0, 0]]]" principalVector="(0, 1, 0)" radii="[[50]]" rotAxis="(0.0, 0.0, 1.0)" useRotAxis="True" useLength="False" encapsulatingRadius="400" use_mesh_rb="False"/>

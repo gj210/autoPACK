@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+	<autopackSetup name="NManalysisFigure1">
+	<options EnviroOnly="False" _hackFreepts="False" _timer="False" boundingBox="[[-500.0, -500.0, -0.5], [500.0, 500.0, 0.5]]" cancelDialog="False" computeGridParams="True" freePtsUpdateThrehod="0.0" gradients="['gR']" ingrLookForNeighbours="False" innerGridMethod="bhtree" largestProteinSize="200" overwritePlaceMethod="True" pickRandPt="True" pickWeightedIngr="True" placeMethod="pandaBullet" resultfile="autoPackDataRightBasePath/NatureMethodsFigures/results/NManalysisFigure1.apr" runTimeDisplay="False" saveResult="False" smallestProteinSize="15" use_gradient="True" windowsSize="10.0"/>
+	<gradients>
+	<gradient description="" direction="[-200.0, -200.0, 0.0]" gblob="4.0" mode="radial" name="gR" pick_mode="rnd" radius="400.0" weight_mode="square"/>
+	<gradient description="" direction="[0.5, 0.5, 0.0]" gblob="4.0" mode="Y" name="gY" pick_mode="rnd" radius="10.0" weight_mode="gauss"/>
+	<gradient description="" direction="[1.0, 0.0, 0.0]" gblob="4.0" mode="X" name="gX" pick_mode="rnd" radius="10.0" weight_mode="gauss"/>
+	</gradients>
+	<grid grid_result="None" grid_storage="None"/>
+    
+	<cytoplasme>
+        <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Cyl_Rad25_1.xml"/>
+        <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Sphere_Rad25_1.xml"/>
+        <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Sphere_Rad25_2.xml"/>
+        
+        <!-- added 11/15/13 by Andy-->
+        <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Sphere_Rad40_3.xml"/>
+        <ingredient include="autoPACKserver/dataRight/NatureMethodsFigures/ingredients/Cyl_Rad50_2.xml"/>
+        
+        
+        <ingredient Type="MultiSphere" cutoff_boundary="0" cutoff_surface="0" gradient="" jitterMax="(1, 1, 1)" meshFile="http://autofill.googlecode.com/svn/data/HIV/geoms/Cyt_3dcg.dae" molarity="6.2e-05" name="Cyt_3dcg" nbJitter="5" nbMol="19" packingMode="random" packingPriority="0.106402837409" pdb="3dcg" perturbAxisAmplitude="0.1" placeType="jitter" positions="[[(-0.0, -0.0, 0.0)]]" principalVector="(1, 0, 0)" radii="[[30.359999999999999]]" sphereFile="http://grahamj.com/autofill/autoFillData/HIV/HIV_0_0_1/HIVsph/3dcg_1.sph"/>
+
+
+	</cytoplasme>
+	</autopackSetup>
