@@ -8087,7 +8087,7 @@ class IOingredientTool:
         elif kw["Type"]=="Grow":
             ingr = GrowIngrediant(**kw)                    
         elif kw["Type"]=="Actine":
-            ingr = ActineIngrediant(**kw)       
+            ingr = ActinIngrediant(**kw)       
         if "gradient" in kw and kw["gradient"] != "" and kw["gradient"]!= "None":
             ingr.gradient = kw["gradient"]           
         return ingr    
