@@ -2240,8 +2240,12 @@ class SubdialogViewer(uiadaptor):
         if len(self.histoVol.ingr_result):# is not None :
             self.ingredients =self.histoVol.ingr_result
             return
-        fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
-        print ("loadResult ",fname,) 
+        try :
+            fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
+        except :
+            fname = self.histoVol.resultfile
+        fname = autopack.fixOnePath(fname)
+        print ("loadResult ",fname,self.recipe,self.recipe_version) 
         if fname.find("http") != -1 or fname.find("ftp") != -1:
             #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
             name =   fname.split("/")[-1]
@@ -2947,6 +2951,7 @@ class AutoPackGui(uiadaptor):
             vi = kw["vi"]
         self.helper = upy.getHelperClass()(vi=vi)
         autopack.helper = self.helper
+        print autopack.helper.getCurrentScene()
         self.histoVol={}
         self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
@@ -2997,12 +3002,13 @@ class AutoPackGui(uiadaptor):
         return draw
         
     def onlinMessage(self,*args):
-        URI="http://autofill.googlecode.com/svn/data/message"
+        URI=autopack.autoPACKserver+"/data/message"
         urllib.urlcleanup()
         if checkURL(URI) :
             response = urllib.urlopen(URI)
             html = response.read().decode("utf-8", "strict") 
             if html !='' :
+                print (html)
                 if self.compareMessage(html):
                     self.drawMessage(title='Message',
                                      message=html)
@@ -3645,6 +3651,8 @@ Copyright: Graham Johnson ©2010
         #should drawhe dialog for the seleced recipe
         recipe = self.getVal(self.WidgetViewer["menuscene"]) 
         version = self.getVal(self.WidgetViewer["recipeversion"])
+        if version is None :
+            version = "1.0"
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"]) 
         if self.host.find("blender") != -1 :
             self.helper.dupliVert = self.getVal(self.use_dupli_vert)

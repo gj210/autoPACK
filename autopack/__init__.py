@@ -60,7 +60,7 @@ Please update to the latest version under the Help menu.
 '''
 autoPACKserver="http://autofill.googlecode.com/git"
 replace_autoPACKserver=["autoPACKserver","http://autofill.googlecode.com/git"]
-autopackdir=afdir
+autopackdir=str(afdir)#copy
 replace_autopackdir=["autopackdir",afdir]
 replace_path=[replace_autoPACKserver,replace_autopackdir]
 
@@ -105,8 +105,9 @@ def checkURL(URL):
     return response.code != 404
  
 def retrieveFile(filename,destination=os.sep):
+    filename=autopack.fixOnePath(filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
-        name = filename.split("/")[-1]
+        name = filename.split("/")[-1]#the recipe name
         tmpFileName = afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination+name
         if not os.path.exists(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination):
 		    os.makedirs(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination)
@@ -121,10 +122,10 @@ def retrieveFile(filename,destination=os.sep):
         return filename
     return filename
 
-def fixOnePath(path):
+def fixOnePath(p):
     for v in replace_path:
-        path=path.replace(v[0],v[1])
-    return path
+        p=p.replace(v[0],v[1])
+    return p
 
 def fixPath(adict, k, v):
     for key in list(adict.keys()):

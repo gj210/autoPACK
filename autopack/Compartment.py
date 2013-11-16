@@ -268,6 +268,8 @@ class  Compartment(CompartmentList):
             gname =rep 
             if helper is not None :parent=helper.getObject('O%s'%self.name)
         #print ("organelle",filename,gname,rep)
+        filename=autopack.fixOnePath(filename)
+        print ("filename compartements is",filename,type(filename))
         if filename.find("http") != -1 or filename.find("ftp")!= -1 :
             try :
                 import urllib.request as urllib# , urllib.parse, urllib.error

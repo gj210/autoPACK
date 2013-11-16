@@ -423,6 +423,7 @@ def getSpheres(sphereFile):
     reporthook = None
     if helper is not None:        
         reporthook=helper.reporthook
+    sphereFile=autopack.fixOnePath(sphereFile)
     print ("sphereFile ",sphereFile)
     if sphereFile.find("http") != -1 or sphereFile.find("ftp")!= -1 :
         name = sphereFile.split("/")[-1]
@@ -1151,6 +1152,7 @@ class Ingredient(Agent):
         reporthook = None
         if helper is not None:        
             reporthook=helper.reporthook
+        sphereFile=autopack.fixOnePath(sphereFile)
         print ("sphereFile ",sphereFile)
         if sphereFile.find("http") != -1 or sphereFile.find("ftp")!= -1 :
             name = sphereFile.split("/")[-1]
@@ -1402,9 +1404,13 @@ class Ingredient(Agent):
                         urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)#hook_cb ->progress bar TODO
                     else :
                         print ("problem downloading "+filename)
-                        if not os.path.isfile(tmpFileName):
-                            return
-            filename = tmpFileName 
+                    if not os.path.isfile(tmpFileName):
+                        print ("problem with "+tmpFileName)
+                        return
+            filename = tmpFileName  
+        if not os.path.isfile(filename):
+            print ("problem with "+filename)
+            return
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
         if fileExtension.lower() == ".fbx" :
@@ -1461,9 +1467,9 @@ class Ingredient(Agent):
                     geom = helper.createsNmesh(geomname,v,None,f)[0]
                     return geom
                 helper.read(filename)
+#                helper.update()
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
-#                helper.update()
                 #rotate ?
                 if helper.host == "3dsmax" or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing??maybe not?
