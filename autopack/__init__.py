@@ -281,6 +281,8 @@ updateRecipAvailable(recipe_web_pref_file)
 updateRecipAvailable(recipe_user_pref_file)
 print ("currently nb recipes is "+str(len(RECIPES)))
 #check cach directory create if doesnt exit.abs//should be in user pref?
+
+#need a distinction between autopackdir and cachdir
 wkr = afdir
 #in the preefined working directory
 cache = wkr+os.sep+"cache_results"
