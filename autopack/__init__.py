@@ -64,6 +64,8 @@ autopackdir=str(afdir)#copy
 replace_autopackdir=["autopackdir",afdir]
 replace_path=[replace_autoPACKserver,replace_autopackdir]
 
+#we have to change the name of theses files. and decide how to handle the 
+#currated recipeList, and the dev recipeList
 recipe_web_pref_file = afdir+os.sep+"recipe_available.json"
 recipe_user_pref_file = afdir+os.sep+"user_recipe_available.json"
 autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
