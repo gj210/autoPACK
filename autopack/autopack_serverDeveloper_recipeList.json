@@ -23,7 +23,7 @@
             "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_1.apr"
         },
         "1.2": {
-            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.2.xml",
+            "setupfile": "autoPACKserver/dataRight/HIV/Recipes/HIV1.2.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
             "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_2.apr"
         },
