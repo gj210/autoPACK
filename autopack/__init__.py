@@ -69,6 +69,7 @@ replace_path=[replace_autoPACKserver,replace_autopackdir]
 #same for output and write theses file see below for the cache directories
 recipe_web_pref_file = afdir+os.sep+"recipe_available.json"
 recipe_user_pref_file = afdir+os.sep+"user_recipe_available.json"
+recipe_dev_pref_file = afdir+os.sep+"autopack_serverDeveloper_recipeList.json"
 autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
 
 if not os.path.isfile(afdir+os.sep+"version.txt"):
@@ -279,6 +280,8 @@ if checkAtstartup :
     checkRecipeAvailable()
 updateRecipAvailable(recipe_web_pref_file)
 updateRecipAvailable(recipe_user_pref_file)
+updateRecipAvailable(recipe_dev_pref_file)
+
 print ("currently nb recipes is "+str(len(RECIPES)))
 #check cach directory create if doesnt exit.abs//should be in user pref?
 #?
