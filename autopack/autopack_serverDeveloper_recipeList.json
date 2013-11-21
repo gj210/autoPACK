@@ -15,12 +15,12 @@
         "1.0": {
             "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.0.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
-            "resultfile": "http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_0.apr"
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_0.apr"
         },
         "1.1": {
             "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.1.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
-            "resultfile": "http://grahamj.com/autofill/autoFillData/HIV/HIV_resultFiles/HIVresult_1_1.apr"
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_1.apr"
         },
         "1.2": {
             "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.2.xml",
@@ -144,10 +144,10 @@
         "1.0": {
             "setupfile": "autoPACKserver/dataRight/NatureMethodsFigures/recipes/NM_Analysis_Figure1.0.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
-            "resultfile": "autoPACKserver/dataRight/NatureMethodsFigures/results/NManalysisFigure1.apr"
+            "resultfile": "autoPACKserver/dataRight/NatureMethodsFigures/results/NManalysisFigure1.0.apr"
         },
         "1.1": {
-            "setupfile": "/Users/grahamold/Dev/autoPACK_master/dataRight/NatureMethodsFigures/recipes/NM_Analysis_Figure1.1.xml",
+            "setupfile": "autoPACKserver/dataRight/NatureMethodsFigures/recipes/NM_Analysis_Figure1.1.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
             "resultfile": "autoPACKserver/dataRight/NatureMethodsFigures/results/NManalysisFigure1.1.apr"
         }
