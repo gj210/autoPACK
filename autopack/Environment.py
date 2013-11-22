@@ -1167,7 +1167,9 @@ class Environment(CompartmentList):
                 #check if multiple include filename, aumngo',' in the path
                 liste_xmlfile = ingredients_xmlfile.split(",")
                 for xmlf in liste_xmlfile :                    
-                    xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                    xmlfile = autopack.retrieveFile(xmlf,
+                            destination = self.name+os.sep+"recipe"+os.sep,
+                            cache="recipes")
                     if xmlfile :
                         xmlinclude = parse(xmlfile).documentElement
                         self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
@@ -1209,7 +1211,9 @@ class Environment(CompartmentList):
                     #check if multiple include filename, aumngo',' in the path
                     liste_xmlfile = ingredients_xmlfile.split(",")
                     for xmlf in liste_xmlfile :                    
-                        xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                        xmlfile = autopack.retrieveFile(xmlf,
+                                destination = self.name+os.sep+"recipe"+os.sep,
+                            cache="recipes")
                         if xmlfile :
                             xmlinclude = parse(xmlfile).documentElement
                             self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
@@ -1224,7 +1228,9 @@ class Environment(CompartmentList):
                     #check if multiple include filename, aumngo',' in the path
                     liste_xmlfile = ingredients_xmlfile.split(",")
                     for xmlf in liste_xmlfile :
-                        xmlfile = autopack.retrieveFile(xmlf,destination = self.name+os.sep+"recipe"+os.sep)
+                        xmlfile = autopack.retrieveFile(xmlf,
+                                destination = self.name+os.sep+"recipe"+os.sep,
+                            cache="recipes")
                         if xmlfile :
                             xmlinclude = parse(xmlfile).documentElement
                             self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)

@@ -407,74 +407,6 @@ vect1 and vect2 can be any vector (non-normalized)
 
     return rot
 
-def getSpheres(sphereFile):
-    """
-    get spherical approximation of shape
-    """
-    # file format is space separated
-    # float:Rmin float:Rmax
-    # int:number of levels
-    # int: number of spheres in first level
-    # x y z r i j k ...# first sphere in first level and 0-based indices
-                       # of spheres in next level covererd by this sphere
-    # ...
-    # int: number of spheres in second level
-    helper = autopack.helper
-    reporthook = None
-    if helper is not None:        
-        reporthook=helper.reporthook
-    sphereFile=autopack.fixOnePath(sphereFile)
-    print ("sphereFile ",sphereFile)
-    if sphereFile.find("http") != -1 or sphereFile.find("ftp")!= -1 :
-        name = sphereFile.split("/")[-1]
-        tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+"sphereTree"+os.sep+name
-        #check if exist first
-        if not os.path.isfile(tmpFileName) or autopack.forceFetch :
-            try :
-                import urllib.request as urllib
-            except :
-                import urllib
-            if checkURL(sphereFile):
-                urllib.urlretrieve(sphereFile, tmpFileName,reporthook=reporthook)
-            else :
-                if not os.path.isfile(tmpFileName)  :
-                    return  0, 0, [], [], []
-        sphereFile = tmpFileName    
-    f = open(sphereFile)
-    datao = f.readlines()
-    f.close()
-    
-    # strip comments
-    data = [x for x in datao if x[0]!='#' and len(x)>1]
-
-    rmin, rmax = list(map(float, data[0].split()))
-    nblevels = int(data[1])
-    radii = []
-    centers = []
-    children = []
-    line = 2
-    for level in range(nblevels):
-        rl = []
-        cl = []
-        ch = []
-        nbs = int(data[line])
-        line += 1
-        for n in range(nbs):
-            w = data[line].split()
-            x,y,z,r = list(map(float, w[:4]))
-            if level<nblevels-1: # get sub spheres indices
-                ch.append( list(map(int, w[4:])) )
-            cl.append( (x,y,z) )
-            rl.append( r )
-            line += 1
-        centers.append(cl)
-        radii.append(rl)
-        children.append(ch)
-
-    # we ignore the hierarchy for now
-    return rmin, rmax, centers, radii, children 
-
-
 def ApplyMatrix(coords,mat):
     """
     Apply the 4x4 transformation matrix to the given list of 3d points.
@@ -1148,27 +1080,7 @@ class Ingredient(Agent):
                            # of spheres in next level covererd by this sphere
         # ...
         # int: number of spheres in second level
-        helper = autopack.helper
-        reporthook = None
-        if helper is not None:        
-            reporthook=helper.reporthook
-        sphereFile=autopack.fixOnePath(sphereFile)
-        print ("sphereFile ",sphereFile)
-        if sphereFile.find("http") != -1 or sphereFile.find("ftp")!= -1 :
-            name = sphereFile.split("/")[-1]
-            tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+"sphereTree"+os.sep+name
-            #check if exist first
-            if not os.path.isfile(tmpFileName) or autopack.forceFetch :
-                try :
-                    import urllib.request as urllib
-                except :
-                    import urllib
-                if checkURL(sphereFile):
-                    urllib.urlretrieve(sphereFile, tmpFileName,reporthook=reporthook)
-                else :
-                    if not os.path.isfile(tmpFileName)  :
-                        return  0, 0, [], [], []
-            sphereFile = tmpFileName    
+        sphereFile = autopack.retrieveFile(sphereFile,cache="spheres") 
         f = open(sphereFile)
         datao = f.readlines()
         f.close()
@@ -1359,55 +1271,15 @@ class Ingredient(Agent):
             print ("retrieve ",geomname,o)
             if o is not None :
                 return o
-        #test filname for autopack.keywords
-        filename=autopack.fixOnePath(filename)
-        if filename.find("http") != -1 or filename.find("ftp")!= -1 :
-            try :
-                import urllib.request as urllib# , urllib.parse, urllib.error
-            except :
-                import urllib
-            name =   filename.split("/")[-1]
-            fileName, fileExtension = os.path.splitext(name)
-            tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
-#            print("try to get from cache "+name+" "+fileExtension,fileExtension.find(".fbx"),fileExtension.find(".dae"))
-            if fileExtension is '' :            
-#            if fileExtension.find(".fbx") == -1 and fileExtension.find(".dae") == -1:
-                #need to getboth file
-                tmpFileName1 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolface"
-                tmpFileName2 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolvert"
-#                print("#check if exist first1",tmpFileName1)
-                #check if exist first
-                if not os.path.isfile(tmpFileName1) or autopack.forceFetch:
-                    if checkURL(filename+".indpolface"):
-                        try :
-                            urllib.urlretrieve(filename+".indpolface", tmpFileName1,reporthook=reporthook)
-                        except :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                    else : 
-                        print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                        if not os.path.isfile(tmpFileName1): return
-                if not os.path.isfile(tmpFileName2) or autopack.forceFetch:
-                    if checkURL(filename+".indpolvert"):
-                        try :
-                            urllib.urlretrieve(filename+".indpolvert", tmpFileName2,reporthook=reporthook)
-                        except :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName2)
-                    else : 
-                        print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                        if not os.path.isfile(tmpFileName2): return
-            else :
-                tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
-#                print("#check if exist first",tmpFileName,os.path.isfile(tmpFileName))
-                if not os.path.isfile(tmpFileName) or autopack.forceFetch:
-#                    print("urlretrieve and fetch")
-                    if checkURL(filename):
-                        urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)#hook_cb ->progress bar TODO
-                    else :
-                        print ("problem downloading "+filename)
-                    if not os.path.isfile(tmpFileName):
-                        print ("problem with "+tmpFileName)
-                        return
-            filename = tmpFileName  
+        #identify extension
+        name =   filename.split("/")[-1]
+        fileName, fileExtension = os.path.splitext(name)
+        if fileExtension is '' :  
+            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
+            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
+            filename = os.path.splitext(tmpFileName1)[0]
+        else :
+            filename =autopack.retrieveFile(filename,cache="geoms")        
         if not os.path.isfile(filename):
             print ("problem with "+filename)
             return
@@ -7958,26 +7830,9 @@ class IOingredientTool:
             if f != '':
                 filename = str(f)
         if filename is not None :
-            filename=autopack.fixOnePath(filename)
-            if filename.find("http") != -1 or filename.find("ftp")!= -1 :
-                name = filename.split("/")[-1]
-                tmpFileName = AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients"+os.sep+name
-                #check the folder ingredients
-                if not os.path.exists(AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients"):
-                    os.makedirs(AFDIR+os.sep+"autopackRecipeScripts"+os.sep+recipe+os.sep+"ingredients")
-                #check if exist first
-                if not os.path.isfile(tmpFileName) or autopack.forceFetch :
-                    try :
-                        import urllib.request as urllib
-                    except :
-                        import urllib
-                    if checkURL(filename):
-                        urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
-                    else :
-                        if not os.path.isfile(tmpFileName)  :
-                            return  None
-                filename = tmpFileName
-            #url ? then where cache ?
+            filename=autopack.retrieveFile(filename,
+                            destination = recipe+os.sep+"recipe"+os.sep+"ingredients"+os.sep,
+                            cache="recipes")
             from xml.dom.minidom import parse
             xmlingr = parse(filename) # parse an XML file by name
             ingrnode = xmlingr.documentElement
