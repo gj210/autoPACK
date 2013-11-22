@@ -267,16 +267,19 @@ class  Compartment(CompartmentList):
         if rep is not None :
             gname =rep 
             if helper is not None :parent=helper.getObject('O%s'%self.name)
-        #print ("organelle",filename,gname,rep)
+        print ("compartments ",filename,gname,rep)
         #identify extension
-        name =   filename.split("/")[-1]
+        name = filename.split("/")[-1]
         fileName, fileExtension = os.path.splitext(name)
         if fileExtension is '' :  
             tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
             tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
             filename = os.path.splitext(tmpFileName1)[0]
         else :
-            filename =autopack.retrieveFile(filename,cache="geoms")        
+            filename =autopack.retrieveFile(filename,cache="geoms")  
+        if filename is None :
+            print ("problem with "+filename)
+            return            
         if not os.path.isfile(filename):
             print ("problem with "+filename)
             return
