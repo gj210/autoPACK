@@ -2244,30 +2244,13 @@ class SubdialogViewer(uiadaptor):
             fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
         except :
             fname = self.histoVol.resultfile
-        fname = autopack.fixOnePath(fname)
-        print ("loadResult ",fname,self.recipe,self.recipe_version) 
-        if fname.find("http") != -1 or fname.find("ftp") != -1:
-            #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
-            name =   fname.split("/")[-1]
-            tmpFileName = AFwrkDir1+os.sep+"cache_results"+os.sep+name
-            if not os.path.isfile(tmpFileName) or self.forceResult :
-                try :
-                    import urllib.request as urllib# , urllib.parse, urllib.error
-                except :
-                    import urllib
-                urllib.urlcleanup()
-                if checkURL(fname) :
-                    urllib.urlretrieve(fname, tmpFileName,reporthook=self.helper.reporthook)
-                else :
-                    tmpFileName = None
-            if self.build_grid :
-                self.fetchGridResult(fname,name)
-            fname = tmpFileName
-            #try to download the grid information?
+        fname = autopack.retrieveFile(fname,cache="results")
+        name =   fname.split("/")[-1]
+        if self.build_grid :
+            self.fetchGridResult(fname,name)
         print ("loadResult ",fname,os.path.isfile(fname))
         res = self.loadAPResult(fname)
         return res
-#            print (self.ingredients)
 
     def buildGrid(self,):
         bname = 'histoVolBB'
@@ -2964,7 +2947,7 @@ class AutoPackGui(uiadaptor):
         self.register = None
         if self.host != 'qt': # self.host != 'blender25' and
             self.checkRegistration()
-        self.server = "http://autofill.googlecode.com/svn/data/"
+        self.server = autopack.autoPACKserver
         #pop up message ?
         self.onlinMessage()
         
@@ -3544,38 +3527,42 @@ Copyright: Graham Johnson ©2010
         print (recipe,version)
         print (self.recipe_available[recipe][version]["setupfile"])        
         setupfile = self.recipe_available[recipe][version]["setupfile"]
-        if setupfile.find("http") != -1 or setupfile.find("ftp") != -1:
-            try :
-                import urllib.request as urllib# , urllib.parse, urllib.error
-            except :
-                import urllib
-            print ("setupfile to prepare",setupfile)
-            #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
-            name =   setupfile.split("/")[-1]
-            tmpFileName = self.recipe_available[recipe][version]["wrkdir"]+os.sep+name
-            if not os.path.isdir(self.recipe_available[recipe][version]["wrkdir"]) :
-                os.makedirs(self.recipe_available[recipe][version]["wrkdir"])                
-                os.makedirs(self.recipe_available[recipe][version]["wrkdir"]+os.sep+"ingredients")
-            if not os.path.isfile(tmpFileName) or forceRecipe :
-                urllib.urlcleanup()
-                if checkURL(setupfile) :
-                    urllib.urlretrieve(setupfile, tmpFileName,reporthook=self.helper.reporthook)
-                else :
-                    if not os.path.isfile(tmpFileName):
-                        print (" didnt found ",tmpFileName)
-                        return False
-            #this code is for Max to ensurehe xml file is there too
-            xmlfile = self.server+recipe+"/recipe/"+recipe+version+".xml"
-            tmpFileName2 = self.recipe_available[recipe][version]["wrkdir"]+os.sep+recipe+version+".xml"
-            if not os.path.isfile(tmpFileName2) or forceRecipe :
-                urllib.urlcleanup()
-                if checkURL(xmlfile) :
-                    urllib.urlretrieve(xmlfile, tmpFileName2,reporthook=self.helper.reporthook)
-                else :
-                    if not os.path.isfile(tmpFileName2):
-                        print (" didnt found ",tmpFileName2)
-                        return False
-            setupfile = tmpFileName
+        setupfile = autopack.retrieveFile(setupfile,
+                            destination = recipe+os.sep+"recipe"+os.sep,
+                            cache="recipes")        
+        
+#        if setupfile.find("http") != -1 or setupfile.find("ftp") != -1:
+#            try :
+#                import urllib.request as urllib# , urllib.parse, urllib.error
+#            except :
+#                import urllib
+#            print ("setupfile to prepare",setupfile)
+#            #http://grahamj.com/autofill/autoFillData/HIV/HIVresult_2_afr.afr
+#            name =   setupfile.split("/")[-1]
+#            tmpFileName = self.recipe_available[recipe][version]["wrkdir"]+os.sep+name
+#            if not os.path.isdir(self.recipe_available[recipe][version]["wrkdir"]) :
+#                os.makedirs(self.recipe_available[recipe][version]["wrkdir"])                
+#                os.makedirs(self.recipe_available[recipe][version]["wrkdir"]+os.sep+"ingredients")
+#            if not os.path.isfile(tmpFileName) or forceRecipe :
+#                urllib.urlcleanup()
+#                if checkURL(setupfile) :
+#                    urllib.urlretrieve(setupfile, tmpFileName,reporthook=self.helper.reporthook)
+#                else :
+#                    if not os.path.isfile(tmpFileName):
+#                        print (" didnt found ",tmpFileName)
+#                        return False
+#            #this code is for Max to ensurehe xml file is there too
+#            xmlfile = self.server+recipe+"/recipe/"+recipe+version+".xml"
+#            tmpFileName2 = self.recipe_available[recipe][version]["wrkdir"]+os.sep+recipe+version+".xml"
+#            if not os.path.isfile(tmpFileName2) or forceRecipe :
+#                urllib.urlcleanup()
+#                if checkURL(xmlfile) :
+#                    urllib.urlretrieve(xmlfile, tmpFileName2,reporthook=self.helper.reporthook)
+#                else :
+#                    if not os.path.isfile(tmpFileName2):
+#                        print (" didnt found ",tmpFileName2)
+#                        return False
+#            setupfile = tmpFileName
         fileName, fileExtension = os.path.splitext(setupfile)
         print("prepare fill with ",recipe,version,setupfile)
         if fileExtension == ".py":

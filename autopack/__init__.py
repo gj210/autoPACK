@@ -35,12 +35,70 @@ AF
 @author: Ludovic Autin with editing by Graham Johnson
 """
 packageContainsVFCommands = 1
+import sys
 import os
+from os import path, environ
 import json
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
     import urllib
+
+#==============================================================================
+# #Setup autopack data directory.
+#==============================================================================
+#the dir will have all the recipe + cache.
+APPNAME = "autoPACK"
+if sys.platform == 'darwin':
+    #from AppKit import NSSearchPathForDirectoriesInDomains
+    # http://developer.apple.com/DOCUMENTATION/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Functions/Reference/reference.html#//apple_ref/c/func/NSSearchPathForDirectoriesInDomains
+    # NSApplicationSupportDirectory = 14
+    # NSUserDomainMask = 1
+    # True for expanding the tilde into a fully qualified path
+    #appdata = path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], APPNAME)
+    appdata = os.path.expanduser("~")+"/Library/Application Support/autoPACK"
+elif sys.platform == 'win32':
+    appdata = path.join(environ['APPDATA'], APPNAME)
+else:
+    appdata = path.expanduser(path.join("~", "." + APPNAME))
+if not os.path.exists(appdata):
+    os.makedirs(appdata)
+    print("autoPACK data dir created")
+    print(appdata)
+
+#==============================================================================
+# setup the cache directory inside the app data folder
+#==============================================================================
+cache_results = appdata+os.sep+"cache_results"
+if not os.path.exists(cache_results):
+    os.makedirs(cache_results)
+cache_geoms = appdata+os.sep+"cache_geometries"
+if not os.path.exists(cache_geoms):
+    os.makedirs(cache_geoms)
+cache_sphere = appdata+os.sep+"cache_geometries"+os.sep+"sphereTree"
+if not os.path.exists(cache_sphere):
+    os.makedirs(cache_sphere)
+#cacheo = appdata+os.sep+"cache_organelles"
+#if not os.path.exists(cacheo):
+#    os.makedirs(cacheo)
+cache_recipes=appdata+os.sep+"cache_recipes"
+if not os.path.exists(cache_recipes):
+    os.makedirs(cache_recipes)
+cache_dir={
+"geoms":cache_geoms,
+"results":cache_results,
+"spheres":cache_sphere,
+"recipes":cache_recipes,
+}
+#    
+#autopack_cache_data (e.g. recipe_available.json)
+#or call this autopack_cache_recipelists
+#autopack_cache_recipes
+#autopack_cache_results
+#autopack_cache_analysis
+#autopack_cache_geometries
+#autopack_cache_paths
+
 usePP = False
 helper = None
 #try :
@@ -62,7 +120,8 @@ autoPACKserver="http://autofill.googlecode.com/git"
 replace_autoPACKserver=["autoPACKserver","http://autofill.googlecode.com/git"]
 autopackdir=str(afdir)#copy
 replace_autopackdir=["autopackdir",afdir]
-replace_path=[replace_autoPACKserver,replace_autopackdir]
+replace_autopackdata=["autopackdata",appdata]
+replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
 
 #we have to change the name of theses files. and decide how to handle the 
 #currated recipeList, and the dev recipeList
@@ -107,18 +166,27 @@ def checkURL(URL):
     except :
         return False
     return response.code != 404
+
+def fixOnePath(p):
+    for v in replace_path:
+        p=p.replace(v[0],v[1])
+    return p
  
-def retrieveFile(filename,destination=os.sep):
-    filename=autopack.fixOnePath(filename)
+def retrieveFile(filename,destination=os.sep,cache="geoms"):
+#    helper = autopack.helper
+    filename=fixOnePath(filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
+        reporthook = None
+        if helper is not None:        
+            reporthook=helper.reporthook
         name = filename.split("/")[-1]#the recipe name
-        tmpFileName = afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination+name
-        if not os.path.exists(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination):
-		    os.makedirs(afdir+os.sep+"autoFillRecipeScripts"+os.sep+destination)
+        tmpFileName = cache_dir[cache]+os.sep+destination+name
+        if not os.path.exists(cache_dir[cache]+os.sep+destination):
+		    os.makedirs(cache_dir[cache]+os.sep+destination)
         #check if exist first
         if not os.path.isfile(tmpFileName) or forceFetch :
             if checkURL(filename):
-                urllib.urlretrieve(filename, tmpFileName,reporthook=None)
+                urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
             else :
                 if not os.path.isfile(tmpFileName)  :
                     return  None
@@ -126,20 +194,19 @@ def retrieveFile(filename,destination=os.sep):
         return filename
     return filename
 
-def fixOnePath(p):
-    for v in replace_path:
-        p=p.replace(v[0],v[1])
-    return p
-
-def fixPath(adict, k, v):
+def fixPath(adict):#, k, v):
     for key in list(adict.keys()):
-        if key == k:
-            if type(v) is list or type(v) is tuple:
-                adict[key]=adict[key].replace(v[0],v[1])
-            else :
-                adict[key] = v
-        elif type(adict[key]) is dict:
-            fixPath(adict[key], k, v)
+        if type(adict[key]) is dict:
+            fixPath(adict[key])
+        else :
+#        if key == k:
+            adict[key]=fixOnePath(adict[key])
+#            if type(v) is list or type(v) is tuple:
+#                adict[key]=adict[key].replace(v[0],v[1])
+#            else :
+#                adict[key] = v
+#        elif type(adict[key]) is dict:
+#            fixPath(adict[key], k, v)
 
 def updatePathJSON():
     if not os.path.isfile(autopack_path_pref_file):
@@ -240,9 +307,9 @@ def updateRecipAvailable(recipesfile):
         updateRecipAvailableXML(recipesfile)
     elif fileExtension.lower() == ".json":
         updateRecipAvailableJSON(recipesfile)
-    fixPath(RECIPES,"setupfile",replace_autoPACKserver)
-    fixPath(RECIPES,"wrkdir",replace_autopackdir)
-    fixPath(RECIPES,"resultfile",replace_autoPACKserver)
+    fixPath(RECIPES)
+#    fixPath(RECIPES,"wrkdir")#or autopackdata
+#    fixPath(RECIPES,"resultfile")
     print ("recipes updated and path fixed "+str(len(RECIPES)))
     
 def saveRecipeAvailable(recipe_dictionary,recipefile):
@@ -288,15 +355,3 @@ print ("currently nb recipes is "+str(len(RECIPES)))
 #need a distinction between autopackdir and cachdir
 wkr = afdir
 #in the preefined working directory
-cache = wkr+os.sep+"cache_results"
-if not os.path.exists(cache):
-    os.makedirs(cache)
-cachei = wkr+os.sep+"cache_ingredients"
-if not os.path.exists(cachei):
-    os.makedirs(cachei)
-cache_sphere = wkr+os.sep+"cache_ingredients"+os.sep+"sphereTree"
-if not os.path.exists(cache_sphere):
-    os.makedirs(cache_sphere)
-cacheo = wkr+os.sep+"cache_organelles"
-if not os.path.exists(cacheo):
-    os.makedirs(cacheo)

@@ -268,59 +268,19 @@ class  Compartment(CompartmentList):
             gname =rep 
             if helper is not None :parent=helper.getObject('O%s'%self.name)
         #print ("organelle",filename,gname,rep)
-        filename=autopack.fixOnePath(filename)
-        print ("filename compartements is",filename,type(filename))
-        if filename.find("http") != -1 or filename.find("ftp")!= -1 :
-            try :
-                import urllib.request as urllib# , urllib.parse, urllib.error
-            except :
-                import urllib
-            name =   filename.split("/")[-1]
-            fileName, fileExtension = os.path.splitext(name)
-            tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
-            print("try to get from cache "+name+" "+fileExtension,fileExtension.find(".fbx"),fileExtension.find(".dae"))
-            if fileExtension is '' :   
-#            if fileExtension.find(".fbx") == -1 and fileExtension.find(".dae") == -1:
-                #need to getboth file
-                tmpFileName1 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolface"
-                tmpFileName2 = AFDIR+os.sep+"cache_ingredients"+os.sep+name+".indpolvert"
-#                print("#check if exist first1",tmpFileName1)
-                #check if exist first
-                if not os.path.isfile(tmpFileName1) or autopack.forceFetch:
-#                    print "download "+filename+".indpolface"
-#                    print "download "+filename+".indpolvert"
-                    if checkURL(filename+".indpolface"):
-                        try :
-                            urllib.urlretrieve(filename+".indpolface", tmpFileName1)
-                        except :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                    else :
-                        if not os.path.isfile(tmpFileName1)  :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                            return
-                if not os.path.isfile(tmpFileName2):
-                    if checkURL(filename+".indpolvert"):
-                        try :
-                            urllib.urlretrieve(filename+".indpolvert", tmpFileName2)
-                        except :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName2)
-                    else :
-                        if not os.path.isfile(tmpFileName2)  :
-                            print ("problem downloading "+filename+".indpolface to"+tmpFileName1)
-                            return
-            else :
-                tmpFileName = AFDIR+os.sep+"cache_ingredients"+os.sep+name
-                print("#check if exist first",tmpFileName,os.path.isfile(tmpFileName))
-                if not os.path.isfile(tmpFileName) or autopack.forceFetch:
-                    print("urlretrieve and fetch")
-                    if checkURL(filename):
-                        urllib.urlretrieve(filename, tmpFileName)
-                    else :
-                        if not os.path.isfile(tmpFileName)  :
-                            print ("problem downloading "+filename)
-                            return
-                        
-            filename = tmpFileName 
+        #identify extension
+        name =   filename.split("/")[-1]
+        fileName, fileExtension = os.path.splitext(name)
+        if fileExtension is '' :  
+            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
+            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
+            filename = os.path.splitext(tmpFileName1)[0]
+        else :
+            filename =autopack.retrieveFile(filename,cache="geoms")        
+        if not os.path.isfile(filename):
+            print ("problem with "+filename)
+            return
+        print ("filename compartements is",filename,type(filename))     
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
         if fileExtension.lower() == ".fbx":
