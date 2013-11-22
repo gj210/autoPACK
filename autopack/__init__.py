@@ -84,11 +84,18 @@ if not os.path.exists(cache_sphere):
 cache_recipes=appdata+os.sep+"cache_recipes"
 if not os.path.exists(cache_recipes):
     os.makedirs(cache_recipes)
+    
+preferences = appdata+os.sep+"preferences"
+if not os.path.exists(preferences):
+    os.makedirs(preferences)
+#we can now use some json/xml file for storing preferences and options.
+    
 cache_dir={
 "geoms":cache_geoms,
 "results":cache_results,
 "spheres":cache_sphere,
 "recipes":cache_recipes,
+"prefs":preferences,
 }
 #    
 #autopack_cache_data (e.g. recipe_available.json)
@@ -126,11 +133,15 @@ replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
 #we have to change the name of theses files. and decide how to handle the 
 #currated recipeList, and the dev recipeList
 #same for output and write theses file see below for the cache directories
-recipe_web_pref_file = afdir+os.sep+"recipe_available.json"
-recipe_user_pref_file = afdir+os.sep+"user_recipe_available.json"
-recipe_dev_pref_file = afdir+os.sep+"autopack_serverDeveloper_recipeList.json"
-autopack_path_pref_file = afdir+os.sep+"path_preferences.json"
+#all theses file will go in the pref folder ie cache_path
+recipe_web_pref_file = preferences+os.sep+"recipe_available.json"
+recipe_user_pref_file = preferences+os.sep+"user_recipe_available.json"
+recipe_dev_pref_file = preferences+os.sep+"autopack_serverDeveloper_recipeList.json"
+autopack_path_pref_file = preferences+os.sep+"path_preferences.json"
 
+#we keep the file here, it come with the distribution 
+#wonder if the cache shouldn use the version like other appDAta
+#ie appData/AppName/Version/etc...
 if not os.path.isfile(afdir+os.sep+"version.txt"):
     f=open(afdir+os.sep+"version.txt","w")
     f.write("0.0.0")
@@ -138,7 +149,6 @@ if not os.path.isfile(afdir+os.sep+"version.txt"):
 f = open(afdir+os.sep+"version.txt","r")
 __version__ = f.readline()
 f.close()
-
 
 info_dic = ["setupfile","resultfile","wrkdir"]
 #change the setupfile access to online in recipe_available.xml
