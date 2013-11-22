@@ -1279,7 +1279,10 @@ class Ingredient(Agent):
             tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
             filename = os.path.splitext(tmpFileName1)[0]
         else :
-            filename =autopack.retrieveFile(filename,cache="geoms")        
+            filename =autopack.retrieveFile(filename,cache="geoms") 
+        if filename is None :
+            print ("problem with "+filename)
+            return
         if not os.path.isfile(filename):
             print ("problem with "+filename)
             return
