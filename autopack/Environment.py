@@ -3765,6 +3765,7 @@ h1 = Environment()
     def store(self,resultfilename=None):
         if resultfilename == None:
             resultfilename = self.resultfile
+        resultfilename=autopack.fixOnePath(resultfilename)
         rfile = open(resultfilename, 'wb')
         #pickle.dump(self.molecules, rfile)
         #OR 
@@ -3942,6 +3943,7 @@ h1 = Environment()
     def store_asJson(self,resultfilename=None):
         if resultfilename == None:
             resultfilename = self.resultfile
+        resultfilename=autopack.fixOnePath(resultfilename)
         self.collectResultPerIngredient()
         self.result_json={}
         r =  self.exteriorRecipe
@@ -3970,6 +3972,7 @@ h1 = Environment()
     def store_asTxt(self,resultfilename=None):
         if resultfilename == None:
             resultfilename = self.resultfile
+        resultfilename=autopack.fixOnePath(resultfilename)
         rfile = open(resultfilename+".txt", 'w')#doesnt work with symbol link ?
         #pickle.dump(self.molecules, rfile)
         #OR 
