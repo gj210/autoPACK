@@ -2244,7 +2244,7 @@ class SubdialogViewer(uiadaptor):
             fname = autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"]
         except :
             fname = self.histoVol.resultfile
-        fname = autopack.retrieveFile(fname,cache="results")
+        fname = autopack.retrieveFile(fname,cache="results",force = self.forceResult)
         name =   fname.split("/")[-1]
         if self.build_grid :
             self.fetchGridResult(fname,name)
@@ -3529,7 +3529,7 @@ Copyright: Graham Johnson ©2010
         setupfile = self.recipe_available[recipe][version]["setupfile"]
         setupfile = autopack.retrieveFile(setupfile,
                             destination = recipe+os.sep+"recipe"+os.sep,
-                            cache="recipes")        
+                            cache="recipes",force = forceRecipe)        
         
 #        if setupfile.find("http") != -1 or setupfile.find("ftp") != -1:
 #            try :

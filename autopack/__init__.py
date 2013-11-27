@@ -117,6 +117,7 @@ helper = None
 LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev","RAPID"]
 afdir = os.path.abspath(__path__[0])
 ncpus = 2
+#forceFetch is for any file not only recipe/ingredient etc...
 forceFetch = False
 checkAtstartup = True
 verbose = 0 
@@ -182,8 +183,10 @@ def fixOnePath(p):
         p=p.replace(v[0],v[1])
     return p
  
-def retrieveFile(filename,destination=os.sep,cache="geoms"):
+def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
 #    helper = autopack.helper
+    if force is None :
+        force = forceFetch
     filename=fixOnePath(filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
         reporthook = None
@@ -194,7 +197,7 @@ def retrieveFile(filename,destination=os.sep,cache="geoms"):
         if not os.path.exists(cache_dir[cache]+os.sep+destination):
 		    os.makedirs(cache_dir[cache]+os.sep+destination)
         #check if exist first
-        if not os.path.isfile(tmpFileName) or forceFetch :
+        if not os.path.isfile(tmpFileName) or force :
             if checkURL(filename):
                 urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
             else :
