@@ -917,6 +917,7 @@ class Ingredient(Agent):
         if "rejectionThreshold" in kw:
             self.rejectionThreshold = kw["rejectionThreshold"]
 
+        #get the collision mesh
         self.meshFile = None
         self.mesh = None
         self.meshObject= None
@@ -941,6 +942,11 @@ class Ingredient(Agent):
         if "resolution_dictionary" in kw :
             if kw["resolution_dictionary"] is not None:
                 self.resolution_dictionary = kw["resolution_dictionary"]
+
+        #how to get the geom of different res?
+        self.representation = None
+        self.representation_file = None
+
         self.useRotAxis = False    
         if "useRotAxis" in kw:
             self.useRotAxis = kw["useRotAxis"]
@@ -1274,6 +1280,7 @@ class Ingredient(Agent):
         #identify extension
         name =   filename.split("/")[-1]
         fileName, fileExtension = os.path.splitext(name)
+        print ("retrieve ",filename,fileExtension)
         if fileExtension is '' :  
             tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
             tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
@@ -1281,7 +1288,7 @@ class Ingredient(Agent):
         else :
             filename =autopack.retrieveFile(filename,cache="geoms") 
         if filename is None :
-            print ("problem with "+filename)
+            print ("problem")
             return
         if not os.path.isfile(filename):
             print ("problem with "+filename)
@@ -5456,6 +5463,17 @@ class SingleSphereIngr(Ingredient):
                 self.mesh = autopack.helper.Icosahedron(self.name+"_basic",
                                 radius=self.radii[0][0])[0]
             self.getData()
+        #should do that for all ingredient type
+        if self.representation is None:
+            if not autopack.helper.nogui :
+                self.representation = autopack.helper.Sphere(self.name+"_rep",
+                                radius=self.radii[0][0],color=self.color,
+                                parent=self.mesh,res=24)[0]
+            else :
+                self.representation = autopack.helper.Icosahedron(self.name+"_rep",
+                                radius=self.radii[0][0])[0]
+            
+        
         
         
 class SingleCubeIngr(Ingredient):
@@ -5744,6 +5762,7 @@ class GrowIngrediant(MultiCylindersIngr):
 #                                radius=self.radii[0][0]*1.24, length=self.uLength,
 #                                res= 5, parent="autopackHider",axis="+X")[0]
 #            else :
+            #is axis working ?
             self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
                                 res= 5, parent="autopackHider",axis=self.orientation)[0]                
