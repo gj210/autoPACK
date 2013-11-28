@@ -864,7 +864,7 @@ class AutopackViewer:
             if ingr.color != None :
                 material=self.vi.retrieveColorMat(ingr.color)
 #            print ("parent is ", ingr.name+"MeshsParent",vParentHiders,parent)
-            if isinstance(geom,int):
+            if hasattr(geom,"getFaces"):
                 polygon = self.vi.createsNmesh(name,geom.getVertices(),None,
                                        geom.getFaces(),
                                        material=material,
