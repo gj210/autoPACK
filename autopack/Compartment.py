@@ -280,7 +280,7 @@ class  Compartment(CompartmentList):
         if filename is None :
             print ("problem with "+filename)
             return            
-        if not os.path.isfile(filename):
+        if not os.path.isfile(filename) and fileExtension != '' :
             print ("problem with "+filename)
             return
         print ("filename compartements is",filename,type(filename))     
