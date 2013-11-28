@@ -1074,6 +1074,25 @@ class Ingredient(Agent):
                         "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},
                         }
 
+
+    def DecomposeMesh(self,m,edit=True,copy=False,tri=True,transform=True) :         
+        helper = autopack.helper
+        if hasattr(m,"getFaces"):#DejaVu object
+            faces = m.getFaces()
+            vertices = m.getVertices()
+            vnormals = m.getVNormals()       
+        else :
+            if helper.host == "dejavu" :
+                m = helper.getMesh(m)
+                tr=False
+            else :
+                m = helper.getMesh(helper.getName(m))
+                tr=True
+            #print ("Decompose Mesh")
+            faces,vertices,vnormals = helper.DecomposeMesh(m,
+                           edit=edit,copy=copy,tri=tri,transform=tr) 
+        return faces,vertices,vnormals
+
     def getSpheres(self,sphereFile):
         """
         get spherical approximation of shape
@@ -1167,15 +1186,8 @@ class Ingredient(Agent):
         helper = autopack.helper
         if mesh is None :
             mesh = self.mesh
-        if helper.host == "dejavu" :
-            m = helper.getMesh(self.mesh)
-            tr=False
-        else :
-            m = helper.getMesh(helper.getName(self.mesh))
-            tr=True
-        #print ("Decompose Mesh")
-        faces,vertices,vnormals = helper.DecomposeMesh(m,
-                           edit=True,copy=False,tri=True,transform=tr) 
+        faces,vertices,vnormals = self.DecomposeMesh(mesh,
+                           edit=True,copy=False,tri=True) 
         #print ("create the triangle",len(faces))
         #encapsulating radius ?
         v=numpy.array(vertices,'f')
@@ -1185,34 +1197,25 @@ class Ingredient(Agent):
     def getData(self):
         if not self.vertices :
             if self.mesh :
-                helper = autopack.helper
-                #should get the mesh
-                if helper.host == "dejavu" :
-                    m = helper.getMesh(self.mesh)
-                    tr=False
-                else :
-                    m = helper.getMesh(helper.getName(self.mesh))
-                    tr=True
-                #print ("Decompose Mesh")
-                self.faces,self.vertices,vnormals = helper.DecomposeMesh(m,
-                                   edit=True,copy=False,tri=True,transform=tr) 
+                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
+                                   edit=True,copy=False,tri=True) 
         
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
         if not self.vertices :
             if self.mesh :
-                helper = autopack.helper
-                #should get the mesh
-                if helper.host == "dejavu" :
-                    m = helper.getMesh(self.mesh)
-                    tr=False
-                else :
-                    m = helper.getMesh(helper.getName(self.mesh))
-                    tr=True
+#                helper = autopack.helper
+#                #should get the mesh
+#                if helper.host == "dejavu" :
+#                    m = helper.getMesh(self.mesh)
+#                    tr=False
+#                else :
+#                    m = helper.getMesh(helper.getName(self.mesh))
+#                    tr=True
 #                print ("Decompose Mesh")
-                self.faces,self.vertices,vnormals = helper.DecomposeMesh(m,
-                                   edit=True,copy=False,tri=True,transform=tr) 
+                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
+                                   edit=True,copy=False,tri=True) 
 #                print ("create the triangle",len(faces))
             rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
         return rapid_model       
@@ -1221,17 +1224,17 @@ class Ingredient(Agent):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
         if self.mesh :
-            helper = autopack.helper
-            #should get the mesh
-            if helper.host == "dejavu" :
-                m = helper.getMesh(self.mesh)
-                tr=False
-            else :
-                m = helper.getMesh(helper.getName(self.mesh))
-                tr=True
+#            helper = autopack.helper
+#            #should get the mesh
+#            if helper.host == "dejavu" :
+#                m = helper.getMesh(self.mesh)
+#                tr=False
+#            else :
+#                m = helper.getMesh(helper.getName(self.mesh))
+#                tr=True
 #            print ("Decompose Mesh")
-            faces,vertices,vnormals = helper.DecomposeMesh(m,
-                               edit=True,copy=False,tri=True,transform=tr) 
+            faces,vertices,vnormals = self.DecomposeMesh(self.mesh,
+                               edit=True,copy=False,tri=True) 
 #            print ("create the triangle",len(faces))
             #encapsulating radius ?
 #            v=numpy.array(vertices,'f')
@@ -1290,8 +1293,8 @@ class Ingredient(Agent):
         if filename is None :
             print ("problem")
             return
-        if not os.path.isfile(filename):
-            print ("problem with "+filename)
+        if not os.path.isfile(filename) and fileExtension != '' :
+            print ("problem with "+filename,fileExtension)
             return
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
@@ -5464,7 +5467,8 @@ class SingleSphereIngr(Ingredient):
                                 radius=self.radii[0][0])[0]
             self.getData()
         #should do that for all ingredient type
-        if self.representation is None:
+        if self.representation is None and not hasattr(self.mesh,"getFaces"):#this is not working with dejavu
+            #and should go in the graphics.
             if not autopack.helper.nogui :
                 self.representation = autopack.helper.Sphere(self.name+"_rep",
                                 radius=self.radii[0][0],color=self.color,
