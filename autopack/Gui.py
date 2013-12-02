@@ -100,6 +100,79 @@ from autopack.Graphics import AutopackViewer
 from autopack import checkURL
 from upy.register_user import Register_User_ui
 
+class SubdialogPreferencesPath(uiadaptor):
+    def CreateLayout(self):
+        self._createLayout()
+        return 1
+        
+    def Command(self,*args):
+        self._command(args)
+        return 1
+
+    def setup(self,**kw):
+#        self.subdialog = True
+        self.block = True
+#        self.scrolling = True
+        self.title = "Preferences"
+        self.parent = None
+        if "parent" in kw :
+            self.parent = kw["parent"]
+        self.SetTitle(self.title)
+        self.initWidget()
+        self.setupLayout()
+
+    def initWidget(self, ):
+        self.Widget={}
+        self.Widget["label"]={}
+        self.Widget["options"]={}
+        #show appdata folder ? change it ?
+        self.Widget["label"]["appdata"] = self._addElemt(name="appdirLabel",label="appdir:",width=120)
+        self.Widget["options"]["appdata"] = self._addElemt(name="appdir",
+                                        label=autopack.appdata,width=120)
+        #show/edit autoPACKserver path
+        self.Widget["label"]["autoPACKserver"] = self._addElemt(name="autoPACKserverLabel",label="autoPACKserver:",width=120)
+        self.Widget["options"]["autoPACKserver"] = self._addElemt(name="autoPACKserver",action=None,width=100,
+                          value=autopack.autoPACKserver,type="inputStr",
+                          variable=self.addVariable("str",autopack.autoPACKserver))         
+        #show/edit autoPACKserver path
+        self.Widget["label"]["filespath"] = self._addElemt(name="filespathLabel",label="filespath:",width=120)
+        self.Widget["options"]["filespath"] = self._addElemt(name="filespath",action=None,width=100,
+                          value=autopack.filespath,type="inputStr",
+                          variable=self.addVariable("str",autopack.filespath))         
+        #show/edit autoPACKserver path
+        self.Widget["label"]["recipeslistes"] = self._addElemt(name="recipeslistesLabel",label="recipeslistes:",width=120)
+        self.Widget["options"]["recipeslistes"] = self._addElemt(name="recipeslistes",action=None,width=100,
+                          value=autopack.recipeslistes,type="inputStr",
+                          variable=self.addVariable("str",autopack.recipeslistes))         
+        self.Widget["label"]["mainLAbel"] = self._addElemt(name="mainLAbel",
+    label="Upade the Recip List after applying to see your change.",width=120)
+        
+        #define the buttons
+        self.BTN={}
+        self.BTN["close"]=self._addElemt(name="Close",width=50,height=10,
+                         action=self.close,type="button",icon=None,
+                                     variable=self.addVariable("int",0))
+        self.BTN["apply"]=self._addElemt(name="Apply",width=50,height=10,
+                         action=self.Apply,type="button",icon=None,
+                                     variable=self.addVariable("int",0))
+       #need to add browse button for all of them
+        
+    def setupLayout(self, ):
+        self._layout = []
+        for wname in ["appdata","autoPACKserver","filespath","recipeslistes"]:        
+            widget =[self.Widget["label"][wname],self.Widget["options"][wname]]
+            self._layout.append(widget)
+        self._layout.append([self.Widget["label"]["mainLAbel"],])
+        self._layout.append([self.BTN["apply"],self.BTN["close"]])        
+
+    
+    def Apply(self,*args,**kw):
+        #change and apply new value
+        autopack.autoPACKserver = self.getVal(self.Widget["autoPACKserver"])
+        autopack.filespath = self.getVal(self.Widget["filespath"])
+        autopack.recipeslistes = self.getVal(self.Widget["recipeslistes"])
+        self.close()
+        
 #upy dialog type
 #you can look at the upy documentation and exampl for futher informations
 class SubdialogGradient(uiadaptor):
@@ -3026,7 +3099,7 @@ class AutoPackGui(uiadaptor):
         """
         #define button and other stuff here
         #need widget for viewer, filler, builder
-        self.menuorder = ["Help"]#,"Edit"]
+        self.menuorder = ["Help","Edit"]
         self._menu = self.MENU_ID = {"Help":
                       [self._addElemt(name="Check for stable updates",action=self.stdCheckUpdate),
                        self._addElemt(name="Check for latest development updates",action=self.devCheckUpdate),
@@ -3037,10 +3110,11 @@ class AutoPackGui(uiadaptor):
                       self._addElemt(name="About",action=self.drawAbout),
                       self._addElemt(name="Close autoPACK",action=self.close),
                       ],
-#                      "Edit":
-#                          [
-#                          self._addElemt(name="Clear all caches",action=self.clearCaches),
-#                          ]
+                      "Edit":
+                          [
+                          self._addElemt(name="Change Path preferences",action=self.changePath),
+                          self._addElemt(name="Clear all caches",action=self.clearCaches),
+                          ]
                           }
         if not self.isRegistred():
             self.MENU_ID["Help"].append(self._addElemt(name="Register",
@@ -3222,6 +3296,8 @@ class AutoPackGui(uiadaptor):
 
 
     def UpdateRecipesList(self,*args):
+        #reset RECIPES
+        autopack.RECIPES={}
         autopack.checkPath()
         autopack.updatePathJSON()
         autopack.checkRecipeAvailable()
@@ -3263,17 +3339,13 @@ class AutoPackGui(uiadaptor):
         
     def clearCaches(self,*args):
         #can't work if file are open!
-        
-        wkr = os.path.abspath(AFwrkDir1)
-        #in the preefined working directory
-        cache = wkr+os.sep+"cache_results"
-        cachei = wkr+os.sep+"cache_ingredients"
-        cache_sphere = wkr+os.sep+"cache_ingredients"+os.sep+"sphereTree"
-        cacheo = wkr+os.sep+"cache_compartments"
-        for d in [cache_sphere,cachei,cache,cacheo]:            
-            shutil.rmtree(d)
-            os.makedirs(d)
-
+        for k in autopack.cache_dir:
+            try :
+                shutil.rmtree(autopack.cache_dir[k])
+                os.makedirs(autopack.cache_dir[k])
+            except:
+                print ("problem cleaning ",autopack.cache_dir[k])
+                
     def checkForUpdate(self,upyv,afv):
         #check on web if update available
         #return boolean for update_PMV,update_ePMV and update_pyubics
@@ -3458,6 +3530,12 @@ class AutoPackGui(uiadaptor):
     def visiteAFwebAPI(self,*args):
         import webbrowser
         webbrowser.open(self.__url__[1])
+
+    def changePath(self,*args):
+        dlg = SubdialogPreferencesPath()
+        dlg.setup(subdialog = True)
+        self.drawSubDialog(dlg,555555553)
+        
 
     def drawAbout(self,*args):
         self.upyv = upyv = upy.__version__

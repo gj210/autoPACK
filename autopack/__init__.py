@@ -124,12 +124,20 @@ verbose = 0
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
 '''
+
+#Default values    
 autoPACKserver="http://autofill.googlecode.com/git"
-replace_autoPACKserver=["autoPACKserver","http://autofill.googlecode.com/git"]
+filespath = autoPACKserver+"/autoPACK_filePaths.json"
+recipeslistes = autoPACKserver+"/autopack_recipe.json"
+
 autopackdir=str(afdir)#copy
+
+replace_autoPACKserver=["autoPACKserver",autoPACKserver]
 replace_autopackdir=["autopackdir",afdir]
 replace_autopackdata=["autopackdata",appdata]
+
 replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
+
 
 #we have to change the name of theses files. and decide how to handle the 
 #currated recipeList, and the dev recipeList
@@ -188,6 +196,7 @@ def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
     if force is None :
         force = forceFetch
     filename=fixOnePath(filename)
+    print ("autopack retrieve ",filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
         reporthook = None
         if helper is not None:        
@@ -197,11 +206,13 @@ def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
         if not os.path.exists(cache_dir[cache]+os.sep+destination):
 		    os.makedirs(cache_dir[cache]+os.sep+destination)
         #check if exist first
+        #print ("isfile ",tmpFileName)
         if not os.path.isfile(tmpFileName) or force :
             if checkURL(filename):
                 urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
             else :
                 if not os.path.isfile(tmpFileName)  :
+                    print ("not isfile ",tmpFileName)
                     return  None
         filename = tmpFileName
         return filename
@@ -230,7 +241,15 @@ def updatePathJSON():
     f.close()
     autoPACKserver=pref_path["autoPACKserver"]
     replace_autoPACKserver[1]=autoPACKserver
-    if "autopackdir" in  pref_path:
+    filespath = autoPACKserver+"/autoPACK_filePaths.json"
+    if "filespath" in pref_path:
+        if pref_path["filespath"] != "default" :
+            filespath =pref_path["filespath"]
+    recipeslistes = autoPACKserver+"/autopack_recipe.json"
+    if "recipeslistes" in pref_path:
+        if pref_path["recipeslistes"] != "default" :
+            recipeslistes =pref_path["recipeslistes"]
+    if "autopackdir" in pref_path:
         if pref_path["autopackdir"] != "default" :
             autopackdir=pref_path["autopackdir"]
             replace_autopackdir[1]=pref_path["autopackdir"]
@@ -244,7 +263,7 @@ def updatePath():
         updatePathJSON()
             
 def checkPath():
-    fname = autoPACKserver+"/autoPACK_filePaths.json"
+    fname = filespath#autoPACKserver+"/autoPACK_filePaths.json"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :
@@ -257,7 +276,7 @@ def checkPath():
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
 #    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
-    fname = autoPACKserver+"/autopack_recipe.json"
+    fname = recipeslistes#autoPACKserver+"/autopack_recipe.json"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :
