@@ -180,8 +180,9 @@ class AnalyseAP:
         if p is not None :
             self.helper.deleteObject(p)#recursif?
         p = self.helper.newEmpty(self.env.name+"distances")
-        sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=self.env.name+"distances")
-
+        sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=p)
+        #can use cube also 
+        
     def loadJSON(self,filename):
         import json
         with open(filename) as data_file:    

@@ -266,7 +266,8 @@ class  Compartment(CompartmentList):
                 parent = helper.newEmpty("autopackHider")
         if rep is not None :
             gname =rep 
-            if helper is not None :parent=helper.getObject('O%s'%self.name)
+            if helper is not None :
+                parent=helper.getObject('O%s'%self.name)
         print ("compartments ",filename,gname,rep)
         #identify extension
         name = filename.split("/")[-1]
