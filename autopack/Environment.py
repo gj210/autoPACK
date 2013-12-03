@@ -900,7 +900,7 @@ class Environment(CompartmentList):
         # smallest and largest protein radii acroos all recipes
         self.smallestProteinSize = 99999999
         self.largestProteinSize = 0
-        self.scaleER = 20.0 # hack in case problem with encapsulating radius
+        self.scaleER = 1.5 # hack in case problem with encapsulating radius
         self.computeGridParams = True
         
         self.EnviroOnly = False
@@ -2681,6 +2681,10 @@ h1 = Environment()
                     ingr.icyl = None
                 if hasattr(ingr,"allIngrPts"):
                     delattr(ingr, "allIngrPts")
+                if hasattr(ingr,"rb_nodes"):
+                    for node in ingr.rb_nodes:
+                        self.delRB(node)
+                    ingr.rb_nodes=[]
             for ingr in recip.exclude:
                 ingr.start_positions=[]
                 ingr.prev_alt = None
@@ -2697,7 +2701,10 @@ h1 = Environment()
                     ingr.icyl = None
                 if hasattr(ingr,"allIngrPts"):
                     delattr(ingr, "allIngrPts")
-                    
+                if hasattr(ingr,"rb_nodes"):
+                    for node in ingr.rb_nodes:
+                        self.delRB(node)
+                    ingr.rb_nodes=[]                    
     def resetIngr(self,ingr):
         """Reset the given ingredient (count, completion, nmol)"""
         ingr.counter = 0
