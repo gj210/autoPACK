@@ -4335,13 +4335,13 @@ h1 = Environment()
         geom=Geom(vdata)
         geom.addPrimitive(tris)
         #step 4) create the bullet mesh and node
-        if ingr.convex_hull:
-            shape = BulletConvexHullShape()
-            shape.add_geom(geom)
-        else :
-            mesh = BulletTriangleMesh()
-            mesh.addGeom(geom)    
-            shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape            
+#        if ingr.convex_hull:
+#            shape = BulletConvexHullShape()
+#            shape.add_geom(geom)
+#        else :
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)    
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape            
         print ("shape ok",shape)
         #inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
         #inodenp.node().setMass(1.0)

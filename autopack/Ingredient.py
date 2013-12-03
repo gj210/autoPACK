@@ -5883,7 +5883,7 @@ class GrowIngrediant(MultiCylindersIngr):
             return None
         ptIndr = int(uniform(0.0,1.0)*len(pointsmask))
         sp_pt_indice = pointsmask[ptIndr]
-        np = numpy.array(self.sphere_points[sp_pt_indice]*numpy.array(self.jitterMax) 
+        np = numpy.array(self.sphere_points[sp_pt_indice])*numpy.array(self.jitterMax) 
         return numpy.array(self.vi.unit_vector(np)) *self.uLength   #biased by jitterMax ?                      
 
     def mask_sphere_points_boundary(self,pt,boundingBox = None):
