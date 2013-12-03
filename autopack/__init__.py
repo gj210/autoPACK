@@ -125,20 +125,6 @@ messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
 '''
 
-#Default values    
-autoPACKserver="http://autofill.googlecode.com/git"
-filespath = autoPACKserver+"/autoPACK_filePaths.json"
-recipeslistes = autoPACKserver+"/autopack_recipe.json"
-
-autopackdir=str(afdir)#copy
-
-replace_autoPACKserver=["autoPACKserver",autoPACKserver]
-replace_autopackdir=["autopackdir",afdir]
-replace_autopackdata=["autopackdata",appdata]
-
-replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
-
-
 #we have to change the name of theses files. and decide how to handle the 
 #currated recipeList, and the dev recipeList
 #same for output and write theses file see below for the cache directories
@@ -147,6 +133,41 @@ recipe_web_pref_file = preferences+os.sep+"recipe_available.json"
 recipe_user_pref_file = preferences+os.sep+"user_recipe_available.json"
 recipe_dev_pref_file = preferences+os.sep+"autopack_serverDeveloper_recipeList.json"
 autopack_path_pref_file = preferences+os.sep+"path_preferences.json"
+autopack_user_path_pref_file = preferences+os.sep+"path_user_preferences.json"
+
+
+#Default values    
+autoPACKserver="http://autofill.googlecode.com/git"
+filespath = autoPACKserver+"/autoPACK_filePaths.json"
+recipeslistes = autoPACKserver+"/autopack_recipe.json"
+
+autopackdir=str(afdir)#copy
+#get user / default value 
+if not os.path.isfile(autopack_path_pref_file):
+    print (autopack_path_pref_file+" file is not found")
+if os.path.isfile(autopack_user_path_pref_file):
+    f=open(autopack_user_path_pref_file,"r")    
+else :
+    f=open(autopack_path_pref_file,"r")
+pref_path = json.load(f)
+f.close()
+autoPACKserver=pref_path["autoPACKserver"]
+if "filespath" in pref_path:
+    if pref_path["filespath"] != "default" :
+        filespath =pref_path["filespath"]
+if "recipeslistes" in pref_path:
+    if pref_path["recipeslistes"] != "default" :
+        recipeslistes =pref_path["recipeslistes"]
+if "autopackdir" in pref_path:
+    if pref_path["autopackdir"] != "default" :
+        autopackdir=pref_path["autopackdir"]
+
+replace_autoPACKserver=["autoPACKserver",autoPACKserver]
+replace_autopackdir=["autopackdir",autopackdir]
+replace_autopackdata=["autopackdata",appdata]
+
+replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
+
 
 #we keep the file here, it come with the distribution 
 #wonder if the cache shouldn use the version like other appDAta
@@ -158,6 +179,8 @@ if not os.path.isfile(afdir+os.sep+"version.txt"):
 f = open(afdir+os.sep+"version.txt","r")
 __version__ = f.readline()
 f.close()
+
+#should we check filespath
 
 info_dic = ["setupfile","resultfile","wrkdir"]
 #change the setupfile access to online in recipe_available.xml
@@ -179,6 +202,12 @@ RECIPES = {}
 
 USER_RECIPES={}
 
+def resetDefault():
+    os.remove(autopack_user_path_pref_file)
+    autoPACKserver="http://autofill.googlecode.com/git"
+    filespath = autoPACKserver+"/autoPACK_filePaths.json"
+    recipeslistes = autoPACKserver+"/autopack_recipe.json"
+    
 def checkURL(URL):
     try :
         response = urllib.urlopen(URL)
@@ -236,7 +265,10 @@ def updatePathJSON():
     if not os.path.isfile(autopack_path_pref_file):
         print (autopack_path_pref_file+" file is not found")
         return
-    f=open(autopack_path_pref_file,"r")
+    if os.path.isfile(autopack_user_path_pref_file):
+        f=open(autopack_user_path_pref_file,"r")    
+    else :
+        f=open(autopack_path_pref_file,"r")
     pref_path = json.load(f)
     f.close()
     autoPACKserver=pref_path["autoPACKserver"]
@@ -262,17 +294,20 @@ def updatePath():
     elif fileExtension.lower() == ".json":
         updatePathJSON()
             
-def checkPath():
+def checkPath(autopack_path_pref_file):
     fname = filespath#autoPACKserver+"/autoPACK_filePaths.json"
-    try :
-        import urllib.request as urllib# , urllib.parse, urllib.error
-    except :
-        import urllib
-    if checkURL(fname):
-        urllib.urlretrieve(fname, autopack_path_pref_file)
+    if fname.find("http") != -1 or fname.find("ftp")!= -1 :
+        try :
+            import urllib.request as urllib# , urllib.parse, urllib.error
+        except :
+            import urllib
+        if checkURL(fname):
+            urllib.urlretrieve(fname, autopack_path_pref_file)
+        else :
+            print ("problem accessing "+fname)
     else :
-        print ("problem accessing "+fname)
-       
+        autopack_path_pref_file = fname
+        
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
 #    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
@@ -371,11 +406,13 @@ def saveRecipeAvailableJSON(recipe_dictionary,filename):
 #we should read a file to fill the RECIPE Dictionary so we can add some and write/save setup 
 #afdir  or user_pref
 if checkAtstartup :
-    checkPath()
+    checkPath(autopack_path_pref_file)
 updatePathJSON()
 print ("path are updated ")
 
 if checkAtstartup :
+    #get from server the list of recipe
+    #recipe_web_pref_file
     checkRecipeAvailable()
 updateRecipAvailable(recipe_web_pref_file)
 updateRecipAvailable(recipe_user_pref_file)

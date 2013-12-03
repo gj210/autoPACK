@@ -66,7 +66,9 @@ Developed @UCSF by Graham Johnson
 # -------------------------------------------------------------------------- 
 #=======
 #should be universal
-import os,sys
+import os
+import sys
+import json
 from time import time
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -117,6 +119,7 @@ class SubdialogPreferencesPath(uiadaptor):
         self.parent = None
         if "parent" in kw :
             self.parent = kw["parent"]
+        #should load the user saved preferences
         self.SetTitle(self.title)
         self.initWidget()
         self.setupLayout()
@@ -155,6 +158,12 @@ class SubdialogPreferencesPath(uiadaptor):
         self.BTN["apply"]=self._addElemt(name="Apply",width=50,height=10,
                          action=self.Apply,type="button",icon=None,
                                      variable=self.addVariable("int",0))
+        self.BTN["save"]=self._addElemt(name="SaveToFilespath",width=50,height=10,
+                         action=self.Save,type="button",icon=None,
+                                     variable=self.addVariable("int",0))
+        self.BTN["restore"]=self._addElemt(name="RestoreDefault",width=50,height=10,
+                         action=self.RestoreDefault,type="button",icon=None,
+                                     variable=self.addVariable("int",0))
        #need to add browse button for all of them
         
     def setupLayout(self, ):
@@ -163,15 +172,44 @@ class SubdialogPreferencesPath(uiadaptor):
             widget =[self.Widget["label"][wname],self.Widget["options"][wname]]
             self._layout.append(widget)
         self._layout.append([self.Widget["label"]["mainLAbel"],])
-        self._layout.append([self.BTN["apply"],self.BTN["close"]])        
+        self._layout.append([self.BTN["apply"],self.BTN["save"]])        
+        self._layout.append([self.BTN["restore"],self.BTN["close"]])        
 
-    
     def Apply(self,*args,**kw):
         #change and apply new value
         autopack.autoPACKserver = self.getVal(self.Widget["options"]["autoPACKserver"])
-        autopack.filespath = autopack.fixOnePath(self.getVal(self.Widget["options"]["filespath"]))
         autopack.recipeslistes = autopack.fixOnePath(self.getVal(self.Widget["options"]["recipeslistes"]))
-        self.close()
+        autopack.filespath = autopack.fixOnePath(self.getVal(self.Widget["options"]["filespath"]))
+        #filespath = autoPACKserver+"/autoPACK_filePaths.json"        
+        #self.close()
+        self.parent.UpdateRecipesList()
+
+    def Save(self,*args,**kw):
+        #should save the preferences
+        dictowrite={
+            "filespath":autopack.fixOnePath(self.getVal(self.Widget["options"]["filespath"])),
+            "autopackdir": "default",
+            "autoPACKserver": self.getVal(self.Widget["options"]["autoPACKserver"]),
+            "autoPackDataBasePath": "autoPACKserver/data",
+            "autoPackDataRightBasePath": "autoPACKserver/dataRight",
+            "autoPackDataLeftBasePath": "autoPACKserver/data",
+            "recipeslistes":self.getVal(self.Widget["options"]["recipeslistes"])
+            }
+        with open(autopack.autopack_user_path_pref_file, 'w') as fp :#doesnt work with symbol link ?
+            json.dump(dictowrite,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ') 
+        self.setVal(self.Widget["options"]["recipeslistes"],autopack.autopack_user_path_pref_file)
+        
+
+    def RestoreDefault(self,*args,**kw):
+        #delete the user preferences
+        os.remove(autopack.autopack_user_path_pref_file)
+        autopack.autoPACKserver="http://autofill.googlecode.com/git"
+        autopack.filespath = autopack.autoPACKserver+"/autoPACK_filePaths.json"
+        autopack.recipeslistes = autopack.autoPACKserver+"/autopack_recipe.json"
+        self.setVal(self.Widget["options"]["autoPACKserver"],autopack.autoPACKserver)
+        self.setVal(self.Widget["options"]["recipeslistes"],autopack.recipeslistes)
+        self.setVal(self.Widget["options"]["filespath"],autopack.filespath)
+        self.parent.UpdateRecipesList()
         
 #upy dialog type
 #you can look at the upy documentation and exampl for futher informations
@@ -3314,7 +3352,7 @@ class AutoPackGui(uiadaptor):
     def UpdateRecipesList(self,*args):
         #reset RECIPES
         autopack.RECIPES={}
-        autopack.checkPath()
+        autopack.checkPath(autopack.autopack_path_pref_file)
         autopack.updatePathJSON()
         autopack.checkRecipeAvailable()
         autopack.updateRecipAvailable(autopack.recipe_web_pref_file)
@@ -3549,7 +3587,7 @@ class AutoPackGui(uiadaptor):
 
     def changePath(self,*args):
         dlg = SubdialogPreferencesPath()
-        dlg.setup(subdialog = True)
+        dlg.setup(subdialog = True,parent=self)
         self.drawSubDialog(dlg,555555553)
         
 
