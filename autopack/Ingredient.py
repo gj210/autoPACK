@@ -2785,7 +2785,7 @@ class Ingredient(Agent):
                 if (n==c) or n==(c-1) or (n==c-2):
                     continue   
             if ingrCounter[ingr.name] >= len(ingr.rb_nodes):
-                if ingr.Type == "Grow":
+                if ingr.Type == "Grow": 
                     #shouldnt we use sphere instead
                     tr=self.histoVol.result[n][0]
                     if ingr.use_rbsphere :
@@ -2807,7 +2807,7 @@ class Ingredient(Agent):
 #                print ("create",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
             else :
                 rbnode = ingr.rb_nodes[ingrCounter[ingr.name]]
-                self.histoVol.moveRBnode(rbnode, jtrans, rotMat)  
+                self.histoVol.moveRBnode(rbnode, jtrans, rotMat)  #Pb here ?
 #                rTrans,rRot=self.histoVol.getRotTransRB(rbnode)
 #                print ("set ",jtrans," get ", rTrans)
 #                print ("move",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
@@ -5507,7 +5507,7 @@ class SingleSphereIngr(Ingredient):
                         autopack.helper.toggleDisplay(p,False)
                 self.mesh = autopack.helper.Sphere(self.name+"_basic",
                                 radius=self.radii[0][0],color=self.color,
-                                parent="autopackHider")[0]
+                                parent="autopackHider",res=10)[0]
             else :
                 self.mesh = autopack.helper.Icosahedron(self.name+"_basic",
                                 radius=self.radii[0][0])[0]
