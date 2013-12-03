@@ -23,7 +23,10 @@ except :
     pyplot = None
     Circle = None
     mlab = None
+    
+import autopack
 from autopack.GeometryTools import GeometriTools,Rectangle
+import Image
 
 class AnalyseAP:
     def __init__(self, env=None, viewer=None, result_file=None):
@@ -42,7 +45,10 @@ class AnalyseAP:
         self.bbox=[[0,0,0],[1,1,1]]
         self.g=GeometriTools()
         self.g.Resolution = 1.0#or grid step?
-
+        self.current_pos=None
+        self.current_distance=None
+        autopack._colors = None
+        
     def getMinMaxProteinSize(self):
         smallest=999999.0
         largest= 0.0
@@ -157,6 +163,8 @@ class AnalyseAP:
                     listeDistance[i] = d
         return listeDistance
 
+
+
     def displayDistance(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
                         ramp_color3=None,cutoff=60.0):
         distances = self.env.grid.distToClosestSurf[:]
@@ -182,7 +190,83 @@ class AnalyseAP:
         p = self.helper.newEmpty(self.env.name+"distances")
         sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=p)
         #can use cube also 
+
+    def displayDistanceCube(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
+                        ramp_color3=None,cutoff=60.0):
+        distances = self.env.grid.distToClosestSurf[:]
+        positions = self.env.grid.masterGridPositions[:]
+        #map the color as well ?
+        from upy import colors as col
+        from DejaVu.colorTool import Map
+        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < -cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff   
+        colors = Map(distances, ramp)
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        base=self.helper.getObject(self.env.name+"distances_base")
+        if base is None :
+#            base=self.helper.Sphere(self.env.name+"distances_base")[0]
+            size = self.env.grid.gridSpacing
+            base=self.helper.box(self.env.name+"distances_base_cube",
+                                 center=[0.,0.,0.],size=[size,size,size])[0]
+        p=self.helper.getObject(self.env.name+"distances")
+        if p is not None :
+            self.helper.deleteObject(p)#recursif?
+        p = self.helper.newEmpty(self.env.name+"distances_cubes")
+        #sphs=self.helper.instancesSphere(self.env.name+"distances_cubes",positions,distances,base,colors,None,parent=p)
+        #can use cube also 
+        for i,p in enumerate(positions):
+            mat = self.helper.addMaterial("matcube"+str(i),colors[i])
+            c = self.helper.newInstance(self.env.name+"distances_cubes_"+str(i),base,
+                                      location=p,material=mat)
+
+    def displayDistancePlane(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
+                        ramp_color3=None,cutoff=60.0):
+        #which axis ?
+        distances = self.env.grid.distToClosestSurf[:]
+        #positions = self.env.grid.masterGridPositions[:]
+        #map the color as well ?
+        from upy import colors as col
+        from DejaVu.colorTool import Map
+        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < -cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff   
+        colors = Map(distances, ramp)#1D array of the grid x,y,1
+        autopack._colors = colors
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        p=self.helper.getObject(self.env.name+"distances")
+        if p is not None :
+            self.helper.deleteObject(p)#recursif?
+        p = self.helper.newEmpty(self.env.name+"distances_p")
+        #sphs=self.helper.instancesSphere(self.env.name+"distances_cubes",positions,distances,base,colors,None,parent=p)
+        #can use cube also 
+        print ("grid is ",self.env.grid.nbGridPoints)
+        print ("colors shape is ",colors.shape)
+        d = numpy.array(self.env.grid.boundingBox[0]) - numpy.array(self.env.grid.boundingBox[1])
+        p,mpl = self.helper.plane(self.env.name+"distances_plane",
+                                  center = self.env.grid.getCenter(),
+                                size=[math.fabs(d[0]),math.fabs(d[1])],
+                                    parent=p)
+        self.helper.rotateObj(p,[0,math.pi,0.0])
+        filename = autopack.cache_results+os.sep+self.env.name+"distances_plane_texture.png"
+        c=colors.reshape((self.env.grid.nbGridPoints[0],
+                          self.env.grid.nbGridPoints[1],
+                          self.env.grid.nbGridPoints[2],3))
         
+        im = Image.fromstring("RGB",(c.shape[0],c.shape[1]),numpy.uint8(c*255.0).tostring())
+        im.save(str(filename))
+        mat = self.helper.createTexturedMaterial(self.env.name+"planeMat",str(filename))
+        #assign the material to the plane
+        self.helper.assignMaterial(p,mat,texture=True)
+                
     def loadJSON(self,filename):
         import json
         with open(filename) as data_file:    
