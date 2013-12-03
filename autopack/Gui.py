@@ -168,9 +168,9 @@ class SubdialogPreferencesPath(uiadaptor):
     
     def Apply(self,*args,**kw):
         #change and apply new value
-        autopack.autoPACKserver = self.getVal(self.Widget["autoPACKserver"])
-        autopack.filespath = self.getVal(self.Widget["filespath"])
-        autopack.recipeslistes = self.getVal(self.Widget["recipeslistes"])
+        autopack.autoPACKserver = self.getVal(self.Widget["options"]["autoPACKserver"])
+        autopack.filespath = autopack.fixOnePath(self.getVal(self.Widget["options"]["filespath"]))
+        autopack.recipeslistes = autopack.fixOnePath(self.getVal(self.Widget["options"]["recipeslistes"]))
         self.close()
         
 #upy dialog type
