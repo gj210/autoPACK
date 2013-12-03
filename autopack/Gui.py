@@ -786,10 +786,17 @@ class AnalysisTab:
                                      variable=self.afgui.addVariable("int",0))
         self.widget["display_distance"]=self.afgui._addElemt(name="display_distance",
                         width=150,height=10,type="button",icon=None,
-                    action=self.dsdist,label="Disply grid closest distance",
+                    action=self.dsdist_sphere,label="Disply grid distance as spheres",
                                      variable=self.afgui.addVariable("int",0)) 
-        #show sphere tree of ingredients ?
-                                     
+        self.widget["display_distance_cube"]=self.afgui._addElemt(name="display_distance_cube",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.dsdist_cube,label="Disply grid distance as cube",
+                                     variable=self.afgui.addVariable("int",0)) 
+        self.widget["display_distance_plane"]=self.afgui._addElemt(name="display_distance_plane",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.dsdist_plane,label="Disply grid distance as texture plane",
+                                     variable=self.afgui.addVariable("int",0)) 
+        
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
         #if volume rendering support could display a volume for distance array
@@ -816,6 +823,8 @@ class AnalysisTab:
         elemframe.append([self.widget["savedist"], self.widget["btn_save_dist"],])
         elemframe.append([self.widget["saveclosestdist"], self.widget["btn_save_closest_dist"],])
         elemframe.append([self.widget["display_distance"],])
+        elemframe.append([self.widget["display_distance_cube"],])
+        elemframe.append([self.widget["display_distance_plane"],])
         elemframe.append([self.widget["gradients"], self.widget["btn_ds_gradient"],])        
         return elemframe
 
@@ -829,10 +838,17 @@ class AnalysisTab:
                                   useMaterial=True,
                                   usePoint=self.afgui.getVal(self.widget["usePoint"]))
 
-    def dsdist(self,):
-        self.aap.displayDistance(self.afgui.histoVol)
+    def dsdist_sphere(self,):
+        self.aap.displayDistance()#self.afgui.histoVol)
         #or
         #self.afgui.afviewer.displayDistance(self.afgui.histoVol)
+
+    def dsdist_cube(self,):
+        self.aap.displayDistanceCube(ramp_color1=[1,0,0],ramp_color2=[0,0,1],
+                        ramp_color3=None,cutoff=60.0)
+
+    def dsdist_plane(self,):
+        self.aap.displayDistancePlane(self.afgui.histoVol)
         
     def displayGradient(self,):
         """
@@ -857,7 +873,7 @@ class AnalysisTab:
         self.aap.save_csv(d,"/Users/ludo/closest_distance.csv")
 
     def export_result(self,):
-        passs
+        pass
         
 #create subdialog here
 #could be in different file
@@ -1215,7 +1231,7 @@ class SubdialogFiller(uiadaptor):
                   value=ingr.overwrite_nbMol_value,type="inputInt",variable=self.addVariable("int",ingr.overwrite_nbMol_value),mini=0,maxi=1000)   
                 self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                 self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
-                  value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 
+                  value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=150.)                 
                 self.ingr_ref_object[ingr.name] = self._addElemt(name=ingr.name+"ref",action=None,width=self.wicolumn[5],
                   value=ingr.modelType,type="inputStr",variable=self.addVariable("str",ingr.modelType))  
                 self.ingr_view_object[ingr.name] = self._addElemt(name=ingr.name+"view",action=None,width=self.wicolumn[6],

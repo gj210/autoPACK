@@ -900,7 +900,7 @@ class Environment(CompartmentList):
         # smallest and largest protein radii acroos all recipes
         self.smallestProteinSize = 99999999
         self.largestProteinSize = 0
-        self.scaleER = 2.0 # hack in case problem with encapsulating radius
+        self.scaleER = 20.0 # hack in case problem with encapsulating radius
         self.computeGridParams = True
         
         self.EnviroOnly = False
