@@ -145,29 +145,32 @@ autopackdir=str(afdir)#copy
 #get user / default value 
 if not os.path.isfile(autopack_path_pref_file):
     print (autopack_path_pref_file+" file is not found")
+doit=False
 if os.path.isfile(autopack_user_path_pref_file):
-    f=open(autopack_user_path_pref_file,"r")    
-else :
+    f=open(autopack_user_path_pref_file,"r")  
+    doit=True
+elif os.path.isfile(autopack_path_pref_file):
     f=open(autopack_path_pref_file,"r")
-pref_path = json.load(f)
-f.close()
-autoPACKserver=pref_path["autoPACKserver"]
-if "filespath" in pref_path:
-    if pref_path["filespath"] != "default" :
-        filespath =pref_path["filespath"]
-if "recipeslistes" in pref_path:
-    if pref_path["recipeslistes"] != "default" :
-        recipeslistes =pref_path["recipeslistes"]
-if "autopackdir" in pref_path:
-    if pref_path["autopackdir"] != "default" :
-        autopackdir=pref_path["autopackdir"]
+    doit=True
+if doit :
+    pref_path = json.load(f)
+    f.close()
+    autoPACKserver=pref_path["autoPACKserver"]
+    if "filespath" in pref_path:
+        if pref_path["filespath"] != "default" :
+            filespath =pref_path["filespath"]
+    if "recipeslistes" in pref_path:
+        if pref_path["recipeslistes"] != "default" :
+            recipeslistes =pref_path["recipeslistes"]
+    if "autopackdir" in pref_path:
+        if pref_path["autopackdir"] != "default" :
+            autopackdir=pref_path["autopackdir"]
 
 replace_autoPACKserver=["autoPACKserver",autoPACKserver]
 replace_autopackdir=["autopackdir",autopackdir]
 replace_autopackdata=["autopackdata",appdata]
 
 replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
-
 
 #we keep the file here, it come with the distribution 
 #wonder if the cache shouldn use the version like other appDAta
@@ -405,6 +408,7 @@ def saveRecipeAvailableJSON(recipe_dictionary,filename):
     
 #we should read a file to fill the RECIPE Dictionary so we can add some and write/save setup 
 #afdir  or user_pref
+
 if checkAtstartup :
     checkPath(autopack_path_pref_file)
 updatePathJSON()

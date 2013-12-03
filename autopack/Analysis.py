@@ -531,11 +531,13 @@ class AnalyseAP:
 #        bb=self.helper.getCornerPointCube(box)
         gridFileIn=None
         gridFileOut=None
+#        self.env.grid.reset()
+#        self.grid.reset()self.env.grid = None
 #        if forceBuild :
 #            gridFileOut=wrkDir+os.sep+"fill_grid"
 #        else :
 #            gridFileIn=wrkDir+os.sep+"fill_grid"
-        print (gridFileIn,gridFileOut)
+        print (gridFileIn,gridFileOut,forceBuild)
         self.env.buildGrid(boundingBox=bb,gridFileIn=gridFileIn,rebuild=forceBuild ,
                           gridFileOut=gridFileOut,previousFill=False)
     #    h.buildGrid(gridFileIn=gridFileIn, 
@@ -582,7 +584,7 @@ class AnalyseAP:
         self.bbox = bbox
         rebuild = True
         for i in rangeseed:
-            if i > 0 : rebuild = False
+#            if i > 0 : rebuild = False #bu need to reset ...
             basename = output+os.sep+"results_seed_"+str(i)
 #            self.env.saveResult = False
             resultfilename = self.env.resultfile = basename  

@@ -2062,6 +2062,7 @@ h1 = Environment()
         self.reportprogress(label="Computing the number of grid points")
         if rebuild or gridFileIn is not None or self.grid is None:
             # save bb for current fill
+            print ("####BUILD GRID####") 
             self.fillBB = boundingBox
             self.grid = Grid(boundingBox=boundingBox,
                                space=self.smallestProteinSize)
