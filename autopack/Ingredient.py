@@ -3699,7 +3699,7 @@ class Ingredient(Agent):
                 elif self.packingMode =="gradient":
                     rotMat=self.alignRotation(gridPointsCoords[ptInd] )
                 else :
-                    rotMat=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
+                    rotMat=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
             else :
                 rotMat=histoVol.randomRot.get()
@@ -3820,7 +3820,7 @@ class Ingredient(Agent):
                     elif self.packingMode =="gradient":
                         rotMatj=self.getAxisRotation(rotMat)
                     else :
-                        rotMatj=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
+                        rotMatj=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
                 else :
                     rotMatj=histoVol.randomRot.get()  #Graham turned this back on to replace rotMat.copy() so ing rotate each time
 #                    rotMatj = rotMat.copy()
