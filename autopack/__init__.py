@@ -155,16 +155,20 @@ elif os.path.isfile(autopack_path_pref_file):
 if doit :
     pref_path = json.load(f)
     f.close()
-    autoPACKserver=pref_path["autoPACKserver"]
-    if "filespath" in pref_path:
-        if pref_path["filespath"] != "default" :
-            filespath =pref_path["filespath"]
-    if "recipeslistes" in pref_path:
-        if pref_path["recipeslistes"] != "default" :
-            recipeslistes =pref_path["recipeslistes"]
-    if "autopackdir" in pref_path:
-        if pref_path["autopackdir"] != "default" :
-            autopackdir=pref_path["autopackdir"]
+    if "autoPACKserver" not in pref_path :
+        print ("problem with autopack_path_pref_file ",autopack_path_pref_file)
+        print ("reset to default")
+    else :
+        autoPACKserver=pref_path["autoPACKserver"]
+        if "filespath" in pref_path:
+            if pref_path["filespath"] != "default" :
+                filespath =pref_path["filespath"]
+        if "recipeslistes" in pref_path:
+            if pref_path["recipeslistes"] != "default" :
+                recipeslistes =pref_path["recipeslistes"]
+        if "autopackdir" in pref_path:
+            if pref_path["autopackdir"] != "default" :
+                autopackdir=pref_path["autopackdir"]
 
 replace_autoPACKserver=["autoPACKserver",autoPACKserver]
 replace_autopackdir=["autopackdir",autopackdir]

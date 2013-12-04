@@ -522,7 +522,8 @@ class AnalyseAP:
         pylab.savefig(filname)
         pylab.close()     # closes the current figure
 
-    def grid_pack(self,bb,wrkDir,forceBuild=True, fill=0,seed=20,vTestid = 3,vAnalysis = 0):
+    def grid_pack(self,bb,wrkDir,forceBuild=True, fill=0,seed=20,vTestid = 3,
+                  vAnalysis = 0,fbox_bb=None):
         t1 = time()
 #        if bbox is None :
 #            box=self.helper.getCurrentSelection()[0]
@@ -545,16 +546,16 @@ class AnalyseAP:
         t2 = time()
         gridTime = t2-t1
         if fill :
-            self.pack(seed=seed,vTestid = vTestid,vAnalysis = vAnalysis)
+            self.pack(seed=seed,vTestid = vTestid,vAnalysis = vAnalysis,fbox_bb=fbox_bb)
         print ('time to Build Grid', gridTime)
     #    afviewer.displayOrganellesPoints()
         #return
         #actine.updateFromBB(h.grid)
     
-    def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0):
+    def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0,fbox_bb = None):
         t1 = time()
         print "seed is ",seed
-        self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis)
+        self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
         t2 = time()
         print('time to run Fill5', t2-t1)
 
@@ -569,7 +570,8 @@ class AnalyseAP:
     
 
         
-    def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, plot = True,twod=True):
+    def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
+               plot = True,twod=True,fbox_bb=None):
         # doLoop automatically produces result files, images, and documents from the recipe while adjusting parameters
         # To run doLoop, 1) in your host's python console type:
         # execfile(pathothis recipe) # for example, on my computer:
@@ -596,7 +598,8 @@ class AnalyseAP:
             #no need to rebuild the grid ?
             self.env.saveResult = True
             self.env.resultfile = basename
-            self.grid_pack(bbox,output,seed=i, fill=1,vTestid = i,vAnalysis = 1,forceBuild=rebuild)#build grid and fill
+            self.grid_pack(bbox,output,seed=i, fill=1,vTestid = i,vAnalysis = 1,
+                           forceBuild=rebuild,fbox_bb=fbox_bb)#build grid and fill
             #store the result 
 #            self.env.store_asJson(resultfilename=basename)
             self.center = self.env.grid.getCenter()

@@ -162,7 +162,7 @@ class SubdialogPreferencesPath(uiadaptor):
                          action=self.Save,type="button",icon=None,
                                      variable=self.addVariable("int",0))
         self.BTN["restore"]=self._addElemt(name="RestoreDefault",width=50,height=10,
-                         action=self.RestoreDefault,type="button",icon=None,
+                         action=self.Save,type="button",icon=None,
                                      variable=self.addVariable("int",0))
        #need to add browse button for all of them
         
@@ -197,12 +197,13 @@ class SubdialogPreferencesPath(uiadaptor):
             }
         with open(autopack.autopack_user_path_pref_file, 'w') as fp :#doesnt work with symbol link ?
             json.dump(dictowrite,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ') 
-        self.setVal(self.Widget["options"]["recipeslistes"],autopack.autopack_user_path_pref_file)
+        self.setVal(self.Widget["options"]["filespath"],autopack.autopack_user_path_pref_file)
         
 
     def RestoreDefault(self,*args,**kw):
         #delete the user preferences
-        os.remove(autopack.autopack_user_path_pref_file)
+        if os.path.isfile(autopack.autopack_user_path_pref_file):
+            os.remove(autopack.autopack_user_path_pref_file)
         autopack.autoPACKserver="http://autofill.googlecode.com/git"
         autopack.filespath = autopack.autoPACKserver+"/autoPACK_filePaths.json"
         autopack.recipeslistes = autopack.autoPACKserver+"/autopack_recipe.json"
