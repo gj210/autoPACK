@@ -150,6 +150,18 @@
             "setupfile": "autoPACKserver/dataRight/NatureMethodsFigures/recipes/NM_Analysis_Figure1.1.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
             "resultfile": "autoPACKserver/dataRight/NatureMethodsFigures/results/NManalysisFigure1.1.apr"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NManalysisFigureC1.1.apr"
+        }
+    },
+    "NM_Analysis_FigureC": {
+        "1.0": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NManalysisFigureC1.1.apr"
         }
     }
 }
