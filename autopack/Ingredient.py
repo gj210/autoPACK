@@ -1743,7 +1743,7 @@ class Ingredient(Agent):
             axis = self.perturbAxis(self.perturbAxisAmplitude)
         else:
             axis = self.principalVector
-        tau = uniform(-pi, pi)
+        tau = gauss(-pi, pi)
         rrot = rotax( (0,0,0), axis, tau, transpose=1 )
         rot = numpy.dot(rot, rrot)
         return rot
@@ -3698,7 +3698,13 @@ class Ingredient(Agent):
                 if sum(self.rotAxis) == 0.0 :
                     rotMat=numpy.identity(4)
                 elif self.packingMode =="gradient":
-                    rotMat=self.alignRotation(gridPointsCoords[ptInd] )
+                    rotMatAligned=self.alignRotation(gridPointsCoords[ptInd] )
+                    print("rotMat aligned = ", rotMatAligned)
+                    print("**************************************************Rotate GRADIENT ON **************************")
+                    rotMatRand = autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
+                    print("rotMat random = ", rotMatRand)
+                    rotMatBiased = getBiasedRotation(rotMatRand)
+                    print("rotMat biased = ", rotMatBiased)
                 else :
                     rotMat=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
