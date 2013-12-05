@@ -369,8 +369,8 @@ class Grid:
         Return all grid points indices inside the given bouding box.
         NOTE : need to fix with grid build with numpy arrange
         """        
-        return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
-        spacing1 = 1./self.gridSpacing
+        #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
+        spacing1 = 1./self.gridSpacing*1.1547
         NX, NY, NZ = self.nbGridPoints
         OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
         ox, oy, oz = bb[0]
