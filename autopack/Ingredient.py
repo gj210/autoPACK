@@ -114,6 +114,13 @@ KWDS = {
                         "useRotAxis":{"name":"useRotAxis","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useRotAxis"},                             
                         "rotAxis":{"name":"rotAxis","value":[0.,0.,0.],"default":[0.,0.,0.],"min":0,"max":1,"type":"vector","description":"rotAxis"},
                         "rotRange":{"name":"rotRange","value":6.2831,"default":6.2831,"min":0,"max":12,"type":"float","description":"rotRange"},
+                        
+                        "useOrientBias":{"name":"useOrientBias","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useOrientBias"},
+
+                        "orientBiasRotRangeMin":{"name":"orientBiasRotRange","value":-pi,"default":-pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMin"},
+                        "orientBiasRotRangeMax":{"name":"orientBiasRotRange","value":pi,"default":pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMax"},
+
+
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
                         "cutoff_boundary":{"name":"cutoff_boundary","value":1.0,"default":1.0,"min":0.,"max":50.,"type":"float","description":"cutoff_boundary"},
                         "cutoff_surface":{"name":"cutoff_surface","value":5.0,"default":5.0,"min":0.,"max":50.,"type":"float","description":"cutoff_surface"},
@@ -962,7 +969,22 @@ class Ingredient(Agent):
         self.rotRange = 6.2831
         if "rotRange" in kw:
             self.rotRange = kw["rotRange"]
-        
+                
+                
+        self.useOrientBias = False
+        if "useOrientBias" in kw:
+            self.useOrientBias = kw["useOrientBias"]
+                
+        self.orientBiasRotRangeMin = -pi
+        if "orientBiasRotRangeMin" in kw:
+            self.orientBiasRotRangeMin = kw["orientBiasRotRangeMin"]
+                
+        self.orientBiasRotRangeMax = -pi
+        if "orientBiasRotRangeMax" in kw:
+            self.orientBiasRotRangeMax = kw["orientBiasRotRangeMax"]
+
+
+
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
         self.cutoff_surface = self.encapsulatingRadius
@@ -1015,6 +1037,15 @@ class Ingredient(Agent):
                         "useRotAxis":{"name":"useRotAxis","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useRotAxis"},                             
                         "rotAxis":{"name":"rotAxis","value":[0.,0.,0.],"default":[0.,0.,0.],"min":0,"max":1,"type":"vector","description":"rotAxis"},
                         "rotRange":{"name":"rotRange","value":6.2831,"default":6.2831,"min":0,"max":12,"type":"float","description":"rotRange"},
+                        
+                        
+                        "useOrientBias":{"name":"useOrientBias","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useOrientBias"},
+                        
+                        "orientBiasRotRangeMin":{"name":"orientBiasRotRange","value":-pi,"default":-pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMin"},
+                        "orientBiasRotRangeMax":{"name":"orientBiasRotRange","value":pi,"default":pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMax"},
+
+                        
+                        
                         "cutoff_boundary":{"name":"cutoff_boundary","value":1.0,"default":1.0,"min":0.,"max":50.,"type":"float","description":"cutoff_boundary"},
                         "cutoff_surface":{"name":"cutoff_surface","value":5.0,"default":5.0,"min":0.,"max":50.,"type":"float","description":"cutoff_surface"},
                         "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
@@ -1060,6 +1091,14 @@ class Ingredient(Agent):
                         "useRotAxis":{"name":"useRotAxis","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useRotAxis"},                             
                         "rotAxis":{"name":"rotAxis","value":[0.,0.,0.],"default":[0.,0.,0.],"min":0,"max":1,"type":"vector","description":"rotAxis"},
                         "rotRange":{"name":"rotRange","value":6.2831,"default":6.2831,"min":0,"max":12,"type":"float","description":"rotRange"},
+                        
+                        
+                        "useOrientBias":{"name":"useOrientBias","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"useOrientBias"},
+                        
+                        "orientBiasRotRangeMin":{"name":"orientBiasRotRange","value":-pi,"default":-pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMin"},
+                        "orientBiasRotRangeMax":{"name":"orientBiasRotRange","value":pi,"default":pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMax"},
+
+                        
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
                                'randomPartner', 'gradient'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
                         "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
@@ -1742,9 +1781,9 @@ class Ingredient(Agent):
         if self.perturbAxisAmplitude!=0.0:
             axis = self.perturbAxis(self.perturbAxisAmplitude)
         else:
-            axis = self.principalVector
-        tau = gauss(-pi, pi)
-        rrot = rotax( (0,0,0), axis, tau, transpose=1 )
+            axis = self.rotAxis
+        tau = gauss(self.orientBiasRotRangeMin*0.01, self.orientBiasRotRangeMax*0.01)#(-pi, pi)
+        rrot = rotax( (0,0,0), self.rotAxis, tau, transpose=1 )
         rot = numpy.dot(rot, rrot)
         return rot
 
@@ -3691,20 +3730,23 @@ class Ingredient(Agent):
                 print('PROBLEM ', self.name)
                 rotMat = numpy.identity(4)
         else:
+            self.useOrientBias = True
             if self.useRotAxis :
 #                angle = random()*6.2831#math.radians(random()*360.)#random()*pi*2.
 #                print "angle",angle,math.degrees(angle)
 #                direction = self.rotAxis
                 if sum(self.rotAxis) == 0.0 :
                     rotMat=numpy.identity(4)
-                elif self.packingMode =="gradient":
+                elif self.useOrientBias :
                     rotMatAligned=self.alignRotation(gridPointsCoords[ptInd] )
+                    print("rotAxis = ", self.rotAxis)
+                    print("rotRange = ", self.rotRange)
                     print("rotMat aligned = ", rotMatAligned)
                     print("**************************************************Rotate GRADIENT ON **************************")
                     rotMatRand = autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
                     print("rotMat random = ", rotMatRand)
-                    rotMatBiased = getBiasedRotation(rotMatRand)
-                    print("rotMat biased = ", rotMatBiased)
+                    rotMat = self.getBiasedRotation(rotMatAligned)
+                    print("rotMat biased = ", rotMat)
                 else :
                     rotMat=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
