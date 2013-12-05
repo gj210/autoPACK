@@ -102,7 +102,8 @@ KWDS = {
                         "packingPriority":{"type":"float"}, 
                         "name":{"type":"string"}, 
                         "pdb":{"type":"string"}, 
-                        "color":{"type":"vector"},"principalVector":{"type":"vector"},
+                        "color":{"type":"vector"},
+                        "principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
@@ -119,7 +120,9 @@ KWDS = {
 
                         "orientBiasRotRangeMin":{"name":"orientBiasRotRange","value":-pi,"default":-pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMin"},
                         "orientBiasRotRangeMax":{"name":"orientBiasRotRange","value":pi,"default":pi,"min":-pi,"max":pi,"type":"float","description":"orientBiasRotRangeMax"},
-
+                        
+                        "rejectionThreshold":{"name":"rejectionThreshold","value":30,"default":30,"type":"float","min":0,"max":10000,"description":"rejectionThreshold"},
+                        
 
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
                         "cutoff_boundary":{"name":"cutoff_boundary","value":1.0,"default":1.0,"min":0.,"max":50.,"type":"float","description":"cutoff_boundary"},
@@ -814,6 +817,7 @@ class Ingredient(Agent):
         print (packingPriority,self.packingPriority)
         if name == None:
             name = "%f"% molarity
+        print "CREATE INGREDIENT",str(name),("rejectionThreshold" in kw)
         self.name = str(name)
         self.o_name = str(name)
         self.Type = Type
@@ -925,6 +929,7 @@ class Ingredient(Agent):
             self.coordsystem = kw["coordsystem"]
         self.rejectionThreshold = 30
         if "rejectionThreshold" in kw:
+            print "rejectionThreshold",kw["rejectionThreshold"]
             self.rejectionThreshold = kw["rejectionThreshold"]
 
         #get the collision mesh
@@ -1051,6 +1056,7 @@ class Ingredient(Agent):
                         "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
+                        "rejectionThreshold":{"name":"rejectionThreshold","value":30,"default":30,"type":"float","min":0,"max":10000,"description":"rejectionThreshold"},
                         "partners_name":{"name":"partners_name","type":"liste_string", "value":"[]"},
                         "excluded_partners_name":{"name":"excluded_partners_name","type":"liste_string", "value":"[]"},
                         "partners_position":{"name":"partners_position","type":"liste_float", "value":"[]"},
@@ -1083,7 +1089,7 @@ class Ingredient(Agent):
                         "meshObject":{},
                         "coordsystem":{"name":"coordsystem","type":"string","value":"right","default":"right","description":"coordinate system of the files"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
-                        "rejectionThreshold":{"name":"rejectionThreshold","value":30,"default":30,"type":"int","min":0,"max":10000,"description":"rejectionThreshold"},
+                        "rejectionThreshold":{"name":"rejectionThreshold","value":30,"default":30,"type":"float","min":0,"max":10000,"description":"rejectionThreshold"},
                         "jitterMax":{"name":"jitterMax","value":[1.,1.,1.],"default":[1.,1.,1.],"min":0,"max":1,"type":"vector","description":"jitterMax"},
                         "nbJitter":{"name":"nbJitter","value":5,"default":5,"type":"int","min":0,"max":50,"description":"nbJitter"},
                         "perturbAxisAmplitude":{"name":"perturbAxisAmplitude","value":0.1,"default":0.1,"min":0,"max":1,"type":"float","description":"perturbAxisAmplitude"},
@@ -5535,7 +5541,7 @@ class SingleSphereIngr(Ingredient):
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,
                  meshFile=meshFile, packingMode=packingMode,placeType=placeType,
-                 meshObject=meshObject,nbMol=nbMol,Type=Type,)
+                 meshObject=meshObject,nbMol=nbMol,Type=Type,**kw)
 
         if name == None:
             name = "%5.2f_%f"% (radius,molarity)
@@ -8289,6 +8295,10 @@ class IOingredientTool:
         kw = {}
         for k in KWDS:
             v=io.getValueToXMLNode(KWDS[k]["type"],ingrnode,k)
+#example of debugging...
+#            if k == "rejectionThreshold" :
+#                print "rejectionThreshold",KWDS[k]["type"],v,v is not None
+#                print "rejectionThreshold",ingrnode.getAttribute(k)
             if v is not None :
                 kw[k]=v                   
         #create the ingredient according the type
@@ -8358,7 +8368,6 @@ class IOingredientTool:
 #        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
 #        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
         ingr = None
-        print ("make ingredient of type ",kw["Type"])
         if kw["Type"]=="SingleSphere":
             kw["position"] = kw["positions"][0][0]
             kw["radius"]=kw["radii"][0][0]
