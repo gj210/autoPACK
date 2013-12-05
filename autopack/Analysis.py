@@ -432,12 +432,21 @@ class AnalyseAP:
         self.plot(numpy.array(G),radii[:-1],basename+ingr.name+"_rdf_simple.png")
         print G
         
+    def axis_distribution_total(self,all_positions):
+        basename = self.env.basename
+        numpy.savetxt(basename+"total_pos.csv", numpy.array(all_positions), delimiter=",") 
+        px,py,pz = self.getAxesValues(all_positions)
+        self.histo(px,basename+"total_histo_X.png",bins=20)
+        self.histo(py,basename+"total_histo_Y.png",bins=20)
+        self.histo(pz,basename+"total_histo_Z.png",bins=20)
+
     def axis_distribution(self,ingr):
         basename = self.env.basename
         px,py,pz = self.getAxesValues(self.env.ingrpositions[ingr.name])
         self.histo(px,basename+ingr.name+"_histo_X.png",bins=20)
         self.histo(py,basename+ingr.name+"_histo_Y.png",bins=20)
         self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=20)
+        #do it for all ingredient cumulate?
         
     def correlation(self,ingr):
         basename = self.env.basename
@@ -599,6 +608,8 @@ class AnalyseAP:
         rangeseed=range(n)
         distances={}
         ingrpositions={}
+        total_positions=[]
+        total_distances=[]
         self.bbox = bbox
         rebuild = True
         for i in rangeseed:
@@ -641,6 +652,8 @@ class AnalyseAP:
                         ingrpos,d=self.getDistance(ingr.name, center)
                         distances[ingr.name].extend(d)
                         ingrpositions[ingr.name].extend(ingrpos)
+                        total_positions.extend(ingrpos)
+                        total_distances.extend(d)
                         #print plot,twod
                         if plot and twod:
                             for i,p in enumerate(ingrpos): 
@@ -669,6 +682,8 @@ class AnalyseAP:
                             ingrpos,d=self.getDistance(ingr.name, center)
                             distances[ingr.name].extend(d)
                             ingrpositions[ingr.name].extend(ingrpos)
+                            total_positions.extend(ingrpos)
+                            total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
@@ -685,6 +700,8 @@ class AnalyseAP:
                             ingrpos,d=self.getDistance(ingr.name, center)
                             distances[ingr.name].extend(d)
                             ingrpositions[ingr.name].extend(ingrpos)
+                            total_positions.extend(ingrpos)
+                            total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
@@ -706,7 +723,8 @@ class AnalyseAP:
             if twod : self.env.loopThroughIngr(self.rdf_2d)
             else : self.env.loopThroughIngr(self.rdf_3d)
 #            do the X Y histo averge !        
-        self.env.loopThroughIngr(self.axis_distribution)
+        self.env.loopThroughIngr(self.axis_distribution)        
+        self.axis_distribution_total(total_positions)
 #        self.env.loopThroughIngr(self.correlation)
         return distances
 #from bhtree import bhtreelib

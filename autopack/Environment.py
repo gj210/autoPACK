@@ -1790,6 +1790,8 @@ h1 = Environment()
         """
         Retrieve and store mini and maxi ingredient size
         """
+        self.smallestProteinSize = 999999
+        self.largestProteinSize = 0
         for compartment in self.compartments:
             mini, maxi = compartment.getMinMaxProteinSize()
             if mini < self.smallestProteinSize:
@@ -2051,6 +2053,9 @@ h1 = Environment()
             from autopack.Grid import Grid            
         #check viewer, and setup the progress bar               
         self.reportprogress(label="Building the Master Grid")
+        if self.smallestProteinSize == 0 :
+            #compute it automatically
+            self.setMinMaxProteinSize()
         #get and test the bounding box 
         if boundingBox is None:
             boundingBox = self.boundingBox
@@ -2062,7 +2067,7 @@ h1 = Environment()
         self.reportprogress(label="Computing the number of grid points")
         if rebuild or gridFileIn is not None or self.grid is None:
             # save bb for current fill
-            print ("####BUILD GRID####") 
+            print ("####BUILD GRID - step ",self.smallestProteinSize) 
             self.fillBB = boundingBox
             self.grid = Grid(boundingBox=boundingBox,
                                space=self.smallestProteinSize)

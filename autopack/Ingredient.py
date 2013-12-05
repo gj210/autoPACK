@@ -1502,7 +1502,6 @@ class Ingredient(Agent):
     def getMaxJitter(self, spacing):
         return max(self.jitterMax)*spacing
 
-
 ##     def checkCollisions(self, pt, radius, pointsInCube, gridPointsCoords,
 ##                         distance, verbose):
 ##         insidePoints = {}
@@ -2091,6 +2090,9 @@ class Ingredient(Agent):
             if self.compareCompartment:
                 compIdsSphere = numpy.take(histoVol.grid.gridPtId,ptsInSphereId,0)  
 #                print "compId in sphere",compIdsSphere
+                wrongPt = [ cid for cid in compIdsSphere if cid == 99999 ]                
+                if len(wrongPt):
+                    return True
                 if self.compNum <= 0 :
                     wrongPt = [ cid for cid in compIdsSphere if cid != self.compNum ]
                     if len(wrongPt):
@@ -3291,6 +3293,8 @@ class Ingredient(Agent):
 #                direction = self.rotAxis
                 if sum(self.rotAxis) == 0.0 :
                     rotMat=numpy.identity(4)
+                elif self.useOrientBias and self.packingMode =="gradient":#you need a gradient here
+                    rotMat=self.alignRotation(gridPointsCoords[ptInd] )
                 else :
                     rotMat=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
@@ -3421,6 +3425,9 @@ class Ingredient(Agent):
                     if sum(self.rotAxis) == 0.0 :
                         rotMatj=numpy.identity(4)  #Graham Oct 16,2012 Turned on always rotate below as default.  If you want no rotation
                                                    #set useRotAxis = 1 and set rotAxis = 0, 0, 0 for that ingredient
+                    elif self.useOrientBias and self.packingMode =="gradient":
+#                        rotMatj = self.getAxisRotation(rotMat)
+                        rotMatj = self.getBiasedRotation(rotMat)
                     else :
                         #should we align to this rotAxis ?
                         rotMatj=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
@@ -3434,28 +3441,31 @@ class Ingredient(Agent):
                 afvi.vi.setObjectMatrix(moving,mat,transpose=True)
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
-            if self.modelType=='Spheres':
-#                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
-#                print("jtrans = ", jtrans)
-                collision = histoVol.callFunction(self.checkSphCollisions,(
-                    self.positions[level], self.radii[level], jtrans, rotMatj,
-                    level, gridPointsCoords, distance, histoVol))
-#                print("jitter collision = ", collision, " for pt = ", ptInd, " with jtrans = ", jtrans)
-            elif self.modelType=='Cylinders':
-                collision = histoVol.callFunction(self.checkCylCollisions,(
-                    self.positions[level], self.positions2[level],
-                    self.radii[level], jtrans, rotMatj, gridPointsCoords,
-                     distance, histoVol))
-            elif self.modelType=='Cube':
-                collision = histoVol.callFunction(self.checkCubeCollisions,(
-                    self.positions[0], self.positions2[0], self.radii,
-                    jtrans, rotMatj, gridPointsCoords,
-                    distance, histoVol))
+            collision = True
+            r=False#self.testPoint(jtrans)
+            if not r :                    
+                if self.modelType=='Spheres':
+    #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
+    #                print("jtrans = ", jtrans)
+                    collision = histoVol.callFunction(self.checkSphCollisions,(
+                        self.positions[level], self.radii[level], jtrans, rotMatj,
+                        level, gridPointsCoords, distance, histoVol))
+    #                print("jitter collision = ", collision, " for pt = ", ptInd, " with jtrans = ", jtrans)
+                elif self.modelType=='Cylinders':
+                    collision = histoVol.callFunction(self.checkCylCollisions,(
+                        self.positions[level], self.positions2[level],
+                        self.radii[level], jtrans, rotMatj, gridPointsCoords,
+                         distance, histoVol))
+                elif self.modelType=='Cube':
+                    collision = histoVol.callFunction(self.checkCubeCollisions,(
+                        self.positions[0], self.positions2[0], self.radii,
+                        jtrans, rotMatj, gridPointsCoords,
+                        distance, histoVol))
             if not collision:
                 break # break out of jitter pos loop
         if verbose: 
             print("jitter loop ",time()-t1)
-        if not collision:
+        if not collision and not r:
             ## get inside points and update distance
             ##
             # use best sperical approcimation
@@ -3743,15 +3753,15 @@ class Ingredient(Agent):
 #                direction = self.rotAxis
                 if sum(self.rotAxis) == 0.0 :
                     rotMat=numpy.identity(4)
-                elif self.useOrientBias :
-                    rotMatAligned=self.alignRotation(gridPointsCoords[ptInd] )
+                elif self.useOrientBias and self.packingMode =="gradient":#you need a gradient here
+                    rotMat=self.alignRotation(gridPointsCoords[ptInd] )
 #                    print("rotAxis = ", self.rotAxis)
 #                    print("rotRange = ", self.rotRange)
 #                    print("rotMat aligned = ", rotMatAligned)
 #                    print("**************************************************Rotate GRADIENT ON **************************")
 #                    rotMatRand = autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
 #                    print("rotMat random = ", rotMatRand)
-                    rotMat = self.getBiasedRotation(rotMatAligned)
+#                    
 #                    print("rotMat biased = ", rotMat)
                 else :
                     rotMat=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
@@ -3872,8 +3882,9 @@ class Ingredient(Agent):
                 if self.useRotAxis :
                     if sum(self.rotAxis) == 0.0 :
                         rotMatj=numpy.identity(4)
-                    elif self.packingMode =="gradient":
-                        rotMatj=self.getAxisRotation(rotMat)
+                    elif self.useOrientBias and self.packingMode =="gradient":
+#                        rotMatj = self.getAxisRotation(rotMat)
+                        rotMatj = self.getBiasedRotation(rotMat)
                     else :
                         rotMatj=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
                 else :
@@ -4764,6 +4775,8 @@ class Ingredient(Agent):
 #                direction = self.rotAxis
                 if sum(self.rotAxis) == 0.0 :
                     rotMat=numpy.identity(4)
+                elif self.useOrientBias and self.packingMode =="gradient":#you need a gradient here
+                    rotMat=self.alignRotation(gridPointsCoords[ptInd] )
                 else :
                     rotMat=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
@@ -4875,6 +4888,9 @@ class Ingredient(Agent):
                 if self.useRotAxis :
                     if sum(self.rotAxis) == 0.0 :
                         rotMatj=numpy.identity(4)
+                    elif self.useOrientBias and self.packingMode =="gradient":
+#                        rotMatj = self.getAxisRotation(rotMat)
+                        rotMatj = self.getBiasedRotation(rotMat)
                     else :
                         rotMatj=afvi.vi.rotation_matrix(random()*self.rotRange,self.rotAxis)
                 else :
