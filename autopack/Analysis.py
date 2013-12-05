@@ -180,7 +180,7 @@ class AnalyseAP:
         ind=numpy.nonzero(mask)[0]
         distances[ind]=0#cutoff   
         newd=numpy.append(distances,cutoff)
-        colors = Map(newd, ramp)#1D array of the grid x,y,1
+        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
 #        colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         base=self.helper.getObject(self.env.name+"distances_base")
@@ -208,7 +208,7 @@ class AnalyseAP:
         ind=numpy.nonzero(mask)[0]
         distances[ind]=0#cutoff   
         newd=numpy.append(distances,cutoff)
-        colors = Map(newd, ramp)#1D array of the grid x,y,1
+        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
 #        colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         base=self.helper.getObject(self.env.name+"distances_base_cube")
@@ -248,7 +248,7 @@ class AnalyseAP:
         ind=numpy.nonzero(mask)[0]
         distances[ind]=0#cutoff 
         newd=numpy.append(distances,cutoff)
-        colors = Map(newd, ramp)#1D array of the grid x,y,1
+        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
         autopack._colors = colors
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         p=self.helper.getObject(self.env.name+"distances")
