@@ -190,13 +190,23 @@ class Grid:
         if boundingBox is None :
             boundingBox= self.boundingBox
         space = self.gridSpacing
-        self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space*1.1547)
-        self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space*1.1547)
-        self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space*1.1547)
+        # we want the diagonal of the voxel, not the diagonal of the plane, so the second 1.1547 is was incorrect
+        environmentBoxEqualFillBox = True
+        if environmentBoxEqualFillBox: #environment.environmentBoxEqualFillBox:
+            self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space)#*1.1547) gridspacing is already multiplied by 1.1547
+            self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space)#*1.1547)
+            self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space)#*1.1547)
+        else:
+            self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0] + space, space)#*1.1547) gridspacing is already multiplied by 1.1547
+            self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1] + space, space)#*1.1547)
+            self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2] + space, space)#*1.1547)
+#        self._x = x = numpy.ogrid(boundingBox[0][0]: boundingBox[1][0]: space*1.1547j)
+#        self._y = y = numpy.ogrid(boundingBox[0][1]: boundingBox[1][1]: space*1.1547j)
+#        self._z = z = numpy.ogrid(boundingBox[0][2]: boundingBox[1][2]: space*1.1547j)
         #nx,ny,nz = self.nbGridPoints
-        nx = len(x) + 1 # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
-        ny = len(y) + 1
-        nz = len(z) + 1
+        nx = len(x) # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
+        ny = len(y)
+        nz = len(z)
         # Dec 5 2013, we need to confirm that the getPointsInBox function is also using +1, or potential neighbors will be missed
         # This used to be fine, but it may have changed?
         
