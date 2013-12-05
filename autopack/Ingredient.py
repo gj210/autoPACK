@@ -1782,7 +1782,7 @@ class Ingredient(Agent):
             axis = self.perturbAxis(self.perturbAxisAmplitude)
         else:
             axis = self.rotAxis
-        tau = gauss(self.orientBiasRotRangeMin*0.01, self.orientBiasRotRangeMax*0.01)#(-pi, pi)
+        tau = gauss(self.orientBiasRotRangeMin, self.orientBiasRotRangeMax)#(-pi, pi)
         rrot = rotax( (0,0,0), self.rotAxis, tau, transpose=1 )
         rot = numpy.dot(rot, rrot)
         return rot
@@ -3730,7 +3730,7 @@ class Ingredient(Agent):
                 print('PROBLEM ', self.name)
                 rotMat = numpy.identity(4)
         else:
-            self.useOrientBias = True
+#            self.useOrientBias = True
             if self.useRotAxis :
 #                angle = random()*6.2831#math.radians(random()*360.)#random()*pi*2.
 #                print "angle",angle,math.degrees(angle)
@@ -3739,14 +3739,14 @@ class Ingredient(Agent):
                     rotMat=numpy.identity(4)
                 elif self.useOrientBias :
                     rotMatAligned=self.alignRotation(gridPointsCoords[ptInd] )
-                    print("rotAxis = ", self.rotAxis)
-                    print("rotRange = ", self.rotRange)
-                    print("rotMat aligned = ", rotMatAligned)
-                    print("**************************************************Rotate GRADIENT ON **************************")
-                    rotMatRand = autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
-                    print("rotMat random = ", rotMatRand)
+#                    print("rotAxis = ", self.rotAxis)
+#                    print("rotRange = ", self.rotRange)
+#                    print("rotMat aligned = ", rotMatAligned)
+#                    print("**************************************************Rotate GRADIENT ON **************************")
+#                    rotMatRand = autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
+#                    print("rotMat random = ", rotMatRand)
                     rotMat = self.getBiasedRotation(rotMatAligned)
-                    print("rotMat biased = ", rotMat)
+#                    print("rotMat biased = ", rotMat)
                 else :
                     rotMat=autopack.helper.rotation_matrix(random()*self.rotRange,self.rotAxis)
             # for other points we get a random rotation
