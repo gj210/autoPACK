@@ -835,7 +835,23 @@ class AnalysisTab:
                         width=150,height=10,type="button",icon=None,
                     action=self.dsdist_plane,label="Disply grid distance as texture plane",
                                      variable=self.afgui.addVariable("int",0)) 
-        
+        #widget color ramp / cutoff
+        self.widget["color_ramp1"]=self.afgui._addElemt(name="color1",
+                                            width=40,height=10,
+                                            action=None,type="color",
+                                            icon=None,
+                                            value = [1,0,0],
+                                            variable=self.afgui.addVariable("color",[1,0,0]))                             
+        self.widget["color_ramp2"]=self.afgui._addElemt(name="color2",
+                                            width=40,height=10,
+                                            action=None,type="color",
+                                            icon=None,
+                                            value = [0,0,1],
+                                            variable=self.afgui.addVariable("color",[1,0,0]))                             
+        self.widget["cutoff"]=self.afgui._addElemt(name="cutoff",action=None,width=100,
+                          value=60.0,type="inputFloat",variable=self.afgui.addVariable("float",60.0),
+                            mini=0.0,maxi=2000.0)         
+
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
         #if volume rendering support could display a volume for distance array
@@ -861,6 +877,7 @@ class AnalysisTab:
         elemframe.append([self.widget["colordist"], self.widget["btn_color_dist"],])
         elemframe.append([self.widget["savedist"], self.widget["btn_save_dist"],])
         elemframe.append([self.widget["saveclosestdist"], self.widget["btn_save_closest_dist"],])
+        elemframe.append([self.widget["color_ramp1"],self.widget["color_ramp2"],self.widget["cutoff"]])
         elemframe.append([self.widget["display_distance"],])
         elemframe.append([self.widget["display_distance_cube"],])
         elemframe.append([self.widget["display_distance_plane"],])
@@ -877,17 +894,29 @@ class AnalysisTab:
                                   useMaterial=True,
                                   usePoint=self.afgui.getVal(self.widget["usePoint"]))
 
+    def getColorRampCutoff(self,):
+        color1 = self.afgui.getVal(self.widget["color_ramp1"])
+        color2 = self.afgui.getVal(self.widget["color_ramp2"])
+        cutoff = self.afgui.getVal(self.widget["cutoff"])
+        return color1,color2,cutoff
+        
     def dsdist_sphere(self,):
-        self.aap.displayDistance()#self.afgui.histoVol)
+        color1,color2,cutoff=self.getColorRampCutoff()
+        self.aap.displayDistance(ramp_color1=color1,ramp_color2=color2,
+                        ramp_color3=None,cutoff=cutoff)#self.afgui.histoVol)
         #or
         #self.afgui.afviewer.displayDistance(self.afgui.histoVol)
 
     def dsdist_cube(self,):
-        self.aap.displayDistanceCube(ramp_color1=[1,0,0],ramp_color2=[0,0,1],
-                        ramp_color3=None,cutoff=60.0)
+        color1,color2,cutoff=self.getColorRampCutoff()
+        self.aap.displayDistanceCube(ramp_color1=color1,ramp_color2=color2,
+                        ramp_color3=None,cutoff=cutoff)
 
     def dsdist_plane(self,):
-        self.aap.displayDistancePlane(self.afgui.histoVol)
+        color1,color2,cutoff=self.getColorRampCutoff()
+        self.aap.displayDistancePlane(ramp_color1=color1,
+                                      ramp_color2=color2,
+                        ramp_color3=None,cutoff=cutoff)
         
     def displayGradient(self,):
         """

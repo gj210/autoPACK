@@ -808,6 +808,7 @@ class Ingredient(Agent):
         if name == None:
             name = "%f"% molarity
         self.name = str(name)
+        self.o_name = str(name)
         self.Type = Type
         self.pdb = pdb        #pmv ?
         self.color = color    # color used for sphere display

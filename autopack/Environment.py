@@ -1213,7 +1213,7 @@ class Environment(CompartmentList):
                     for xmlf in liste_xmlfile :                    
                         xmlfile = autopack.retrieveFile(xmlf,
                                 destination = self.name+os.sep+"recipe"+os.sep,
-                            cache="recipes")
+                                cache="recipes")
                         if xmlfile :
                             xmlinclude = parse(xmlfile).documentElement
                             self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
@@ -3819,8 +3819,11 @@ h1 = Environment()
 
 #    @classmethod
     def getOneIngrJson(self,ingr,ingrdic):
+        name_ingr = ingr.name
+        if name_ingr not in ingrdic:
+            name_ingr = ingr.o_name
         for r in ingr.results:  
-            ingrdic[ingr.name]["results"].append([r[0]],r[1],)
+            ingrdic[name_ingr]["results"].append([r[0]],r[1],)
 #        print ("growingr?",ingr,ingr.name,isinstance(ingr, GrowIngrediant))
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             ingr.nbCurve = ingrdic["nbCurve"]
@@ -3893,9 +3896,16 @@ h1 = Environment()
         r =  self.exteriorRecipe
         if r :
             if "exteriorRecipe" in self.result_json:
-                for ingr in r.ingredients:        
-                    if ingr.name not in self.result_json["exteriorRecipe"] : continue
-                    iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json["exteriorRecipe"][ingr.name])
+                for ingr in r.ingredients:   
+                    name_ingr = ingr.name
+                    if name_ingr not in self.result_json["exteriorRecipe"] : 
+                        #backward compatiblity 
+                        if ingr.o_name not in self.result_json["exteriorRecipe"] : 
+                            continue
+                        else :
+                            name_ingr = ingr.o_name
+                    iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
+                          self.result_json["exteriorRecipe"][name_ingr])
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
@@ -3906,8 +3916,15 @@ h1 = Environment()
             if rs :
                 if orga.name+"_surfaceRecipe" in self.result_json:
                     for ingr in rs.ingredients:
-                        if ingr.name not in self.result_json[orga.name+"_surfaceRecipe"] : continue
-                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"][ingr.name])
+                        name_ingr = ingr.name
+                        if name_ingr not in self.result_json[orga.name+"_surfaceRecipe"] : 
+                            #backward compatiblity 
+                            if ingr.o_name not in self.result_json[orga.name+"_surfaceRecipe"] : 
+                                continue
+                            else :
+                                name_ingr = ingr.o_name
+                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
+                                    self.result_json[orga.name+"_surfaceRecipe"][name_ingr])
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
@@ -3916,8 +3933,15 @@ h1 = Environment()
             if ri :
                 if orga.name+"_innerRecipe" in self.result_json:
                     for ingr in ri.ingredients:                    
-                        if ingr.name not in self.result_json[orga.name+"_innerRecipe"] : continue
-                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"][ingr.name])
+                        name_ingr = ingr.name
+                        if name_ingr not in self.result_json[orga.name+"_innerRecipe"] : 
+                            #backward compatiblity 
+                            if ingr.o_name not in self.result_json[orga.name+"_innerRecipe"] : 
+                                continue
+                            else :
+                                name_ingr = ingr.o_name
+                        iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
+                                           self.result_json[orga.name+"_innerRecipe"][name_ingr])
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])

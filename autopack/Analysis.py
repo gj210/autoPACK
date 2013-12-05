@@ -167,18 +167,18 @@ class AnalyseAP:
 
     def displayDistance(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
                         ramp_color3=None,cutoff=60.0):
-        distances = self.env.grid.distToClosestSurf[:]
-        positions = self.env.grid.masterGridPositions[:]
+        distances = numpy.array(self.env.grid.distToClosestSurf[:])
+        positions = numpy.array(self.env.grid.masterGridPositions[:])
         #map the color as well ?
         from upy import colors as col
         from DejaVu.colorTool import Map
-        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
         mask = distances > cutoff
         ind=numpy.nonzero(mask)[0]
         distances[ind]=cutoff
-        mask = distances < -cutoff
+        mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
-        distances[ind]=cutoff   
+        distances[ind]=0#cutoff   
         colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         base=self.helper.getObject(self.env.name+"distances_base")
@@ -193,52 +193,53 @@ class AnalyseAP:
 
     def displayDistanceCube(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
                         ramp_color3=None,cutoff=60.0):
-        distances = self.env.grid.distToClosestSurf[:]
-        positions = self.env.grid.masterGridPositions[:]
+        distances = numpy.array(self.env.grid.distToClosestSurf[:])
+        positions = numpy.array(self.env.grid.masterGridPositions[:])
         #map the color as well ?
         from upy import colors as col
         from DejaVu.colorTool import Map
-        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
         mask = distances > cutoff
         ind=numpy.nonzero(mask)[0]
         distances[ind]=cutoff
-        mask = distances < -cutoff
+        mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
-        distances[ind]=cutoff   
+        distances[ind]=0#cutoff   
         colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
-        base=self.helper.getObject(self.env.name+"distances_base")
+        base=self.helper.getObject(self.env.name+"distances_base_cube")
         if base is None :
 #            base=self.helper.Sphere(self.env.name+"distances_base")[0]
             size = self.env.grid.gridSpacing
             base=self.helper.box(self.env.name+"distances_base_cube",
                                  center=[0.,0.,0.],size=[size,size,size])[0]
-        p=self.helper.getObject(self.env.name+"distances")
-        if p is not None :
-            self.helper.deleteObject(p)#recursif?
-        p = self.helper.newEmpty(self.env.name+"distances_cubes")
+        parent_cube=self.helper.getObject(self.env.name+"distances_cubes")
+        if parent_cube is not None :
+            self.helper.deleteObject(parent_cube)#recursif?
+        parent_cube = self.helper.newEmpty(self.env.name+"distances_cubes")
         #sphs=self.helper.instancesSphere(self.env.name+"distances_cubes",positions,distances,base,colors,None,parent=p)
         #can use cube also 
         for i,p in enumerate(positions):
             mat = self.helper.addMaterial("matcube"+str(i),colors[i])
             c = self.helper.newInstance(self.env.name+"distances_cubes_"+str(i),base,
-                                      location=p,material=mat)
+                                      location=p,material=mat,parent=parent_cube)
 
     def displayDistancePlane(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
                         ramp_color3=None,cutoff=60.0):
         #which axis ?
-        distances = self.env.grid.distToClosestSurf[:]
+        distances = numpy.array(self.env.grid.distToClosestSurf[:])
+#        positions = numpy.array(self.env.grid.masterGridPositions[:])
         #positions = self.env.grid.masterGridPositions[:]
         #map the color as well ?
         from upy import colors as col
         from DejaVu.colorTool import Map
-        ramp = col.getRamp([[1,0,0],[0,0,1]],size=255)   #color
+        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
         mask = distances > cutoff
         ind=numpy.nonzero(mask)[0]
         distances[ind]=cutoff
-        mask = distances < -cutoff
+        mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
-        distances[ind]=cutoff   
+        distances[ind]=0#cutoff   
         colors = Map(distances, ramp)#1D array of the grid x,y,1
         autopack._colors = colors
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
@@ -554,7 +555,7 @@ class AnalyseAP:
     
     def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0,fbox_bb = None):
         t1 = time()
-        print "seed is ",seed
+        print ("seed is ",seed, fbox_bb)
         self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
         t2 = time()
         print('time to run Fill5', t2-t1)
@@ -567,9 +568,7 @@ class AnalyseAP:
             data = nDimPoints[:,d]
             delta += (data - data[:,numpy.newaxis])**2
         return numpy.sqrt(delta)
-    
-
-        
+            
     def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
                plot = True,twod=True,fbox_bb=None):
         # doLoop automatically produces result files, images, and documents from the recipe while adjusting parameters
