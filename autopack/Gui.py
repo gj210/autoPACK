@@ -840,13 +840,13 @@ class AnalysisTab:
                                             width=40,height=10,
                                             action=None,type="color",
                                             icon=None,
-                                            value = [1,0,0],
-                                            variable=self.afgui.addVariable("color",[1,0,0]))                             
+                                            value = [1,1,1],
+                                            variable=self.afgui.addVariable("color",[1,1,1]))                             
         self.widget["color_ramp2"]=self.afgui._addElemt(name="color2",
                                             width=40,height=10,
                                             action=None,type="color",
                                             icon=None,
-                                            value = [0,0,1],
+                                            value = [1,0,0],
                                             variable=self.afgui.addVariable("color",[1,0,0]))                             
         self.widget["cutoff"]=self.afgui._addElemt(name="cutoff",action=None,width=100,
                           value=60.0,type="inputFloat",variable=self.afgui.addVariable("float",60.0),
