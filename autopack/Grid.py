@@ -194,9 +194,12 @@ class Grid:
         self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space*1.1547)
         self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space*1.1547)
         #nx,ny,nz = self.nbGridPoints
-        nx = len(x) 
-        ny = len(y) 
-        nz = len(z)
+        nx = len(x) + 1 # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
+        ny = len(y) + 1
+        nz = len(z) + 1
+        # Dec 5 2013, we need to confirm that the getPointsInBox function is also using +1, or potential neighbors will be missed
+        # This used to be fine, but it may have changed?
+        
         self.nbGridPoints = [nx,ny,nz]
         self.gridVolume = nx*ny*nz
         self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
