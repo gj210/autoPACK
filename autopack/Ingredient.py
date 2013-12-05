@@ -2899,10 +2899,13 @@ class Ingredient(Agent):
             else :
                 #request kdtree
                 nb=[]
-                if len(histoVol.rTrans) > 1 :
+                if len(histoVol.rTrans) >= 1 :
 #                    nb = histoVol.close_ingr_bhtree.query_ball_point(point,cutoff)
 #                else :#use the general query, how many we want
                     distance,nb = histoVol.close_ingr_bhtree.query(point,len(histoVol.rTrans))#len of ingr posed so far
+                    if len(histoVol.rTrans) == 1 :
+                        distance=[distance]
+                        nb=[nb]
                     R["indices"] = nb
                     R["distances"] = distance
                 return R
@@ -2927,10 +2930,10 @@ class Ingredient(Agent):
             self.histoVol.result.append([ jtrans, rotMatj, 
                             self, ptInd ])
         if self.histoVol.treemode == "bhtree":# "cKDTree"
-            if len(self.histoVol.rTrans) > 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
+            if len(self.histoVol.rTrans) >= 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
             self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
         else :
-            if len(self.histoVol.rTrans) > 1 :
+            if len(self.histoVol.rTrans) >= 1 :
                 self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
        
     def place(self,histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,usePP,
@@ -3999,11 +4002,11 @@ class Ingredient(Agent):
 #                    if len(self.histoVol.rTrans) > 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
 #                    if len(self.histoVol.rTrans) : self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
                     if self.histoVol.treemode == "bhtree":# "cKDTree"
-                        if len(self.histoVol.rTrans) > 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
+                        if len(self.histoVol.rTrans) >= 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
                         if len(self.histoVol.rTrans) : self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
                     else :
                         #rebuild kdtree
-                        if len(self.histoVol.rTrans) > 1 : self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
+                        if len(self.histoVol.rTrans) >= 1 : self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
                     self.histoVol.callFunction(self.histoVol.delRB,(rbnode,))                    
                     break # break out of jitter pos loop
                 else :
