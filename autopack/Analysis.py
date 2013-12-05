@@ -273,7 +273,7 @@ class AnalyseAP:
                                   center = self.env.grid.getCenter(),
                                 size=[math.fabs(d[0]),math.fabs(d[1])],
                                     parent=p)
-        self.helper.rotateObj(p,[-math.pi/2.0,0,0.0])
+        self.helper.rotateObj(p,[0,0,-math.pi/2.0])
         filename = autopack.cache_results+os.sep+self.env.name+"distances_plane_texture.png"
         c=colors.reshape((self.env.grid.nbGridPoints[0],
                           self.env.grid.nbGridPoints[1],
@@ -582,7 +582,7 @@ class AnalyseAP:
     def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0,fbox_bb = None):
         t1 = time()
         print ("seed is ",seed, fbox_bb)
-        self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
+        self.env.fill5(seedNum=14,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
         t2 = time()
         print('time to run Fill5', t2-t1)
 
