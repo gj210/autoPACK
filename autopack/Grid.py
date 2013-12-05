@@ -323,7 +323,7 @@ class Grid:
         NOTE : need to fix with grid build with numpy arrange
         """        
         #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
-        spacing1 = 1./(self.gridSpacing*1.1547)
+        spacing1 = 1./(self.gridSpacing)
         NX, NY, NZ = self.nbGridPoints
         OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
         ox, oy, oz = bb[0]
@@ -383,7 +383,7 @@ class Grid:
         NOTE : need to fix with grid build with numpy arrange
         """        
         #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
-        spacing1 = 1./self.gridSpacing*1.1547
+        spacing1 = 1./self.gridSpacing
         NX, NY, NZ = self.nbGridPoints
         OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
         ox, oy, oz = bb[0]
