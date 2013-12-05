@@ -193,8 +193,17 @@ class AnalyseAP:
         sphs=self.helper.instancesSphere(self.env.name+"distances",positions,distances,base,colors,None,parent=p)
         #can use cube also 
 
+#    def displayFillBoxCubeGrid(self,):
+#        bb_insidepoint = self.env.grid.getPointsInCubeFillBB(self.env.fbox, [0,0,0], 1.0)[:]#center and radius ?3,runTime=self.runTimeDisplay
+#        positions = numpy.array(self.env.grid.masterGridPositions[bb_insidepoint])    
+        
     def displayDistanceCube(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
                         ramp_color3=None,cutoff=60.0):
+#        if self.env.fbox is not None :
+#            bb_insidepoint = self.env.grid.getPointsInCubeFillBB(self.env.fbox, [0,0,0], 1.0)[:]#center and radius ?3,runTime=self.runTimeDisplay
+#            distances = numpy.array(self.env.grid.distToClosestSurf[bb_insidepoint])
+#            positions = numpy.array(self.env.grid.masterGridPositions[bb_insidepoint])    
+#        else :
         distances = numpy.array(self.env.grid.distToClosestSurf[:])
         positions = numpy.array(self.env.grid.masterGridPositions[:])
         #map the color as well ?
@@ -264,7 +273,7 @@ class AnalyseAP:
                                   center = self.env.grid.getCenter(),
                                 size=[math.fabs(d[0]),math.fabs(d[1])],
                                     parent=p)
-        self.helper.rotateObj(p,[0,math.pi,0.0])
+        self.helper.rotateObj(p,[-math.pi/2.0,0,0.0])
         filename = autopack.cache_results+os.sep+self.env.name+"distances_plane_texture.png"
         c=colors.reshape((self.env.grid.nbGridPoints[0],
                           self.env.grid.nbGridPoints[1],

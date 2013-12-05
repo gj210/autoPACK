@@ -3099,7 +3099,7 @@ h1 = Environment()
             self.fbox = kw["fbox"]
         if self.fbox is not None and not self.EnviroOnly :
             self.freePointMask = numpy.ones(nbFreePoints,dtype="int32")
-            bb_insidepoint = self.grid.getPointsInCube(self.fbox, [0,0,0], 1.0)[:]#center and radius ?3,runTime=self.runTimeDisplay
+            bb_insidepoint = self.grid.getPointsInCubeFillBB(self.fbox, [0,0,0], 1.0)[:]#center and radius ?3,runTime=self.runTimeDisplay
             self.freePointMask[bb_insidepoint]=0
             bb_outside = numpy.nonzero(self.freePointMask)
             self.grid.gridPtId[bb_outside] = 99999

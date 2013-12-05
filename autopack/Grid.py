@@ -77,6 +77,9 @@ class Grid:
         self.gridVolume = 0 # will be the toatl number of grid points
         # list of (x,y,z) for each grid point (x index moving fastest)
         self.masterGridPositions = []
+        self._x = None
+        self._y = None
+        self._z = None
         
         #this are specific for each compartment
         self.aInteriorGrids = []
@@ -187,9 +190,9 @@ class Grid:
         if boundingBox is None :
             boundingBox= self.boundingBox
         space = self.gridSpacing
-        x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space*1.1547)
-        y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space*1.1547)
-        z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space*1.1547)
+        self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space*1.1547)
+        self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space*1.1547)
+        self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space*1.1547)
         #nx,ny,nz = self.nbGridPoints
         nx = len(x) 
         ny = len(y) 
@@ -199,7 +202,11 @@ class Grid:
         self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
         #this is 60% faster than the for loop
 #        self.masterGridPositions = numpy.array(list(numpy.broadcast(*numpy.ix_(x, y, z))))
-        self.masterGridPositions = numpy.vstack(numpy.meshgrid(x,y,z)).reshape(3,-1).T
+#        self.masterGridPositions = numpy.vstack(numpy.meshgrid(x,y,z)).reshape(3,-1).T
+        self.masterGridPositions = numpy.vstack(numpy.meshgrid(x,y,z,copy=False)).reshape(3,-1).T
+        #this ay be faster but dont kno the implication
+#        np.vstack((ndmesh(x_p,y_p,z_p,copy=False))).reshape(3,-1).T
+        #from http://stackoverflow.com/questions/18253210/creating-a-numpy-array-of-3d-coordinates-from-three-1d-arrays
 
     def getPointCompartmentId(self,point,ray=1):
         #check if point inside on of the compartments
@@ -296,7 +303,67 @@ class Grid:
         if self.tree is None :
             self.tree = spatial.cKDTree(self.masterGridPositions, leafsize=10)
         return self.tree.query_ball_point(pt,diag)#len of ingr posed so far
-        
+  
+    def getPointsInCubeFillBB(self, bb, pt, radius,addSP=True,info=False):
+        """
+        Return all grid points indices inside the given bouding box.
+        NOTE : need to fix with grid build with numpy arrange
+        """        
+        #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
+        spacing1 = 1./(self.gridSpacing*1.1547)
+        NX, NY, NZ = self.nbGridPoints
+        OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
+        ox, oy, oz = bb[0]
+        ex, ey, ez = bb[1]
+
+        i0 = int(max(0, floor((ox-OX)*spacing1)))
+        i1 = int(min(NX, int((ex-OX)*spacing1))+1)
+
+        j0 = int(max(0, floor((oy-OY)*spacing1)))
+        j1 = int(min(NY, int((ey-OY)*spacing1))+1)
+
+        k0 = int(max(0, floor((oz-OZ)*spacing1)))
+        k1 = int(min(NZ, int((ez-OZ)*spacing1))+1)
+
+        i = min( NX-1, max( 0, round((ox-OX)*spacing1)))
+        j = min( NY-1, max( 0, round((oy-OY)*spacing1)))
+        k = min( NZ-1, max( 0, round((oz-OZ)*spacing1)))
+
+        ptIndices=[]
+#        print "Ob",self.boundingBox[0] 
+#        print "bb",bb[0]
+#        print "ijk",i0,j0,k0,i,j,k
+#        print "coord",self._x[i0],self._y[j0],self._z[k0],self._x[i],self._y[j],self._z[k]
+#        print i0,i1,j0,j1,k0,k1
+#        x=self._x[i0:i1]
+#        y=self._y[j0:j1]
+#        z=self._z[k0:k1]
+#        positions = numpy.vstack(numpy.meshgrid(x,y,z,copy=False)).reshape(3,-1).T
+#        distances=spatial.distance.cdist(self.masterGridPositions,positions)
+#        ptIndices = numpy.nonzero(distances == 0)[0]
+        pid=numpy.mgrid[i0:i1,j0:j1,k0:k1]
+        ijk=numpy.vstack(pid).reshape(3,-1).T
+        #in case 2D, meaning one of the dimension is 1
+        if NZ == 1 :
+            ptIndices = [p[2]+p[1]+NX*p[0] for p in ijk]
+        elif NY == 1:
+            ptIndices = [p[2]+p[1]+NX*p[0] for p in ijk]
+        elif NX == 1:
+            ptIndices = [p[2]+NY*p[1]+p[0] for p in ijk]
+        else :
+            ptIndices = [p[2]+NY*p[1]+NX*NY*p[0] for p in ijk]
+#        print "coordi",ptIndices[0],self.masterGridPositions[ptIndices[0]]
+       # add surface points
+        if addSP and self.nbSurfacePoints != 0:
+            result = numpy.zeros( (self.nbSurfacePoints,), 'i')
+            nb = self.surfPtsBht.closePoints(tuple(pt), radius, result )
+#            nb = self.surfPtsBht.query(tuple(pt),k=self.nbSurfacePoints)
+            dimx, dimy, dimz = self.nbGridPoints
+            ptIndices.extend(list(map(lambda x, length=self.gridVolume:x+length,
+                             result[:nb])) )
+        return ptIndices
+
+      
     def getPointsInCube(self, bb, pt, radius,addSP=True,info=False):
         """
         Return all grid points indices inside the given bouding box.
