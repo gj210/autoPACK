@@ -179,7 +179,9 @@ class AnalyseAP:
         mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
         distances[ind]=0#cutoff   
-        colors = Map(distances, ramp)
+        newd=numpy.append(distances,cutoff)
+        colors = Map(newd, ramp)#1D array of the grid x,y,1
+#        colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         base=self.helper.getObject(self.env.name+"distances_base")
         if base is None :
@@ -205,7 +207,9 @@ class AnalyseAP:
         mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
         distances[ind]=0#cutoff   
-        colors = Map(distances, ramp)
+        newd=numpy.append(distances,cutoff)
+        colors = Map(newd, ramp)#1D array of the grid x,y,1
+#        colors = Map(distances, ramp)
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         base=self.helper.getObject(self.env.name+"distances_base_cube")
         if base is None :
@@ -228,6 +232,9 @@ class AnalyseAP:
                         ramp_color3=None,cutoff=60.0):
         #which axis ?
         distances = numpy.array(self.env.grid.distToClosestSurf[:])
+        max_distance= max(distances)
+        min_distance= min(distances)
+        
 #        positions = numpy.array(self.env.grid.masterGridPositions[:])
         #positions = self.env.grid.masterGridPositions[:]
         #map the color as well ?
@@ -239,8 +246,9 @@ class AnalyseAP:
         distances[ind]=cutoff
         mask = distances < 0#-cutoff
         ind=numpy.nonzero(mask)[0]
-        distances[ind]=0#cutoff   
-        colors = Map(distances, ramp)#1D array of the grid x,y,1
+        distances[ind]=0#cutoff 
+        newd=numpy.append(distances,cutoff)
+        colors = Map(newd, ramp)#1D array of the grid x,y,1
         autopack._colors = colors
 #        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
         p=self.helper.getObject(self.env.name+"distances")
