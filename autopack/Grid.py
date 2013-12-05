@@ -198,7 +198,8 @@ class Grid:
         self.gridVolume = nx*ny*nz
         self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
         #this is 60% faster than the for loop
-        self.masterGridPositions = numpy.array(list(numpy.broadcast(*numpy.ix_(x, y, z))))
+#        self.masterGridPositions = numpy.array(list(numpy.broadcast(*numpy.ix_(x, y, z))))
+        self.masterGridPositions = numpy.vstack(numpy.meshgrid(x,y,z)).reshape(3,-1).T
 
     def getPointCompartmentId(self,point,ray=1):
         #check if point inside on of the compartments
