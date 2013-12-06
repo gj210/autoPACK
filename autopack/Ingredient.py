@@ -2447,6 +2447,7 @@ class Ingredient(Agent):
         inComp = True
         closeS = False
         inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=self.jitterMax)
+        print ("testPoint",newPt,inside,self.jitterMax)    
         if inside :
             inComp = self.checkPointComp(newPt)
             if inComp :
@@ -3911,10 +3912,11 @@ class Ingredient(Agent):
             rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             t=time()   
-            r=[]
+            r=[False]
+            test=self.testPoint(jtrans)
             #       checkif rb collide 
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
-            if True :
+            if not test :
                 #check for close surface ?
                 #closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
 #                raw_input()
@@ -3958,10 +3960,10 @@ class Ingredient(Agent):
                                     break
                         #r=[ (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 ) for node in liste_nodes]# in closesbody_indice if n != len(self.histoVol.rTrans)-1]  #except last one  that should be last drop fragment                        
 #                        r=[ (self.histoVol.world.contactTestPair(rbnode, self.histoVol.static[n]).getNumContacts() > 0 ) for n in closesbody_indice if n < len(self.histoVol.static)]  #except last one  that should be last drop fragment
-            else :
-                result2 = self.histoVol.world.contactTest(rbnode)
-                r = [( result2.getNumContacts() > 0),]    
-            print ("contact All ",(True in r), time()-t, len(r),self.encapsulatingRadius*2.,len(self.histoVol.rTrans))                 
+#            else :
+#                result2 = self.histoVol.world.contactTest(rbnode)
+#                r = [( result2.getNumContacts() > 0),]    
+#            print ("contact All ",(True in r), time()-t, len(r),self.encapsulatingRadius*2.,len(self.histoVol.rTrans))                 
 #            t=time()     
             collision2=( True in r)
             collisionComp = False
@@ -3969,7 +3971,7 @@ class Ingredient(Agent):
 #            print ("contactTestPair",collision2,time()-t)
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
-            if not collision2 :# and not collision2:
+            if not collision2 and not test :# and not collision2:
                 if self.compareCompartment:
                     if self.modelType=='Spheres':
         #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
@@ -4017,7 +4019,7 @@ class Ingredient(Agent):
 #        if verbose: 
 #        print("jitter loop ",time()-t1)
             self.histoVol.callFunction(self.histoVol.delRB,(rbnode,)) 
-        if not collision2 :# and not collision2:
+        if not collision2 and not test:# and not collision2:
 #            print("jtrans for NotCollision= ", jtrans)
             
             ## get inside points and update distance

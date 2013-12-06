@@ -436,16 +436,20 @@ class AnalyseAP:
         basename = self.env.basename
         numpy.savetxt(basename+"total_pos.csv", numpy.array(all_positions), delimiter=",") 
         px,py,pz = self.getAxesValues(all_positions)
-        self.histo(px,basename+"total_histo_X.png",bins=20)
-        self.histo(py,basename+"total_histo_Y.png",bins=20)
-        self.histo(pz,basename+"total_histo_Z.png",bins=20)
+        m1=numpy.nonzero( numpy.logical_and(
+               numpy.greater_equal(px, 0.), numpy.less_equal(px, 1000.0)))
+        m2=numpy.nonzero( numpy.logical_and(
+               numpy.greater_equal(py, 0.), numpy.less_equal(py, 1000.0)))
+        self.histo(px[m1],basename+"total_histo_X.png",bins=10)
+        self.histo(py[m2],basename+"total_histo_Y.png",bins=10)
+#        self.histo(pz,basename+"total_histo_Z.png",bins=20)
 
     def axis_distribution(self,ingr):
         basename = self.env.basename
         px,py,pz = self.getAxesValues(self.env.ingrpositions[ingr.name])
-        self.histo(px,basename+ingr.name+"_histo_X.png",bins=20)
-        self.histo(py,basename+ingr.name+"_histo_Y.png",bins=20)
-        self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=20)
+        self.histo(px,basename+ingr.name+"_histo_X.png",bins=10)
+        self.histo(py,basename+ingr.name+"_histo_Y.png",bins=10)
+        self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=10)
         #do it for all ingredient cumulate?
         
     def correlation(self,ingr):
@@ -530,11 +534,11 @@ class AnalyseAP:
         pylab.clf()
         mu, sigma = numpy.mean(distances) , numpy.std(distances)
         ## the histogram of the data
-        b=numpy.arange(distances.min(), distances.max(), 2)
-        n, bins, patches = pyplot.hist(distances, bins=bins, normed=0, facecolor='green')#, alpha=0.75)
+#        b=numpy.arange(distances.min(), distances.max(), 2)
+        n, bins, patches = pyplot.hist(distances, bins=bins, normed=1, facecolor='green')#, alpha=0.75)
         # add a 'best fit' line?
         y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
-        l = pyplot.plot(bins, y, 'r--', linewidth=1)
+#        l = pyplot.plot(bins, y, 'r--', linewidth=3)
         pyplot.savefig(filename)     
         pylab.close()     # closes the current figure
         
@@ -582,7 +586,7 @@ class AnalyseAP:
     def pack(self,seed=20,forceBuild=True,vTestid = 3,vAnalysis = 0,fbox_bb = None):
         t1 = time()
         print ("seed is ",seed, fbox_bb)
-        self.env.fill5(seedNum=14,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
+        self.env.fill5(seedNum=seed,verbose=4, vTestid = vTestid,vAnalysis = vAnalysis,fbox = fbox_bb)
         t2 = time()
         print('time to run Fill5', t2-t1)
 
@@ -596,7 +600,7 @@ class AnalyseAP:
         return numpy.sqrt(delta)
             
     def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
-               plot = True,twod=True,fbox_bb=None):
+               plot = True,twod=True,fbox_bb=None,use_file = True):
         # doLoop automatically produces result files, images, and documents from the recipe while adjusting parameters
         # To run doLoop, 1) in your host's python console type:
         # execfile(pathothis recipe) # for example, on my computer:
@@ -605,6 +609,8 @@ class AnalyseAP:
         #    Results will appear in the result folder of your recipe path
         # where n is the number of loop, seed = i
         #analyse.doloop(n) 
+        position_file=output+os.sep+"pos"
+        distance_file=output+os.sep+"dist"
         rangeseed=range(n)
         distances={}
         ingrpositions={}
@@ -650,10 +656,18 @@ class AnalyseAP:
                         if ingr.packingMode=='gradient' and self.env.use_gradient:
                             self.center = center = self.env.gradients[ingr.gradient].direction
                         ingrpos,d=self.getDistance(ingr.name, center)
-                        distances[ingr.name].extend(d)
-                        ingrpositions[ingr.name].extend(ingrpos)
-                        total_positions.extend(ingrpos)
-                        total_distances.extend(d)
+                        if use_file :
+                            f_handle = file(position_file, 'a')
+                            numpy.savetxt(f_handle, ingrpos, delimiter=",")
+                            f_handle.close()
+                            f_handle = file(distance_file, 'a')
+                            numpy.savetxt(f_handle, d, delimiter=",")
+                            f_handle.close()
+                        else :
+                            distances[ingr.name].extend(d)
+                            ingrpositions[ingr.name].extend(ingrpos)
+                            total_positions.extend(ingrpos)
+                            total_distances.extend(d)
                         #print plot,twod
                         if plot and twod:
                             for i,p in enumerate(ingrpos): 
@@ -680,10 +694,18 @@ class AnalyseAP:
                             if ingr.packingMode=='gradient' and self.env.use_gradient :
                                 center = self.env.gradients[ingr.gradient].direction
                             ingrpos,d=self.getDistance(ingr.name, center)
-                            distances[ingr.name].extend(d)
-                            ingrpositions[ingr.name].extend(ingrpos)
-                            total_positions.extend(ingrpos)
-                            total_distances.extend(d)
+                            if use_file :
+                                f_handle = file(position_file, 'a')
+                                numpy.savetxt(f_handle, ingrpos, delimiter=",")
+                                f_handle.close()
+                                f_handle = file(distance_file, 'a')
+                                numpy.savetxt(f_handle, d, delimiter=",")
+                                f_handle.close()
+                            else :
+                                distances[ingr.name].extend(d)
+                                ingrpositions[ingr.name].extend(ingrpos)
+                                total_positions.extend(ingrpos)
+                                total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
@@ -698,10 +720,18 @@ class AnalyseAP:
                             if ingr.packingMode=='gradient' and self.env.use_gradient:
                                 center = self.env.gradients[ingr.gradient].direction
                             ingrpos,d=self.getDistance(ingr.name, center)
-                            distances[ingr.name].extend(d)
-                            ingrpositions[ingr.name].extend(ingrpos)
-                            total_positions.extend(ingrpos)
-                            total_distances.extend(d)
+                            if use_file :
+                                f_handle = file(position_file, 'a')
+                                numpy.savetxt(f_handle, ingrpos, delimiter=",")
+                                f_handle.close()
+                                f_handle = file(distance_file, 'a')
+                                numpy.savetxt(f_handle, d, delimiter=",")
+                                f_handle.close()
+                            else :
+                                distances[ingr.name].extend(d)
+                                ingrpositions[ingr.name].extend(ingrpos)
+                                total_positions.extend(ingrpos)
+                                total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
@@ -716,6 +746,8 @@ class AnalyseAP:
                     pyplot.savefig(basename+".png")
                     pylab.close()     # closes the current figure
         #plot(x)
+        if use_file :
+            total_positions = numpy.genfromtxt(position_file, delimiter=',')        
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
         self.env.basename = basename

@@ -93,22 +93,25 @@ class Grid:
         self.encapsulatingGrid = 1
         if setup :
             self.setup(boundingBox,space)
-        
+        #use np.roll to have periodic condition
+        #what about collision ?
+            
     def setup(self,boundingBox,space):
         self.gridSpacing = space*1.1547
         self.boundingBox = boundingBox
         #self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
-        self.create3DPointLookup()
+#        self.create3DPointLookup()
+        self.create3DPointLookupCover()
         self.getDiagonal()
         self.nbSurfacePoints = 0
-        print ("$$$$$$", self.gridVolume)
+        print ("$$$$$$", self.gridVolume,self.gridSpacing)
         self.gridPtId = numpy.zeros(self.gridVolume,'i')#[0]*nbPoints
         #self.distToClosestSurf = [self.diag]*self.gridVolume#surface point too?
         self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
         self.freePoints = list(range(self.gridVolume))
         self.nbFreePoints =len(self.freePoints)
         print ("$$$$$$$$  1 ",boundingBox,space,self.gridSpacing,len(self.gridPtId))
-        self.create3DPointLookup()
+#        self.create3DPointLookup()#whatdoI do it twice ?
         print("$$$$$$$$  gridVolume = nbPoints = ", self.gridVolume, 
                           " grid.nbGridPoints = ", self.nbGridPoints,
                           "gridPId = ",len(self.gridPtId),
@@ -192,6 +195,7 @@ class Grid:
         space = self.gridSpacing
         # we want the diagonal of the voxel, not the diagonal of the plane, so the second 1.1547 is was incorrect
         environmentBoxEqualFillBox = True
+        #np.linspace(2.0, 3.0, num=5)
         if environmentBoxEqualFillBox: #environment.environmentBoxEqualFillBox:
             self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space)#*1.1547) gridspacing is already multiplied by 1.1547
             self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space)#*1.1547)
@@ -220,6 +224,42 @@ class Grid:
         #this ay be faster but dont kno the implication
 #        np.vstack((ndmesh(x_p,y_p,z_p,copy=False))).reshape(3,-1).T
         #from http://stackoverflow.com/questions/18253210/creating-a-numpy-array-of-3d-coordinates-from-three-1d-arrays
+
+    def create3DPointLookupCover(self, boundingBox=None):
+        """
+        Fill the orthogonal bounding box described by two global corners
+        with an array of points spaces pGridSpacing apart. Optimized version using
+        numpy broadcasting
+        """
+        if boundingBox is None :
+            boundingBox= self.boundingBox
+        space = self.gridSpacing
+        S =  numpy.array(boundingBox[1])-numpy.array(boundingBox[0])
+        NX,NY,NZ = numpy.around(S/self.gridSpacing)
+        if NX == 0 : NX=1
+        if NY == 0 : NY=1
+        if NZ == 0 : NZ=1
+        print NX,NY,NZ
+        # we want the diagonal of the voxel, not the diagonal of the plane, so the second 1.1547 is was incorrect
+        environmentBoxEqualFillBox = True
+        #np.linspace(2.0, 3.0, num=5)
+        if environmentBoxEqualFillBox: #environment.environmentBoxEqualFillBox:
+            self._x = x = numpy.linspace(boundingBox[0][0], boundingBox[1][0], int(NX))#*1.1547) gridspacing is already multiplied by 1.1547
+            self._y = y = numpy.linspace(boundingBox[0][1], boundingBox[1][1], int(NY))#*1.1547)
+            self._z = z = numpy.linspace(boundingBox[0][2], boundingBox[1][2], int(NZ))#*1.1547)
+        else:
+            self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0] + space, space)#*1.1547) gridspacing is already multiplied by 1.1547
+            self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1] + space, space)#*1.1547)
+            self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2] + space, space)#*1.1547)
+        xyz = numpy.meshgrid(x,y,z,copy=False)
+        nx = len(x) # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
+        ny = len(y)
+        nz = len(z)
+        self.gridSpacing = x[1]-x[0]
+        self.nbGridPoints = [nx,ny,nz]
+        self.gridVolume = nx*ny*nz
+        self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
+        self.masterGridPositions = numpy.vstack(xyz).reshape(3,-1).T
 
     def getPointCompartmentId(self,point,ray=1):
         #check if point inside on of the compartments
@@ -279,18 +319,23 @@ class Grid:
         test2 =  P > E
         if True in test1 or True in test2:
             #outside
+            print "outside"
             return False
         else :
             if dist is not None:
+                print "ok distance ",dist,P
                 #distance to closest wall
-                d1 = P - O
-                s1=min(x for x in (d1*jitter) if x != 0)
+                d1 = (P - O)*jitter
+                s1=min(x for x in d1[d1 != 0] if x != 0)
+                print d1,s1,s1<=dist
                 #s1 = numpy.sum(d1*d1)
-                d2 = E - P
-                s2=min(x for x in (d2*jitter) if x != 0)
+                d2 = (E - P)*jitter
+                s2=min(x for x in d2[d2 != 0] if x != 0)
+                print d2,s2,s2<=dist
                 #s2 = numpy.sum(d2*d2)
                 if s1 <= dist or s2 <=dist:
-                   return False 
+                    print ("too close")
+                    return False 
             return True
         
     def getCenter(self):
@@ -338,9 +383,22 @@ class Grid:
         k0 = int(max(0, floor((oz-OZ)*spacing1)))
         k1 = int(min(NZ, int((ez-OZ)*spacing1))+1)
 
-        i = min( NX-1, max( 0, round((ox-OX)*spacing1)))
-        j = min( NY-1, max( 0, round((oy-OY)*spacing1)))
-        k = min( NZ-1, max( 0, round((oz-OZ)*spacing1)))
+        i0 = int(min( NX-1, max( 0, round((ox-OX)*spacing1))))
+        j0 = int(min( NY-1, max( 0, round((oy-OY)*spacing1))))
+        k0 = int(min( NZ-1, max( 0, round((oz-OZ)*spacing1))))
+        i1 = int(min( NX, max( 0, round((ex-OX)*spacing1))))
+        j1 = int(min( NY, max( 0, round((ey-OY)*spacing1))))
+        k1 = int(min( NZ, max( 0, round((ez-OZ)*spacing1))))
+
+        if NZ == 1 :
+            k0=0
+            k1=1
+        elif NY == 1:
+            j0=0
+            j1=1
+        elif NX == 1:
+            i0=0
+            i1=1
 
         ptIndices=[]
 #        print "Ob",self.boundingBox[0] 
@@ -382,6 +440,7 @@ class Grid:
         Return all grid points indices inside the given bouding box.
         NOTE : need to fix with grid build with numpy arrange
         """        
+        #return self.getPointsInCubeFillBB(bb, pt, radius,addSP=addSP,info=info)
         #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
         spacing1 = 1./self.gridSpacing
         
