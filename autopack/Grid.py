@@ -100,8 +100,8 @@ class Grid:
         self.gridSpacing = space*1.1547
         self.boundingBox = boundingBox
         #self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
-#        self.create3DPointLookup()
-        self.create3DPointLookupCover()
+        self.create3DPointLookup()
+#        self.create3DPointLookupCover()
         self.getDiagonal()
         self.nbSurfacePoints = 0
         print ("$$$$$$", self.gridVolume,self.gridSpacing)
