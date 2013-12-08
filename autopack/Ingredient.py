@@ -833,6 +833,7 @@ class Ingredient(Agent):
         self.moving = None
         self.moving_geom = None
         self.rb_nodes = []#store rbnode. no more than X ?
+        self.bullet_nodes =[None,None]#try only store 2, and move them when needd
         self.limit_nb_nodes = 50
         self.vi = autopack.helper
         self.minRadius = 0
@@ -1308,7 +1309,15 @@ class Ingredient(Agent):
             self.create_rapid_model()
             #print ("OK")
         return self.rapid_model 
-            
+
+    def get_rb_model(self,alt=False):
+        ret = 0        
+        if alt :
+            ret=1
+        if (self.bullet_nodes[ret] is None ):
+            self.bullet_nodes[ret] = self.histoVol.addRB(self,[0.,0.,0.], numpy.identity(4),rtype=self.Type)
+        return self.bullet_nodes[ret]
+
     def getMesh(self, filename, geomname):
         """
         Create a mesh representation from a filename for the ingredient
@@ -2797,6 +2806,74 @@ class Ingredient(Agent):
             organelle = self.histoVol
         else :
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
+#        nodes = self.histoVol.rb_panda[:-1]
+#        for n in nodes:
+#            #reset everything 
+#            #print ("delete node ",n)
+#            self.histoVol.delRB(n)
+        nodes = []
+        ingrCounter={}
+#        a=numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]]
+#        b=numpy.array([currentpt,])
+        distances=close_indice["distances"]#spatial.distance.cdist(a,b)#close_indice["distance"]
+        print ("retrieve ",len(close_indice["indices"]))
+        for nid,n in enumerate(close_indice["indices"]):
+            if n >= len(self.histoVol.rIngr):
+                continue
+            if distances[nid] == 0.0 : continue
+#            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
+            ingr= self.histoVol.rIngr[n]
+#            print self.name+" is close to "+ingr.name
+            jtrans=self.histoVol.rTrans[n]
+            rotMat=self.histoVol.rRot[n]
+            if prevpoint != None :
+                #if prevpoint == jtrans : continue
+                d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(prevpoint))
+                if d == 0 : #same point
+                    continue
+            if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
+                continue
+            if self.Type == "Grow":
+                if self.name == ingr.name :
+                    c = len(self.histoVol.rIngr)
+                    if (n==c) or n==(c-1) :#or  (n==(c-2)):
+                        continue
+            if ingr.name in self.partners and self.Type == "Grow":
+                c = len(self.histoVol.rIngr)
+                if (n==c) or n==(c-1) or (n==c-2):
+                    continue   
+            rbnode = ingr.get_rb_model(alt=(ingr.name==self.name))
+            if getInfo :
+                nodes.append([rbnode, jtrans, rotMat,ingr])
+            else :
+                nodes.append(rbnode)
+#            print "get",ingr.name,self.name,rbnode,distances[nid],(ingr.encapsulatingRadius+self.encapsulatingRadius)
+        #append organelle rb nodes
+        for o in self.histoVol.compartments:
+            if self.compNum > 0 and o.name == organelle.name:
+                continue
+            if o.rbnode is not None : 
+                if not getInfo :
+                    nodes.append(o.rbnode)
+                else :
+                    nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
+#        if self.compNum < 0 or self.compNum == 0 :     
+#            for o in self.histoVol.compartments:
+#                if o.rbnode is not None : 
+#                    if not getInfo :
+#                        nodes.append(o.rbnode)
+#        print len(nodes),nodes
+        self.histoVol.nodes = nodes
+        return nodes
+
+    def get_rbNodesOld(self,close_indice,currentpt,removelast=False,prevpoint=None,
+                     getInfo=False):
+        #move around the rbnode and return it
+        #self.histoVol.loopThroughIngr( self.histoVol.reset_rbnode )   
+        if self.compNum == 0 :
+            organelle = self.histoVol
+        else :
+            organelle = self.histoVol.compartments[abs(self.compNum)-1]
         nodes = self.histoVol.rb_panda[:-1]
         for n in nodes:
             #reset everything 
@@ -2885,7 +2962,7 @@ class Ingredient(Agent):
 #        print len(nodes),nodes
         self.histoVol.nodes = nodes
         return nodes
-
+        
     def getClosestIngredient(self,point,histoVol,cutoff=10.0):
         #may have to rebuild the whale tree every time we add a point
         #grab the current result
@@ -3910,10 +3987,10 @@ class Ingredient(Agent):
 #                print ("ok reject once")
 #                self.rejectOnce(None,moving,afvi)
 #                continue
-                
+            rbnode = self.get_rb_model()
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
-            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
-#            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
+#            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
+            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             t=time()   
             r=[False]
             test=False#self.testPoint(jtrans)
@@ -3927,11 +4004,11 @@ class Ingredient(Agent):
                 if len(self.histoVol.rTrans) == 0 : r=[False]
                 else :
                     print("getClosestIngredient",jtrans)
-                    closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius)#vself.radii[0][0]*2.0
+                    closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
                     print ("len(closesbody_indice) ",len(closesbody_indice),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )                    
                     if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
                     else : 
-                        liste_nodes = self.get_rbNodes(closesbody_indice,jtrans)
+                        liste_nodes = self.get_rbNodes(closesbody_indice,jtrans,getInfo=True)
                         print ("len(liste_nodes) ",len(liste_nodes) )
                         if usePP :
                             #use self.grab_cb and self.pp_server
@@ -3957,7 +4034,10 @@ class Ingredient(Agent):
                             #why will it be not woking with organelle ? 
                             #tranformation prolem ?
                             for node in liste_nodes:
-                                col = (self.histoVol.world.contactTestPair(rbnode, node).getNumContacts() > 0 )
+                                self.histoVol.moveRBnode(node[0], node[1], node[2])  #Pb here ? 
+#                                print (node[0],node[1])
+                                col = (self.histoVol.world.contactTestPair(rbnode, node[0]).getNumContacts() > 0 )
+#                                print ("collision ?",self.name,node[3].name,col,autopack.helper.measure_distance(jtrans,node[1]))
                                 r=[col]
                                 if col :
                                     break
@@ -4021,7 +4101,7 @@ class Ingredient(Agent):
                 #remove the node
 #        if verbose: 
 #        print("jitter loop ",time()-t1)
-            self.histoVol.callFunction(self.histoVol.delRB,(rbnode,)) 
+#            self.histoVol.callFunction(self.histoVol.delRB,(rbnode,)) 
         if not collision2 and not test:# and not collision2:
 #            print("jtrans for NotCollision= ", jtrans)
             drop = True    
@@ -4210,7 +4290,7 @@ class Ingredient(Agent):
             self.rejectionCounter = 0
             
         else: # got rejected
-            histoVol.callFunction(histoVol.delRB,(rbnode,))
+#            histoVol.callFunction(histoVol.delRB,(rbnode,))
             if runTimeDisplay and moving is not None :
                 afvi.vi.deleteObject(moving)
             success = False
@@ -5165,6 +5245,7 @@ class Ingredient(Agent):
                 (self, jitterList, collD1, collD2) )
 
             distance[ptInd] = max(0, distance[ptInd]*0.9)# ???
+            print ("distance reduce ",distance[ptInd] )
             self.rejectionCounter += 1
             if verbose :
                 print('Failed ingr:%s rejections:%d'%(

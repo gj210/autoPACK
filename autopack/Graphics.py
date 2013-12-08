@@ -2159,7 +2159,7 @@ class AutopackViewer:
             self.helper.deleteObject(parent) #is this dleete the child ?
         #need to do the same for cylinder
         if self.doSpheres :
-            orga = ingr.recipe().compartment()
+            orga = ingr.recipe.compartment
             name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
             parent = self.helper.getObject(name)
             print (name,parent)            
