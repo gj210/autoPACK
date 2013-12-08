@@ -2849,8 +2849,9 @@ h1 = Environment()
                 cut = ingr.length-jitter
 #            if ingr.modelType=='Cube' : #radius iactually the size
 #                cut = min(self.radii[0]/2.)-jitter
-            elif ingr.cutoff_boundary is not None :
-                cut  = radius+ingr.cutoff_boundary-jitter
+#            elif ingr.cutoff_boundary is not None :
+#                #this may work if we have the distance from the border   
+#                cut  = radius+ingr.cutoff_boundary-jitter
             else :
                 cut  = radius-jitter
             for pt in freePoints:#[:nbFreePoints]:
@@ -2867,8 +2868,8 @@ h1 = Environment()
 #            print("len (allIngrPts) = ", len(allIngrPts))
             if ingr.modelType=='Cylinders' and ingr.useLength :
                 cut = ingr.length-jitter
-            elif ingr.cutoff_boundary is not None :
-                cut  = radius+ingr.cutoff_boundary-jitter                
+#            elif ingr.cutoff_boundary is not None :
+#                cut  = radius+ingr.cutoff_boundary-jitter                
             else :
                 cut  = radius-jitter
             #for pt in freePoints[:nbFreePoints]:

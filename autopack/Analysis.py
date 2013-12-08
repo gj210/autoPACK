@@ -8,6 +8,8 @@ import os
 import math
 import numpy
 import csv
+import json
+
 from time import time
 try :
     import matplotlib
@@ -28,6 +30,70 @@ import autopack
 from autopack.GeometryTools import GeometriTools,Rectangle
 import Image
 
+def angle_between_vectors(v0, v1, directed=True, axis=0):
+    """Return angle between vectors.
+    If directed is False, the input vectors are interpreted as undirected axes,
+    i.e. the maximum angle is pi/2.
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3])
+    >>> numpy.allclose(a, math.pi)
+    True
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3], directed=False)
+    >>> numpy.allclose(a, 0)
+    True
+    >>> v0 = [[2, 0, 0, 2], [0, 2, 0, 2], [0, 0, 2, 2]]
+    >>> v1 = [[3], [0], [0]]
+    >>> a = angle_between_vectors(v0, v1)
+    >>> numpy.allclose(a, [0, 1.5708, 1.5708, 0.95532])
+    True
+    >>> v0 = [[2, 0, 0], [2, 0, 0], [0, 2, 0], [2, 0, 0]]
+    >>> v1 = [[0, 3, 0], [0, 0, 3], [0, 0, 3], [3, 3, 3]]
+    >>> a = angle_between_vectors(v0, v1, axis=1)
+    >>> numpy.allclose(a, [1.5708, 1.5708, 1.5708, 0.95532])
+    True
+    """
+    v0 = numpy.array(v0, dtype=numpy.float64, copy=False)
+    v1 = numpy.array(v1, dtype=numpy.float64, copy=False)
+    dot = numpy.sum(v0 * v1, axis=axis)
+    dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
+    return numpy.arccos(dot if directed else numpy.fabs(dot))    
+
+def vector_norm(data, axis=None, out=None):
+    """Return length, i.e. Euclidean norm, of ndarray along axis.
+    >>> v = numpy.random.random(3)
+    >>> n = vector_norm(v)
+    >>> numpy.allclose(n, numpy.linalg.norm(v))
+    True
+    >>> v = numpy.random.rand(6, 5, 3)
+    >>> n = vector_norm(v, axis=-1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=2)))
+    True
+    >>> n = vector_norm(v, axis=1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> v = numpy.random.rand(5, 4, 3)
+    >>> n = numpy.empty((5, 3))
+    >>> vector_norm(v, axis=1, out=n)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> vector_norm([])
+    0.0
+    >>> vector_norm([1])
+    1.0
+    """
+    data = numpy.array(data, dtype=numpy.float64, copy=True)
+    if out is None:
+        if data.ndim == 1:
+            return math.sqrt(numpy.dot(data, data))
+        data *= data
+        out = numpy.atleast_1d(numpy.sum(data, axis=axis))
+        numpy.sqrt(out, out)
+        return out
+    else:
+        data *= data
+        numpy.sum(data, axis=axis, out=out)
+        numpy.sqrt(out, out)        
+        
+        
 class AnalyseAP:
     def __init__(self, env=None, viewer=None, result_file=None):
         self.env=None
@@ -284,11 +350,16 @@ class AnalyseAP:
         mat = self.helper.createTexturedMaterial(self.env.name+"planeMat",str(filename))
         #assign the material to the plane
         self.helper.assignMaterial(p,mat,texture=True)
+
+
+    def writeJSON(self,filename,data):
+        with open(filename, 'w') as fp :#doesnt work with symbol link ?
+            json.dump(data,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
                 
     def loadJSON(self,filename):
-        import json
         with open(filename) as data_file:    
-            data = json.load(data_file)       
+            data = json.load(data_file)  
+        return data
                             
     #should take any type of list...
     def save_csv(self,data,filename=None):
@@ -318,17 +389,8 @@ class AnalyseAP:
                 area = self.g.get_rectangle_cercle_area(rect,m,r,rightBound,leftBound)
 #                print area,leftBound,rightBound
         return area
-        
-    def getDistance(self,ingrname, center):
-        distA=[]
-        ingrpositions=[self.env.molecules[i][0] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
-        ingrpositions=numpy.array(ingrpositions)
-        if len(ingrpositions) :
-            delta = numpy.array(ingrpositions)-numpy.array(center)
-            delta *= delta
-            distA = numpy.sqrt( delta.sum(1) )
-        return ingrpositions,distA
-        
+
+
     def getAxeValue(self,ingrname,axe=0):
         ingrpositions=[self.env.molecules[i][0][axe] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
         return ingrpositions
@@ -339,6 +401,28 @@ class AnalyseAP:
         py=pp[1]
         pz=pp[2]
         return px,py,pz
+
+    def getDistance(self,ingrname, center):
+        distA=[]
+        ingrpositions=[self.env.molecules[i][0] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
+        ingrpositions=numpy.array(ingrpositions)
+        if len(ingrpositions) :
+            delta = numpy.array(ingrpositions)-numpy.array(center)
+            delta *= delta
+            distA = numpy.sqrt( delta.sum(1) ).tolist()
+        return ingrpositions,distA
+        
+    def getDistanceAngle(self,ingr, center):
+        angles=[]
+        distA=[]
+        ingrpositions=[self.env.molecules[i][0] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
+        ingrpositions=numpy.array(ingrpositions)
+        if len(ingrpositions) :
+            delta = numpy.array(ingrpositions)-numpy.array(center)
+            delta *= delta
+            distA = numpy.sqrt( delta.sum(1) ).tolist()
+            angles=angle_between_vectors(delta,ingr.principalVector)
+        return ingrpositions,distA,angles
 
     def getVolumeShell(self,bbox,radii,center):
         #rectangle_circle_area
@@ -535,9 +619,14 @@ class AnalyseAP:
         mu, sigma = numpy.mean(distances) , numpy.std(distances)
         ## the histogram of the data
 #        b=numpy.arange(distances.min(), distances.max(), 2)
-        n, bins, patches = pyplot.hist(distances, bins=bins, normed=1, facecolor='green')#, alpha=0.75)
+#        n, bins, patches = pyplot.hist(distances, bins=bins, normed=1, facecolor='green')#, alpha=0.75)
+        y,binEdges=numpy.histogram(distances,bins=bins)        
+        bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
+        menStd  = numpy.sqrt(y)
+        width=1000.0/bins
+        pyplot.bar(bincenters,y,width=width, color='r', yerr=menStd)
         # add a 'best fit' line?
-        y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
+#        y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
 #        l = pyplot.plot(bins, y, 'r--', linewidth=3)
         pyplot.savefig(filename)     
         pylab.close()     # closes the current figure
@@ -598,6 +687,29 @@ class AnalyseAP:
             data = nDimPoints[:,d]
             delta += (data - data[:,numpy.newaxis])**2
         return numpy.sqrt(delta)
+
+    def flush(self):
+        import gc
+        import pprint
+        for i in range(2):
+            print 'Collecting %d ...' % i
+            n = gc.collect()
+            print 'Unreachable objects:', n
+            print 'Remaining Garbage:', 
+            pprint.pprint(gc.garbage)
+            del gc.garbage[:]
+            print
+                 
+    def merge(self,d1, d2, merge=lambda x,y:y):
+        result = dict(d1)
+        for k,v in d2.iteritems():
+            print k
+            if k in result:
+                result[k].extend(v)
+            else:
+                result[k] = v
+        return result
+    
             
     def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
                plot = True,twod=True,fbox_bb=None,use_file = True):
@@ -609,18 +721,24 @@ class AnalyseAP:
         #    Results will appear in the result folder of your recipe path
         # where n is the number of loop, seed = i
         #analyse.doloop(n) 
+        angle_file= output+os.sep+"angle"
         position_file=output+os.sep+"pos"
         distance_file=output+os.sep+"dist"
+        position_files=output+os.sep+"pos.json"
+        distance_files=output+os.sep+"dist.json"
         rangeseed=range(n)
         distances={}
         ingrpositions={}
+        anglesingr={}
         total_positions=[]
         total_distances=[]
+        total_angles=[]
         self.bbox = bbox
+        angles=None
         rebuild = True
-        for i in rangeseed:
+        for si in rangeseed:
 #            if i > 0 : rebuild = False #bu need to reset ...
-            basename = output+os.sep+"results_seed_"+str(i)
+            basename = output+os.sep+"results_seed_"+str(si)
 #            self.env.saveResult = False
             resultfilename = self.env.resultfile = basename  
             #Clear
@@ -631,7 +749,7 @@ class AnalyseAP:
             #no need to rebuild the grid ?
             self.env.saveResult = True
             self.env.resultfile = basename
-            self.grid_pack(bbox,output,seed=i, fill=1,vTestid = i,vAnalysis = 1,
+            self.grid_pack(bbox,output,seed=si, fill=1,vTestid = si,vAnalysis = 1,
                            forceBuild=rebuild,fbox_bb=fbox_bb)#build grid and fill
             #store the result 
 #            self.env.store_asJson(resultfilename=basename)
@@ -653,21 +771,35 @@ class AnalyseAP:
                         if ingr.name not in distances :
                             distances[ingr.name]=[]
                             ingrpositions[ingr.name]=[]
+                            anglesingr[ingr.name]=[]
                         if ingr.packingMode=='gradient' and self.env.use_gradient:
                             self.center = center = self.env.gradients[ingr.gradient].direction
-                        ingrpos,d=self.getDistance(ingr.name, center)
+                            #also mesure the angle pos>center pcpalVector
+                            ingrpos,d,angles=self.getDistanceAngle(ingr, center)
+                            if use_file :
+                                f_handle = file(angle_file, 'a')
+                                numpy.savetxt(f_handle, angles, delimiter=",")
+                                f_handle.close()
+                            else :
+                                anglesingr[ingr.name].extend(angles)
+                                total_angles.extend(angles)
+                        else :
+                            ingrpos,d=self.getDistance(ingr.name, center)
                         if use_file :
                             f_handle = file(position_file, 'a')
                             numpy.savetxt(f_handle, ingrpos, delimiter=",")
                             f_handle.close()
                             f_handle = file(distance_file, 'a')
                             numpy.savetxt(f_handle, d, delimiter=",")
-                            f_handle.close()
+                            f_handle.close() 
+                            distances[ingr.name]=d
+                            ingrpositions[ingr.name]=ingrpos.tolist()
                         else :
                             distances[ingr.name].extend(d)
                             ingrpositions[ingr.name].extend(ingrpos)
                             total_positions.extend(ingrpos)
                             total_distances.extend(d)
+                           
                         #print plot,twod
                         if plot and twod:
                             for i,p in enumerate(ingrpos): 
@@ -701,6 +833,8 @@ class AnalyseAP:
                                 f_handle = file(distance_file, 'a')
                                 numpy.savetxt(f_handle, d, delimiter=",")
                                 f_handle.close()
+                                distances[ingr.name]=d.tolist()
+                                ingrpositions[ingr.name]=ingrpos.tolist()
                             else :
                                 distances[ingr.name].extend(d)
                                 ingrpositions[ingr.name].extend(ingrpos)
@@ -727,6 +861,8 @@ class AnalyseAP:
                                 f_handle = file(distance_file, 'a')
                                 numpy.savetxt(f_handle, d, delimiter=",")
                                 f_handle.close()
+                                distances[ingr.name]=d.tolist()
+                                ingrpositions[ingr.name]=ingrpos.tolist()
                             else :
                                 distances[ingr.name].extend(d)
                                 ingrpositions[ingr.name].extend(ingrpos)
@@ -736,6 +872,13 @@ class AnalyseAP:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
                                         edgecolor="black", facecolor=ingr.color))
+                #write
+                self.writeJSON(output+os.sep+"_posIngr_"+str(si)+".json",ingrpositions)
+                self.writeJSON(output+os.sep+"_dIngr_"+str(si)+".json",distances)
+                self.writeJSON(output+os.sep+"_angleIngr_"+str(si)+".json",anglesingr)
+                
+                #print ("############")                 
+                #print (output+os.sep+"_dIngr_"+str(si)+".json",distances)
                 if plot and twod:
                     ax.set_aspect(1.0)
                     pyplot.axhline(y=0, color='k')
@@ -745,9 +888,22 @@ class AnalyseAP:
                     pyplot.axis([-0.1*width, width*1.1, -0.1*width, width*1.1])
                     pyplot.savefig(basename+".png")
                     pylab.close()     # closes the current figure
+            self.flush()        
         #plot(x)
         if use_file :
-            total_positions = numpy.genfromtxt(position_file, delimiter=',')        
+            total_positions = numpy.genfromtxt(position_file, delimiter=',')
+#            total_angles = numpy.genfromtxt(angle_file, delimiter=',')
+            #gatherall result
+            ingrpositions={}
+            distances={}
+            anglesingr={}
+            for i in rangeseed:
+                dict1= self.loadJSON(output+os.sep+"_posIngr_"+str(i)+".json")
+                ingrpositions=dict(self.merge(ingrpositions,dict1))
+                dict1= self.loadJSON(output+os.sep+"_dIngr_"+str(i)+".json")
+                distances=dict(self.merge(distances,dict1))
+                dict1=self.loadJSON(output+os.sep+"_angleIngr_"+str(i)+".json")
+                anglesingr=dict(self.merge(anglesingr,dict1))
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
         self.env.basename = basename
@@ -758,6 +914,8 @@ class AnalyseAP:
         self.env.loopThroughIngr(self.axis_distribution)        
         self.axis_distribution_total(total_positions)
 #        self.env.loopThroughIngr(self.correlation)
+        #plot the angle
+        self.histo(total_angles,output+os.sep+"_angles.png",bins=10)
         return distances
 #from bhtree import bhtreelib
 #bht = bhtreelib.BHtree( verts, None, 10)
