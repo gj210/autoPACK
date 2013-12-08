@@ -323,18 +323,18 @@ class Grid:
             return False
         else :
             if dist is not None:
-                print "ok distance ",dist,P
+#                print "ok distance ",dist,P
                 #distance to closest wall
                 d1 = (P - O)*jitter
                 s1=min(x for x in d1[d1 != 0] if x != 0)
-                print d1,s1,s1<=dist
+#                print d1,s1,s1<=dist
                 #s1 = numpy.sum(d1*d1)
                 d2 = (E - P)*jitter
                 s2=min(x for x in d2[d2 != 0] if x != 0)
-                print d2,s2,s2<=dist
+#                print d2,s2,s2<=dist
                 #s2 = numpy.sum(d2*d2)
                 if s1 <= dist or s2 <=dist:
-                    print ("too close")
+#                    print ("too close")
                     return False 
             return True
         

@@ -900,7 +900,7 @@ class Environment(CompartmentList):
         # smallest and largest protein radii acroos all recipes
         self.smallestProteinSize = 99999999
         self.largestProteinSize = 0
-        self.scaleER = 1.5 # hack in case problem with encapsulating radius
+        self.scaleER = 1.0 # hack in case problem with encapsulating radius
         self.computeGridParams = True
         
         self.EnviroOnly = False
@@ -2876,7 +2876,7 @@ h1 = Environment()
             if hasattr(ingr,"allIngrPts") and self._hackFreepts:
                 allIngrPts = ingr.allIngrPts
 #                print("hasattr(ingr,allIngrPts)")
-#                print ("Running nofreepoint HACK")
+                print ("Running nofreepoint HACK")
             else :
                 #use periodic update according size ration grid
                 update = self.checkIfUpdate(ingr,nbFreePoints)
@@ -3008,6 +3008,7 @@ h1 = Environment()
                 ptInd = self.gradients[ingr.gradient].pickPoint(allIngrPts) 
             else:
                 # pick a point randomly among free points
+                #random or uniform?
                 ptIndr = int(random()*len(allIngrPts))
                 ptInd = allIngrPts[ptIndr]            
             if ptInd is None :
@@ -3285,7 +3286,7 @@ h1 = Environment()
                 print ("vRangeStart coninue ",res)
                 vRangeStart = res[1]
                 continue
-            print ("picked ",ptInd)
+            print ("picked ",ptInd,distance[ptInd])
             #place the ingrediant
             if self.overwritePlaceMethod :
                 ingr.placeType = self.placeMethod
@@ -3309,6 +3310,8 @@ h1 = Environment()
 #                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
             else :
                 print ("rejected",ingr.rejectionCounter)
+                print ("picked reduced ?",ptInd, distance[ptInd] )
+
             if ingr.completion >= 1.0 :
                 print('completed***************', ingr.name)
                 print('PlacedMols = ', PlacedMols)
