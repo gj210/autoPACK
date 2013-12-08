@@ -154,6 +154,9 @@ KWDS = {
                         "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},        
                     }
 #should use transform.py instead
+def getNormedVectorU(a):
+ return a/numpy.linalg.norm(a)
+    
 def getNormedVector(a,b):
  return (b-a)/numpy.linalg.norm(b-a)
 
@@ -2446,7 +2449,7 @@ class Ingredient(Agent):
     def testPoint(self,newPt):
         inComp = True
         closeS = False
-        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=self.jitterMax)
+        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=getNormedVectorU(self.jitterMax))
         print ("testPoint",newPt,inside,self.jitterMax)    
         if inside :
             inComp = self.checkPointComp(newPt)
@@ -2808,9 +2811,9 @@ class Ingredient(Agent):
         for nid,n in enumerate(close_indice["indices"]):
             if n >= len(self.histoVol.rIngr):
                 continue
-            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
+#            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
             ingr= self.histoVol.rIngr[n]
-            print self.name+" is close to "+ingr.name
+#            print self.name+" is close to "+ingr.name
             jtrans=self.histoVol.rTrans[n]
             rotMat=self.histoVol.rRot[n]
             if prevpoint != None :
@@ -3913,7 +3916,7 @@ class Ingredient(Agent):
 #            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             t=time()   
             r=[False]
-            test=self.testPoint(jtrans)
+            test=False#self.testPoint(jtrans)
             #       checkif rb collide 
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
             if not test :
@@ -3924,8 +3927,8 @@ class Ingredient(Agent):
                 if len(self.histoVol.rTrans) == 0 : r=[False]
                 else :
                     print("getClosestIngredient",jtrans)
-                    closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
-                    print ("len(closesbody_indice) ",len(closesbody_indice),str(self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0) )                    
+                    closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius)#vself.radii[0][0]*2.0
+                    print ("len(closesbody_indice) ",len(closesbody_indice),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )                    
                     if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
                     else : 
                         liste_nodes = self.get_rbNodes(closesbody_indice,jtrans)
@@ -4021,7 +4024,7 @@ class Ingredient(Agent):
             self.histoVol.callFunction(self.histoVol.delRB,(rbnode,)) 
         if not collision2 and not test:# and not collision2:
 #            print("jtrans for NotCollision= ", jtrans)
-            
+            drop = True    
             ## get inside points and update distance
             ##
             # use best sperical approcimation   
