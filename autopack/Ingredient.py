@@ -5583,7 +5583,7 @@ class SingleSphereIngr(Ingredient):
                         autopack.helper.toggleDisplay(p,False)
                 self.mesh = autopack.helper.Sphere(self.name+"_basic",
                                 radius=self.radii[0][0],color=self.color,
-                                parent="autopackHider",res=10)[0]
+                                parent="autopackHider",res=24)[0]
             else :
                 self.mesh = autopack.helper.Icosahedron(self.name+"_basic",
                                 radius=self.radii[0][0])[0]
