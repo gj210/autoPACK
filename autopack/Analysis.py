@@ -369,6 +369,63 @@ class AnalyseAP:
         with open(filename) as data_file:    
             data = json.load(data_file)  
         return data
+
+    def grabResultFromJSON(self,n):
+        ingrrot={}
+        ingrpos={}
+        for i in range(n):
+            with open("results_seed_"+str(i)+".json") as data_file:  
+                data = json.load(data_file)
+            for recipe in data:
+                for ingrname in data[recipe]:
+                    for k in range(len(data[recipe][ingrname]['results'])):
+                        if ingrname not in ingrrot:
+                            ingrrot[ingrname]=[]
+                            ingrpos[ingrname]=[]                            
+                        ingrrot[ingrname].append(data[recipe][ingrname]['results'][k][1])
+                        ingrpos[ingrname].append(data[recipe][ingrname]['results'][k][0])
+            print i
+        return ingrpos,ingrrot
+
+    def grabResultFromTXT(self,n,doanalyze=False):
+        ingrrot={}
+        ingrpos={}
+        ingrpos3=[]
+        ingrrot3=[]
+        for i in range(1000):
+            print i    
+            files=open("results_seed_"+str(i)+"_s.txt","r")
+            lines = files.readlines()
+            files.close()
+            for l in lines :
+                l=l.replace("<"," ").replace(">"," ")
+                elem=l.split()
+                ingrname=elem[-5]
+                if ingrname not in ingrrot:
+                    ingrrot[ingrname]=[]
+                    ingrpos[ingrname]=[]                            
+                ingrrot[ingrname].append(eval(elem[0])) 
+                ingrpos[ingrname].append(eval(elem[2]))
+        for ingrname in ingrrot:
+            ingrrot[ingrname] = [numpy.array(m).reshape((4,4)) for m in ingrrot[ingrname]]
+        if doanalyze :
+            for ingrname in ingrrot:
+                eulers3 = [t.euler_from_matrix(m, 'rxyz') for m in ingrrot[ingrname]]
+                e3=numpy.degrees(numpy.array(eulers3)).transpose()
+                numpy.savetxt(ingrname+"_euler_X.csv", numpy.array(e3[0]), delimiter=",") 
+                numpy.savetxt(ingrname+"_euler_Y.csv", numpy.array(e3[1]), delimiter=",") 
+                numpy.savetxt(ingrname+"_euler_Z.csv", numpy.array(e3[2]), delimiter=",") 
+                self.histo(e3[0],ingrname+"_euler_X.png",bins=12,size=max(e3[0]))
+                self.histo(e3[1],ingrname+"_euler_Y.png",bins=12,size=max(e3[1]))
+                self.histo(e3[2],ingrname+"_euler_Z.png",bins=12,size=max(e3[2]))
+                ingrpositions,distA,angles3=self.getDistanceAngle(ingrpos3, ingrrot3)
+                numpy.savetxt(ingrname+"_angle_X.csv", numpy.array(angles3[1]), delimiter=",") 
+                numpy.savetxt(ingrname+"_angle_Y.csv", numpy.array(angles3[2]), delimiter=",") 
+                numpy.savetxt(ingrname+"_angle_Z.csv", numpy.array(angles3[3]), delimiter=",") 
+                self.histo(angles3[1],ingrname+"_angle_X.png",bins=12,size=max(angles3[1]))
+                self.histo(angles3[2],ingrname+"_angle_Y.png",bins=12,size=max(angles3[2]))
+                self.histo(angles3[3],ingrname+"_angle_Z.png",bins=12,size=max(angles3[3]))
+        return ingrpos,ingrrot
                             
     #should take any type of list...
     def save_csv(self,data,filename=None):
