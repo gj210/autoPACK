@@ -36,6 +36,7 @@
 @author: Ludovic Autin, Graham Johnson,  & Michel Sanner
 """
 import numpy
+import autopack
 from autopack.ldSequence import cHaltonSequence3
 from scipy import spatial
 from math import ceil
@@ -91,6 +92,8 @@ class Grid:
         self.result_filename=None   #used after fill to store result
         self.tree = None
         self.encapsulatingGrid = 1
+        self.testPeriodicity = autopack.testPeriodicity
+        self.biasedPeriodicity = None
         if setup :
             self.setup(boundingBox,space)
         #use np.roll to have periodic condition
@@ -116,6 +119,7 @@ class Grid:
                           " grid.nbGridPoints = ", self.nbGridPoints,
                           "gridPId = ",len(self.gridPtId),
                         "self.nbFreePoints =",self.nbFreePoints)
+        self.setupBoundaryPeriodicity()
 
     def reset(self,):
         #reset the  distToClosestSurf and the freePoints
@@ -307,19 +311,95 @@ class Grid:
         #ptInd = k*(sizex)*(sizey)+j*(sizex)+i;#want i,j,k
         return self.ijkPtIndice[ptInd]
 
+    def setupBoundaryPeriodicity(self):
+        #we create a dictionary for the adjacent cell of the current grid.
+        self.sizeXYZ = numpy.array(self.boundingBox[1]) - numpy.array(self.boundingBox[0])
+        self.preriodic_table={}
+        self.preriodic_table["left"]=numpy.array([[1,0,0],[0,1,0],[0,0,1]])*self.sizeXYZ
+        self.preriodic_table["right"]=numpy.array([[-1,0,0],[0,-1,0],[0,0,-1]])*self.sizeXYZ
 
+    def getPositionPeridocity(self,pt3d,jitter,cutoff):
+        if self.biasedPeriodicity != None :       
+            biased = biasedPeriodicity
+        else :
+            biased = jitter
+        O = numpy.array(self.boundingBox[0])
+        E = numpy.array(self.boundingBox[1])
+        P = numpy.array(pt3d)
+        translation=None  
+        if not self.testPeriodicity:
+            return None
+        d1 = (P - O)*biased
+        s1=min(x for x in d1[d1 != 0] if x != 0)
+#        i1=list(d1).index(s1)
+        m1=numpy.logical_and(numpy.less(d1,cutoff),numpy.greater(d1,0.0))
+        i1=numpy.nonzero(m1)[0]
+        
+        d2 = (E - P)*biased
+        s2=min(x for x in d2[d2 != 0] if x != 0)
+#        i2=list(d2).index(s2)
+        m2=numpy.logical_and(numpy.less(d2,cutoff),numpy.greater(d2,0.0))
+        i2=numpy.nonzero(m2)[0]
+        #first case to look for is the corner and return all positions 
+        if s1 < s2 : # closer to left bottom corner
+            tr=[]
+            corner=numpy.zeros((4,3))#7 corner / 3 corner 3D / 2D
+            for i in i1 :
+                tr.append(pt3d+self.preriodic_table["left"][i])
+                corner[0]+=self.preriodic_table["left"][i]
+                #the corner are
+                #X+Y+Z corner[0]
+                #X+Y+0 corner[1]
+                #X+0+Z corner[2]
+                #0+Y+Z corner[3]
+            if len(i1) == 2 :
+                tr.append(pt3d+corner[0])
+            if len(i1) == 3 :
+                corner[1] = self.preriodic_table["left"][0]+self.preriodic_table["left"][1]
+                corner[2] = self.preriodic_table["left"][0]+self.preriodic_table["left"][2]
+                corner[3] = self.preriodic_table["left"][1]+self.preriodic_table["left"][2]
+                for i in range(4):
+                    if sum(corner[i]) != 0 :
+                        tr.append(pt3d+corner[i])
+            translation=tr
+            #i1 is the axis to use for the boundary
+#            if s1 < cutoff :
+#                translation=self.preriodic_table["left"][i1]
+            return translation
+        else :
+            tr=[]
+            corner=numpy.zeros((4,3))#7 corner / 3 corner 3D / 2D
+            for i in i2 :
+                tr.append(pt3d+self.preriodic_table["right"][i])
+                corner[0]+=self.preriodic_table["right"][i]
+            if len(i2) == 2 :
+                tr.append(pt3d+corner[0])
+            if len(i2) == 3 :
+                corner[1] = self.preriodic_table["right"][0]+self.preriodic_table["right"][1]
+                corner[2] = self.preriodic_table["right"][0]+self.preriodic_table["right"][2]
+                corner[3] = self.preriodic_table["right"][1]+self.preriodic_table["right"][2]
+                for i in range(4):
+                    if sum(corner[i]) != 0 :
+                        tr.append(pt3d+corner[i])
+            translation=tr
+            #i1 is the axis to use for the boundary
+#            if s2 < cutoff :
+#                translation=self.preriodic_table["right"][i2]
+            return translation
+        return None
+        
     def checkPointInside(self,pt3d,dist=None,jitter=[1,1,1]):
         """
         Check if the given 3d points is inside the grid
         """        
         O = numpy.array(self.boundingBox[0])
         E = numpy.array(self.boundingBox[1])
-        P = numpy.array(pt3d)
+        P = numpy.array(pt3d)#*jitter
         test1 = P < O 
         test2 =  P > E
         if True in test1 or True in test2:
             #outside
-            print "outside"
+            print ("outside",P,self.boundingBox)
             return False
         else :
             if dist is not None:

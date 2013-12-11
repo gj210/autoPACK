@@ -120,6 +120,8 @@ ncpus = 2
 #forceFetch is for any file not only recipe/ingredient etc...
 forceFetch = False
 checkAtstartup = True
+testPeriodicity = False
+biasedPeriodicity = [1,1,1]
 verbose = 0 
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
