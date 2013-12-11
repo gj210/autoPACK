@@ -851,7 +851,11 @@ class AnalysisTab:
         self.widget["cutoff"]=self.afgui._addElemt(name="cutoff",action=None,width=100,
                           value=60.0,type="inputFloat",variable=self.afgui.addVariable("float",60.0),
                             mini=0.0,maxi=2000.0)         
-
+        #should use collapsible 
+        #run mutliple time
+        #widget nb run
+        #widgetworking directory
+        #type of analysis to do : histo / count / rdf / angle
         #could save here the different grid as csv ?
         #self.afgui.histo.distToClosestSurf
         #if volume rendering support could display a volume for distance array
@@ -1074,12 +1078,13 @@ class SubdialogFiller(uiadaptor):
                               "resultfile",#14
                               "gridPts",#15
                               "spherePrimitive",#16
-                              "ingrLookForNeighbours"#17
+                              "ingrLookForNeighbours",#17
+                              "use_periodicity"#18                            
                               ]
         self.listAFo["Simple"]=[0,1,2,6,8,13,14]
         self.listAFo["Intermediate"]=[0,1,2,4,5,6,8,9,13,14,17]
-        self.listAFo["Advanced"]= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17]
-        self.listAFo["Debug"]=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]                   
+        self.listAFo["Advanced"]= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18]
+        self.listAFo["Debug"]=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]                   
         #add here the optnios you want
 #        for option in self.listAFoptions:#self.histoVol.OPTIONS:
         print ("self.guimode",self.guimode)
@@ -1157,7 +1162,7 @@ class SubdialogFiller(uiadaptor):
         self.seedId = self._addElemt(name='seed',width=30,height=10,
                                               action=None,type="inputFloat",icon=None,
                                               variable=self.addVariable("float",14.),
-                                              mini=0.0,maxi=200.0,step=1.,precision=2)
+                                              mini=0.0,maxi=10000.0,step=1.,precision=2)
 
 
 

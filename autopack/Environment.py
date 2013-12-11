@@ -958,7 +958,8 @@ class Environment(CompartmentList):
 
         self.grab_cb = None 
         self.pp_server = None
-        
+        self.seed_set = False
+        self.seed_used = 0
         #
         self.nFill = 0
         self.cFill = 0
@@ -995,11 +996,13 @@ class Environment(CompartmentList):
         #could be a problem here for pp
         #can't pickle this dictionary
         self.rb_func_dic={}
+        self.use_periodicity = False
+        self.gridbiasedPeriodicity = None#unsused here
         
         self.OPTIONS = {
                     "smallestProteinSize":{"name":"smallestProteinSize","value":15,"default":15,
                                            "type":"int","description":"Smallest ingredient packing radius override (low=accurate | high=fast)",
-                                           "mini":1.0,"maxi":100.0,
+                                           "mini":1.0,"maxi":1000.0,
                                            "width":30},
                     "largestProteinSize":{"name":"largestProteinSize","value":0,"default":0,"type":"int","description":"largest Protein Size","width":30},
                     "computeGridParams":{"name":"computeGridParams","value":True,"default":True,"type":"bool","description":"compute Grid Params","width":100},
@@ -1026,6 +1029,7 @@ class Environment(CompartmentList):
                     "_timer": {"name":"_timer","value":False,"default":False,"type":"bool","description":"evaluate time per function","width":30},
                     "_hackFreepts": {"name":"_hackFreepts","value":False,"default":False,"type":"bool","description":"no free point update","width":30},
                     "freePtsUpdateThrehod":{"name":"freePtsUpdateThrehod","value":0.15,"default":0.15,"type":"float","description":"Mask grid while packing (0=always | 1=never)","mini":0.0,"maxi":1.0,"width":30},
+                    "use_periodicity":{"name":"use_periodicity","value":False,"default":False,"type":"bool","description":"Use periodic condition","width":200},
                         }
 
     def Setup(self,setupfile):
@@ -1042,6 +1046,14 @@ class Environment(CompartmentList):
         #etc...
         pass
 
+    def setSeed(self,seedNum):
+        SEED=seedNum
+        numpy.random.seed(SEED)#for gradient
+        seed(seedNum)
+        self.randomRot.setSeed(seed=seedNum)
+        self.seed_set = True
+        self.seed_used = seedNum
+        
     def reportprogress(self,label=None,progress=None):
         if self.afviewer is not None and hasattr(self.afviewer,"vi"):
             self.afviewer.vi.progressBar(progress=progress,label=label)
@@ -2628,6 +2640,14 @@ h1 = Environment()
         ingr.nbMol = nbMol
         ingr.completion = completion
 
+    def clearRBingredient(self,ingr):
+        if ingr.bullet_nodes[0] != None : self.delRB(ingr.bullet_nodes[0])
+        if ingr.bullet_nodes[1] != None : self.delRB(ingr.bullet_nodes[1])
+            
+    def clear(self):
+        #before closing remoeall rigidbody
+        self.loopThroughIngr(self.clearRBingredient)
+
     def reset(self):
         """Reset everything to empty and not done"""
         self.fbox_bb = None
@@ -2646,9 +2666,9 @@ h1 = Environment()
         self.ingr_result = {}
         if self.world is not None :
             #need to clear all node
-            nodes = self.rb_panda[:]
-            for node in nodes:
-                self.delRB(node)
+#            nodes = self.rb_panda[:]
+#            for node in nodes:
+#                self.delRB(node)
             self.static = []
             self.moving = None
         if self.octree is not None :
@@ -2687,10 +2707,10 @@ h1 = Environment()
                     ingr.icyl = None
                 if hasattr(ingr,"allIngrPts"):
                     delattr(ingr, "allIngrPts")
-                if hasattr(ingr,"rb_nodes"):
-                    for node in ingr.rb_nodes:
-                        self.delRB(node)
-                    ingr.rb_nodes=[]
+#                if hasattr(ingr,"rb_nodes"):
+#                    for node in ingr.rb_nodes:
+#                        self.delRB(node)
+#                    ingr.rb_nodes=[]
             for ingr in recip.exclude:
                 ingr.start_positions=[]
                 ingr.prev_alt = None
@@ -2707,10 +2727,10 @@ h1 = Environment()
                     ingr.icyl = None
                 if hasattr(ingr,"allIngrPts"):
                     delattr(ingr, "allIngrPts")
-                if hasattr(ingr,"rb_nodes"):
-                    for node in ingr.rb_nodes:
-                        self.delRB(node)
-                    ingr.rb_nodes=[]                    
+#                if hasattr(ingr,"rb_nodes"):
+#                    for node in ingr.rb_nodes:
+#                        self.delRB(node)
+#                    ingr.rb_nodes=[]                    
     def resetIngr(self,ingr):
         """Reset the given ingredient (count, completion, nmol)"""
         ingr.counter = 0
@@ -2873,6 +2893,7 @@ h1 = Environment()
             else :
                 cut  = radius-jitter
             #for pt in freePoints[:nbFreePoints]:
+            print ("find grid point with distance >= ",cut)
             if hasattr(ingr,"allIngrPts") and self._hackFreepts:
                 allIngrPts = ingr.allIngrPts
 #                print("hasattr(ingr,allIngrPts)")
@@ -2883,7 +2904,7 @@ h1 = Environment()
 #                print("in update ",update)
 #                print "update ", update,nbFreePoints,hasattr(ingr,"allIngrPts"),cut
                 if update :
-#                    print("in update loop")
+                    print("in update loop")
                     for i in range(nbFreePoints):
 #                        print("in i range of update loop",i,freePoints[i],distance[i])
                         pt = freePoints[i]
@@ -3036,7 +3057,7 @@ h1 = Environment()
 
 #            print(("time to random pick a point", time()-t2))
         else :
-            t3=time()
+#            t3=time()
             allIngrPts.sort()
             ptInd = allIngrPts[0]
 #            print(("time to sort and pick a point", time()-t3))
@@ -3073,6 +3094,8 @@ h1 = Environment()
         ## this packing should be able to continue from a previous one
         ## find a suitable point using the ingredient's placer object
         """
+        #set periodicity
+        self.grid.testPeriodicity=self.use_periodicity
         import time
         t1=time.time()
         self.timeUpDistLoopTotal = 0 #Graham added to try to make universal "global variable Verbose" on Aug 28
@@ -3093,10 +3116,8 @@ h1 = Environment()
         self.FillName.append(name)
         self.nFill+=1
         # seed random number generator
-        SEED=seedNum
-        numpy.random.seed(SEED)#for gradient
-        seed(seedNum)
-        self.randomRot.setSeed(seed=seedNum)
+#        if not self.seed_set:
+        self.setSeed(seedNum)
         # create copies of the distance array as they change when molecules
         # are added, theses array can be restored/saved before feeling
         freePoints = self.grid.freePoints[:]
@@ -4452,6 +4473,7 @@ h1 = Environment()
         # Sphere
         if panda3d is None :
             return None
+        print ("add RB bullet ",ingr.name)
         mat = rotMat.copy()
 #        mat[:3, 3] = trans
 #        mat = mat.transpose()

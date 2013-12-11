@@ -57,6 +57,15 @@ def angle_between_vectors(v0, v1, directed=True, axis=0):
     dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
     return numpy.arccos(dot if directed else numpy.fabs(dot))    
 
+def signed_angle_between_vectors(Vn,v0, v1, directed=True, axis=0):
+    Vn = numpy.array(Vn)
+    angles = angle_between_vectors(v0, v1, directed=directed, axis=axis)
+    cross = numpy.cross(v0,v1)
+    dot = numpy.dot(cross,Vn)
+    ind=numpy.nonzero(dot < 0)
+    angles[ind]*=-1.0
+    return angles
+
 def vector_norm(data, axis=None, out=None):
     """Return length, i.e. Euclidean norm, of ndarray along axis.
     >>> v = numpy.random.random(3)
@@ -413,16 +422,31 @@ class AnalyseAP:
         return ingrpositions,distA
         
     def getDistanceAngle(self,ingr, center):
+        #need matrix to euler? then access and plot them?
+        #also check the measure angle one
         angles=[]
         distA=[]
-        ingrpositions=[self.env.molecules[i][0] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
+        ingrpositions=[self.env.molecules[i][0] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingr.name]
         ingrpositions=numpy.array(ingrpositions)
+        ingrrotation=[self.env.molecules[i][1] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingr.name]
+        ingrrotation=numpy.array(ingrrotation)
         if len(ingrpositions) :
+            #thats m
+            orientationX = numpy.array([autopack.helper.ApplyMatrix([[1,0,0],],m)[0] for m in ingrrotation])
+            orientationY = numpy.array([autopack.helper.ApplyMatrix([[0,1,0],],m)[0] for m in ingrrotation])
+            orientationZ = numpy.array([autopack.helper.ApplyMatrix([[0,0,1],],m)[0] for m in ingrrotation])
+#            orientationX = numpy.array([m[0][:3] for m in ingrrotation])
+#            orientationY = numpy.array([m[1][:3] for m in ingrrotation])
+#            orientationZ = numpy.array([m[2][:3] for m in ingrrotation])
             delta = numpy.array(ingrpositions)-numpy.array(center)
+            #lets do it on X,Y,Z and also per positions ?            
+            anglesX=signed_angle_between_vectors([0,0,1],m[0][:3],-delta,directed=False,axis=1)
+            anglesY=signed_angle_between_vectors([0,0,1],m[1][:3],-delta,directed=False,axis=1)
+            anglesZ=signed_angle_between_vectors([1,0,0],m[2][:3],-delta,directed=False,axis=1)
             delta *= delta
-            distA = numpy.sqrt( delta.sum(1) ).tolist()
-            angles=angle_between_vectors(delta,ingr.principalVector)
-        return ingrpositions,distA,angles
+            distA = numpy.sqrt( delta.sum(1) ).tolist()  
+            angles = numpy.array([distA,anglesX,anglesY,anglesZ])
+        return ingrpositions,distA,numpy.degrees(angles)
 
     def getVolumeShell(self,bbox,radii,center):
         #rectangle_circle_area
@@ -520,13 +544,13 @@ class AnalyseAP:
         basename = self.env.basename
         numpy.savetxt(basename+"total_pos.csv", numpy.array(all_positions), delimiter=",") 
         px,py,pz = self.getAxesValues(all_positions)
-        m1=numpy.nonzero( numpy.logical_and(
-               numpy.greater_equal(px, 0.), numpy.less_equal(px, 1000.0)))
-        m2=numpy.nonzero( numpy.logical_and(
-               numpy.greater_equal(py, 0.), numpy.less_equal(py, 1000.0)))
-        self.histo(px[m1],basename+"total_histo_X.png",bins=10)
-        self.histo(py[m2],basename+"total_histo_Y.png",bins=10)
-#        self.histo(pz,basename+"total_histo_Z.png",bins=20)
+#        m1=numpy.nonzero( numpy.logical_and(
+#               numpy.greater_equal(px, 0.), numpy.less_equal(px, 1000.0)))
+#        m2=numpy.nonzero( numpy.logical_and(
+#               numpy.greater_equal(py, 0.), numpy.less_equal(py, 1000.0)))
+        self.histo(px,basename+"total_histo_X.png",bins=10)
+        self.histo(py,basename+"total_histo_Y.png",bins=10)
+        self.histo(pz,basename+"total_histo_Z.png",bins=10)
 
     def axis_distribution(self,ingr):
         basename = self.env.basename
@@ -535,6 +559,11 @@ class AnalyseAP:
         self.histo(py,basename+ingr.name+"_histo_Y.png",bins=10)
         self.histo(pz,basename+ingr.name+"_histo_Z.png",bins=10)
         #do it for all ingredient cumulate?
+
+    def occurence_distribution (self,ingr):
+        basename = self.env.basename
+        occ = self.env.occurences[ingr.name]
+        self.simpleplot(range(len(occ)),occ,basename+ingr.name+"_occurence.png")
         
     def correlation(self,ingr):
         basename = self.env.basename
@@ -614,7 +643,7 @@ class AnalyseAP:
         # shell volume = 4/3*pi(r_outer**3-r_inner**3)
 
 
-    def histo(self,distances,filename,bins=100):
+    def histo(self,distances,filename,bins=100,size=1000.0):
         pylab.clf()
         mu, sigma = numpy.mean(distances) , numpy.std(distances)
         ## the histogram of the data
@@ -623,7 +652,7 @@ class AnalyseAP:
         y,binEdges=numpy.histogram(distances,bins=bins)        
         bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
         menStd  = numpy.sqrt(y)
-        width=1000.0/bins
+        width=size/bins
         pyplot.bar(bincenters,y,width=width, color='r', yerr=menStd)
         # add a 'best fit' line?
 #        y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
@@ -639,6 +668,12 @@ class AnalyseAP:
         pylab.plot(radii, rdf, linewidth=3)
         pylab.xlabel(r"distance $r$ in $\AA$")
         pylab.ylabel(r"radial distribution function $g(r)$")
+        pylab.savefig(filname)
+        pylab.close()     # closes the current figure
+
+    def simpleplot(self,X,Y,filname,w=3):
+        pylab.clf()
+        pylab.plot(X, Y, linewidth=w)
         pylab.savefig(filname)
         pylab.close()     # closes the current figure
 
@@ -721,22 +756,30 @@ class AnalyseAP:
         #    Results will appear in the result folder of your recipe path
         # where n is the number of loop, seed = i
         #analyse.doloop(n) 
+        from autopack.ldSequence import halton
+        seeds_f = numpy.array(halton(int(n*1.5)))*int(n*1.5)
+        seeds_int = numpy.array(numpy.round(seeds_f),'int')
+        sorted_s,indices_u=numpy.unique(seeds_int,return_inverse=True)
+        seeds_i = seeds_int[indices_u][:n]
+        numpy.savetxt(output+os.sep+"seeds", seeds_i, delimiter=",")
         angle_file= output+os.sep+"angle"
         position_file=output+os.sep+"pos"
         distance_file=output+os.sep+"dist"
         position_files=output+os.sep+"pos.json"
         distance_files=output+os.sep+"dist.json"
+        occurences_file=output+os.sep+"occurence"
         rangeseed=range(n)
         distances={}
         ingrpositions={}
         anglesingr={}
+        occurences={}
         total_positions=[]
         total_distances=[]
         total_angles=[]
         self.bbox = bbox
         angles=None
         rebuild = True
-        for si in rangeseed:
+        for si in range(n):           
 #            if i > 0 : rebuild = False #bu need to reset ...
             basename = output+os.sep+"results_seed_"+str(si)
 #            self.env.saveResult = False
@@ -749,7 +792,7 @@ class AnalyseAP:
             #no need to rebuild the grid ?
             self.env.saveResult = True
             self.env.resultfile = basename
-            self.grid_pack(bbox,output,seed=si, fill=1,vTestid = si,vAnalysis = 1,
+            self.grid_pack(bbox,output,seed=seeds_i[si], fill=1,vTestid = si,vAnalysis = 1,
                            forceBuild=rebuild,fbox_bb=fbox_bb)#build grid and fill
             #store the result 
 #            self.env.store_asJson(resultfilename=basename)
@@ -760,7 +803,7 @@ class AnalyseAP:
                 self.helper.write(basename+".c4d",[])
             if rdf :
                 if plot and twod:
-                    width = 1000.0
+                    width = 1000.0#should be the boundary here ?
                     fig = pyplot.figure()
                     ax = fig.add_subplot(111)
                 center = self.env.grid.getCenter()#[500,500,0.5]#center of the grid
@@ -772,6 +815,7 @@ class AnalyseAP:
                             distances[ingr.name]=[]
                             ingrpositions[ingr.name]=[]
                             anglesingr[ingr.name]=[]
+                            occurences[ingr.name]=[]
                         if ingr.packingMode=='gradient' and self.env.use_gradient:
                             self.center = center = self.env.gradients[ingr.gradient].direction
                             #also mesure the angle pos>center pcpalVector
@@ -785,6 +829,7 @@ class AnalyseAP:
                                 total_angles.extend(angles)
                         else :
                             ingrpos,d=self.getDistance(ingr.name, center)
+                        occurences[ingr.name].append(len(ingrpos))
                         if use_file :
                             f_handle = file(position_file, 'a')
                             numpy.savetxt(f_handle, ingrpos, delimiter=",")
@@ -803,7 +848,7 @@ class AnalyseAP:
                         #print plot,twod
                         if plot and twod:
                             for i,p in enumerate(ingrpos): 
-                                ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
+                                ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                                 edgecolor="black", facecolor=ingr.color))
                                 if i == 0:#len(ingrpos)-1:
                                     continue
@@ -823,9 +868,11 @@ class AnalyseAP:
                             if ingr.name not in distances :
                                 distances[ingr.name]=[]
                                 ingrpositions[ingr.name]=[]
+                                occurences[ingr.name]=[]
                             if ingr.packingMode=='gradient' and self.env.use_gradient :
                                 center = self.env.gradients[ingr.gradient].direction
                             ingrpos,d=self.getDistance(ingr.name, center)
+                            occurences[ingr.name].append(len(ingrpos))
                             if use_file :
                                 f_handle = file(position_file, 'a')
                                 numpy.savetxt(f_handle, ingrpos, delimiter=",")
@@ -842,7 +889,7 @@ class AnalyseAP:
                                 total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
-                                    ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
+                                    ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                                     edgecolor="black", facecolor=ingr.color))
 
                     ri = o.innerRecipe
@@ -851,9 +898,11 @@ class AnalyseAP:
                             if ingr.name not in distances :
                                 distances[ingr.name]=[]
                                 ingrpositions[ingr.name]=[]
+                                occurences[ingr.name]=[]
                             if ingr.packingMode=='gradient' and self.env.use_gradient:
                                 center = self.env.gradients[ingr.gradient].direction
                             ingrpos,d=self.getDistance(ingr.name, center)
+                            occurences[ingr.name].append(len(ingrpos))
                             if use_file :
                                 f_handle = file(position_file, 'a')
                                 numpy.savetxt(f_handle, ingrpos, delimiter=",")
@@ -870,7 +919,7 @@ class AnalyseAP:
                                 total_distances.extend(d)
                             if plot and twod:
                                 for p in ingrpos: 
-                                    ax.add_patch(Circle((p[0], p[1]), ingr.minRadius,
+                                    ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                         edgecolor="black", facecolor=ingr.color))
                 #write
                 self.writeJSON(output+os.sep+"_posIngr_"+str(si)+".json",ingrpositions)
@@ -881,18 +930,22 @@ class AnalyseAP:
                 #print (output+os.sep+"_dIngr_"+str(si)+".json",distances)
                 if plot and twod:
                     ax.set_aspect(1.0)
-                    pyplot.axhline(y=0, color='k')
-                    pyplot.axhline(y=width, color='k')
-                    pyplot.axvline(x=0, color='k')
-                    pyplot.axvline(x=width, color='k')
-                    pyplot.axis([-0.1*width, width*1.1, -0.1*width, width*1.1])
+                    pyplot.axhline(y=bbox[0][1], color='k')
+                    pyplot.axhline(y=bbox[1][1], color='k')
+                    pyplot.axvline(x=bbox[0][0], color='k')
+                    pyplot.axvline(x=bbox[1][0], color='k')
+                    pyplot.axis([bbox[0][0], bbox[1][0],
+                                 bbox[0][1], bbox[1][1]])
                     pyplot.savefig(basename+".png")
                     pylab.close()     # closes the current figure
-            self.flush()        
+#            self.flush()        
         #plot(x)
         if use_file :
             total_positions = numpy.genfromtxt(position_file, delimiter=',')
-#            total_angles = numpy.genfromtxt(angle_file, delimiter=',')
+            try :
+                total_angles = numpy.genfromtxt(angle_file, delimiter=',')
+            except :
+                total_angles=[]
             #gatherall result
             ingrpositions={}
             distances={}
@@ -904,18 +957,25 @@ class AnalyseAP:
                 distances=dict(self.merge(distances,dict1))
                 dict1=self.loadJSON(output+os.sep+"_angleIngr_"+str(i)+".json")
                 anglesingr=dict(self.merge(anglesingr,dict1))
+        self.writeJSON(occurences_file,occurences)
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
         self.env.basename = basename
-        if rdf :
-            if twod : self.env.loopThroughIngr(self.rdf_2d)
-            else : self.env.loopThroughIngr(self.rdf_3d)
+        self.env.occurences = occurences
+        self.env.angles =  total_angles
+#        if rdf :
+#            if twod : self.env.loopThroughIngr(self.rdf_2d)
+#            else : self.env.loopThroughIngr(self.rdf_3d)
 #            do the X Y histo averge !        
         self.env.loopThroughIngr(self.axis_distribution)        
+        self.env.loopThroughIngr(self.occurence_distribution)        
         self.axis_distribution_total(total_positions)
 #        self.env.loopThroughIngr(self.correlation)
         #plot the angle
-        self.histo(total_angles,output+os.sep+"_angles.png",bins=10)
+        if len(total_angles) : 
+            self.histo(total_angles[1],output+os.sep+"_anglesX.png",bins=12,size=max(total_angles[2]))
+            self.histo(total_angles[2],output+os.sep+"_anglesY.png",bins=12,size=max(total_angles[2]))
+            self.histo(total_angles[3],output+os.sep+"_anglesZ.png",bins=12,size=max(total_angles[2]))
         return distances
 #from bhtree import bhtreelib
 #bht = bhtreelib.BHtree( verts, None, 10)
