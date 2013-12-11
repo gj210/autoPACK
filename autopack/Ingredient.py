@@ -154,6 +154,10 @@ KWDS = {
                         "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},        
                     }
 #should use transform.py instead
+def getNormedVectorOnes(a):
+ n= a/numpy.linalg.norm(a)
+ return numpy.round(n)
+
 def getNormedVectorU(a):
  return a/numpy.linalg.norm(a)
     
@@ -1133,20 +1137,20 @@ class Ingredient(Agent):
 
     def DecomposeMesh(self,m,edit=True,copy=False,tri=True,transform=True) :         
         helper = autopack.helper
-        if hasattr(m,"getFaces"):#DejaVu object
-            faces = m.getFaces()
-            vertices = m.getVertices()
-            vnormals = m.getVNormals()       
+#        if hasattr(m,"getFaces"):#DejaVu object
+#            faces = m.getFaces()
+#            vertices = m.getVertices()
+#            vnormals = m.getVNormals()       
+#        else :
+        if helper.host == "dejavu" :
+            m = helper.getMesh(m)
+            tr=False
         else :
-            if helper.host == "dejavu" :
-                m = helper.getMesh(m)
-                tr=False
-            else :
-                m = helper.getMesh(helper.getName(m))
-                tr=True
-            #print ("Decompose Mesh")
-            faces,vertices,vnormals = helper.DecomposeMesh(m,
-                           edit=edit,copy=copy,tri=tri,transform=tr) 
+            m = helper.getMesh(helper.getName(m))
+            tr=True
+        #print ("Decompose Mesh")
+        faces,vertices,vnormals = helper.DecomposeMesh(m,
+                       edit=edit,copy=copy,tri=tri,transform=tr) 
         return faces,vertices,vnormals
 
     def getSpheres(self,sphereFile):
@@ -1251,7 +1255,7 @@ class Ingredient(Agent):
         self.encapsulatingRadius = max(l)   
 
     def getData(self):
-        if not self.vertices :
+        if not len(self.vertices) :
             if self.mesh :
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
@@ -1259,7 +1263,7 @@ class Ingredient(Agent):
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
-        if not self.vertices :
+        if not len(self.vertices) :
             if self.mesh :
 #                helper = autopack.helper
 #                #should get the mesh
@@ -1273,35 +1277,17 @@ class Ingredient(Agent):
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
 #                print ("create the triangle",len(faces))
-            rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
         return rapid_model       
             
     def create_rapid_model(self):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
-        if self.mesh :
-#            helper = autopack.helper
-#            #should get the mesh
-#            if helper.host == "dejavu" :
-#                m = helper.getMesh(self.mesh)
-#                tr=False
-#            else :
-#                m = helper.getMesh(helper.getName(self.mesh))
-#                tr=True
-#            print ("Decompose Mesh")
-            faces,vertices,vnormals = self.DecomposeMesh(self.mesh,
-                               edit=True,copy=False,tri=True) 
-#            print ("create the triangle",len(faces))
-            #encapsulating radius ?
-#            v=numpy.array(vertices,'f')
-#            l=numpy.sqrt((v*v).sum(axis=1))
-#            self.encapsulatingRadius = max(l)
-            self.rapid_model.addTriangles(numpy.array(vertices,'f'), numpy.array(faces,'i'))
-        else : #need vertices/faces from sphere/cylinder
-            #get the primitive and extract the mesh from it
-            #what about multiSphere and multiCylinder   
-            print ("empty rapid model")       
-            return self.rapid_model
+        if not len(self.vertices) :
+            if self.mesh :
+                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
+                                   edit=True,copy=False,tri=True) 
+        self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
                    
     def get_rapid_model(self):
         if (self.rapid_model is None ):
@@ -2529,24 +2515,6 @@ class Ingredient(Agent):
         else :
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
         compNum = self.compNum
-#        print "compNum ",compNum
-        #shoud it be closest distance from centeringredient or vertices ingredients        
-#        if compNum < 0 : #inside object:
-#            #need to migrate to ckdtree
-#            res = organelle.OGsrfPtsBht.closestPointsArrayDist2(tuple(numpy.array([point,])),self.histoVol.grid.diag*2.0)
-#            if len(res) == 2 :
-#                pt,d = res
-#                print ("distance is ",d,res)#d can be wrond for some reason,
-#                d = autopack.helper.measure_distance(point,organelle.vertices[res[0][0]])
-#                if d < cutoff :
-#                    return True
-##                if d[0] <= self.histoVol.grid.gridSpacing :
-#                inside = organelle.checkPointInside(numpy.array(point),self.histoVol.grid.diag)
-#                print("inside ? ",inside) 
-#                if not inside : 
-#                    return True
-#        else :
-            #chec oustide / inside depdening the principalVector ?
         for o in self.histoVol.compartments:
             if self.compNum > 0 and o.name == organelle.name:
                 continue
@@ -2588,7 +2556,7 @@ class Ingredient(Agent):
     def testPoint(self,newPt):
         inComp = True
         closeS = False
-        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=getNormedVectorU(self.jitterMax))
+        inside = self.histoVol.grid.checkPointInside(newPt,dist=self.cutoff_boundary,jitter=getNormedVectorOnes(self.jitterMax))
         #print ("testPoint",newPt,inside,self.jitterMax)    
         if inside :
             inComp = self.checkPointComp(newPt)
@@ -2915,6 +2883,10 @@ class Ingredient(Agent):
 #                    raw_input()
                 if (n==c) or n==(c-1) or (n==c-2):
                     continue                              
+            if self.name in ingr.partners and ingr.Type=="Grow":
+                c = len(self.histoVol.rIngr)
+                if (n==c) or n==(c-1) or (n==c-2):
+                    continue                
             #else :
             #   print (self.name+" is close to "+ingr.name,jtrans,curentpt)            
             if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
@@ -2945,11 +2917,6 @@ class Ingredient(Agent):
             organelle = self.histoVol
         else :
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
-#        nodes = self.histoVol.rb_panda[:-1]
-#        for n in nodes:
-#            #reset everything 
-#            #print ("delete node ",n)
-#            self.histoVol.delRB(n)
         nodes = []
         ingrCounter={}
 #        a=numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]]
@@ -2986,6 +2953,10 @@ class Ingredient(Agent):
                 c = len(self.histoVol.rIngr)
                 if (n==c) or n==(c-1) or (n==c-2):
                     continue   
+            if self.name in ingr.partners and ingr.Type=="Grow":
+                c = len(self.histoVol.rIngr)
+                if (n==c) or n==(c-1) or (n==c-2):
+                    continue                
             rbnode = ingr.get_rb_model(alt=(ingr.name==self.name))
             if getInfo :
                 nodes.append([rbnode, jtrans, rotMat,ingr])
@@ -2997,10 +2968,15 @@ class Ingredient(Agent):
             if self.compNum > 0 and o.name == organelle.name:
                 continue
             if o.rbnode is not None : 
-                if not getInfo :
-                    nodes.append(o.rbnode)
-                else :
-                    nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
+                #test distance to surface ? 
+                res = o.OGsrfPtsBht.query(tuple(numpy.array([currentpt,])))
+                if len(res) == 2 :
+                    d = res[0][0]
+                    if d < self.encapsulatingRadius :
+                        if not getInfo :
+                            nodes.append(o.rbnode)
+                        else :
+                            nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
 #        if self.compNum < 0 or self.compNum == 0 :     
 #            for o in self.histoVol.compartments:
 #                if o.rbnode is not None : 
@@ -3937,21 +3913,32 @@ class Ingredient(Agent):
             print ("no partner found")
         return targetPoint
 
-    def pandaBullet_collision(self,pos,rbnode):
+    def pandaBullet_collision(self,pos,rot,rbnode,getnodes=False):
         r=[False]
+        liste_nodes=[]
         if len(self.histoVol.rTrans) == 0 : r=[False]
         else :
             closesbody_indice = self.getClosestIngredient(pos,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
             if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
             else : 
+                print ("get RB ",len(closesbody_indice["indices"]))
+                if rbnode is None :
+                    rbnode = self.get_rb_model()
+                    self.histoVol.moveRBnode(rbnode,pos, rot )
+                    print ("get RB for ",self.name,pos,rot)
                 liste_nodes = self.get_rbNodes(closesbody_indice,pos,getInfo=True)
+                print ("test collision against  ",len(liste_nodes))
                 for node in liste_nodes:
+                    print ("collision test with ",node)
                     self.histoVol.moveRBnode(node[0], node[1], node[2])  #Pb here ? 
                     col = (self.histoVol.world.contactTestPair(rbnode, node[0]).getNumContacts() > 0 )
                     r=[col]
                     if col :
                         break
-        return r
+        if getnodes:
+            return  True in r,liste_nodes
+        else :
+            return True in r
 
     def pandaBullet_place(self, histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
               stepByStep=False, verbose=False,
@@ -4052,10 +4039,10 @@ class Ingredient(Agent):
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
         if histoVol.ingrLookForNeighbours:
-            targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
-                                                 closest_indice=closesbody_indice)
             closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
                 cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
+            targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
+                                                 closest_indice=closesbody_indice)
             #if partner:pickNewPoit like in fill3
             if runTimeDisplay and self.mesh:
                 mat = rotMat.copy()
@@ -4154,14 +4141,14 @@ class Ingredient(Agent):
             rbnode = self.get_rb_model()
 #            print ("periodicity ?",getNormedVectorU(self.jitterMax),self.encapsulatingRadius)
             periodic_pos = self.histoVol.grid.getPositionPeridocity(jtrans,
-                    self.jitterMax,self.encapsulatingRadius)                
+                    getNormedVectorOnes(self.jitterMax),self.encapsulatingRadius)                
             histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             perdiodic_collision = False
             if periodic_pos is not None and self.packingMode !="gradient" :
                 print ("OK Periodicity ",len(periodic_pos),periodic_pos)
                 for p in periodic_pos :
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, p, rotMatj,))
-                    perdiodic_collision = self.pandaBullet_collision(p,rbnode)                
+                    perdiodic_collision = self.pandaBullet_collision(p,rotMatj,rbnode)                
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))              
                     rbnode2 = self.get_rb_model(alt=True)
                     self.histoVol.moveRBnode(rbnode2, p, rotMatj)  #Pb here ? 
@@ -6022,7 +6009,7 @@ class GrowIngrediant(MultiCylindersIngr):
             #is axis working ?
             self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 5, parent="autopackHider",axis=self.orientation)[0]                
+                                res= 12, parent="autopackHider",axis=self.orientation)[0]                
 #            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
 #                                self.positions[0][0],self.positions2[0][0],
 #                                radius=self.radii[0][0]*1.24,
@@ -6162,7 +6149,7 @@ class GrowIngrediant(MultiCylindersIngr):
 
     def mask_sphere_points(self,v,pt,marge,listeclosest,cutoff,pv=None,marge_diedral=None):
         #self.sphere_points_mask=numpy.ones(10000,'i') 
-        print ("attemask_sphere_pointsmpted ",marge_diedral,marge,len(listeclosest))
+        print ("mask_sphere_points ",marge_diedral,marge,len(listeclosest))
         if marge_diedral is not None :
             self.mask_sphere_points_dihedral(pv,v,marge,marge_diedral)        
         else :            
@@ -6750,10 +6737,10 @@ class GrowIngrediant(MultiCylindersIngr):
                                         break
                             else :
                                 for node in liste_nodes:
-                                    print ("collisio with ",node)
+                                    print ("collision test with ",node)
                                     self.histoVol.moveRBnode(node[0], node[1], node[2])
                                     col = (self.histoVol.world.contactTestPair(rbnode, node[0]).getNumContacts() > 0 )
-                                    print ("collisio with ",node,col)
+                                    print ("collision? ",col)
                                     r=[col]
                                     if col :
                                         break
@@ -6765,37 +6752,47 @@ class GrowIngrediant(MultiCylindersIngr):
                         self.prev_alt = None
                         self.prev_vec = None
                         self.update_data_tree(numpy.array(pt2).flatten(),rotMatj,pt1=pt2,pt2=newPt)#jtrans
-                        histoVol.callFunction(histoVol.delRB,(rbnode,))
+#                        histoVol.callFunction(histoVol.delRB,(rbnode,))
                         return newPt,True
 
                 else :
-                    print ("need to implement the alternate system with panda bullet")
-                    pass
-                    #print (" collide ?",collision)
+                    print ("alternate collision")
+                    rotMatj1,jtrans1=self.getJtransRot_r(numpy.array(pt2).flatten(),newPt) 
+                    #collision,liste_nodes = self.collision_rapid(jtrans1,rotMatj1,cutoff=cutoff,usePP=usePP,point=newPt)
+                    #the collision shouldnt look for previous cylinder   
+                    collision_alternate,liste_nodes=self.partners[alternate].ingr.pandaBullet_collision(jtrans,rotMatj,None,getnodes=True)                      
+                    collision = collision_alternate#(collision or collision_alternate)
+#                        print "collision",collision,collision_alternate,len(liste_nodes)
                     if not collision :
-                        #print angle,math.degrees(angle),marge
-                        histoVol.static.append(rbnode)
-                        histoVol.moving = None
-                        found = True
-    #                        histoVol.close_ingr_bhtree.MoveRBHPoint(histoVol.nb_ingredient,jtrans,0)
-                        histoVol.nb_ingredient+=1
-    #                        r,j=self.getJtransRot(numpy.array(pt2).flatten(),newPt)
-                        histoVol.rTrans.append(numpy.array(pt2).flatten())
-    #                        m=autopack.helper.getTubePropertiesMatrix(numpy.array(pt2).flatten(),newPt)[1]
-                        histoVol.rRot.append(numpy.array(rotMatj))#rotMatj r 
-                        histoVol.rIngr.append(self)
-                        histoVol.result.append([ [numpy.array(pt2).flatten(),newPt], rotMatj, self, 0 ])
-                        histoVol.callFunction(histoVol.delRB,(rbnode,))
-                        #histoVol.close_ingr_bhtree.InsertRBHPoint((jtrans[0],jtrans[1],jtrans[2]),radius,None,histoVol.nb_ingredient)
-    #                        print ("update bhtree")
-                        if histoVol.treemode == "bhtree":# "cKDTree"
-                            if len(histoVol.rTrans) > 1 : bhtreelib.freeBHtree(histoVol.close_ingr_bhtree)
-                            histoVol.close_ingr_bhtree=bhtreelib.BHtree( histoVol.rTrans, None, 10)
-                        else :
-                            #rebuild kdtree
-                            if len(self.histoVol.rTrans) > 1 :histoVol.close_ingr_bhtree= spatial.cKDTree(histoVol.rTrans, leafsize=10)
-    #                        print ("bhtree updated")
-                        return numpy.array(pt2).flatten()+numpy.array(pt),True
+                        #what about point in curve and result
+                        #self.update_data_tree(jtrans1,rotMatj1,pt1=pt2,pt2=newPt)
+                        #self.update_data_tree(jtrans1,rotMatj1,pt1=newPt,pt2=newPts[1])
+                        self.partners[alternate].ingr.update_data_tree(jtrans,rotMatj)
+                        self.compartment.molecules.append([ jtrans, rotMatj.transpose(), self.partners[alternate].ingr, 0 ])     
+                        newv,d1 = self.vi.measure_distance(pt2,newPt,vec=True)
+                        #v,d2 = self.vi.measure_distance(newPt,newPts[1],vec=True)
+                        #self.currentLength += d1
+                        if dihedral is not None :
+                            self.prev_alt=alternate
+                        self.prev_vec = v
+                        if nextPoint is not None and dihedral is None:                                              
+                            self.prev_alt_pt = newPts[1]
+                        #treat special case of starting other ingr
+                        start_ingr_name = self.partners[alternate].getProperties("st_ingr")
+                        if start_ingr_name is not None :
+                            #add new starting positions
+                            start_ingr = self.histoVol.getIngrFromName(start_ingr_name)
+                            matrice = numpy.array(rotMatj)#.transpose()
+                            matrice[3,:3] = jtrans
+                            newPts = self.get_alternate_starting_point(matrice.transpose(),alternate)
+                            start_ingr.start_positions.append([newPts[0],newPts[1]])
+                            start_ingr.nbMol+=1
+                            #add a mol
+                        #we need to store 
+                        self.alternate_interval = 0    
+                        return newPt,True
+                    else : 
+                        self.prev_alt_pt = None                    #print (" collide ?",collision)
                 if collision : #increment the range
                     if not self.constraintMarge :
                         if marge >=180 : #pi
@@ -6829,11 +6826,11 @@ class GrowIngrediant(MultiCylindersIngr):
                     continue
             else :
                 found = True
-                histoVol.callFunction(histoVol.delRB,(rbnode,))
+#                histoVol.callFunction(histoVol.delRB,(rbnode,))
                 return numpy.array(pt2).flatten()+numpy.array(pt),True
             print ("end loop add attempt ",attempted)
             attempted += 1
-        histoVol.callFunction(histoVol.delRB,(rbnode,))
+#        histoVol.callFunction(histoVol.delRB,(rbnode,))
         return numpy.array(pt2).flatten()+numpy.array(pt),True        
         
     def walkSpherePandaOLD(self,pt1,pt2,distance,histoVol,marge = 90.0,

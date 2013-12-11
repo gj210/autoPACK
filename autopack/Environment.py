@@ -948,7 +948,7 @@ class Environment(CompartmentList):
         
         #saving/pickle option
         self.saveResult = False
-        self.resultfile = "fillResult"
+        self.resultfile = ""
         self.setupfile = ""
         self.grid_filename =None#
         self.grid_result_filename = None#str(gridn.getAttribute("grid_result"))
@@ -976,7 +976,7 @@ class Environment(CompartmentList):
         self.use_gradient=False #gradient control is also per ingredient
         self.use_halton=False #use halton for grid point distribution
         
-        self.ingrLookForNeighbours = True #Old Features to be test
+        self.ingrLookForNeighbours = False #Old Features to be test
         
         #debug with timer function
         self._timer = False
@@ -1093,6 +1093,8 @@ class Environment(CompartmentList):
             for i,iname in enumerate(ingr.partners_name) :
                 print (iname)
                 ingr_partner = self.getIngrFromName(iname)
+                if ingr_partner is None :
+                    continue
                 print (ingr_partner) 
                 partner = ingr.addPartner(ingr_partner,weight=ingr_partner.weight,
                                 properties={"position":ingr.partners_position[i]})
@@ -1781,7 +1783,8 @@ h1 = Environment()
         """
         Read and setup the grid from the given filename. (pickle) 
         """
-        from bhtree import bhtreelib
+#        from bhtree import bhtreelib
+        from scipy import spatial
         aInteriorGrids = []
         aSurfaceGrids = []
         f = open(gridFileName,'rb')
@@ -1791,7 +1794,8 @@ h1 = Environment()
             compartment.readGridFromFile(f) 
             aInteriorGrids.append(compartment.insidePoints)
             aSurfaceGrids.append(compartment.surfacePoints)
-            compartment.OGsrfPtsBht = bhtreelib.BHtree(tuple(compartment.vertices), None, 10)
+#            compartment.OGsrfPtsBht = bhtreelib.BHtree(tuple(compartment.vertices), None, 10)
+            compartment.OGsrfPtsBht = spatial.cKDTree(tuple(compartment.vertices),leafsize=10) 
         f.close()
         self.grid.aInteriorGrids = aInteriorGrids
         self.grid.aSurfaceGrids = aSurfaceGrids
@@ -2077,6 +2081,9 @@ h1 = Environment()
             assert len(boundingBox[1])==3
         self.sortIngredient(reset=rebuild)
         self.reportprogress(label="Computing the number of grid points")
+        if gridFileIn is not None :
+            if not os.path.isfile(gridFileIn):
+                gridFileIn=None
         if rebuild or gridFileIn is not None or self.grid is None:
             # save bb for current fill
             print ("####BUILD GRID - step ",self.smallestProteinSize) 
@@ -2117,7 +2124,7 @@ h1 = Environment()
             self.BuildCompartmentsGrids()
         else :
             print ("file is not rebuild nor restore from file")
-        if gridFileOut is not None:
+        if gridFileOut is not None and gridFileIn is None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
         self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
@@ -3758,6 +3765,7 @@ h1 = Environment()
         
             
     def load(self,resultfilename=None,restore_grid=True):
+        result=[],[],[]        
         if resultfilename == None:
             resultfilename = self.resultfile
         #check the extension of the filename none, txt or json
@@ -3780,20 +3788,8 @@ h1 = Environment()
         else :
             print  ("can't read or recognize "+resultfilename)
             return [],[],[]
-        #OR 
-        #pos, rot, ingr, ptInd = self.molecules
-        #pos,rot,ingr.name,ingr.compNum,ptInd
-#        orgaresult=[]
-#        freePoint=[]
-#        for i, orga in enumerate(self.compartments):
-#            orfile = open(resultfilename+"ogra"+str(i),'rb')
-#            orgaresult.append(pickle.load(orfile))
-#            orfile.close()
-#        if restore_grid :
-#            freePoint = self.loadFreePoint(resultfilename)
-#            self.restoreGridFromFile(resultfilename+"grid")#restore grid distance and ptId
-#        return result,orgaresult,freePoint
-    
+        return result
+        
     def loadFreePoint(self,resultfilename):
         rfile = open(resultfilename+"freePoints",'rb')
         freePoint = pickle.load(rfile)
@@ -4412,16 +4408,20 @@ h1 = Environment()
 
     def addMeshRBOrganelle(self,o):
         helper = autopack.helper
-        geom =   helper.getObject(o.gname)      
-        if geom is None :
-            o.gname = '%s_Mesh'%o.name            
-            geom = helper.getObject(o.gname)
-
+        if not autopack.helper.nogui :
+            geom =   helper.getObject(o.gname)      
+            if geom is None :
+                o.gname = '%s_Mesh'%o.name            
+                geom = helper.getObject(o.gname)
+            faces,vertices,vnormals = helper.DecomposeMesh(geom,
+                                   edit=False,copy=False,tri=True,transform=True)        
+        else :
+            faces=o.faces
+            vertices=o.vertices
+            vnormals =o.vnormals                           
         inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(o.name))
         inodenp.node().setMass(1.0)
 
-        faces,vertices,vnormals = helper.DecomposeMesh(geom,
-                               edit=False,copy=False,tri=True,transform=True)        
         from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
         from panda3d.core import GeomVertexReader
         from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
