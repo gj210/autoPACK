@@ -2103,6 +2103,8 @@ h1 = Environment()
                 self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:] 
                 nbPoints = self.grid.gridVolume
         else :
+            if autopack.verbose : 
+                print("$$$$$$$$  reset the grid")          
             self.grid.reset()
             nbPoints = len(self.grid.freePoints)
         if autopack.verbose : 

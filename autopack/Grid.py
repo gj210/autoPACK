@@ -124,7 +124,9 @@ class Grid:
     def reset(self,):
         #reset the  distToClosestSurf and the freePoints
         #boundingBox shoud be the same otherwise why keeping the grid
-        self.distToClosestSurf = numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
+#        self.gridPtId = numpy.zeros(self.gridVolume,'i')
+#        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
+        self.distToClosestSurf[:] = self.diag#numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
         self.freePoints = list(range(len(self.freePoints)))
         self.nbFreePoints =len(self.freePoints)
         

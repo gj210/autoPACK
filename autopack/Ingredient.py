@@ -2497,7 +2497,7 @@ class Ingredient(Agent):
 #            if not inside and self.compNum < 0 :
 #                return False                
         if self.compNum == 0 : #shouldnt be in any compartments
-            for i,o in self.histoVol.compartments:
+            for o in self.histoVol.compartments:
                 inside = o.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
                 if inside :
                     return False
