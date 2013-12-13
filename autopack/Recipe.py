@@ -84,6 +84,7 @@ class Recipe:
         if ingr in self.exclude:
             ind = self.exclude.index(ingr)
             self.exclude.pop(ind)
+        print ("add ingredient ",ingr.name)
 
     def setCount(self, volume, reset=True, **kw):#area=False,
         """ set the count of n of molecule for every ingredients 
