@@ -1796,10 +1796,12 @@ h1 = Environment()
             aSurfaceGrids.append(compartment.surfacePoints)
 #            compartment.OGsrfPtsBht = bhtreelib.BHtree(tuple(compartment.vertices), None, 10)
             compartment.OGsrfPtsBht = spatial.cKDTree(tuple(compartment.vertices),leafsize=10) 
+            compartment.computeVolumeAndSetNbMol(self, compartment.surfacePoints,
+                                      compartment.insidePoints,areas=None)
         f.close()
         self.grid.aInteriorGrids = aInteriorGrids
         self.grid.aSurfaceGrids = aSurfaceGrids
- 
+
     
     
     def setMinMaxProteinSize(self):
@@ -4518,6 +4520,9 @@ h1 = Environment()
 #        mat[:3, 3] = trans
 #        mat = mat.transpose()
         mat = mat.transpose().reshape((16,))
+        if True in numpy.isnan(mat).flatten() :
+            print ("problem Matrix",node)
+            return     
 #        print mat,len(mat),mat.shape
         if self.panda_solver == "bullet":
             pMat = Mat4(mat[0],mat[1],mat[2],mat[3],

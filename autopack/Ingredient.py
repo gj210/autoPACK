@@ -996,8 +996,6 @@ class Ingredient(Agent):
         if "orientBiasRotRangeMax" in kw:
             self.orientBiasRotRangeMax = kw["orientBiasRotRangeMax"]
 
-
-
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
         self.cutoff_surface = self.encapsulatingRadius
@@ -2951,11 +2949,11 @@ class Ingredient(Agent):
                         continue
             if ingr.name in self.partners and self.Type == "Grow":
                 c = len(self.histoVol.rIngr)
-                if (n==c) or n==(c-1) or (n==c-2):
+                if (n==c) or n==(c-1) :#or (n==c-2):
                     continue   
             if self.name in ingr.partners and ingr.Type=="Grow":
                 c = len(self.histoVol.rIngr)
-                if (n==c) or n==(c-1) or (n==c-2):
+                if (n==c) or n==(c-1) :#or (n==c-2):
                     continue                
             rbnode = ingr.get_rb_model(alt=(ingr.name==self.name))
             if getInfo :
@@ -4145,22 +4143,24 @@ class Ingredient(Agent):
             histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             perdiodic_collision = False
             if periodic_pos is not None and self.packingMode !="gradient" :
-                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
+#                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
                 for p in periodic_pos :
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, p, rotMatj,))
                     perdiodic_collision = self.pandaBullet_collision(p,rotMatj,rbnode)                
+                    r.extend([perdiodic_collision])
+                    if  True in r : break
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))              
                     rbnode2 = self.get_rb_model(alt=True)
                     self.histoVol.moveRBnode(rbnode2, p, rotMatj)  #Pb here ? 
                     col = (self.histoVol.world.contactTestPair(rbnode, rbnode2).getNumContacts() > 0 )
-                    perdiodic_collision.extend([col])
-                    r.extend(perdiodic_collision)# = True in perdiodic_collision
+#                    perdiodic_collision.extend([col])
+                    r.extend([col])# = True in perdiodic_collision
                     if runTimeDisplay and moving is not None :
                         mat = rotMatj.copy()
                         mat[:3, 3] = jtrans
                         afvi.vi.setObjectMatrix(moving,mat,transpose=True)
                         afvi.vi.update()
-                    if col : break
+                    if  True in r : break
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},            
             t=time()   
@@ -8024,6 +8024,9 @@ class GrowIngrediant(MultiCylindersIngr):
         #dice = uniform(0.0,1.0)
         #int(uniform(0.0,1.0)*len(self.sphere_points_mask))
         alt_name = None
+        #if it is the first two segment dont do it
+        if self.currentLength <= self.uLength * 2.0 :
+            return None,0
 #        return self.pick_random_alternate()
         weights = self.alternates_weight#python3?#dict.copy().keys()
         rnd = uniform(0,1.0) * sum(weights)# * (self.currentLength / self.length)
