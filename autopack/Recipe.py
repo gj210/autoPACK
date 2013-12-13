@@ -89,7 +89,28 @@ class Recipe:
     def setCount(self, volume, reset=True, **kw):#area=False,
         """ set the count of n of molecule for every ingredients 
         in the recipe, and push them in te activeIngredient list 
-        """ 
+        David and Graham independently worked out and corrected the molarity calculation for Å as shown in the following lines
+        M = moles/L
+        6.022e23 ingredients/mole
+        
+        uPy works in Å by default (not ideal for mesoscale, but works with all molecular viewers that way), so given a volume in Å^3
+        1L = (10cm)^3
+        1cm = 10^(-2)m
+        1Å = 10^(-10)m
+        1cm = 10^(8)Å
+        10cm = 10^(9)Å
+        1L = (10cm)^3 = (10^(9)Å)^3 = 10^(27)Å^3
+        
+        M = 6.022x10^23/L = [6.022x10^23] / [10^(27)Å^3] = 6.022x10(-4)ing/Å^3
+        numberIngredientsToPack = [0.0006022 ing/Å^3] * [volume Å^3]
+        
+        volume / ingredient in 1M = 1ing / 0.0006022 ing/Å^3 = 1660Å^3 * 1nm^3/1000Å^3 = 1.6nm^3
+        
+        Average distance between molecules is cubic root 3√(1.6nm^3) = 11.8Å = 1.18nm
+        Thus the nbr should simply be
+        nbr = densityInMolarity*[0.0006022 ing/Å^3] * [volume Å^3]
+
+        """
         seedNum = 14
         seed(seedNum)               
         #Mod by Graham 8/18/11, revised 9/6... 
@@ -116,8 +137,11 @@ class Recipe:
             # molarity = (nbr*10e27)/vnm/1000.0/(6.022*10e23) M
             # nbr = molarity*((6.022*10e23)*vnm*1000)/10e27   molecule
             #specific for M (mol / L) in a volume in Angstrom
-            nbr = ingr.molarity * (volume/10e6) * 1000 * 0.000602 #Mod by Graham 8/18/11
+#            nbr = ingr.molarity * (volume/10e6) * 1000 * 0.000602
+#            nbi = int(nbr)              #Mod by Graham 8/18/11
+            nbr = ingr.molarity * 0.0006022 * volume
             nbi = int(nbr)              #Mod by Graham 8/18/11
+
 #            print 'ingr.molarity = ', ingr.molarity
 #            print 'volume = ', volume
 #            print 'nbr = ', nbr

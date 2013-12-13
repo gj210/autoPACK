@@ -1919,7 +1919,7 @@ class SubdialogFiller(uiadaptor):
     def updateNBMOL(self,*args):
         bname= self.getVal(self.fbox_name)#bbox_name)
         if self.guimode == "Advanced" or self.guimode == "Debug":
-            spacing = self.getVal(self.Widget["options"]["smallestProteinSize"])*1.1547#still dont know why * 1.1
+            spacing = self.getVal(self.Widget["options"]["smallestProteinSize"])*1.1547#still dont know why * 1.1 #Because the grid spacing is the double pythagorium of the diagonal of the voxel which = smallestProtienSize... however, this is not always set by the GUI. If the GUI = 0 then smallestProteinsSize comes from the sorted recipe list.
         else :
             spacing = self.histoVol.smallestProteinSize
         self.popIngrs()
