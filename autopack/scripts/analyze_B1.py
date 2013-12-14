@@ -50,7 +50,7 @@ autopack.helper = helper
 #filename = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/Test_Spheres2Dgradients1.0.xml"
 #filename = "/Users/ludo/DEV/autopack_git/data/Mycoplasma/recipe/Mycoplasma1.3.xml"
 #filename = "/Users/ludo/Desktop/cell_hack.xml"
-filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml"
+filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureB1.0.xml"
 fileName, fileExtension = os.path.splitext(filename)
 n=os.path.basename(fileName)
 h = Environment(name=n)
@@ -70,7 +70,7 @@ h.saveResult = False
 #resultfilename = h1.resultfile = wrkDir+os.sep+"autoFillRecipeScripts"+os.sep+"2DsphereFill"+os.sep+"results"+os.sep+"SpherefillResult.afr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/results/2DsphereFill_1.1.apr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult_3"
-resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1/NM_Analysis_C"
+resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_B2/NM_Analysis_B"
 
 #h.smallestProteinSize=15
 #h.exteriorRecipe.ingredients[0].uLength = 100.0
@@ -96,17 +96,18 @@ h.loopThroughIngr(setCompartment)
 #setJitter
 #raw_input()
 if ANALYSIS:
-    h.placeMethod="RAPID"
+#    h.placeMethod="RAPID"
     h.encapsulatingGrid=0
-    autopack.testPeriodicity = False
+    autopack.testPeriodicity = True
+    autopack.biasedPeriodicity = [1,1,0]
     analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
-    output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1"
+    output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_B2"
     analyse.g.Resolution = 1.0
     h.boundingBox=numpy.array(h.boundingBox)
     fbox_bb=numpy.array(h.boundingBox)
 #    h.boundingBox[0]-=numpy.array([500.0,500.0,0.0])    
 #    h.boundingBox[1]+=numpy.array([500.0,500.0,0.0])
-    d=analyse.doloop(5,h.boundingBox,wrkDir,output,rdf=True,
+    d=analyse.doloop(1000,h.boundingBox,wrkDir,output,rdf=True,
                      render=False,twod=TWOD,use_file=True)#,fbox_bb=fbox_bb)
 #    if not NOGUI :
 #        afviewer.displayFill() 
