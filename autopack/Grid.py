@@ -93,7 +93,7 @@ class Grid:
         self.tree = None
         self.encapsulatingGrid = 1
         self.testPeriodicity = autopack.testPeriodicity
-        self.biasedPeriodicity = None
+        self.biasedPeriodicity = autopack.biasedPeriodicity
         if setup :
             self.setup(boundingBox,space)
         #use np.roll to have periodic condition
@@ -321,15 +321,15 @@ class Grid:
         self.preriodic_table["right"]=numpy.array([[-1,0,0],[0,-1,0],[0,0,-1]])*self.sizeXYZ
 
     def getPositionPeridocity(self,pt3d,jitter,cutoff):
-        if self.biasedPeriodicity != None :       
-            biased = biasedPeriodicity
+        if autopack.biasedPeriodicity != None :       
+            biased = autopack.biasedPeriodicity
         else :
             biased = jitter
         O = numpy.array(self.boundingBox[0])
         E = numpy.array(self.boundingBox[1])
         P = numpy.array(pt3d)
         translation=None  
-        if not self.testPeriodicity:
+        if not autopack.testPeriodicity:
             return None
         d1 = (P - O)*biased
         s1=min(x for x in d1[d1 != 0] if x != 0)
