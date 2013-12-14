@@ -20,7 +20,7 @@ for i in range(2):
     pprint.pprint(gc.garbage)
     del gc.garbage[:]
     print
-    
+
 import os
 import sys
 sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs")
@@ -70,7 +70,7 @@ h.saveResult = False
 #resultfilename = h1.resultfile = wrkDir+os.sep+"autoFillRecipeScripts"+os.sep+"2DsphereFill"+os.sep+"results"+os.sep+"SpherefillResult.afr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/results/2DsphereFill_1.1.apr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult_3"
-resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1/NM_Analysis_C"
+resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C2/NM_Analysis_C"
 
 #h.smallestProteinSize=15
 #h.exteriorRecipe.ingredients[0].uLength = 100.0
@@ -96,17 +96,17 @@ h.loopThroughIngr(setCompartment)
 #setJitter
 #raw_input()
 if ANALYSIS:
-    h.placeMethod="RAPID"
+#    h.placeMethod="RAPID"
     h.encapsulatingGrid=0
     autopack.testPeriodicity = False
     analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
-    output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1"
+    output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_C2"
     analyse.g.Resolution = 1.0
     h.boundingBox=numpy.array(h.boundingBox)
     fbox_bb=numpy.array(h.boundingBox)
 #    h.boundingBox[0]-=numpy.array([500.0,500.0,0.0])    
 #    h.boundingBox[1]+=numpy.array([500.0,500.0,0.0])
-    d=analyse.doloop(5,h.boundingBox,wrkDir,output,rdf=True,
+    d=analyse.doloop(1000,h.boundingBox,wrkDir,output,rdf=True,
                      render=False,twod=TWOD,use_file=True)#,fbox_bb=fbox_bb)
 #    if not NOGUI :
 #        afviewer.displayFill() 

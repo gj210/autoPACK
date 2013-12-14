@@ -34,7 +34,8 @@ from autopack.Graphics import AutopackViewer as AFViewer
 from autopack.Analysis import AnalyseAP
 TWOD = 1
 NOGUI = 1
-ANALYSIS = 1
+ANALYSIS = 0
+usePP=False
 helper = autopack.helper
 if helper is None and not NOGUI:
     import upy
@@ -48,9 +49,9 @@ autopack.helper = helper
 #filename = "/Users/ludo/Desktop/cell.xml"
 #filename = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/Test_Spheres2D1.1.xml"
 #filename = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/Test_Spheres2Dgradients1.0.xml"
-#filename = "/Users/ludo/DEV/autopack_git/data/Mycoplasma/recipe/Mycoplasma1.3.xml"
+filename = "/Users/ludo/DEV/autopack_git/data/Mycoplasma/recipe/Mycoplasma1.3.xml"
 #filename = "/Users/ludo/Desktop/cell_hack.xml"
-filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml"
+#filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml"
 fileName, fileExtension = os.path.splitext(filename)
 n=os.path.basename(fileName)
 h = Environment(name=n)
@@ -70,7 +71,7 @@ h.saveResult = False
 #resultfilename = h1.resultfile = wrkDir+os.sep+"autoFillRecipeScripts"+os.sep+"2DsphereFill"+os.sep+"results"+os.sep+"SpherefillResult.afr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/results/2DsphereFill_1.1.apr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult_3"
-resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1/NM_Analysis_C"
+resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/Mycoplasma/myco_2"
 
 #h.smallestProteinSize=15
 #h.exteriorRecipe.ingredients[0].uLength = 100.0
@@ -92,7 +93,7 @@ def setCompartment(ingr):
 #    ingr.cutoff_boundary=500+ingr.encapsulatingRadius
     ingr.nbJitter = 6
 #   
-h.loopThroughIngr(setCompartment)
+#h.loopThroughIngr(setCompartment)
 #setJitter
 #raw_input()
 if ANALYSIS:
@@ -100,7 +101,7 @@ if ANALYSIS:
     h.encapsulatingGrid=0
     autopack.testPeriodicity = False
     analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
-    output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1"
+    output="/Users/ludo/DEV/autoPACKresults/Mycoplasma"
     analyse.g.Resolution = 1.0
     h.boundingBox=numpy.array(h.boundingBox)
     fbox_bb=numpy.array(h.boundingBox)
@@ -111,18 +112,20 @@ if ANALYSIS:
 #    if not NOGUI :
 #        afviewer.displayFill() 
 else :
-    gridfile = localdir+os.sep+"autoFillRecipeScripts/Mycoplasma/results/grid_store"
-    h.placeMethod="RAPID"
+    autopack.testPeriodicity = False
+    gridfile = "/Users/ludo/DEV/autoPACKresults/Mycoplasma/grid_store"
+#    h.placeMethod="RAPID"
     h.saveResult = True
-    h.innerGridMethod = "bhtree"#jordan pure python ? sdf ?
+    resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/Mycoplasma/myco_2"
+    h.innerGridMethod = "jordan3"#jordan pure python ? sdf ?
 #    h.boundingBox = [[-250.0, -6500.0/2.0, -250.0], [250.0, 6500.0/2.0, 250.0]]
-    h.boundingBox =[[-2482, -2389.0, 100.0], [2495, 2466, 2181.0]]
+#    h.boundingBox =[[-2482, -2389.0, 100.0], [2495, 2466, 2181.0]]
 #    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
 #                          gridFileOut=gridfile,previousFill=False)
     h.buildGrid(boundingBox=h.boundingBox,gridFileIn=gridfile,rebuild=True ,
-                          gridFileOut=None,previousFill=False)
+                          gridFileOut=gridfile,previousFill=False)
 
-    h.fill5(verbose = 0,usePP=True)
+    h.fill5(verbose = 0,usePP=usePP)
 #    if not NOGUI :
 #        afviewer.displayFill()  
 
