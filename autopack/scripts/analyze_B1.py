@@ -98,6 +98,7 @@ h.loopThroughIngr(setCompartment)
 if ANALYSIS:
 #    h.placeMethod="RAPID"
     h.encapsulatingGrid=0
+    h.use_periodicity = True
     autopack.testPeriodicity = True
     autopack.biasedPeriodicity = [1,1,0]
     analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
