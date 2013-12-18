@@ -321,6 +321,91 @@ class Grid:
         self.preriodic_table["right"]=numpy.array([[-1,0,0],[0,-1,0],[0,0,-1]])*self.sizeXYZ
 
     def getPositionPeridocity(self,pt3d,jitter,cutoff):
+#        print ("getPositionPeridocity")
+        if autopack.biasedPeriodicity != None :       
+            biased = autopack.biasedPeriodicity
+        else :
+            biased = jitter
+        O = numpy.array(self.boundingBox[0])
+        E = numpy.array(self.boundingBox[1])
+        P = numpy.array(pt3d)
+        translation=None  
+#        print ("doit ? ",autopack.testPeriodicity)
+        if not autopack.testPeriodicity:
+            return None
+        ox, oy, oz = self.boundingBox[0]
+        ex, ey, ez = self.boundingBox[1]
+        px, py, pz = pt3d
+        pxyz=[0,0,0]
+        
+        #distance plane X
+        dox = px - ox
+        dex = ex - px       
+        dx=0
+        if dox < dex :
+            dx = dox #1
+            pxyz[0] = 1
+        else:
+            dx = dex #-1
+            pxyz[0] = -1
+        if dx < cutoff and dx != 0.0:
+            pass
+        else :
+            pxyz[0]=0
+        #distance plane Y
+        doy = py - oy
+        dey = ey - py 
+        dy=0
+        if doy < dey :
+            dy = doy #1
+            pxyz[1] = 1
+        else:
+            dy = dey #-1
+            pxyz[1] = -1
+        if dy < cutoff and dy != 0.0:
+            pass
+        else :
+            pxyz[1]=0        #distance plane Z
+        doz = pz - oz
+        dez = ez - pz
+        dz=0
+        if doz < dez :
+            dz = doz #1
+            pxyz[2] = 1
+        else:
+            dz = dez #-1
+            pxyz[2] = -1
+        if dz < cutoff and dz != 0.0:
+            pass
+        else :
+            pxyz[2]=0
+        pxyz=numpy.array(pxyz)*biased
+        tr=[]
+        corner=numpy.zeros((4,3))#7 corner / 3 corner 3D / 2D
+        i1=numpy.nonzero(pxyz)[0]
+        for i in i1 :
+            tr.append(pt3d+(self.preriodic_table["left"][i]*pxyz[i]))
+            corner[0]+=self.preriodic_table["left"][i]*pxyz[i]
+            #the corner are
+            #X+Y+Z corner[0]
+            #X+Y+0 corner[1]
+            #X+0+Z corner[2]
+            #0+Y+Z corner[3]
+        if len(i1) == 2 :
+            tr.append(pt3d+corner[0])
+        if len(i1) == 3 :
+            corner[1] = self.preriodic_table["left"][0]*pxyz[0]+self.preriodic_table["left"][1]*pxyz[1]
+            corner[2] = self.preriodic_table["left"][0]*pxyz[0]+self.preriodic_table["left"][2]*pxyz[2]
+            corner[3] = self.preriodic_table["left"][1]*pxyz[1]+self.preriodic_table["left"][2]*pxyz[2]
+            for i in range(4):
+                if sum(corner[i]) != 0 :
+                    tr.append(pt3d+corner[i])
+        if len(tr) :
+            translation=tr
+#        print ("periodicity ",translation, tr) 
+        return translation        
+        
+    def getPositionPeridocityBroke(self,pt3d,jitter,cutoff):
         if autopack.biasedPeriodicity != None :       
             biased = autopack.biasedPeriodicity
         else :
@@ -331,12 +416,14 @@ class Grid:
         translation=None  
         if not autopack.testPeriodicity:
             return None
+        #distance to front-lower-left
         d1 = (P - O)*biased
         s1=min(x for x in d1[d1 != 0] if x != 0)
 #        i1=list(d1).index(s1)
         m1=numpy.logical_and(numpy.less(d1,cutoff),numpy.greater(d1,0.0))
         i1=numpy.nonzero(m1)[0]
         
+        #distance to back-upper-right
         d2 = (E - P)*biased
         s2=min(x for x in d2[d2 != 0] if x != 0)
 #        i2=list(d2).index(s2)
