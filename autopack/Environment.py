@@ -3106,6 +3106,7 @@ h1 = Environment()
         ## find a suitable point using the ingredient's placer object
         """
         #set periodicity
+        autopack.testPeriodicity=self.use_periodicity
         self.grid.testPeriodicity=self.use_periodicity
         import time
         t1=time.time()

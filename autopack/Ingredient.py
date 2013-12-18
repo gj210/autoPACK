@@ -4240,14 +4240,14 @@ class Ingredient(Agent):
                     self.histoVol.rIngr.append(self)
                     self.histoVol.result.append([ jtrans, rotMatj, self, ptInd ])
     #                histoVol.close_ingr_bhtree.MoveRBHPoint(histoVol.nb_ingredient,(jtrans[0],jtrans[1],jtrans[2]),1)
-                    self.histoVol.nb_ingredient+=1
+#                    self.histoVol.nb_ingredient+=1
                     if periodic_pos is not None and self.packingMode !="gradient" :
                         for p in periodic_pos :
                             self.histoVol.rTrans.append(p)
                             self.histoVol.rRot.append(rotMatj)
                             self.histoVol.rIngr.append(self)
                             self.histoVol.result.append([ p, rotMatj, self, ptInd ])
-                            self.histoVol.nb_ingredient+=1                        
+                            #self.histoVol.nb_ingredient+=1                        
                     if self.histoVol.treemode == "bhtree":# "cKDTree"
                         if len(self.histoVol.rTrans) >= 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
                         if len(self.histoVol.rTrans) : self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
@@ -4305,10 +4305,10 @@ class Ingredient(Agent):
             # add one to molecule counter for this ingredient
             self.counter += 1
             self.completion = float(self.counter)/float(self.nbMol)
-            if periodic_pos is not None :
-                for p in periodic_pos :
-                    self.counter += 1
-                    self.completion = float(self.counter)/float(self.nbMol)
+#            if periodic_pos is not None :
+#                for p in periodic_pos :
+#                    self.counter += 1
+#                    self.completion = float(self.counter)/float(self.nbMol)
 
             if jitterPos>0:
                 histoVol.successfullJitter.append(
