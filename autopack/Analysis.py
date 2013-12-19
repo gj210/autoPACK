@@ -804,7 +804,8 @@ class AnalyseAP:
     
             
     def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
-               plot = True,twod=True,fbox_bb=None,use_file = True):
+               plot = True,twod=True,fbox_bb=None,use_file = True,
+               seeds_i=None):
         # doLoop automatically produces result files, images, and documents from the recipe while adjusting parameters
         # To run doLoop, 1) in your host's python console type:
         # execfile(pathothis recipe) # for example, on my computer:
@@ -813,11 +814,12 @@ class AnalyseAP:
         #    Results will appear in the result folder of your recipe path
         # where n is the number of loop, seed = i
         #analyse.doloop(n) 
-        from autopack.ldSequence import halton
-        seeds_f = numpy.array(halton(int(n*1.5)))*int(n*1.5)
-        seeds_int = numpy.array(numpy.round(seeds_f),'int')
-        sorted_s,indices_u=numpy.unique(seeds_int,return_inverse=True)
-        seeds_i = seeds_int[indices_u][:n]
+        if seeds_i is None :
+            from autopack.ldSequence import halton
+            seeds_f = numpy.array(halton(int(n*1.5)))*int(n*1.5)
+            seeds_int = numpy.array(numpy.round(seeds_f),'int')
+            sorted_s,indices_u=numpy.unique(seeds_int,return_index=True)
+            seeds_i = numpy.array(seeds_int[numpy.sort(indices_u)])[:n]
         numpy.savetxt(output+os.sep+"seeds", seeds_i, delimiter=",")
         angle_file= output+os.sep+"angle"
         position_file=output+os.sep+"pos"
@@ -867,7 +869,7 @@ class AnalyseAP:
                 r = self.env.exteriorRecipe
                 d={}
                 if r :
-                    print ("DONERUNXXXCYTO!!!!!")
+#                    print ("DONERUNXXXCYTO!!!!!")
                     for ingr in r.ingredients:
                         if ingr.name not in distances :
                             distances[ingr.name]=[]
@@ -919,9 +921,9 @@ class AnalyseAP:
                                         for pt in pts :
                                             ax.add_patch(Circle((pt[0], pt[1]), ingr.minRadius,
                                                 edgecolor="black", facecolor=ingr.color))
-                print ("DONERUNXXXbefore!!!!!")
+#                print ("DONERUNXXXbefore!!!!!")
                 for o in self.env.compartments:
-                    print ("DONERUNXXXComp!!!!!")
+#                    print ("DONERUNXXXComp!!!!!")
                     rs = o.surfaceRecipe
                     if rs :
                         for ingr in rs.ingredients:
@@ -951,7 +953,7 @@ class AnalyseAP:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                                     edgecolor="black", facecolor=ingr.color))
-                    print ("DONERUNXXXYYY!!!!!")
+#                    print ("DONERUNXXXYYY!!!!!")
                     ri = o.innerRecipe
                     if ri :
                         for ingr in ri.ingredients:
@@ -988,7 +990,7 @@ class AnalyseAP:
                     self.writeJSON(output+os.sep+"_angleIngr_"+str(si)+".json",anglesingr)
                 #print ("############")                 
                 #print (output+os.sep+"_dIngr_"+str(si)+".json",distances)
-                print ("DONERUNXXX!!!!!")
+#                print ("DONERUNXXX!!!!!")
                 if plot and twod:
                     ax.set_aspect(1.0)
                     pyplot.axhline(y=bbox[0][1], color='k')
@@ -1000,10 +1002,10 @@ class AnalyseAP:
                     pyplot.savefig(basename+".png")
                     #pylab.close()     # closes the current figure
 #            return                
-            print ("DONERUN!!!!!")
+#            print ("DONERUN!!!!!")
 #            self.flush()        
         #plot(x)
-        print ("DONE1!!!!")
+#        print ("DONE1!!!!")
         if use_file :
             total_positions = numpy.genfromtxt(position_file, delimiter=',')
             try :
@@ -1021,7 +1023,7 @@ class AnalyseAP:
                 distances=dict(self.merge(distances,dict1))
                 dict1=self.loadJSON(output+os.sep+"_angleIngr_"+str(i)+".json")
                 anglesingr=dict(self.merge(anglesingr,dict1))
-        print ("DONE2!!!!")
+#        print ("DONE2!!!!")
         self.writeJSON(occurences_file,occurences)
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
@@ -1036,13 +1038,13 @@ class AnalyseAP:
         self.env.loopThroughIngr(self.occurence_distribution)        
         self.axis_distribution_total(total_positions)
 #        self.env.loopThroughIngr(self.correlation)
-        print ("DONE3!!!!")
+#        print ("DONE3!!!!")
         #plot the angle
         if len(total_angles) : 
             self.histo(total_angles[1],output+os.sep+"_anglesX.png",bins=12,size=max(total_angles[2]))
             self.histo(total_angles[2],output+os.sep+"_anglesY.png",bins=12,size=max(total_angles[2]))
             self.histo(total_angles[3],output+os.sep+"_anglesZ.png",bins=12,size=max(total_angles[2]))
-        print ("DONE!!!!")
+#        print ("DONE!!!!")
         return distances
 #from bhtree import bhtreelib
 #bht = bhtreelib.BHtree( verts, None, 10)
