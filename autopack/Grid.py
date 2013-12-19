@@ -365,7 +365,8 @@ class Grid:
         if dy < cutoff and dy != 0.0:
             pass
         else :
-            pxyz[1]=0        #distance plane Z
+            pxyz[1]=0        
+        #distance plane Z
         doz = pz - oz
         dez = ez - pz
         dz=0

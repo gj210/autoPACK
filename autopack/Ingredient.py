@@ -3645,30 +3645,33 @@ class Ingredient(Agent):
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
             collision = True
-            r=False#self.testPoint(jtrans)
-            if not r :                    
-                if self.modelType=='Spheres':
-    #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
-    #                print("jtrans = ", jtrans)
-                    collision = histoVol.callFunction(self.checkSphCollisions,(
-                        self.positions[level], self.radii[level], jtrans, rotMatj,
-                        level, gridPointsCoords, distance, histoVol))
-    #                print("jitter collision = ", collision, " for pt = ", ptInd, " with jtrans = ", jtrans)
-                elif self.modelType=='Cylinders':
-                    collision = histoVol.callFunction(self.checkCylCollisions,(
-                        self.positions[level], self.positions2[level],
-                        self.radii[level], jtrans, rotMatj, gridPointsCoords,
-                         distance, histoVol))
-                elif self.modelType=='Cube':
-                    collision = histoVol.callFunction(self.checkCubeCollisions,(
-                        self.positions[0], self.positions2[0], self.radii,
-                        jtrans, rotMatj, gridPointsCoords,
-                        distance, histoVol))
+            #perodicity check
+#            periodic_pos = self.histoVol.grid.getPositionPeridocity(jtrans,
+#                    getNormedVectorOnes(self.jitterMax),self.encapsulatingRadius)                
+##            histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
+#            perdiodic_collision = False
+            r=[False]
+#            if periodic_pos is not None and self.packingMode !="gradient" :
+##                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
+#                for p in periodic_pos :
+#                    perdiodic_collision = self.collision_jitter(p, rotMatj,
+#                                    level, gridPointsCoords, distance, histoVol)
+#                    r.extend([perdiodic_collision])
+#                    if  True in r : break
+#                    if runTimeDisplay and moving is not None :
+#                        mat = rotMatj.copy()
+#                        mat[:3, 3] = jtrans
+#                        afvi.vi.setObjectMatrix(moving,mat,transpose=True)
+#                        afvi.vi.update()
+            test=False#self.testPoint(jtrans)
+            if not test and not ( True in r) :                    
+                collision = self.collision_jitter(jtrans, rotMatj,
+                                    level, gridPointsCoords, distance, histoVol)
             if not collision:
                 break # break out of jitter pos loop
         if verbose: 
             print("jitter loop ",time()-t1)
-        if not collision and not r:
+        if not collision and not  ( True in r) :
             ## get inside points and update distance
             ##
             # use best sperical approcimation
@@ -5299,6 +5302,28 @@ class Ingredient(Agent):
             return success, nbFreePoints
         else :
             return success, nbFreePoints,jtrans, rotMatj
+
+    def collision_jitter(self,jtrans, rotMatj,
+                level, gridPointsCoords, distance, histoVol):
+        collision=False
+        if self.modelType=='Spheres':
+#                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
+#                print("jtrans = ", jtrans)
+            collision = histoVol.callFunction(self.checkSphCollisions,(
+                self.positions[level], self.radii[level], jtrans, rotMatj,
+                level, gridPointsCoords, distance, histoVol))
+#                print("jitter collision = ", collision, " for pt = ", ptInd, " with jtrans = ", jtrans)
+        elif self.modelType=='Cylinders':
+            collision = histoVol.callFunction(self.checkCylCollisions,(
+                self.positions[level], self.positions2[level],
+                self.radii[level], jtrans, rotMatj, gridPointsCoords,
+                 distance, histoVol))
+        elif self.modelType=='Cube':
+            collision = histoVol.callFunction(self.checkCubeCollisions,(
+                self.positions[0], self.positions2[0], self.radii,
+                jtrans, rotMatj, gridPointsCoords,
+                distance, histoVol))  
+        return collision
 
     def collision_rapid(self,jtrans,rotMatj,cutoff=None,usePP=False,point=None,
                         prevpoint=None,liste_nodes=None):

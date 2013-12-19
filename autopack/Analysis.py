@@ -715,7 +715,7 @@ class AnalyseAP:
 #        y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
 #        l = pyplot.plot(bins, y, 'r--', linewidth=3)
         pyplot.savefig(filename)     
-        pylab.close()     # closes the current figure
+#        pylab.close()     # closes the current figure
         
     def plot(self,rdf,radii,filname):
         pylab.clf()
@@ -726,13 +726,13 @@ class AnalyseAP:
         pylab.xlabel(r"distance $r$ in $\AA$")
         pylab.ylabel(r"radial distribution function $g(r)$")
         pylab.savefig(filname)
-        pylab.close()     # closes the current figure
+#        pylab.close()     # closes the current figure
 
     def simpleplot(self,X,Y,filname,w=3):
         pylab.clf()
         pylab.plot(X, Y, linewidth=w)
         pylab.savefig(filname)
-        pylab.close()     # closes the current figure
+#        pylab.close()     # closes the current figure
 
     def grid_pack(self,bb,wrkDir,forceBuild=True, fill=0,seed=20,vTestid = 3,
                   vAnalysis = 0,fbox_bb=None):
@@ -867,6 +867,7 @@ class AnalyseAP:
                 r = self.env.exteriorRecipe
                 d={}
                 if r :
+                    print ("DONERUNXXXCYTO!!!!!")
                     for ingr in r.ingredients:
                         if ingr.name not in distances :
                             distances[ingr.name]=[]
@@ -918,7 +919,9 @@ class AnalyseAP:
                                         for pt in pts :
                                             ax.add_patch(Circle((pt[0], pt[1]), ingr.minRadius,
                                                 edgecolor="black", facecolor=ingr.color))
+                print ("DONERUNXXXbefore!!!!!")
                 for o in self.env.compartments:
+                    print ("DONERUNXXXComp!!!!!")
                     rs = o.surfaceRecipe
                     if rs :
                         for ingr in rs.ingredients:
@@ -948,7 +951,7 @@ class AnalyseAP:
                                 for p in ingrpos: 
                                     ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                                     edgecolor="black", facecolor=ingr.color))
-
+                    print ("DONERUNXXXYYY!!!!!")
                     ri = o.innerRecipe
                     if ri :
                         for ingr in ri.ingredients:
@@ -979,12 +982,13 @@ class AnalyseAP:
                                     ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                         edgecolor="black", facecolor=ingr.color))
                 #write
-                self.writeJSON(output+os.sep+"_posIngr_"+str(si)+".json",ingrpositions)
-                self.writeJSON(output+os.sep+"_dIngr_"+str(si)+".json",distances)
-                self.writeJSON(output+os.sep+"_angleIngr_"+str(si)+".json",anglesingr)
-                
+                if use_file :
+                    self.writeJSON(output+os.sep+"_posIngr_"+str(si)+".json",ingrpositions)
+                    self.writeJSON(output+os.sep+"_dIngr_"+str(si)+".json",distances)
+                    self.writeJSON(output+os.sep+"_angleIngr_"+str(si)+".json",anglesingr)
                 #print ("############")                 
                 #print (output+os.sep+"_dIngr_"+str(si)+".json",distances)
+                print ("DONERUNXXX!!!!!")
                 if plot and twod:
                     ax.set_aspect(1.0)
                     pyplot.axhline(y=bbox[0][1], color='k')
@@ -994,9 +998,12 @@ class AnalyseAP:
                     pyplot.axis([bbox[0][0], bbox[1][0],
                                  bbox[0][1], bbox[1][1]])
                     pyplot.savefig(basename+".png")
-                    pylab.close()     # closes the current figure
+                    #pylab.close()     # closes the current figure
+#            return                
+            print ("DONERUN!!!!!")
 #            self.flush()        
         #plot(x)
+        print ("DONE1!!!!")
         if use_file :
             total_positions = numpy.genfromtxt(position_file, delimiter=',')
             try :
@@ -1014,6 +1021,7 @@ class AnalyseAP:
                 distances=dict(self.merge(distances,dict1))
                 dict1=self.loadJSON(output+os.sep+"_angleIngr_"+str(i)+".json")
                 anglesingr=dict(self.merge(anglesingr,dict1))
+        print ("DONE2!!!!")
         self.writeJSON(occurences_file,occurences)
         self.env.ingrpositions=ingrpositions
         self.env.distances = distances
@@ -1028,11 +1036,13 @@ class AnalyseAP:
         self.env.loopThroughIngr(self.occurence_distribution)        
         self.axis_distribution_total(total_positions)
 #        self.env.loopThroughIngr(self.correlation)
+        print ("DONE3!!!!")
         #plot the angle
         if len(total_angles) : 
             self.histo(total_angles[1],output+os.sep+"_anglesX.png",bins=12,size=max(total_angles[2]))
             self.histo(total_angles[2],output+os.sep+"_anglesY.png",bins=12,size=max(total_angles[2]))
             self.histo(total_angles[3],output+os.sep+"_anglesZ.png",bins=12,size=max(total_angles[2]))
+        print ("DONE!!!!")
         return distances
 #from bhtree import bhtreelib
 #bht = bhtreelib.BHtree( verts, None, 10)
