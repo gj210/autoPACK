@@ -938,11 +938,11 @@ class AnalysisTab:
                 p=self.helper.ToVec(self.helper.getTranslation(o))
         d=self.aap.getDistanceFrom([0,0,0],
                     usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
-        self.aap.save_csv(d,"/Users/ludo/distance.csv")
+        self.aap.save_csv(d,"/Users/grahamold/Desktop/DistanceResults/distance.csv")
 
     def saveclosestdist(self,):
         d=self.aap.getClosestDistance(usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
-        self.aap.save_csv(d,"/Users/ludo/closest_distance.csv")
+        self.aap.save_csv(d,"/Users/grahamold/Desktop/DistanceResults/closest_distance.csv")
 
     def export_result(self,):
         pass
