@@ -1482,9 +1482,9 @@ class Ingredient(Agent):
                 rotMat = numpy.identity(4)
             
         jx, jy, jz = self.jitterMax
-        dx = jx*spacing*uniform(-0.5, 0.5)
-        dy = jy*spacing*uniform(-0.5, 0.5)
-        dz = jz*spacing*uniform(-0.5, 0.5)
+        dx = jx*spacing*uniform(-1.0, 1.0)  #This needs to use the same rejection if outside of the sphere that the uniform cartesian jitters have.  Shoiuld use oneJitter instead?
+        dy = jy*spacing*uniform(-1.0, 1.0)
+        dz = jz*spacing*uniform(-1.0, 1.0)
 #        d2 = dx*dx + dy*dy + dz*dz
 #        if d2 < jitter2:
         if self.compNum > 0: # jitter less among normal
@@ -2577,9 +2577,12 @@ class Ingredient(Agent):
         if jitter2 > 0.0:
             found = False
             while not found:
-                dx = jx*jitter*gauss(0., 0.3)
-                dy = jy*jitter*gauss(0., 0.3)
-                dz = jz*jitter*gauss(0., 0.3)
+#                    dx = jx*jitter*gauss(0., 0.3)
+#                    dy = jy*jitter*gauss(0., 0.3)
+#                    dz = jz*jitter*gauss(0., 0.3)
+                dx = jx*jitter*uniform(-1.0, 1.0) # These should be from -1 to 1, not from -0.5 to 0.5
+                dy = jy*jitter*uniform(-1.0, 1.0)
+                dz = jz*jitter*uniform(-1.0, 1.0)
                 d2 = dx*dx + dy*dy + dz*dz
                 if d2 < jitter2:
                     if compNum > 0: # jitter less among normal
@@ -4489,9 +4492,12 @@ class Ingredient(Agent):
             if jitter2 > 0.0:
                 found = False
                 while not found:
-                    dx = jx*jitter*gauss(0., 0.3)
-                    dy = jy*jitter*gauss(0., 0.3)
-                    dz = jz*jitter*gauss(0., 0.3)
+#                    dx = jx*jitter*gauss(0., 0.3)
+#                    dy = jy*jitter*gauss(0., 0.3)
+#                    dz = jz*jitter*gauss(0., 0.3)
+                    dx = jx*jitter*uniform(-1.0, 1.0)
+                    dy = jy*jitter*uniform(-1.0, 1.0)
+                    dz = jz*jitter*uniform(-1.0, 1.0)
                     d2 = dx*dx + dy*dy + dz*dz
                     if d2 < jitter2:
                         if compNum > 0: # jitter less among normal
@@ -4959,9 +4965,9 @@ class Ingredient(Agent):
 #                    dx = jx*jitter*gauss(0., 0.3)
 #                    dy = jy*jitter*gauss(0., 0.3)
 #                    dz = jz*jitter*gauss(0., 0.3)
-                    dx = jx*jitter*uniform(-0.5, 0.5)
-                    dy = jy*jitter*uniform(-0.5, 0.5)
-                    dz = jz*jitter*uniform(-0.5, 0.5)
+                    dx = jx*jitter*uniform(-1.0, 1.0)
+                    dy = jy*jitter*uniform(-1.0, 1.0)
+                    dz = jz*jitter*uniform(-1.0, 1.0)
                     d2 = dx*dx + dy*dy + dz*dz
                     if d2 < jitter2:
                         if compNum > 0: # jitter less among normal
@@ -6204,7 +6210,7 @@ class GrowIngrediant(MultiCylindersIngr):
         if len(cent2T) == 1 :
             cent2T=cent2T[0]
         tx, ty, tz = cent2T
-        dx = jx*jitter*gauss(0., 0.3)
+        dx = jx*jitter*gauss(0., 0.3)  #This is an incorrect jitter use the uniform random with sphereical rejection
         dy = jy*jitter*gauss(0., 0.3)
         dz = jz*jitter*gauss(0., 0.3)
 #        print "d",dx,dy,dz
