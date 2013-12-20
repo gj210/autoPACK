@@ -3578,9 +3578,9 @@ class Ingredient(Agent):
 #                    dx = jx*jitter*gauss(0., 0.3)
 #                    dy = jy*jitter*gauss(0., 0.3)
 #                    dz = jz*jitter*gauss(0., 0.3)
-                    dx = jx*jitter*uniform(-0.5, 0.5)
-                    dy = jy*jitter*uniform(-0.5, 0.5)
-                    dz = jz*jitter*uniform(-0.5, 0.5)
+                    dx = jx*jitter*uniform(-1.0, 1.0) # These should be from -1 to 1, not from -0.5 to 0.5
+                    dy = jy*jitter*uniform(-1.0, 1.0)
+                    dz = jz*jitter*uniform(-1.0, 1.0)
                     d2 = dx*dx + dy*dy + dz*dz
                     if d2 < jitter2:
                         if compNum > 0: # jitter less among normal
@@ -4068,9 +4068,9 @@ class Ingredient(Agent):
 #                    dx = jx*jitter*gauss(0., 0.3)
 #                    dy = jy*jitter*gauss(0., 0.3)
 #                    dz = jz*jitter*gauss(0., 0.3)
-                    dx = jx*jitter*uniform(-0.5, 0.5)
-                    dy = jy*jitter*uniform(-0.5, 0.5)
-                    dz = jz*jitter*uniform(-0.5, 0.5)
+                    dx = jx*jitter*uniform(-1.0, 1.0)
+                    dy = jy*jitter*uniform(-1.0, 1.0)
+                    dz = jz*jitter*uniform(-1.0, 1.0)
                     d2 = dx*dx + dy*dy + dz*dz
                     if d2 < jitter2:
                         if compNum > 0: # jitter less among normal
