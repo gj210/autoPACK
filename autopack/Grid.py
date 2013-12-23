@@ -103,8 +103,9 @@ class Grid:
         self.gridSpacing = space*1.1547
         self.boundingBox = boundingBox
         #self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
-        self.create3DPointLookup()
-#        self.create3DPointLookupCover()
+#        self.create3DPointLookup()
+        self.create3DPointLookupCover()
+#        self.create3DPointLookup_loop()
         self.getDiagonal()
         self.nbSurfacePoints = 0
         print ("$$$$$$", self.gridVolume,self.gridSpacing)
@@ -114,12 +115,14 @@ class Grid:
         self.freePoints = list(range(self.gridVolume))
         self.nbFreePoints =len(self.freePoints)
         print ("$$$$$$$$  1 ",boundingBox,space,self.gridSpacing,len(self.gridPtId))
-#        self.create3DPointLookup()#whatdoI do it twice ?
+#        self.create3DPointLookup()
+#        self.create3DPointLookup_loop()#whatdoI do it twice ?
         print("$$$$$$$$  gridVolume = nbPoints = ", self.gridVolume, 
                           " grid.nbGridPoints = ", self.nbGridPoints,
                           "gridPId = ",len(self.gridPtId),
                         "self.nbFreePoints =",self.nbFreePoints)
         self.setupBoundaryPeriodicity()
+        return self.gridSpacing
 
     def reset(self,):
         #reset the  distToClosestSurf and the freePoints
@@ -172,7 +175,7 @@ class Grid:
             boundingBox= self.boundingBox
         xl,yl,zl = boundingBox[0]
         xr,yr,zr = boundingBox[1]
-
+        self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
         nx,ny,nz = self.nbGridPoints
         pointArrayRaw = numpy.zeros( (nx*ny*nz, 3), 'f')
         #self.ijkPtIndice = numpy.zeros( (nx*ny*nz, 3), 'i')#this is unused 
@@ -200,16 +203,16 @@ class Grid:
             boundingBox= self.boundingBox
         space = self.gridSpacing
         # we want the diagonal of the voxel, not the diagonal of the plane, so the second 1.1547 is was incorrect
-        environmentBoxEqualFillBox = True
+        environmentBoxEqualFillBox = False
         #np.linspace(2.0, 3.0, num=5)
         if environmentBoxEqualFillBox: #environment.environmentBoxEqualFillBox:
             self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0], space)#*1.1547) gridspacing is already multiplied by 1.1547
             self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1], space)#*1.1547)
             self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2], space)#*1.1547)
         else:
-            self._x = x = numpy.arange(boundingBox[0][0], boundingBox[1][0] + space, space)#*1.1547) gridspacing is already multiplied by 1.1547
-            self._y = y = numpy.arange(boundingBox[0][1], boundingBox[1][1] + space, space)#*1.1547)
-            self._z = z = numpy.arange(boundingBox[0][2], boundingBox[1][2] + space, space)#*1.1547)
+            self._x = x = numpy.arange(boundingBox[0][0] - space, boundingBox[1][0] + space, space)#*1.1547) gridspacing is already multiplied by 1.1547
+            self._y = y = numpy.arange(boundingBox[0][1] - space, boundingBox[1][1] + space, space)#*1.1547)
+            self._z = z = numpy.arange(boundingBox[0][2] - space, boundingBox[1][2] + space, space)#*1.1547)
 #        self._x = x = numpy.ogrid(boundingBox[0][0]: boundingBox[1][0]: space*1.1547j)
 #        self._y = y = numpy.ogrid(boundingBox[0][1]: boundingBox[1][1]: space*1.1547j)
 #        self._z = z = numpy.ogrid(boundingBox[0][2]: boundingBox[1][2]: space*1.1547j)
@@ -241,7 +244,7 @@ class Grid:
             boundingBox= self.boundingBox
         space = self.gridSpacing
         S =  numpy.array(boundingBox[1])-numpy.array(boundingBox[0])
-        NX,NY,NZ = numpy.around(S/self.gridSpacing)
+        NX,NY,NZ = numpy.around(S/(self.gridSpacing/1.1547))
         if NX == 0 : NX=1
         if NY == 0 : NY=1
         if NZ == 0 : NZ=1
@@ -261,11 +264,12 @@ class Grid:
         nx = len(x) # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
         ny = len(y)
         nz = len(z)
-        self.gridSpacing = x[1]-x[0]
+        self.gridSpacing = (x[1]-x[0])*1.1547#? should I multiply here ?
         self.nbGridPoints = [nx,ny,nz]
         self.gridVolume = nx*ny*nz
         self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
         self.masterGridPositions = numpy.vstack(xyz).reshape(3,-1).T
+#        self.masterGridPositions = numpy.vstack(numpy.meshgrid(x,y,z,copy=False)).reshape(3,-1).T
 
     def getPointCompartmentId(self,point,ray=1):
         #check if point inside on of the compartments
@@ -612,7 +616,7 @@ class Grid:
         """        
         #return self.getPointsInCubeFillBB(bb, pt, radius,addSP=addSP,info=info)
         #return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
-        spacing1 = 1./self.gridSpacing
+        spacing1 = 1./(self.gridSpacing/1.1547)
         
         NX, NY, NZ = self.nbGridPoints
         OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
@@ -622,7 +626,7 @@ class Grid:
 #        print("getPointsInCube bb[1] = ",bb[1])
         #        i0 = max(0, int((ox-OX)*spacing1)+1)
         i0 = int(max(0, floor((ox-OX)*spacing1)))
-        i1 = int(min(NX, int((ex-OX)*spacing1)+1))
+        i1 = int(min(NX, int((ex-OX)*spacing1)+1))#+! ? +1 is when the grid doesnt cover everything.
         #        j0 = max(0, int((oy-OY)*spacing1)+1)
         j0 = int(max(0, floor((oy-OY)*spacing1)))
         j1 = int(min(NY, int((ey-OY)*spacing1)+1))
@@ -654,7 +658,7 @@ class Grid:
             nb = self.surfPtsBht.closePoints(tuple(pt), radius, result )
 #            nb = self.surfPtsBht.query(tuple(pt),k=self.nbSurfacePoints)
             dimx, dimy, dimz = self.nbGridPoints
-            ptIndices.extend(list(map(lambda x, length=self.gridVolume:x+length,
+            ptIndices.extend(list(map(lambda x, length=(self.gridVolume/1.1547):x+length,
                              result[:nb])) )
         return ptIndices
 

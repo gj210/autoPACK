@@ -3954,7 +3954,7 @@ class Ingredient(Agent):
         histoVol.setupPanda()
         afvi = histoVol.afviewer
         rejectionCount = 0
-        spacing = histoVol.smallestProteinSize
+        spacing = histoVol.grid.gridSpacing#/1.1547#  histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
         jitter = spacing#histoVol.callFunction(self.getMaxJitter,(spacing,))
         jitter2 = jitter * jitter
@@ -4149,7 +4149,7 @@ class Ingredient(Agent):
             histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             perdiodic_collision = False
             if periodic_pos is not None and self.packingMode !="gradient" :
-#                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
+                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
                 for p in periodic_pos :
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, p, rotMatj,))
                     perdiodic_collision = self.pandaBullet_collision(p,rotMatj,rbnode)                
@@ -4166,11 +4166,11 @@ class Ingredient(Agent):
                         mat[:3, 3] = jtrans
                         afvi.vi.setObjectMatrix(moving,mat,transpose=True)
                         afvi.vi.update()
-                    if  True in r : break
+                    if True in r : break
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},            
             t=time()   
-            print ("testPoints")
+            print ("testPoints",r)
             test=self.testPoint(jtrans)
             #       checkif rb collide 
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
@@ -6675,6 +6675,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 return None,False
             r=[False]
             test =  self.testPoint(newPt)
+            print ("testPoint",test,self.constraintMarge,marge,attempted,self.rejectionThreshold)
             if test :
                 if not self.constraintMarge :
                     if marge >=175 :
@@ -7853,7 +7854,7 @@ class GrowIngrediant(MultiCylindersIngr):
                 closeS = self.checkPointSurface(secondPoint,cutoff=self.cutoff_surface)
             success = False
             if not inside or closeS:
-                safety = 200
+                safety = 30
                 k=0
                 while not inside or closeS:
                     if k > safety :
@@ -7864,13 +7865,14 @@ class GrowIngrediant(MultiCylindersIngr):
                     p = self.vi.advance_randpoint_onsphere(self.uLength,
                                                            marge=math.radians(self.marge),
                                                             vector=self.vector)
-                    print ("p is ",p)
+                    print ("p is ",p,k,safety)
                     print (self.uLength,self.marge,self.vector)
                     pt = numpy.array(p)*numpy.array(self.jitterMax)
                     secondPoint = self.startingpoint+numpy.array(pt)
                     print ("secdpoint ",secondPoint)
                     inside = self.histoVol.grid.checkPointInside(secondPoint,dist=self.cutoff_boundary,jitter=self.jitterMax)
                     if self.compNum<=0 : closeS = self.checkPointSurface(secondPoint,cutoff=self.cutoff_surface)
+                    print (inside,closeS)
             if self.runTimeDisplay:
                 parent = self.histoVol.afviewer.orgaToMasterGeom[self]
                 name = "Startsp"+self.name+seed

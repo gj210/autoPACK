@@ -388,13 +388,14 @@ class AnalyseAP:
         return ingrpos,ingrrot
 
     def grabResultFromTXT(self,n,doanalyze=False):
+        from autopack import transformation as t
         ingrrot={}
         ingrpos={}
         ingrpos3=[]
         ingrrot3=[]
         for i in range(1000):
             print i    
-            files=open("results_seed_"+str(i)+"_s.txt","r")
+            files=open("results_seed_"+str(i)+".txt","r")
             lines = files.readlines()
             files.close()
             for l in lines :
@@ -404,8 +405,8 @@ class AnalyseAP:
                 if ingrname not in ingrrot:
                     ingrrot[ingrname]=[]
                     ingrpos[ingrname]=[]                            
-                ingrrot[ingrname].append(eval(elem[0])) 
-                ingrpos[ingrname].append(eval(elem[2]))
+                ingrrot[ingrname].append(eval(elem[2])) 
+                ingrpos[ingrname].append(eval(elem[0]))
         for ingrname in ingrrot:
             ingrrot[ingrname] = [numpy.array(m).reshape((4,4)) for m in ingrrot[ingrname]]
         if doanalyze :
@@ -418,13 +419,13 @@ class AnalyseAP:
                 self.histo(e3[0],ingrname+"_euler_X.png",bins=12,size=max(e3[0]))
                 self.histo(e3[1],ingrname+"_euler_Y.png",bins=12,size=max(e3[1]))
                 self.histo(e3[2],ingrname+"_euler_Z.png",bins=12,size=max(e3[2]))
-                ingrpositions,distA,angles3=self.getDistanceAngle(ingrpos3, ingrrot3)
-                numpy.savetxt(ingrname+"_angle_X.csv", numpy.array(angles3[1]), delimiter=",") 
-                numpy.savetxt(ingrname+"_angle_Y.csv", numpy.array(angles3[2]), delimiter=",") 
-                numpy.savetxt(ingrname+"_angle_Z.csv", numpy.array(angles3[3]), delimiter=",") 
-                self.histo(angles3[1],ingrname+"_angle_X.png",bins=12,size=max(angles3[1]))
-                self.histo(angles3[2],ingrname+"_angle_Y.png",bins=12,size=max(angles3[2]))
-                self.histo(angles3[3],ingrname+"_angle_Z.png",bins=12,size=max(angles3[3]))
+#                ingrpositions,distA,angles3=self.getDistanceAngle(ingrpos3, ingrrot3)
+#                numpy.savetxt(ingrname+"_angle_X.csv", numpy.array(angles3[1]), delimiter=",") 
+#                numpy.savetxt(ingrname+"_angle_Y.csv", numpy.array(angles3[2]), delimiter=",") 
+#                numpy.savetxt(ingrname+"_angle_Z.csv", numpy.array(angles3[3]), delimiter=",") 
+#                self.histo(angles3[1],ingrname+"_angle_X.png",bins=12,size=max(angles3[1]))
+#                self.histo(angles3[2],ingrname+"_angle_Y.png",bins=12,size=max(angles3[2]))
+#                self.histo(angles3[3],ingrname+"_angle_Z.png",bins=12,size=max(angles3[3]))
         return ingrpos,ingrrot
                             
     #should take any type of list...
@@ -709,7 +710,7 @@ class AnalyseAP:
         y,binEdges=numpy.histogram(distances,bins=bins)        
         bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
         menStd  = numpy.sqrt(y)
-        width=size/bins
+        width=bins
         pyplot.bar(bincenters,y,width=width, color='r', yerr=menStd)
         # add a 'best fit' line?
 #        y = mlab.normpdf( bins, mu, sigma)#should be the excepted distribution
@@ -801,8 +802,59 @@ class AnalyseAP:
             else:
                 result[k] = v
         return result
-    
-            
+
+    def plotNResult2D(self,n,bbox=[[0.0, 0, 0.], [1000.0, 1000.0, 1000.0]]):
+        for i in range(n):
+            f="results_seed_"+str(i)+".json"  
+            self.plotOneResult2D(filename="f",bbox=bbox)
+
+    def plotOneResult2D(self,data=None,filename=None,
+                        bbox=[[0.0, 0, 0.], [1000.0, 1000.0, 1000.0]]):
+        if data is None and filename is None :
+            return
+        elif data is None and filename is not None :
+            with open(filename) as data_file:  
+                data = json.load(data_file)
+        width = 1000.0#should be the boundary here ?
+        fig = pyplot.figure()
+        ax = fig.add_subplot(111)
+        radius={}
+        ingrrot={}
+        ingrpos={}
+        for recipe in data:
+            for ingrname in data[recipe]:
+                for k in range(len(data[recipe][ingrname]['results'])):
+                    if ingrname not in ingrrot:
+                        ingrrot[ingrname]=[]
+                        ingrpos[ingrname]=[]  
+                        radius[ingrname]=data[recipe][ingrname]['encapsulatingRadius']                 
+                    ingrrot[ingrname].append(data[recipe][ingrname]['results'][k][1])
+                    ingrpos[ingrname].append(data[recipe][ingrname]['results'][k][0])
+        for ingr in ingrpos: 
+            for i,p in enumerate(ingrpos[ingr]): 
+                print (p,radius[ingr])
+                ax.add_patch(Circle((p[0], p[1]),radius[ingr],
+                            edgecolor="black", facecolor="red")) 
+            ax.set_aspect(1.0)
+            pyplot.axhline(y=bbox[0][1], color='k')
+            pyplot.axhline(y=bbox[1][1], color='k')
+            pyplot.axvline(x=bbox[0][0], color='k')
+            pyplot.axvline(x=bbox[1][0], color='k')
+            pyplot.axis([bbox[0][0], bbox[1][0],
+                         bbox[0][1], bbox[1][1]])
+            pyplot.savefig("plot"+ingr+".png")
+            pylab.close()     # closes the current figure        
+        return ingrpos
+#        res=plotOneResult(None,filename="results_seed_8.json")
+        
+    def getHaltonUnique(self,n):
+        from autopack.ldSequence import halton
+        seeds_f = numpy.array(halton(int(n*1.5)))*int(n*1.5)
+        seeds_int = numpy.array(numpy.round(seeds_f),'int')
+        sorted_s,indices_u=numpy.unique(seeds_int,return_index=True)
+        seeds_i = numpy.array(seeds_int[numpy.sort(indices_u)])[:n]
+        return seeds_i
+                
     def doloop(self,n,bbox,wrkDir,output,rdf=True, render=False, 
                plot = True,twod=True,fbox_bb=None,use_file = True,
                seeds_i=None):
@@ -815,11 +867,7 @@ class AnalyseAP:
         # where n is the number of loop, seed = i
         #analyse.doloop(n) 
         if seeds_i is None :
-            from autopack.ldSequence import halton
-            seeds_f = numpy.array(halton(int(n*1.5)))*int(n*1.5)
-            seeds_int = numpy.array(numpy.round(seeds_f),'int')
-            sorted_s,indices_u=numpy.unique(seeds_int,return_index=True)
-            seeds_i = numpy.array(seeds_int[numpy.sort(indices_u)])[:n]
+            seeds_i = self.getHaltonUnique(n)
         numpy.savetxt(output+os.sep+"seeds", seeds_i, delimiter=",")
         angle_file= output+os.sep+"angle"
         position_file=output+os.sep+"pos"
@@ -838,6 +886,7 @@ class AnalyseAP:
         self.bbox = bbox
         angles=None
         rebuild = True
+#        seeds_i=[]
         for si in range(n):           
 #            if i > 0 : rebuild = False #bu need to reset ...
             basename = output+os.sep+"results_seed_"+str(si)
@@ -851,7 +900,9 @@ class AnalyseAP:
             #no need to rebuild the grid ?
             self.env.saveResult = True
             self.env.resultfile = basename
-            self.grid_pack(bbox,output,seed=seeds_i[si], fill=1,vTestid = si,vAnalysis = 1,
+            se=seeds_i[si]#int(time())
+#            seeds_i.append(se)
+            self.grid_pack(bbox,output,seed=se, fill=1,vTestid = si,vAnalysis = 1,
                            forceBuild=rebuild,fbox_bb=fbox_bb)#build grid and fill
             #store the result 
 #            self.env.store_asJson(resultfilename=basename)
@@ -1000,12 +1051,13 @@ class AnalyseAP:
                     pyplot.axis([bbox[0][0], bbox[1][0],
                                  bbox[0][1], bbox[1][1]])
                     pyplot.savefig(basename+".png")
-                    #pylab.close()     # closes the current figure
+                    pylab.close()     # closes the current figure
 #            return                
 #            print ("DONERUN!!!!!")
 #            self.flush()        
         #plot(x)
 #        print ("DONE1!!!!")
+        numpy.savetxt(output+os.sep+"seeds", seeds_i, delimiter=",")
         if use_file :
             total_positions = numpy.genfromtxt(position_file, delimiter=',')
             try :
