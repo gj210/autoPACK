@@ -3041,7 +3041,7 @@ h1 = Environment()
             else:
                 # pick a point randomly among free points
                 #random or uniform?
-                ptIndr = int(random()*len(allIngrPts))
+                ptIndr = int(uniform(0.0,1.0)*len(allIngrPts))
                 ptInd = allIngrPts[ptIndr]            
             if ptInd is None :
                 t=time()

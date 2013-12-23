@@ -928,8 +928,10 @@ class AnalysisTab:
         """
         gname = self.afgui.getVal(self.widget["gradients"])
         self.afgui.afviewer.displayGradient(self.afgui.histoVol.gradients[gname],self.afgui.histoVol.grid.masterGridPositions)
+
+
     
-    def savedist(self,):
+    def savedist_cb(self,filename):
         p=[0,0,0]
         o = self.afgui.getVal(self.widget["input_from"])
         if o != "None" :
@@ -938,11 +940,17 @@ class AnalysisTab:
                 p=self.helper.ToVec(self.helper.getTranslation(o))
         d=self.aap.getDistanceFrom([0,0,0],
                     usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
-        self.aap.save_csv(d,"/Users/grahamold/Desktop/DistanceResults/distance.csv")
+        self.aap.save_csv(d,filename)
+
+    def savedist(self,):
+        self.fileDialog(label="choose a file",callback=self.savedist_cb)
+
+    def saveclosestdist_cb(self,filename):
+        d=self.aap.getClosestDistance(usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
+        self.aap.save_csv(d,filename)
 
     def saveclosestdist(self,):
-        d=self.aap.getClosestDistance(usePoint=self.afgui.getVal(self.widget["usePoint"]))#,parents=["Test_Spheres2Dgradients_cytoplasm"])
-        self.aap.save_csv(d,"/Users/grahamold/Desktop/DistanceResults/closest_distance.csv")
+        self.fileDialog(label="choose a file",callback=self.saveclosestdist_cb)
 
     def export_result(self,):
         pass
