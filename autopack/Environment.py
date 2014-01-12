@@ -40,7 +40,7 @@
 
 # TODO: fix the save/restore grid
 """
-print ('histovol is on***********************************')
+print ('Environment is on ***********************************')
 
 import os
 
@@ -54,7 +54,7 @@ import bisect
 
 import numpy, pickle, weakref
 
-print ('AF import')
+print ('autoPACK import')
 from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
@@ -93,23 +93,27 @@ except :
     #MAC PATH
     p="/Developer/Panda3D/lib"#sys.path.append("/Developer/Panda3D/lib/")
     sys.path.append(p)
-    print ("Trying Panda3D Except")
+    print ("Trying Panda3D Except with path = ", p)
 try :
     import panda3d
+    print ("Should have Panda3D now because panda3d = ", panda3d)
     
     from panda3d.core import Mat3,Mat4,Vec3,Point3
+    print ("Got Panda3D Except 1")
     from panda3d.core import TransformState
-    from panda3d.core import BitMask32
+    from panda3d.core import TransformState
     from panda3d.bullet import BulletSphereShape,BulletBoxShape,BulletCylinderShape
+    print ("Got Panda3D Except 2")
     #        from panda3d.bullet import BulletUpAxis
     from panda3d.bullet import BulletRigidBodyNode
     from panda3d.ode import OdeBody, OdeMass
+    print ("Got Panda3D Except 3")
     from panda3d.ode import OdeSphereGeom
     from panda3d.core import NodePath
     print ("Got Panda3D Except")
 except :
     panda3d = None
-    print ("Failed to get Panda")
+    print ("Failed to get Panda, because panda3d = ", panda3d)
 
 #coul replace by a faster json python library
 import json
