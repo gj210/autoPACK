@@ -849,20 +849,31 @@ class Ingredient(Agent):
         self.sphereFile = None
         if sphereFile is not None:
             self.sphereFile=sphereFile
-            rm, rM, positions, radii, children = self.getSpheres(sphereFile)
-            if not len(radii):
-                self.minRadius = 1.0
-                self.encapsulatingRadius = 1.0
+            fileName, fileExtension = os.path.splitext(sphereFile)
+            if fileExtension == ".mstr" : #BD_BOX format
+                data = numpy.loadtxt(sphereFile,converters = {0: lambda s: 0})
+                positions = data[:,1:4]
+                radii = data[:,4]
+                self.minRadius = min(radii)
+                #np.apply_along_axis(np.linalg.norm, 1, c)
+                self.encapsulatingRadius = max(numpy.sqrt(numpy.einsum('ij,ij->i',positions,positions)))#shoud be max distance
+                positions=[positions]
+                radii=[radii]
             else :
-                # minRadius is used to compute grid spacing. It represents the
-                # smallest radius around the anchor point(i.e. 
-                # the point where the
-                # ingredient is dropped that needs to be free
-                self.minRadius = rm
-                # encapsulatingRadius is the radius of the sphere 
-                # centered at 0,0,0
-                # and encapsulate the ingredient
-                self.encapsulatingRadius = rM
+                rm, rM, positions, radii, children = self.getSpheres(sphereFile)
+                if not len(radii):
+                    self.minRadius = 1.0
+                    self.encapsulatingRadius = 1.0
+                else :
+                    # minRadius is used to compute grid spacing. It represents the
+                    # smallest radius around the anchor point(i.e. 
+                    # the point where the
+                    # ingredient is dropped that needs to be free
+                    self.minRadius = rm
+                    # encapsulatingRadius is the radius of the sphere 
+                    # centered at 0,0,0
+                    # and encapsulate the ingredient
+                    self.encapsulatingRadius = rM
             
         elif positions is None or positions[0] is None or positions[0][0] is None:#[0][0]
             positions = [[[0,0,0]]]
@@ -4144,6 +4155,7 @@ class Ingredient(Agent):
             r=[False]
             rbnode = self.get_rb_model()
 #            print ("periodicity ?",getNormedVectorU(self.jitterMax),self.encapsulatingRadius)
+            #cutoff ?
             periodic_pos = self.histoVol.grid.getPositionPeridocity(jtrans,
                     getNormedVectorOnes(self.jitterMax),self.encapsulatingRadius)                
             histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
@@ -4304,9 +4316,9 @@ class Ingredient(Agent):
                 organelle.molecules.append([ jtrans, rotMatj, self, ptInd ])
                 histoVol.order[ptInd]=histoVol.lastrank
                 histoVol.lastrank+=1
-                if periodic_pos is not None and self.packingMode !="gradient" :
-                    for p in periodic_pos :
-                        organelle.molecules.append([ p, rotMatj, self, -1 ])
+#                if periodic_pos is not None and self.packingMode !="gradient" :
+#                    for p in periodic_pos :
+#                        organelle.molecules.append([ p, rotMatj, self, -1 ])
 
             # add one to molecule counter for this ingredient
             self.counter += 1

@@ -578,6 +578,7 @@ class SubdialogIngrdient(uiadaptor):
         aStr += '   r = self.ingr.recipe\n'        
         aStr += '   o = self.ingr.OPTIONS["'+name+'"]\n'
         aStr += '   for ingre in r.ingredients :\n'
+        aStr += '       print ingre,ingre.name,"'+name+'",o["type"]\n'        
         aStr += '       if o["type"] == "vector" :\n'
         aStr += '           v=[self.getVal(w) for w in self.Widget["options"]["'+name+'"]]\n'
         aStr += '           setattr(ingre,"'+name+'",v)       \n'
@@ -1048,6 +1049,8 @@ class SubdialogFiller(uiadaptor):
                       self._addElemt(name="Save Recipe as",action=self.saveas),#self.buttonLoad},
                       self._addElemt(name="Append to available recipe as",action=self.appendtoRECIPES),
                       self._addElemt(name="Save Result",action=self.saveResult),
+                      self._addElemt(name="Export to BD_BOX rigid",action=self.export_bd_rigid),
+                      self._addElemt(name="Export to BD_BOX flex",action=self.export_bd_flex),
                       self._addElemt(name="Save Grid",action=self.saveGrid),
                       ],#self.buttonLoadData
                        }
@@ -2166,6 +2169,18 @@ class SubdialogFiller(uiadaptor):
     def saveResult(self,*args):
         self.saveDialog(label="save result as json",callback=self.saveResult_cb)
 
+    def export_bd_rigid_cb(self,filename):
+        self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="rigid")
+        
+    def export_bd_rigid(self,*args):
+        self.saveDialog(label="save result for BD_BOX rigid",callback=self.export_bd_rigid_cb)
+
+    def export_bd_flex_cb(self,filename):
+        self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="flex")
+        
+    def export_bd_flex(self,*args):
+        self.saveDialog(label="save result for BD_BOX flex",callback=self.export_bd_flex_cb)
+
     def saveGrid_cb(self,filename):
         self.histoVol.writeArraysToFile(filename)
         
@@ -2379,6 +2394,25 @@ class SubdialogViewer(uiadaptor):
     def LoadNewResult(self,*args):
         self.fileDialog(label="choose a .apr file",callback=self.LoadNewResult_cb)
 
+    def export_bd_rigid_cb(self,filename):
+        self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="rigid")
+        
+    def export_bd_rigid(self,*args):
+        self.saveDialog(label="save result for BD_BOX rigid",callback=self.export_bd_rigid_cb)
+
+    def export_bd_flex_cb(self,filename):
+        self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="flex")
+        
+    def export_bd_flex(self,*args):
+        self.saveDialog(label="save result for BD_BOX flex",callback=self.export_bd_flex_cb)
+
+    def import_BDBOX_cb(self,filename):
+        self.histoVol.readTraj(filename)
+        self.histoVol.linkTraj()
+        
+    def import_BDBOX(self,*args):
+        self.fileDialog(label="choose a trajecory file (.dcd,.molb,.xyz)",callback=self.import_BDBOX_cb)
+        
     def fetchGridResult(self,fname,name):
         try :
             import urllib.request as urllib# , urllib.parse, urllib.error
@@ -2459,6 +2493,9 @@ class SubdialogViewer(uiadaptor):
         self.menuorder = ["File",]
         self._menu = self.MENU_ID = {"File":
                       [self._addElemt(name="Load (.apr)",action=self.LoadNewResult),
+                       self._addElemt(name="Export Result to BD_BOX rigid",action=self.export_bd_rigid),
+                       self._addElemt(name="Export Result to BD_BOX flex",action=self.export_bd_flex),
+                       self._addElemt(name="Load Result from BD_BOX",action=self.import_BDBOX),
                       ],#self.buttonLoadData
                        }
         if self.helper.host.find("blender") != -1:
