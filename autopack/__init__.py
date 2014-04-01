@@ -122,6 +122,7 @@ forceFetch = False
 checkAtstartup = True
 testPeriodicity = False
 biasedPeriodicity = None#[1,1,1]
+
 verbose = 0 
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
@@ -253,7 +254,9 @@ def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
                     print ("not isfile ",tmpFileName)
                     return  None
         filename = tmpFileName
+        print ("autopack return grabbed ",filename)
         return filename
+    print ("autopack return ",filename)
     return filename
 
 def fixPath(adict):#, k, v):

@@ -3905,6 +3905,9 @@ h1 = Environment()
         return result,orgaresult,freePoint
 
     def collectResultPerIngredient(self):
+        def cb(ingr):
+            ingr.results=[]
+        self.loopThroughIngr(cb)
         for pos, rot, ingr, ptInd in self.molecules:
             if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                 pass#already store
@@ -4579,3 +4582,90 @@ h1 = Environment()
                 break
             
         
+#==============================================================================
+#               Export -> another file ?
+#==============================================================================
+    def exportToBD_BOX(self,res_filename=None,output=None,bd_type="flex"):
+        #, call the BD_BOX exporter, plugin ? better if result store somewhere.
+        #only sphere + boudary ?
+        #sub ATM 216 225.0000 150.0000 525.0000 25.0000 -5.0000 50.0000 0.5922 1
+        #    #sub name id x y z  Q 2R LJ m
+        if bd_type == "flex" :
+            from bd_box import flex_box as bd_box
+        else :
+            from bd_box import rigid_box as bd_box            
+        if res_filename is None :
+            res_filename = self.resultfile
+        self.bd=bd_box(res_filename,bounding_box=self.boundingBox)
+        self.collectResultPerIngredient()
+        r =  self.exteriorRecipe
+        if r :
+            for ingr in r.ingredients:
+                self.bd.addAutoPackIngredient(ingr)
+
+        #compartment ingr
+        for orga in self.compartments:
+            #compartment surface ingr
+            rs =  orga.surfaceRecipe
+            if rs :
+                for ingr in rs.ingredients:
+                    self.bd.addAutoPackIngredient(ingr)
+            #compartment matrix ingr
+            ri =  orga.innerRecipe
+            if ri :
+                for ingr in ri.ingredients:
+                    self.bd.addAutoPackIngredient(ingr)
+        
+        self.bd.write()
+
+    def exportToTEM(self,):
+        #limited to 20 ingredients, call the TEM exporter plugin ?
+        #ingredient -> PDB file or mrc volume file
+        #ingredient -> coordinate.txt file
+        p=[]#*0.05
+        r=[]
+        output="iSutm_coordinate.txt"#ingrname_.txt
+        aStr="# File created for TEM-simulator, version 1.3.\n"
+        aStr+=str(len(p))+" 6\n"
+        aStr+="#            x             y             z           phi         theta           psi\n"
+        for i in range(len(p)):
+            aStr+="{0:14.4f}{1:14.4f}{2:14.4f}{3:14.4f}{4:14.4f}{5:14.4f}\n".format(p[i][0],p[i][1],p[i][2],rr[i][0],rr[i][1],rr[i][2])
+        f=open(output,"w")
+        f.write(aStr)
+
+    def exportToReaDDy(self,):
+        #wehn I will get it running ... plugin ?
+        return
+        
+#==============================================================================
+#         Animate
+#==============================================================================
+    def readTraj(self,filename):
+        from autopack.trajectory import dcdTrajectory,xyzTrajectory,molbTrajectory
+        self.collectResultPerIngredient()
+        lenIngrInstance = len(self.molecules)
+        for orga in self.compartments:
+            lenIngrInstance += len(orga.molecules)
+        fileName, fileExtension = os.path.splitext(filename)
+        if fileExtension == '.dcd':
+            self.traj = dcdTrajectory(filename,lenIngrInstance)
+        elif fileExtension == '.molb':
+            self.traj = molbTrajectory(filename,lenIngrInstance)         
+        self.traj.completeMapping(self)
+    
+    def linkTraj(self, ):
+        #link the traj usin upy for creating a new synchronized calleback?
+        autopack.helper.synchronize(self.applyStep)
+    
+    def unlinkTraj(self, ):
+        #link the traj usin upy for creating a new synchronized calleback?
+        autopack.helper.unsynchronize(self.applyStep)
+        
+    def applyStep(self, step):
+        #apply the coordinate from a trajectory at step step.
+        #correspondance ingredients instance <-> coordinates file
+        #trajectory class to handle 
+        print "Step is "+str(step)
+        #if self.traj.traj_type=="dcd" or self.traj.traj_type=="xyz":
+        self.traj.applyState_primitive_name(self,step)
+            #ho can we apply to parent instance the rotatiotn?
