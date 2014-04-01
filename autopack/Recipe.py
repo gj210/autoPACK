@@ -76,7 +76,7 @@ class Recipe:
 #        print ingr,ingr.name
         #we need ingredient unique name
         if ingr.name.find(self.name) == -1 :
-            ingr.name = self.name+"__"+ingr.name
+            ingr.name = self.name+"__"+ingr.name  # I'd like to turn this off but it breaks the GUI's ability to turn off ingredients with the checkboxes and packs everything everytime if this is off.  Right now the ingredients become way too long with it on.
         if ingr not in self.ingredients :
             self.ingredients.append(ingr)
 #        ingr.recipe = weakref.ref(self)

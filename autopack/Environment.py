@@ -7,7 +7,8 @@
 #   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
 #   from Arthur Olson's Molecular Graphics Lab
 #
-# HistoVol.py Authors: Graham Johnson & Michel Sanner with editing/enhancement from Ludovic Autin
+# Environment.py Authors: Graham Johnson & Michel Sanner with editing/enhancement from Ludovic Autin
+# HistoVol.py became Environment.py in the Spring of 2013 to generalize the terminology away from biology
 #
 # Translation to Python initiated March 1, 2010 by Michel Sanner with Graham Johnson
 #
@@ -15,7 +16,7 @@
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "HistoVol.py" is part of autoPACK, cellPACK.
+# This file "Environment.py" is part of autoPACK, cellPACK.
 #    
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -40,7 +41,7 @@
 
 # TODO: fix the save/restore grid
 """
-print ('histovol is on***********************************')
+print ('Environment is on ***********************************')
 
 import os
 
@@ -54,7 +55,7 @@ import bisect
 
 import numpy, pickle, weakref
 
-print ('AF import')
+print ('autoPACK import')
 from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
@@ -80,7 +81,7 @@ try :
     helper = autopack.helper
 except :
     helper = None
-print ("HistoVol helper is "+str(helper))
+print ("Environment helper is "+str(helper))
 
 LOG = False
 verbose = 0
@@ -93,9 +94,10 @@ except :
     #MAC PATH
     p="/Developer/Panda3D/lib"#sys.path.append("/Developer/Panda3D/lib/")
     sys.path.append(p)
-    print ("Trying Panda3D Except")
+    print ("Trying Panda3D Except with path = ", p)
 try :
     import panda3d
+    print ("Should have Panda3D now because panda3d = ", panda3d)
     
     from panda3d.core import Mat3,Mat4,Vec3,Point3
     from panda3d.core import TransformState
@@ -109,7 +111,7 @@ try :
     print ("Got Panda3D Except")
 except :
     panda3d = None
-    print ("Failed to get Panda")
+    print ("Failed to get Panda, because panda3d = ", panda3d)
 
 #coul replace by a faster json python library
 import json
@@ -648,11 +650,11 @@ class Grid:
         # the surface of compartment i and -i is the interior of compartment i
         # in the list self. compartments
         self.gridPtId = []
-        # will be a list of indices into 3D of histovol
-        # of points that have not yet been used by the fill algorithm
+        # will be a list of indices into 3D of Environment
+        # of points that have not yet been used by the packing algorithm
         # entries are removed from this list as grid points are used up
-        # during hte fill. This list is used to pick points randomly during
-        # the fill
+        # during packing. This list is used to pick points randomly during
+        # the packing
         self.freePoints = []
         self.nbFreePoints = 0
         # this list evolves in parallel with self.freePoints and provides
@@ -675,8 +677,8 @@ class Grid:
         #bhtree
         self.surfPtsBht=None
         self.ijkPtIndice = []
-        self.filename=None          #used for storing before fill so no need rebuild
-        self.result_filename=None   #used after fill to store result
+        self.filename=None          #used for storing before pack so no need rebuild
+        self.result_filename=None   #used after pack to store result
 
         self.encapsulatingGrid = 1
         
@@ -738,7 +740,7 @@ class Grid:
         x, y, z = pt3d  # Continuous 3D point to be discretized
         spacing1 = 1./self.gridSpacing  # Grid spacing = diagonal of the voxel determined by smalled packing radius
         NX, NY, NZ = self.nbGridPoints  # vector = [length, height, depth] of grid, units = gridPoints
-        OX, OY, OZ = self.boundingBox[0] # origin of fill grid
+        OX, OY, OZ = self.boundingBox[0] # origin of Pack grid
         # Algebra gives nearest gridPoint ID to pt3D
         i = min( NX-1, max( 0, round((x-OX)*spacing1)))
         j = min( NY-1, max( 0, round((y-OY)*spacing1)))
@@ -801,7 +803,7 @@ class Grid:
         """        
         spacing1 = 1./self.gridSpacing
         NX, NY, NZ = self.nbGridPoints
-        OX, OY, OZ = self.boundingBox[0] # origin of fill grid-> bottom lef corner not origin
+        OX, OY, OZ = self.boundingBox[0] # origin of Pack grid-> bottom lef corner not origin
         ox, oy, oz = bb[0]
         ex, ey, ez = bb[1]
 #        print("getPointsInCube bb[0] = ",bb[0])
@@ -850,7 +852,7 @@ class Grid:
         xl,yl,zl = boundingBox[0]
         xr,yr,zr = boundingBox[1]
 
-        encapsulatingGrid = self.encapsulatingGrid  #Graham Added on Oct17 to allow for truly 2D grid for test fills... may break everything!
+        encapsulatingGrid = self.encapsulatingGrid  #Graham Added on Oct17 to allow for truly 2D grid for test packs... may break everything!
         
         from math import ceil
         nx = int(ceil((xr-xl)/space))+encapsulatingGrid
@@ -890,7 +892,7 @@ class Environment(CompartmentList):
         self.world = None   #panda world for collision
         self.octree = None  #ongoing octree test, no need if openvdb wrapp to python
         self.grid = Grid()  # the main grid
-        self.encapsulatingGrid = 1  # Only override this with 0 for 2D fills- otherwise its very unsafe!
+        self.encapsulatingGrid = 1  # Only override this with 0 for 2D packing- otherwise its very unsafe!
         self.nbCompartments = 1 # 0 is the exterior, 1 is compartment 1 surface, -1 is compartment 1 interior, etc.
         self.name = "out"
 
@@ -905,7 +907,7 @@ class Environment(CompartmentList):
         
         self.EnviroOnly = False
         self.EnviroOnlyCompartiment  =  -1
-        # bounding box of the HistoVol
+        # bounding box of the Environment
 
         self.boundingBox = [[0,0,0], [.1,.1,.1]]
         self.fbox_bb = None #used for estimating the volume
@@ -929,7 +931,7 @@ class Environment(CompartmentList):
         #version of setup used
         self.version = "1.0"
         
-        #option for filling using host dynamics capability
+        #option for packing using host dynamics capability
         self.windowsSize = 100
         self.windowsSize_overwrite = False
 
@@ -1038,7 +1040,7 @@ class Environment(CompartmentList):
         #2-recipe
         #use XML with tag description of the setup:
         #filling name root
-        #histoVol option
+        #Environment option
         #cytoplasme recipe if any and its ingredient
         #compartment name= mesh ?
         #orga surfaceingr#file or direct
@@ -2044,7 +2046,7 @@ h1 = Environment()
 
         for compartment in self.compartments:
             if autopack.verbose :
-                print("in HistoVol, compartment.isOrthogonalBoudingBox =", 
+                print("in Environment, compartment.isOrthogonalBoudingBox =",
                       compartment.isOrthogonalBoudingBox)
             a,b = compartment.BuildGrid(self)
             aInteriorGrids.append(a)
@@ -2166,7 +2168,7 @@ h1 = Environment()
         aSurfaceGrids = []
 
         for compartment in self.compartments:
-            print("in HistoVol, compartment.isOrthogonalBoudingBox =", compartment.isOrthogonalBoudingBox)
+            print("in Environment, compartment.isOrthogonalBoudingBox =", compartment.isOrthogonalBoudingBox)
             b = []
             if compartment.isOrthogonalBoudingBox==1:
                 self.EnviroOnly = True
@@ -2809,7 +2811,7 @@ h1 = Environment()
                 if ingrInd <  len(self.activeIngr):
                     ingr = self.activeIngr[ingrInd]
                 else :
-                    print("error in histoVol pick Ingredient",ingrInd)
+                    print("error in Environment pick Ingredient",ingrInd)
                     ingr = self.activeIngr[0]
                 if verbose:
                     print ('weighted',prob, vThreshStart, ingrInd,ingr.name)
@@ -3574,7 +3576,7 @@ h1 = Environment()
                     print ('self.gridVolume = ', self.gridVolume)
     #        self.exteriorVolume = totalVolume
                         
-            print("self.compartments In HistoVol = ", len(self.compartments))
+            print("self.compartments In Environment = ", len(self.compartments))
             if self.compartments == [] :
                 #o = self.histoVol
 #                o = self.exteriorRecipe
@@ -4100,7 +4102,7 @@ h1 = Environment()
     def printFillInfo(self):
         r = self.exteriorRecipe
         if r is not None:
-            print('    histoVol exterior recipe:')
+            print('    Environment exterior recipe:')
             r.printFillInfo('        ')
             
         for o in self.compartments:

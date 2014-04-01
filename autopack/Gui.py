@@ -1216,7 +1216,7 @@ class SubdialogFiller(uiadaptor):
         self.LABELSINGR[rname]=[]
         self.LABELSINGR[rname].append(self._addElemt(name=rname+"i",label="Include",width=self.wicolumn[0]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname+"d",label="Density",width=self.wicolumn[1]))
-        self.LABELSINGR[rname].append(self._addElemt(name=rname+"a",label="+ this",width=self.wicolumn[2]))
+        self.LABELSINGR[rname].append(self._addElemt(name=rname+"a",label="+ this many",width=self.wicolumn[2]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname+"t",label="Total",width=self.wicolumn[3]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname+"p",label="",width=self.wicolumn[4]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname+"c",label="Collision",width=self.wicolumn[5]))
@@ -1448,7 +1448,7 @@ class SubdialogFiller(uiadaptor):
                                  self.ingr_priority[ingr.name],
                                 self.ingr_ref_object[ingr.name],self.ingr_view_object[ingr.name],
                                 self.ingr_advanced[ingr.name]])#
-            frame = self._addLayout(id=196,name=o.name+" Surface setup ",elems=subelem,collapse=False)
+            frame = self._addLayout(id=196,name="Setup "+o.name+" SURFACE ingredients",elems=subelem,collapse=False)
             elemFrame.append(frame)
             subelem=[]
             subelem.append([self.LABELS[o.name+"matrix"+"_ingr"] ])#,self.ingr_include[o.name+"matrix"]])
@@ -1464,7 +1464,7 @@ class SubdialogFiller(uiadaptor):
                                 self.ingr_ref_object[ingr.name],self.ingr_view_object[ingr.name],
                                 self.ingr_advanced[ingr.name]])#
         
-            frame = self._addLayout(id=196,name=o.name+" Matrix setup ",elems=subelem,collapse=False)  
+            frame = self._addLayout(id=196,name="Setup "+o.name+" INTERIOR ingredients",elems=subelem,collapse=False)
             elemFrame.append(frame)
         
         subelem=[]
@@ -1480,7 +1480,7 @@ class SubdialogFiller(uiadaptor):
                                  self.ingr_priority[ingr.name],
                                 self.ingr_ref_object[ingr.name],self.ingr_view_object[ingr.name],
                                 self.ingr_advanced[ingr.name]])#
-        frame = self._addLayout(id=196,name="Exterior ingredients' setup",elems=subelem,collapse=False)
+        frame = self._addLayout(id=196,name="Setup EXTERIOR ingredients",elems=subelem,collapse=False)
         elemFrame.append(frame)
     
         elemFrame.append([self.LABELS["RecipeColumnsEmptySpace100"],self.LABELS["RecipeColumnsEmptySpace100"],
