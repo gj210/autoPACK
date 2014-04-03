@@ -6,12 +6,19 @@
             "resultfile": "autoPACKserver/data/BloodSerum/results/BloodSerumfillResult.apr"
         }
     },
-    "HIV": {
-        "1.4": {
-            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.4.xml",
-            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
-            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_4.apr"
+    "BloodPlasma": {
+        "1.2": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/BloodPlasma1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/BloodSerum",
+            "resultfile": "autoPACKserver/data/BloodSerum/results/BloodPlasma1.2.apr"
         },
+        "1.3": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/BloodPlasma1.3.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/BloodSerum",
+            "resultfile": "autoPACKserver/data/BloodSerum/results/BloodPlasma1.3.apr"
+        }
+    },
+    "HIV": {
         "1.0": {
             "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.0.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
@@ -31,6 +38,31 @@
             "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.3.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
             "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_3.apr"
+        },
+        "1.4": {
+            "setupfile": "autoPACKserver/data/HIV/recipe/HIV1.4.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/data/HIV/results/HIVresult_1_4.apr"
+        },
+        "1.5": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/HIV1.5.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/HIV1.5.apr.json"
+        },
+        "1.6": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/HIV1.6.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/HIV1.6.apr.json"
+        },
+        "1.7": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/HIV-1_0.1.7.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/HIV-1_0.1.7.apr.json"
+        },
+        "1.8": {
+            "setupfile": "/Users/grahamold/Dev/autoPACK_master/autoPACK_data_google/autoPACK_database_1.0.0/recipes/HIV-1_0.1.8.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/HIV",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/HIV-1_0.1.8.apr.json"
         }
     },
     "planeWave": {
@@ -150,18 +182,69 @@
             "setupfile": "autoPACKserver/dataRight/NatureMethodsFigures/recipes/NM_Analysis_Figure1.1.xml",
             "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
             "resultfile": "autoPACKserver/dataRight/NatureMethodsFigures/results/NManalysisFigure1.1.apr"
-        },
-        "1.2": {
-            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.1.xml",
-            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
-            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NManalysisFigureC1.1.apr"
+        }
+    },
+    "NM_Analysis_FigureA": {
+        "1.0": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureA1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureA",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureA1.0.apr.json"
+        }
+    },
+    "NM_Analysis_FigureB": {
+        "1.0": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureB1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureB",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureB1.0.apr.json"
         }
     },
     "NM_Analysis_FigureC": {
-        "1.0": {
+        "1.1": {
             "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.1.xml",
-            "wrkdir": "autopackdir/autoFillRecipeScripts/NatureMethodsFigures",
-            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NManalysisFigureC1.1.apr"
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureC",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureC1.1.apr.json"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureC",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureC1.2.apr.json"
+        },
+        "1.3": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureC",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureC1.3.apr.json"
+        },
+        "1.4": {
+            "setupfile": "autoPACKserver/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.4.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/NM_Analysis_FigureC",
+            "resultfile": "autoPACKserver/autoPACK_database_1.0.0/results/NM_Analysis_FigureC1.4.apr.json"
+        }
+    },
+    "SynapticVesicle": {
+        "1.0": {
+            "setupfile": "autoPACKserver/data/SynapticVesicle/recipe/SynapticVesicle1.0.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/SynapticVesicle",
+            "resultfile": "autoPACKserver/data/SynapticVesicle/results/SynapticVesicle1_0.apr"
+        },
+        "1.1": {
+            "setupfile": "autoPACKserver/data/SynapticVesicle/recipe/SynapticVesicle1.1.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/SynapticVesicle",
+            "resultfile": "autoPACKserver/data/SynapticVesicle/results/SynapticVesicle1_1.apr"
+        },
+        "1.2": {
+            "setupfile": "autoPACKserver/data/SynapticVesicle/recipe/SynapticVesicle1.2.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/SynapticVesicle",
+            "resultfile": "autoPACKserver/data/SynapticVesicle/results/SynapticVesicle1_2.apr"
+        },
+        "1.3": {
+            "setupfile": "autoPACKserver/data/SynapticVesicle/recipe/SynapticVesicle1.3.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/SynapticVesicle",
+            "resultfile": "autoPACKserver/data/SynapticVesicle/results/SynapticVesicle1_3.apr"
+        },
+        "1.4": {
+            "setupfile": "autoPACKserver/data/SynapticVesicle/recipe/SynapticVesicle1.4.xml",
+            "wrkdir": "autopackdir/autoFillRecipeScripts/SynapticVesicle",
+            "resultfile": "autoPACKserver/data/SynapticVesicle/results/SynapticVesicle1_4.apr"
         }
     }
-}
+} 
