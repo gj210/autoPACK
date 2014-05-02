@@ -709,16 +709,27 @@ class Agent:
         ing_indice = listePartner[i][0]#i,part,dist
         ing = mingrs[2][ing_indice]#[2]
         print ("binding to "+ing.name)
-        targetPoint= mingrs[0][ing_indice]#[0]            
-        #if self.placeType == "rigid-body" or self.placeType == "jitter":
-            #the new point is actually tPt -normalise(tPt-current)*radius
-        print("tP",ing_indice,ing.name,targetPoint,ing.radii[0][0])
-        print("cP",currentPos)
-        v=numpy.array(targetPoint) - numpy.array(currentPos)
-        s = numpy.sum(v*v)
-        factor = ((v/math.sqrt(s)) * (ing.radii[0][0]+self.radii[0][0]))
-        targetPoint =  numpy.array(targetPoint) - factor    
+        targetPoint= mingrs[0][ing_indice]#[0]     
+        if self.compNum > 0 :
+#            organelle = self.histoVol.compartments[abs(self.compNum)-1]
+#            dist,ind = organelle.OGsrfPtsBht.query(targetPoint)
+            targetPoint=self.histoVol.grid.getClosestFreeGridPoint(targetPoint,
+                                        compId=self.compNum,ball=(ing.encapsulatingRadius+self.encapsulatingRadius)*2.0,
+                                        distance=self.encapsulatingRadius*1.5)
+            print ("target point free tree is ",targetPoint,self.encapsulatingRadius,ing.encapsulatingRadius)
+        else :                
+            #get closestFreePoint using freePoint and masterGridPosition
+            #if self.placeType == "rigid-body" or self.placeType == "jitter":
+                #the new point is actually tPt -normalise(tPt-current)*radius
+            print("tP",ing_indice,ing.name,targetPoint,ing.radii[0][0])
+            print("cP",currentPos)
+            #what I need it the closest free point from the target ingredient
+            v=numpy.array(targetPoint) - numpy.array(currentPos)
+            s = numpy.sum(v*v)
+            factor = ((v/math.sqrt(s)) * (ing.encapsulatingRadius+self.encapsulatingRadius))#encapsulating radus ?
+            targetPoint =  numpy.array(targetPoint) - factor    
         print("tPa",targetPoint)
+        
         return targetPoint,b
         
     def pickPartner_old(self, mingrs,listePartner, currentPos=[0,0,0]):
@@ -1351,10 +1362,10 @@ class Ingredient(Agent):
             filename =autopack.retrieveFile(filename,cache="geoms") 
         if filename is None :
             print ("problem")
-            return
+            return None
         if not os.path.isfile(filename) and fileExtension != '' :
             print ("problem with "+filename,fileExtension)
-            return
+            return None
         fileName, fileExtension = os.path.splitext(filename)
         print('found fileName '+fileName+' fileExtension '+fileExtension)
         if fileExtension.lower() == ".fbx" :
@@ -1441,7 +1452,7 @@ class Ingredient(Agent):
             return self.getDejaVuMesh(filename, geomname)
         else :#host specific file
             if helper is not None:#neeed the helper
-                helper.read(filename)
+                helper.read(filename)# doesnt get the regular file ? conver state to object
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
                 p=helper.getObject("autopackHider")
@@ -2633,7 +2644,7 @@ class Ingredient(Agent):
                 x,y,z = posc
                 
                 bb = ( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
-                print ("pointsInCube",bb, posc, rad,radc,dpad)
+                #print ("pointsInCube",bb, posc, rad,radc,dpad)
                 pointsInCube = grid.getPointsInCube(bb, posc, rad)
 
                 delta = numpy.take(gridPointsCoords,pointsInCube,0)-posc
@@ -2774,7 +2785,8 @@ class Ingredient(Agent):
             ingrs= [self.histoVol.rIngr[i] for i in close_indice["indices"]]
             return [numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]],
                     numpy.asarray(self.histoVol.rRot)[close_indice["indices"]],
-                    ingrs]
+                    ingrs,
+                    close_indice["distances"]]
         else :
             return []
             
@@ -2800,12 +2812,12 @@ class Ingredient(Agent):
         for i in range(len(mingrs[2])):
             ing = mingrs[2][i]
             t = mingrs[0][i]
-            print ("test "+ing.name,ing.isAttractor)
+#            print ("test "+ing.name,ing.o_name,ing.isAttractor,self.partners_name)
             if self.packingMode=="closePartner":
-                if ing.name in self.partners_name :
-                    print ("is a partner of"+self.name)
-                    listePartner.append([i,self.partners[ing.name],
-                                         afvi.vi.measure_distance(jtrans,mingrs[0][i])])
+                if ing.o_name in self.partners_name :
+#                    print ("is a partner of"+self.name)
+                    listePartner.append([i,self.partners[ing.name],mingrs[3][i]])
+#                                         autopack.helper.measure_distance(jtrans,mingrs[0][i])])
             if ing.isAttractor :#and self.compNum <= 0: #always attract! or rol a dice ?sself.excluded_partners.has_key(name)               
                 if ing.name not in self.partners_name and self.name not in ing.excluded_partners_name \
                 and ing.name not in self.excluded_partners_name :
@@ -3148,7 +3160,19 @@ class Ingredient(Agent):
         else :
             if len(self.histoVol.rTrans) >= 1 :
                 self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
-       
+
+    def reject(self,):
+        # got rejected
+        self.haveBeenRejected = True
+        self.rejectionCounter += 1
+        if verbose :
+                print('Failed ingr:%s rejections:%d'%(
+                self.name, self.rejectionCounter))
+        if self.rejectionCounter >= self.rejectionThreshold: #Graham set this to 6000 for figure 13b (Results Fig 3 Test1) otehrwise it fails to fill small guys
+                #if verbose :
+                print('PREMATURE ENDING of ingredient', self.name)
+                self.completion = 1.0
+        
     def place(self,histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,usePP,
               stepByStep=False, verbose=False,
               sphGeom=None, labDistGeom=None, debugFunc=None,
@@ -3900,6 +3924,7 @@ class Ingredient(Agent):
         mingrs,listePartner=self.getListePartners(self.histoVol,trans,rotMat,
                                 organelle,afvi,close_indice=closest_indice)
         targetPoint = trans
+        found = False
         if listePartner : #self.packingMode=="closePartner":
             print ("partner found")
             if not self.force_random:
@@ -3907,8 +3932,19 @@ class Ingredient(Agent):
                 if targetPoint is None :
                     targetPoint = trans
                 else :#maybe get the ptid that can have it
+                    found = True
+                    if self.compNum > 0 :
+                        d,i=organelle.OGsrfPtsBht.query(targetPoint)
+                        vx, vy, vz = v1 = self.principalVector
+                        #surfacePointsNormals problem here
+                        v2 = organelle.ogsurfacePointsNormals[i]
+                        try :
+                            rotMat = numpy.array( rotVectToVect(v1, v2 ), 'f')
+                        except :
+                            print('PROBLEM ', self.name)
+                            rotMat = numpy.identity(4)
                     #find a newpoint here?
-                    return targetPoint
+                    return targetPoint,rotMat,found
                     x,y,z = targetPoint
                     rad = self.radii[0][0]*2.
                     bb = ( [x-rad, y-rad, z-rad], [x+rad, y+rad, z+rad] )
@@ -3926,7 +3962,7 @@ class Ingredient(Agent):
                 targetPoint = trans 
         else :
             print ("no partner found")
-        return targetPoint
+        return targetPoint,rotMat,found
 
     def pandaBullet_collision(self,pos,rot,rbnode,getnodes=False):
         r=[False]
@@ -3984,6 +4020,7 @@ class Ingredient(Agent):
         if compNum>0 :
             # for surface points we compute the rotation which
             # aligns the principalVector with the surface normal
+            # no noise ?
             vx, vy, vz = v1 = self.principalVector
             #surfacePointsNormals problem here
             v2 = organelle.surfacePointsNormals[ptInd]
@@ -4054,10 +4091,16 @@ class Ingredient(Agent):
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
         if histoVol.ingrLookForNeighbours:
+            print ("look for ingredient",trans)
             closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
                 cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
-            targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
+            #return R[indice] and distance R["distances"] 
+            targetPoint,rotMat,found = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
                                                  closest_indice=closesbody_indice)
+            if not found and self.counter!=0:
+                self.reject()                
+                return False, nbFreePoints#,targetPoint, rotMat       
+
             #if partner:pickNewPoit like in fill3
             if runTimeDisplay and self.mesh:
                 mat = rotMat.copy()
@@ -4958,7 +5001,7 @@ class Ingredient(Agent):
         if histoVol.ingrLookForNeighbours:
             closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
                 cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
-            targetPoint = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
+            targetPoint,rotMat = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
                                                  closest_indice=closesbody_indice)
         tx, ty, tz = jtrans = targetPoint
         gridDropPoint = targetPoint        

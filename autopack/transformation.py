@@ -1910,6 +1910,20 @@ def matrixToEuler(mat):
             attitude = math.pi-attitude
     return (heading,attitude,bank)
 
+def unbiasedRotationXYZ(ex,ey,ez):
+    M=numpy.identity(3)
+    e=math.sqrt((ex*ex)+(ey*ey)+(ez*ez))
+    e2=(ex*ex)+(ey*ey)+(ez*ez)
+    M[0,0] = M11 = ((ey*ey)+(ez*ez)*math.cos(e)+(ex*ex))/(e*e)
+    M[0,1] = M12 = ((ex*ey)/(e*e))*(1-math.cos(e))-(ez/e)*math.sin(e)
+    M[0,2] = M13 = ((ex*ez)/(e*e))*(1-math.cos(e))-(ey/e)*math.sin(e)
+    M[1,0] = M21 = ((ex*ey)/(e*e))*(1-math.cos(e))+(ez/e)*math.sin(e)
+    M[1,1] = M22 = ((ex*ex)+(ez*ez)*math.cos(e)+(ey*ey))/(e*e)
+    M[1,2] = M23 = ((ey*ez)/(e*e))*(1-math.cos(e))-(ex/e)*math.sin(e)
+    M[2,0] = M31 = ((ex*ez)/(e*e))*(1-math.cos(e))-(ey/e)*math.sin(e)
+    M[2,1] = M32 = ((ey*ez)/(e*e))*(1-math.cos(e))+(ex/e)*math.sin(e)
+    M[2,2] = M33 = ((ex*ex)+(ey*ey)*math.cos(e)+(ez*ez))/(e*e)
+    return M
 
 #def _import_module(name, package=None, warn=True, prefix='_py_', ignore='_'):
 #    """Try import all public attributes from module into global namespace.

@@ -206,7 +206,7 @@ class  Compartment(CompartmentList):
         # list of grid point indices on compartment surface
         self.surfacePoints = None
         self.surfacePointsNormals = {} # will be point index:normal
-        self.molecules = [] 
+        #self.molecules = [] 
         
 
     def getDejaVuMesh(self, filename, geomname):
