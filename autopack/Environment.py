@@ -61,7 +61,8 @@ from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 from autopack.ray import vlen, vdiff, vcross
 from autopack.IOutils import GrabResult
-
+from bhtree import bhtreelib
+from scipy import spatial
 import math
 import sys
 
@@ -681,6 +682,15 @@ class Grid:
         self.result_filename=None   #used after pack to store result
 
         self.encapsulatingGrid = 1
+
+    def reset(self,):
+        #reset the  distToClosestSurf and the freePoints
+        #boundingBox shoud be the same otherwise why keeping the grid
+#        self.gridPtId = numpy.zeros(self.gridVolume,'i')
+#        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
+        self.distToClosestSurf[:] = self.diag#numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
+        self.freePoints = list(range(len(self.freePoints)))
+        self.nbFreePoints =len(self.freePoints)
         
     def removeFreePoint(self,pti):
         tmp = self.freePoints[self.nbFreePoints] #last one
@@ -891,7 +901,7 @@ class Environment(CompartmentList):
         self.hgrid=[]
         self.world = None   #panda world for collision
         self.octree = None  #ongoing octree test, no need if openvdb wrapp to python
-        self.grid = Grid()  # the main grid
+        self.grid = None#Grid()  # the main grid
         self.encapsulatingGrid = 1  # Only override this with 0 for 2D packing- otherwise its very unsafe!
         self.nbCompartments = 1 # 0 is the exterior, 1 is compartment 1 surface, -1 is compartment 1 interior, etc.
         self.name = "out"
@@ -965,8 +975,9 @@ class Environment(CompartmentList):
         #
         self.nFill = 0
         self.cFill = 0
-        self.FillName=[]
+        self.FillName=["null"]
         
+        self.traj_linked = False
         ##do we sort the ingrediant or not see  getSortedActiveIngredients
         self.pickWeightedIngr = True 
         self.pickRandPt = True       ##point pick randomly or one after the other?
@@ -1254,8 +1265,8 @@ class Environment(CompartmentList):
                 o.setInnerRecipe(rMatrix)
         #Go through all ingredient and setup the partner  
         self.loopThroughIngr(self.set_partners_ingredient)
-        if self.placeMethod.find("panda") != -1 :
-            self.setupPanda()
+#        if self.placeMethod.find("panda") != -1 :
+#            self.setupPanda()
             
     def getValueToXMLNode(self,vtype,node,attrname):
         """
@@ -1618,7 +1629,7 @@ h1 = Environment()
         if self.exteriorRecipe:
             self.exteriorRecipe.sort()
         for o in self.compartments:
-            o.molecules = []
+#            o.molecules = []
             if reset :
                 o.reset()
             if o.innerRecipe:
@@ -2088,7 +2099,9 @@ h1 = Environment()
         if gridFileIn is not None :
             if not os.path.isfile(gridFileIn):
                 gridFileIn=None
-        if rebuild or gridFileIn is not None or self.grid is None:
+        if self.nFill == 0 :
+            rebuild = True
+        if rebuild or gridFileIn is not None or self.grid is None or self.nFill == 0:
             # save bb for current fill
             print ("####BUILD GRID - step ",self.smallestProteinSize) 
             self.fillBB = boundingBox
@@ -2123,21 +2136,20 @@ h1 = Environment()
             if self.nFill == 0 :#first fill, after we can just reset
                 print ("restore from file")
                 self.restoreGridFromFile(gridFileIn)
-        elif gridFileIn is None and rebuild:
+        elif (gridFileIn is None and rebuild) or self.nFill == 0:
             # assign ids to grid points
             if autopack.verbose : 
                 print ("file is None thus re/building grid distance")
             self.BuildCompartmentsGrids()
+            self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
         else :
             print ("file is not rebuild nor restore from file")
         if gridFileOut is not None and gridFileIn is None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
-        self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
         r = self.exteriorRecipe
         if r:
-            r.setCount(self.exteriorVolume)#should actually use the fillBB
-            
+            r.setCount(self.exteriorVolume)#should actually use the fillBB           
         if not rebuild :
             self.grid.distToClosestSurf = self.grid.distToClosestSurf_store[:]   
         else :
@@ -2675,7 +2687,7 @@ h1 = Environment()
             self.resetIngrRecip(rs)
             ri =  orga.innerRecipe
             self.resetIngrRecip(ri)
-
+            orga.molecules = []
         self.ingr_result = {}
         if self.world is not None :
             #need to clear all node
@@ -2760,7 +2772,7 @@ h1 = Environment()
         if r:
             for ingr in r.ingredients:
                 ingr.counter = 0 # counter of placed molecules
-                if  ingr.nbMol > 0:
+                if  ingr.nbMol > 0: # I DONT GET IT !
                     ingr.completion = 0.0
                     allIngredients.append(ingr)
                 else:
@@ -3032,7 +3044,7 @@ h1 = Environment()
                 order = numpy.argsort(allIngrDist)
                 # pick point with closest distance
                 ptInd = allIngrPts[order[0]]
-                if (ingr.rejectionCounter % 300 == 0):
+                if (ingr.rejectionCounter % 10 == 0):
                     ptIndr = int(random()*len(allIngrPts))
                     ptInd = allIngrPts[ptIndr]                            
             elif ingr.packingMode=='gradient' and self.use_gradient:  
@@ -3135,7 +3147,7 @@ h1 = Environment()
         # create copies of the distance array as they change when molecules
         # are added, theses array can be restored/saved before feeling
         freePoints = self.grid.freePoints[:]
-        nbFreePoints = len(freePoints)#-1
+        self.grid.nbFreePoints = nbFreePoints = len(freePoints)#-1
 #        self.freePointMask = numpy.ones(nbFreePoints,dtype="int32")
         if "fbox" in kw :  # Oct 20, 2012  This is part of the code that is breaking the grids for all meshless compartment fills
             self.fbox = kw["fbox"]
@@ -3336,6 +3348,9 @@ h1 = Environment()
                                 {"debugFunc":debugFunc})
 #            print("nbFreePoints after PLACE ",nbFreePoints)
             if success:
+                self.grid.distToClosestSurf = numpy.array(distance[:])
+                self.grid.freePoints = numpy.array(freePoints[:])
+                self.grid.nbFreePoints = len(freePoints)#-1
                 print ("success",ingr.completion)
                 #update largest protein size
                 #problem when the encapsulatingRadius is actually wrong
@@ -3727,14 +3742,18 @@ h1 = Environment()
             #needto check the name if it got the comp rule
             ingr = self.getIngrFromName(name,compNum)
             if ingr is not None:
-                molecules.append([pos, rot, ingr, ptInd])
+                molecules.append([pos, numpy.array(rot), ingr, ptInd])
                 if name not  in ingredients :
                     ingredients[name]=[ingr,[],[],[]]
-                mat = rot.copy()
+                mat = numpy.array(rot)
                 mat[:3, 3] = pos
                 ingredients[name][1].append(pos)
-                ingredients[name][2].append(rot)
+                ingredients[name][2].append(numpy.array(rot))
                 ingredients[name][3].append(numpy.array(mat))
+                self.rTrans.append(numpy.array(pos).flatten())
+                self.rRot.append(numpy.array(rot))#rotMatj 
+                self.rIngr.append(ingr)
+
         self.molecules = molecules
         if self.exteriorRecipe:
             self.exteriorRecipe.molecules = molecules
@@ -3745,23 +3764,32 @@ h1 = Environment()
                     pos,rot,name,compNum,ptInd = elem
                     ingr = self.getIngrFromName(name,compNum)
                     if ingr is not None:
-                        molecules.append([pos, rot, ingr, ptInd])
+                        molecules.append([pos, numpy.array(rot), ingr, ptInd])
                         if name not in ingredients :
                             ingredients[name]=[ingr,[],[],[]]
-                        mat = rot.copy()
+                        mat = numpy.array(rot)
                         mat[:3, 3] = pos                            
                         ingredients[name][1].append(pos)
-                        ingredients[name][2].append(rot)
+                        ingredients[name][2].append(numpy.array(rot))
                         ingredients[name][3].append(numpy.array(mat))
+                        self.rTrans.append(numpy.array(pos).flatten())
+                        self.rRot.append(numpy.array(rot))#rotMatj 
+                        self.rIngr.append(ingr)
                 o.molecules = molecules
         #consider that one filling have occured
+        if len(self.rTrans):
+            if self.treemode == "bhtree":# "cKDTree"
+                if len(self.rTrans) >= 1 : bhtreelib.freeBHtree(self.close_ingr_bhtree)
+                self.close_ingr_bhtree=bhtreelib.BHtree( self.rTrans, None, 10)
+            else :
+                self.close_ingr_bhtree= spatial.cKDTree(self.rTrans, leafsize=10)
         self.cFill = self.nFill
         #if name == None :
-        name = "F"+str(self.nFill)
-        self.FillName.append(name)
-        self.nFill+=1
+#        name = "F"+str(self.nFill)
+#        self.FillName.append(name)
+#        self.nFill+=1
         self.ingr_result = ingredients
-        self.restoreFreePoints(freePoint)
+        if len(freePoint):self.restoreFreePoints(freePoint)
         return ingredients
 
     def restoreFreePoints(self,freePoint):
@@ -4618,6 +4646,32 @@ h1 = Environment()
         
         self.bd.write()
 
+    def exportToTEM_SIM(self,res_filename=None,output=None):
+        from tem_sim import tem_sim
+        if res_filename is None :
+            res_filename = self.resultfile
+        self.tem=tem_sim(res_filename,bounding_box=self.boundingBox)
+        self.collectResultPerIngredient()
+        r =  self.exteriorRecipe
+        if r :
+            for ingr in r.ingredients:
+                self.tem.addAutoPackIngredient(ingr)
+
+        #compartment ingr
+        for orga in self.compartments:
+            #compartment surface ingr
+            rs =  orga.surfaceRecipe
+            if rs :
+                for ingr in rs.ingredients:
+                    self.tem.addAutoPackIngredient(ingr)
+            #compartment matrix ingr
+            ri =  orga.innerRecipe
+            if ri :
+                for ingr in ri.ingredients:
+                    self.tem.addAutoPackIngredient(ingr)
+        
+        self.tem.write()
+
     def exportToTEM(self,):
         #limited to 20 ingredients, call the TEM exporter plugin ?
         #ingredient -> PDB file or mrc volume file
@@ -4655,11 +4709,15 @@ h1 = Environment()
     
     def linkTraj(self, ):
         #link the traj usin upy for creating a new synchronized calleback?
-        autopack.helper.synchronize(self.applyStep)
+        if not self.traj_linked:
+            autopack.helper.synchronize(self.applyStep)
+            self.traj_linked=True
     
     def unlinkTraj(self, ):
         #link the traj usin upy for creating a new synchronized calleback?
-        autopack.helper.unsynchronize(self.applyStep)
+        if self.traj_linked :
+            autopack.helper.unsynchronize(self.applyStep)
+            self.traj_linked=False
         
     def applyStep(self, step):
         #apply the coordinate from a trajectory at step step.

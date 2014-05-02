@@ -1051,6 +1051,7 @@ class SubdialogFiller(uiadaptor):
                       self._addElemt(name="Save Result",action=self.saveResult),
                       self._addElemt(name="Export to BD_BOX rigid",action=self.export_bd_rigid),
                       self._addElemt(name="Export to BD_BOX flex",action=self.export_bd_flex),
+                      self._addElemt(name="Load Result from BD_BOX",action=self.import_BDBOX),
                       self._addElemt(name="Save Grid",action=self.saveGrid),
                       ],#self.buttonLoadData
                        }
@@ -2168,6 +2169,13 @@ class SubdialogFiller(uiadaptor):
     
     def saveResult(self,*args):
         self.saveDialog(label="save result as json",callback=self.saveResult_cb)
+
+    def import_BDBOX_cb(self,filename):
+        self.histoVol.readTraj(filename)
+        self.histoVol.linkTraj()
+        
+    def import_BDBOX(self,*args):
+        self.fileDialog(label="choose a trajecory file (.dcd,.molb,.xyz)",callback=self.import_BDBOX_cb)
 
     def export_bd_rigid_cb(self,filename):
         self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="rigid")

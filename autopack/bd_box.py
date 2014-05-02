@@ -7,14 +7,15 @@ Created on Tue Mar 18 22:07:48 2014
 import os
 import numpy as np
 import math
-from autopack.transformation import euler_from_matrix,matrixToEuler
+from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix
 #some progress report would be nice
 
 class bd_box:
     def __init__(self,name="box",bounding_box=[[0.0, 0.0, 0.], [190.0, 190.0, 190]]):
         #define whats is need for bd_box simulation
-        self.base_name=name   
-        self.bounding_box=bounding_box
+        self.base_name=name 
+        self.base_directory=os.path.dirname(name)
+        self.bounding_box=np.array(bounding_box)*1.5
         self.params_file = self.base_name+".prm"
         self.params_string=""
         self.order=[]
@@ -234,7 +235,7 @@ class rigid_box(bd_box):
                                            "type":"float","description":"scaling factor for electrostatic interactions",
                                            "mini":1,"maxi":1000,
                                            "width":30}
-        self.params["alpha"]={"name":"alpha","value":4,"default":4,
+        self.params["alpha"]={"name":"alpha","value":4,"default":2,
                                            "type":"int","description":"scaling factor for L-J interactions",
                                            "mini":1,"maxi":1000,
                                            "width":30}
@@ -254,7 +255,7 @@ class rigid_box(bd_box):
                                            "type":"int","description":"power, repulsive term in the L-J potential",
                                            "mini":1,"maxi":1000,
                                            "width":30}
-        self.params["save_dcd_freq"]={"name":"save_dcd_freq","value":100000,"default":1,
+        self.params["save_dcd_freq"]={"name":"save_dcd_freq","value":50,"default":1,
                                            "type":"int","description":"frequency (number of steps) for writing to the dcd trajectory",
                                            "mini":1,"maxi":1000,
                                            "width":30}
@@ -266,7 +267,7 @@ class rigid_box(bd_box):
                                            "type":"int","description":"frequency (number of steps) for writing to the energy file",
                                            "mini":1,"maxi":1000,
                                            "width":30}
-        self.params["save_molb_freq"]={"name":"save_molb_freq","value":50,"default":1,
+        self.params["save_molb_freq"]={"name":"save_molb_freq","value":10,"default":1,
                                            "type":"int","description":"frequency (number of steps) for writing to the molb trajectory",
                                            "mini":1,"maxi":1000,
                                            "width":30} 
@@ -288,7 +289,7 @@ class rigid_box(bd_box):
         self.params["elec"]={"name":"elec","value":True,"default":True,
                                            "type":"bool","description":"switch electrostatic interactions on/off",
                                            "width":30}
-        self.params["bd_algorithm"]={"name":"bd_algorithm","value":"ermak_const","default":"ermak_const",
+        self.params["bd_algorithm"]={"name":"bd_algorithm","value":"ermak_var","default":"ermak_const",
                                            "type":"str","description":"BD algorithm to be used",
                                            "mini":1,"maxi":10000,
                                            "width":30}#list ?
@@ -350,7 +351,7 @@ class rigid_box(bd_box):
         self.params["restart"]={"name":"restart","value":"","default":"",
                                            "type":"str","description":"apply restart from filename",
                                            "width":30} 
-        self.params["move_attempts"]={"name":"move_attempts","value":10,"default":10,
+        self.params["move_attempts"]={"name":"move_attempts","value":500,"default":10,
                                            "type":"int","description":"number of attempts to draw a new random vector in case of an overlap between particles",
                                            "mini":1,"maxi":100000,
                                            "width":30}
@@ -378,7 +379,7 @@ class rigid_box(bd_box):
         self.params["overlaps"]={"name":"overlaps","value":"trees","default":"trees",
                                            "type":"str","description":"an algorithm used to check for overlaps",
                                            "width":30}
-        self.params["overlaps_removal"]={"name":"overlaps_removal","value":"none","default":"none",
+        self.params["overlaps_removal"]={"name":"overlaps_removal","value":"molecule","default":"none",
                                            "type":"str","description":"whether to remove overlaps between particles using an iterative procedure, yes/no",
                                            "width":30} 
         self.params["cuda_block"]={"name":"cuda_block","value":256,"default":256,
@@ -388,7 +389,7 @@ class rigid_box(bd_box):
         self.params["elec_desolv"]={"name":"elec_desolv","value":True,"default":True,
                                            "type":"bool","description":"switch electrostatic interactions - desolvation forces on/off",
                                            "width":30}
-        self.params["min_dt"]={"name":"min_dt","value":-1,"default":-1,
+        self.params["min_dt"]={"name":"min_dt","value":1,"default":-1,
                                            "type":"int","description":"minimal time step in the variable-step BD algorithm",
                                            "mini":-1,"maxi":100000,
                                            "width":30} 
@@ -545,12 +546,18 @@ ex: LJ 5.26316 -12.7961 -4.13284 4.24053 0.5922 0 0 0 0 0 0 0 0
                 r[0]=r[0].tolist()#position
             if hasattr(r[1],"tolist"):
                 r[1]=r[1].tolist()#rotation that should be apply to sphereTree
-            #self.addCoordinate(r[0],euler_from_matrix(r[1]))
-            self.addCoordinate(r[0],matrixToEuler(r[1]))
+            self.addCoordinateMatrix(r[0],np.array(r[1]).transpose().reshape(16))
+#            euler = euler_from_matrix(r[1])#Or angle from software ?
+#            euler = [math.degrees(euler[0]),math.degrees(euler[1]),math.degrees(euler[2])]
+#            self.addCoordinate(r[0],euler)
             
     def addCoordinate(self,pos,rot):
         self.initial_coordinates_str+="%.4f %.4f %.4f %.4f %.4f %.4f\n" %(
                                 pos[0],pos[1],pos[2],rot[0],rot[1],rot[2])
+    
+    def addCoordinateMatrix(self,pos,rot):
+        self.initial_coordinates_str+="%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n" %(
+                                pos[0],pos[1],pos[2],rot[0],rot[1],rot[2],rot[4],rot[5],rot[6],rot[8],rot[9],rot[10])
         
     def writeInitialCoordinates(self,):
         """Initial coordinates of objects in the studied system (in the laboratory frame) can be speci
@@ -568,10 +575,11 @@ vx,vy,vz,omx,omy,omz (translation / rotation) for ith molecule
         from subprocess import call
         fileName, fileExtension = os.path.splitext(filename)
         call(['mv',filename,'input.txt'])
-        return_code = call([executable, filename])
+        call([executable, filename])
         call(['mv','input.txt',filename])
-        call(['mv','tensor.txt',fileName+".dt"])
-        print return_code
+        call('tail -6 tensor.txt > '+fileName+".dt", shell=True)
+        call(['mv','transformations.txt',fileName+".frame"])
+        #print return_code
         aStr="""  .218365E-01  .000000E+00  .000000E+00  .000000E+00  .000000E+00  .000000E+00
   .000000E+00  .218365E-01  .000000E+00  .000000E+00  .000000E+00  .000000E+00
   .000000E+00  .000000E+00  .218365E-01  .000000E+00  .000000E+00  .000000E+00
@@ -584,17 +592,19 @@ vx,vy,vz,omx,omy,omz (translation / rotation) for ith molecule
         f.close()
        
     def write(self,):
+        print ("write BD_BOX input files")
         bd_box.write(self)
         #write one mstr file per objects too         
         for i in range(len(self.objects)):
-            f=open(self.objects[i]+".mstr","w")
+            print ("write BD_BOX input files for object "+str(i)+" "+self.objects[i])
+            f=open(self.base_directory+os.sep+self.objects[i]+".mstr","w")
             f.write(self.objects_str_string[i])
             #divides by zero, then releases the kraken!
             f.close()
-            f=open(self.objects[i]+".beads","w")
+            f=open(self.base_directory+os.sep+self.objects[i]+".beads","w")
             f.write(self.objects_dt_string[i])
             f.close()
-            self.computeDmatrix(self.objects[i]+".beads")
+            self.computeDmatrix(self.base_directory+os.sep+self.objects[i]+".beads")
         #dt file ? make on the fly?
         self.writeInitialCoordinates()
         

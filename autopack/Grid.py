@@ -41,7 +41,7 @@ from autopack.ldSequence import cHaltonSequence3
 from scipy import spatial
 from math import ceil
 from math import floor
-
+from random import randrange
 class Grid:
     """
     The Grid class
@@ -90,7 +90,8 @@ class Grid:
         self.ijkPtIndice = []
         self.filename=None          #used for storing before fill so no need rebuild
         self.result_filename=None   #used after fill to store result
-        self.tree = None
+        self.tree = None        
+        self.tree_free = None
         self.encapsulatingGrid = 1
         self.testPeriodicity = autopack.testPeriodicity
         self.biasedPeriodicity = autopack.biasedPeriodicity
@@ -129,6 +130,7 @@ class Grid:
         #boundingBox shoud be the same otherwise why keeping the grid
 #        self.gridPtId = numpy.zeros(self.gridVolume,'i')
 #        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
+        self.distToClosestSurf = numpy.array(self.distToClosestSurf[:])        
         self.distToClosestSurf[:] = self.diag#numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
         self.freePoints = list(range(len(self.freePoints)))
         self.nbFreePoints =len(self.freePoints)
@@ -295,6 +297,44 @@ class Grid:
             self.tree = spatial.cKDTree(self.masterGridPositions, leafsize=10)
         distance,nb = self.tree.query(pt3d)#len of ingr posed so far
         return distance,nb
+
+
+    def getClosestFreeGridPoint(self,pt3d,compId=None,updateTree=True,ball=0.0,distance=0.0):
+        free_indices =self.freePoints[:self.nbFreePoints]
+        arr=numpy.array(self.masterGridPositions[free_indices])
+        indices = numpy.nonzero(numpy.equal(self.gridPtId[free_indices],compId))
+        distances = self.distToClosestSurf[free_indices]
+        if not len(indices):
+            return None
+        tree_free = spatial.cKDTree(arr[indices], leafsize=10)
+        arr=arr[indices]
+        res = tree_free.query_ball_point(pt3d,ball)#
+        if not len(res) :
+            return None
+        all_distances = distances[res]
+        all_pts =  arr[res]
+        ind = numpy.nonzero( numpy.greater_equal(all_distances,distance) )[0]
+        if not len(ind):
+            return None
+        targetPoint = all_pts[ind[randrange(len(ind))]]#randomly pick free surface point at given distance
+        return targetPoint
+
+        free_indices = self.freePoints[:self.nbFreePoints]
+        arr=numpy.array(self.masterGridPositions[free_indices])
+        if self.tree_free is None or updateTree : 
+            if compId != None :
+                arr = numpy.array(self.masterGridPositions[free_indices])
+                indices = numpy.nonzero(numpy.equal(self.gridPtId[free_indices],compId))
+                self.tree_free = spatial.cKDTree(arr[indices], leafsize=10)
+                arr=arr[indices]
+            else :    
+                self.tree_free = spatial.cKDTree(self.masterGridPositions[:self.nbFreePoints], leafsize=10)
+        if distance != 0.0:
+            res = self.tree_free.query_ball_point(pt3d,distance)#
+            return 0,res,arr 
+        else :
+            res = self.tree_free.query(pt3d)#len of ingr posed so far
+            return res,arr
 
     def getPointFrom3D(self, pt3d):
         """

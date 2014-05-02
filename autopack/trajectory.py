@@ -327,7 +327,7 @@ class molbTrajectory(Trajectory):
             m[3][:3] = fromfile(f,'<d',count=4)[:3]#size*4 4 double ?
             f.seek( size*(mols-1-nr)*4, 1 )
             f.seek( size*nr*9, 1 )
-            m[:3,:3] = fromfile(f,'<d',count=9).reshape(3,3)#size*4 4 double ?
+            m[:3,:3] = fromfile(f,'<d',count=9).reshape(3,3)#.transpose()#size*4 4 double ?
             f.seek( size*(mols-1-nr)*9, 1)  
             liste_m.append(m)
             if (log) : print step_nr,m 
@@ -358,6 +358,10 @@ class molbTrajectory(Trajectory):
                 for ingr in rs.ingredients:
                     for k in range(len(ingr.results)):
                         pos = self.getIngredientInstancePos(ingr.name,k,frame)
+                        #pos
+                        newp = np.identity(4)
+                        newp[3,:3] = pos[3,:3]
+                        newp[:3,:3] = pos.transpose()[:3,:3]
                         autopack.helper.setTransformation(autopack.helper.getName(ingr.ipoly[k]),mat=pos)
                         indice+=1
             #compartment matrix ingr
