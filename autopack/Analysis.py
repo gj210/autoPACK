@@ -709,7 +709,7 @@ class AnalyseAP:
 #        n, bins, patches = pyplot.hist(distances, bins=bins, normed=1, facecolor='green')#, alpha=0.75)
         y,binEdges=numpy.histogram(distances,bins=bins)        
         bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
-        menStd  = numpy.sqrt(y)
+        menStd  = numpy.sqrt(y)#or sigma?
         width=bins
         pyplot.bar(bincenters,y,width=width, color='r', yerr=menStd)
         # add a 'best fit' line?
@@ -961,6 +961,17 @@ class AnalyseAP:
                             for i,p in enumerate(ingrpos): 
                                 ax.add_patch(Circle((p[0], p[1]), ingr.encapsulatingRadius,
                                                 edgecolor="black", facecolor=ingr.color))
+#                                 Plot "image" particles to verify that periodic boundary conditions are working
+                                r=ingr.encapsulatingRadius
+                                if autopack.testPeriodicity :
+                                    if p[0] < r:
+                                        ax.add_patch(Circle((p[0] + width,p[1]), r, facecolor=ingr.color))
+                                    elif p[0] > (width-r):
+                                        ax.add_patch(Circle((p[0] - width,p[1]), r, facecolor=ingr.color))
+                                    if p[1] < r:
+                                        ax.add_patch(Circle((p[0],p[1]+ width), r, facecolor=ingr.color))
+                                    elif p[1] > (width-r):
+                                        ax.add_patch(Circle((p[0],p[1] - width), r, facecolor=ingr.color))
                                 if i == 0:#len(ingrpos)-1:
                                     continue
                                 if ingr.Type== "Grow":

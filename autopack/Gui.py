@@ -1313,7 +1313,9 @@ class SubdialogFiller(uiadaptor):
                   value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
 #                print "molarity",ingr.molarity,str(ingr.molarity)
                 self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                  value=ingr.overwrite_nbMol_value,type="inputInt",variable=self.addVariable("int",ingr.overwrite_nbMol_value),mini=0,maxi=1000)   
+                  value=ingr.overwrite_nbMol_value,type="inputInt",
+                  variable=self.addVariable("int",ingr.overwrite_nbMol_value),
+                    mini=0,maxi=100000)   
                 self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                 self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                   value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=150.)                 
@@ -2457,6 +2459,8 @@ class SubdialogViewer(uiadaptor):
         except :
             fname = self.histoVol.resultfile
         fname = autopack.retrieveFile(fname,cache="results",force = self.forceResult)
+        if fname is None :
+            return False
         name =   fname.split("/")[-1]
         if self.build_grid :
             self.fetchGridResult(fname,name)

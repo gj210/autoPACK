@@ -490,6 +490,7 @@ class Partner:
         self.ingr = ingr
         self.weight = weight
         self.properties = {}
+        self.distExpression = None
         if properties is not None:
             self.properties = properties
             
@@ -512,7 +513,7 @@ class Partner:
         elif function is not None :
             val = function(self.weight,d)
         else :
-            val= self.weight*1/d
+            val= self.weight*1.0/d
         return val
 
 class IngredientInstanceDrop:
@@ -581,7 +582,7 @@ class Agent:
         self.distExpression = None
         if "distExpression" in kw:
             self.distExpression=kw["distExpression"]
-        self.overwrite_distFunc = True     #overWrite
+        self.overwrite_distFunc = False     #overWrite
         if "overwrite_distFunc" in kw:
             self.overwrite_distFunc = kw["overwrite_distFunc"]        
         #chance to actually bind to any partner
@@ -673,8 +674,8 @@ class Agent:
 #            print "calc ",dist, wd
             probaArray.append(wd)
             w = w+wd
-        probaArray.append(self.proba_not_binding)
-        w=w+self.proba_not_binding
+        #probaArray.append(self.proba_not_binding)
+        #w=w+self.proba_not_binding
         return probaArray,w
 
     def getProbaArray(self, weightD, total):
@@ -687,25 +688,44 @@ class Agent:
             probaArray.append(final)
         probaArray[-1]=1.0
         return probaArray
-        
+
+    def getSubWeighted(self,weights):
+        """
+        From http://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/
+        This method is about twice as fast as the binary-search technique, 
+        although it has the same complexity overall. Building the temporary 
+        list of totals turns out to be a major part of the functions runtime.
+        This approach has another interesting property. If we manage to sort 
+        the weights in descending order before passing them to 
+        weighted_choice_sub, it will run even faster since the random 
+        call returns a uniformly distributed value and larger chunks of 
+        the total weight will be skipped in the beginning.
+        """
+        rnd = random() * sum(weights)
+        for i, w in enumerate(weights):
+            rnd -= w
+            if rnd < 0:
+                return i,rnd
+                        
     def pickPartner(self, mingrs, listePartner, currentPos=[0,0,0]):
         #listePartner is (i,partner,d)
         #wieght using the distance function
 #        print "len",len(listePartner)
         weightD,total = self.weightListByDistance(listePartner)
 #        print "w", weightD,total
-        probaArray = self.getProbaArray(weightD,total)
-#        print "p",probaArray
-        probaArray=numpy.array(probaArray)
-        #where is random in probaArray->index->ingr
-        b = random() 
-        test = b < probaArray
-        i = test.tolist().index(True)
-#        print "proba",i,test,(len(probaArray)-1)    
-        if i == (len(probaArray)-1) :
-            #no binding due to proba not binding....
-            print ("no binding due to proba")
-            return None,b
+        i,b = self.getSubWeighted(weightD)
+#        probaArray = self.getProbaArray(weightD,total)
+##        print "p",probaArray
+#        probaArray=numpy.array(probaArray)
+#        #where is random in probaArray->index->ingr
+#        b = random() 
+#        test = b < probaArray
+#        i = test.tolist().index(True)
+##        print "proba",i,test,(len(probaArray)-1)    
+#        if i == (len(probaArray)-1) :
+#            #no binding due to proba not binding....
+#            print ("no binding due to proba")
+#            return None,b
         ing_indice = listePartner[i][0]#i,part,dist
         ing = mingrs[2][ing_indice]#[2]
         print ("binding to "+ing.name)
@@ -729,7 +749,6 @@ class Agent:
             factor = ((v/math.sqrt(s)) * (ing.encapsulatingRadius+self.encapsulatingRadius))#encapsulating radus ?
             targetPoint =  numpy.array(targetPoint) - factor    
         print("tPa",targetPoint)
-        
         return targetPoint,b
         
     def pickPartner_old(self, mingrs,listePartner, currentPos=[0,0,0]):
@@ -4091,22 +4110,29 @@ class Ingredient(Agent):
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
         if histoVol.ingrLookForNeighbours:
+            bind = True
             print ("look for ingredient",trans)
-            closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
-                cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
-            #return R[indice] and distance R["distances"] 
-            targetPoint,rotMat,found = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
-                                                 closest_indice=closesbody_indice)
-            if not found and self.counter!=0:
-                self.reject()                
-                return False, nbFreePoints#,targetPoint, rotMat       
-
-            #if partner:pickNewPoit like in fill3
-            if runTimeDisplay and self.mesh:
-                mat = rotMat.copy()
-                mat[:3, 3] = targetPoint
-                afvi.vi.setObjectMatrix(moving,mat,transpose=True)
-                afvi.vi.update()                                                   
+            #roll a dice about proba_not_binding
+            if self.proba_not_binding != 0 :#between 0 and 1
+                b=random()
+                if b <= self.proba_not_binding :
+                    bind = False
+            if bind :
+                closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
+                    cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
+                #return R[indice] and distance R["distances"] 
+                targetPoint,rotMat,found = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
+                                                     closest_indice=closesbody_indice)
+                if not found and self.counter!=0:
+                    self.reject()                
+                    return False, nbFreePoints#,targetPoint, rotMat       
+    
+                #if partner:pickNewPoit like in fill3
+                if runTimeDisplay and self.mesh:
+                    mat = rotMat.copy()
+                    mat[:3, 3] = targetPoint
+                    afvi.vi.setObjectMatrix(moving,mat,transpose=True)
+                    afvi.vi.update()                                                   
         tx, ty, tz = jtrans = targetPoint
         gridDropPoint = targetPoint        
         #we may increase the jitter, or pick from xyz->Id free for its radius
