@@ -1215,7 +1215,8 @@ class Environment(CompartmentList):
             geom = str(onode.getAttribute("geom"))
             rep =  str(onode.getAttribute("rep"))
             rep_file=str(onode.getAttribute("rep_file"))
-            if rep != "None" :
+            print len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0
+            if rep != "None" and len(rep) != 0 and rep != '' and rep == "":
                 rname =  rep_file.split("/")[-1]
                 fileName, fileExtension = os.path.splitext(rname)
                 if fileExtension == "" :
@@ -1227,7 +1228,10 @@ class Environment(CompartmentList):
             else :
                 rep=None
                 rep_file=None
+                print "NONENE"
+            print ("add compartment ",name,geom,rep,rep_file)
             o = Compartment(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
+            print ("added compartment ",name)
             self.addCompartment(o)
             rsnodes = onode.getElementsByTagName("surface")
             if len(rsnodes) :

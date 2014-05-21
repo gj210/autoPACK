@@ -836,6 +836,10 @@ class AnalysisTab:
                         width=150,height=10,type="button",icon=None,
                     action=self.dsdist_plane,label="Disply grid distance as texture plane",
                                      variable=self.afgui.addVariable("int",0)) 
+        self.widget["generate_fluorescence"]=self.afgui._addElemt(name="generate_fluorescence",
+                        width=150,height=10,type="button",icon=None,
+                    action=self.generaeFluorescence,label="Generate fluoresence for a given ingredient",
+                                     variable=self.afgui.addVariable("int",0)) 
         #widget color ramp / cutoff
         self.widget["color_ramp1"]=self.afgui._addElemt(name="color1",
                                             width=40,height=10,
@@ -852,6 +856,8 @@ class AnalysisTab:
         self.widget["cutoff"]=self.afgui._addElemt(name="cutoff",action=None,width=100,
                           value=60.0,type="inputFloat",variable=self.afgui.addVariable("float",60.0),
                             mini=0.0,maxi=2000.0)         
+
+        #fluorescence data ? require an object, and some data
         #should use collapsible 
         #run mutliple time
         #widget nb run
@@ -886,7 +892,8 @@ class AnalysisTab:
         elemframe.append([self.widget["display_distance"],])
         elemframe.append([self.widget["display_distance_cube"],])
         elemframe.append([self.widget["display_distance_plane"],])
-        elemframe.append([self.widget["gradients"], self.widget["btn_ds_gradient"],])        
+        elemframe.append([self.widget["gradients"], self.widget["btn_ds_gradient"],])  
+        elemframe.append([self.widget["generate_fluorescence"],])
         return elemframe
 
     def colordist(self,):
@@ -955,6 +962,13 @@ class AnalysisTab:
 
     def export_result(self,):
         pass
+
+    def generaeFluorescence(self,*args,**kw):
+        #open the subdialog of fluo setp
+        from autopack.fluorescence import fluoSimGui
+        self.afgui.fluo_dlg =  fluoSimGui()
+        self.afgui.fluo_dlg.setup(environment=self.afgui.histoVol)
+        self.afgui.drawSubDialog(self.afgui.fluo_dlg,555455553)  
         
 #create subdialog here
 #could be in different file
@@ -1315,7 +1329,7 @@ class SubdialogFiller(uiadaptor):
                 self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
                   value=ingr.overwrite_nbMol_value,type="inputInt",
                   variable=self.addVariable("int",ingr.overwrite_nbMol_value),
-                    mini=0,maxi=100000)   
+                    mini=0,maxi=100000)  
                 self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                 self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                   value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=150.)                 
@@ -2497,6 +2511,13 @@ class SubdialogViewer(uiadaptor):
         self.afviewer.visibleMesh = True #mesh default visibility 
         self.afviewer.displayFill()
         self.afviewer.displayIngrGrows()
+
+    def generaeFluorescence(self,*args,**kw):
+        #open the subdialog of fluo setp
+        from autopack.fluorescence import fluoSimGui
+        self.fluo_dlg =  fluoSimGui()
+        self.fluo_dlg.setup(environment=self.histoVol)
+        self.drawSubDialog(self.fluo_dlg,555455553)
         
     def initWidget(self, ):
         """    
@@ -2508,7 +2529,8 @@ class SubdialogViewer(uiadaptor):
                        self._addElemt(name="Export Result to BD_BOX rigid",action=self.export_bd_rigid),
                        self._addElemt(name="Export Result to BD_BOX flex",action=self.export_bd_flex),
                        self._addElemt(name="Load Result from BD_BOX",action=self.import_BDBOX),
-                      ],#self.buttonLoadData
+                       self._addElemt(name="Simulate Fluorescence",action=self.generaeFluorescence),
+                      ],
                        }
         if self.helper.host.find("blender") != -1:
             self.setupMenu()

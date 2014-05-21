@@ -131,6 +131,7 @@ class  Compartment(CompartmentList):
         self.faces = faces
         self.vnormals = vnormals
         self.fnormals = None
+        self.area = 0.0
         if "fnormals" in kw :
             self.fnormals = kw["fnormals"]
         self.mesh = None
@@ -268,7 +269,7 @@ class  Compartment(CompartmentList):
             gname =rep 
             if helper is not None :
                 parent=helper.getObject('O%s'%self.name)
-        print ("compartments ",filename,gname,rep)
+        print ("compartments ",self.name,filename,gname,rep)
         #identify extension
         name = filename.split("/")[-1]
         fileName, fileExtension = os.path.splitext(name)
@@ -647,8 +648,8 @@ class  Compartment(CompartmentList):
             if fillBB is not None:
                 if self.inGrid(vertices[f[0]],fillBB) and self.inGrid(vertices[f[0]],fillBB) and self.inGrid(vertices[f[0]],fillBB):
                     areas.append(0.5*vlen(normal)) #added by Graham
+        self.area = sum(areas)
         return normals, areas #areas added by Graham
-
 
     def getInterpolatedNormal(self, pt, tri):
         """compute an interpolated normal for te given triangle at the given point"""

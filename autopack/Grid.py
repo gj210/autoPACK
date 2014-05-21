@@ -71,7 +71,7 @@ class Grid:
         self.distToClosestSurf = []
         self.distToClosestSurf_store = []
         
-        self.diag=None
+        self.diag=self.getDiagonal()
         self.gridSpacing = space*1.1547
         self.nbGridPoints = None
         self.nbSurfacePoints = 0
@@ -95,6 +95,7 @@ class Grid:
         self.encapsulatingGrid = 1
         self.testPeriodicity = autopack.testPeriodicity
         self.biasedPeriodicity = autopack.biasedPeriodicity
+        self.lookup=0
         if setup :
             self.setup(boundingBox,space)
         #use np.roll to have periodic condition
@@ -105,8 +106,11 @@ class Grid:
         self.boundingBox = boundingBox
         #self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
 #        self.create3DPointLookup()
-        self.create3DPointLookupCover()
-#        self.create3DPointLookup_loop()
+        
+        if self.lookup==0 : self.create3DPointLookupCover()
+        elif self.lookup==1 : self.create3DPointLookup()
+        elif self.lookup==2 : self.create3DPointLookup_loop()
+            
         self.getDiagonal()
         self.nbSurfacePoints = 0
         print ("$$$$$$", self.gridVolume,self.gridSpacing)
@@ -366,10 +370,11 @@ class Grid:
 
     def getPositionPeridocity(self,pt3d,jitter,cutoff):
 #        print ("getPositionPeridocity")
+#       max number of p position is 7, if lie in the corner
         if autopack.biasedPeriodicity != None :       
-            biased = autopack.biasedPeriodicity
+            biased = numpy.array(autopack.biasedPeriodicity)
         else :
-            biased = jitter
+            biased = numpy.array(jitter)
         O = numpy.array(self.boundingBox[0])
         E = numpy.array(self.boundingBox[1])
         P = numpy.array(pt3d)
@@ -381,7 +386,7 @@ class Grid:
         ex, ey, ez = self.boundingBox[1]
         px, py, pz = pt3d
         pxyz=[0,0,0]
-        
+        #can I use rapid and find the collision ?
         #distance plane X
         dox = px - ox
         dex = ex - px       
@@ -428,26 +433,30 @@ class Grid:
         tr=[]
         corner=numpy.zeros((4,3))#7 corner / 3 corner 3D / 2D
         i1=numpy.nonzero(pxyz)[0]
+        #print i1,pxyz
         for i in i1 :
-            tr.append(pt3d+(self.preriodic_table["left"][i]*pxyz[i]))
-            corner[0]+=self.preriodic_table["left"][i]*pxyz[i]
+            tr.append(pt3d+(self.preriodic_table["left"][i]*pxyz[i]))#0,1,2
+            corner[0]+=self.preriodic_table["left"][i]*pxyz[i]#1
             #the corner are
             #X+Y+Z corner[0]
             #X+Y+0 corner[1]
             #X+0+Z corner[2]
             #0+Y+Z corner[3]
         if len(i1) == 2 :
+            #two axis cross-> three pos
             tr.append(pt3d+corner[0])
         if len(i1) == 3 :
+            #in a corner need total 7 pos, never happen in 2D
             corner[1] = self.preriodic_table["left"][0]*pxyz[0]+self.preriodic_table["left"][1]*pxyz[1]
             corner[2] = self.preriodic_table["left"][0]*pxyz[0]+self.preriodic_table["left"][2]*pxyz[2]
             corner[3] = self.preriodic_table["left"][1]*pxyz[1]+self.preriodic_table["left"][2]*pxyz[2]
-            for i in range(4):
-                if sum(corner[i]) != 0 :
-                    tr.append(pt3d+corner[i])
+            for i in range(4):#4+1=5 
+                #print i,corner[i],sum(corner[i])
+                #if sum(corner[i]) != 0 :
+                tr.append(pt3d+corner[i])
         if len(tr) :
             translation=tr
-#        print ("periodicity ",translation, tr) 
+            print ("periodicity ",len(translation), tr) 
         return translation        
         
     def getPositionPeridocityBroke(self,pt3d,jitter,cutoff):

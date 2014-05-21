@@ -287,7 +287,7 @@ class xyzTrajectory(Trajectory):
 class molbTrajectory(Trajectory): 
     #NMR Type file type
     traj_type="molb"
-    def parse(self,filename=None,nbMol=0):
+    def parse(self,filename=None,nbMol=0,log=False):
         #brutforce parsing
         if filename==None:
             filename = self.filename
@@ -295,11 +295,12 @@ class molbTrajectory(Trajectory):
         #but how make difference between 2 molecules    
         #dicrionary indice in moldb-> indice in input ?
         for i in range(nbMol):
-           mat = self.parse_one_mol(filename,i)
+           mat = self.parse_one_mol(filename,i,log=log)
            self.data[i]=mat
                
     def parse_one_mol(self,filename,instance_id, ftype="double",log=False ):
         #start_time = clock()
+        #progresss bard ? but it slow down
         if filename==None:
             filename = self.filename
         f=open(filename,"rb")
@@ -315,11 +316,16 @@ class molbTrajectory(Trajectory):
         while 1:
             m = np.zeros((4,4))
             b=fromfile(f,'<i',count=4)
+            if (log) : print b
             if not len(b) : break
             step_nr = fromfile(f,'<i',count=1)[0]
             mols = fromfile(f,'<i',count=1)[0]
+            if autopack.helper is not None :
+                autopack.helper.progressBar(label="parsin moldb "+str(step_nr)+" "+str(mols)+" "+str(nr))
             if ( mols <= nr ):
                 print("Number of molecules (%d) is less of equal than the number given (%d)\n"% (mols,nr));
+            if mols == 0 :
+                break
             state_size= fromfile(f,'<i',count=1)[0] 
             f.seek(state_size,1)
             f.seek(size,1)            
@@ -330,7 +336,7 @@ class molbTrajectory(Trajectory):
             m[:3,:3] = fromfile(f,'<d',count=9).reshape(3,3)#.transpose()#size*4 4 double ?
             f.seek( size*(mols-1-nr)*9, 1)  
             liste_m.append(m)
-            if (log) : print step_nr,m 
+            if (log) : print step_nr,m,mols
         f.close()
         #end_time = clock()
         #print 'It took',end_time - start_time,'seconds'
