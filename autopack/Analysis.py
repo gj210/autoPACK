@@ -7,6 +7,8 @@ Created on Mon May  6 22:58:44 2013
 import os
 import math
 import numpy
+import numpy as np
+import scipy
 import csv
 import json
 
@@ -102,7 +104,56 @@ def vector_norm(data, axis=None, out=None):
         numpy.sum(data, axis=axis, out=out)
         numpy.sqrt(out, out)        
         
-        
+def autolabel(rects,ax):
+    #from http://matplotlib.org/examples/api/barchart_demo.html
+    # attach some text labels
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x()+rect.get_width()/2., height/2.0, '%d'%int(height),
+                ha='center', va='bottom')
+
+def autolabelyerr(ax,rects,err=None):
+    # attach some text labels
+    for i,rect in enumerate(rects):
+        height = rect.get_height()
+        v='%.2f'%height
+        y=0.5*height
+        if err is not None :
+            v='%.2f'%err[i]
+            y=1.05*height
+        ax.text(rect.get_x()+rect.get_width()/2., y, v,
+                ha='center', va='bottom')
+                
+def autolabels(loci1,loci2,loci3,ax,yerr1,yerr2,yerr3):
+    #from http://matplotlib.org/examples/api/barchart_demo.html
+    # attach some text labels
+    for i in range(len(loci1)):#rects:
+        rect1 = loci1[i]
+        rect2 = loci2[i]
+        rect3 = loci3[i]
+        height1 = rect1.get_height()
+        height2 = rect2.get_height()
+        height3 = rect3.get_height()
+        ax.text(rect1.get_x()+rect1.get_width()/2., height1/2.0, '%2.1f'% (height1*100.0),
+                ha='center', va='bottom',color='black')
+        ax.text(rect2.get_x()+rect2.get_width()/2., height2/2.0+height1, '%2.1f'% (height2*100.0),
+                ha='center', va='bottom',color='black')
+        ax.text(rect3.get_x()+rect2.get_width()/2., height3/2.0+height1+height2, '%2.1f'% (height3*100.0),
+                ha='center', va='bottom',color='white')
+        ax.text(rect1.get_x()+rect1.get_width()/2., 1.01*height1, '%2.1f'% (yerr1[i]*100.0),
+                ha='center', va='bottom',color='black')
+        ax.text(rect2.get_x()+rect2.get_width()/2., 1.01*(height2+height1), '%2.1f'% (yerr2[i]*100.0),
+                ha='center', va='bottom',color='white')
+        ax.text(rect3.get_x()+rect2.get_width()/2., 1.01*(height3+height1+height2), '%2.1f'% (yerr3[i]*100.0),
+                ha='center', va='bottom',color='black')        
+
+def getRndWeighted(listPts,weight,yerr):
+        w=[yerr[i]*np.random.random()+weight[i] for i in range(len(weight)) ]
+        t = numpy.cumsum(w)
+        s = numpy.sum(w)
+        i = numpy.searchsorted(t,numpy.random.rand(1)*s)[0]
+        return listPts[i]
+                
 class AnalyseAP:
     def __init__(self, env=None, viewer=None, result_file=None):
         self.env=None
@@ -442,21 +493,23 @@ class AnalyseAP:
     def rectangle_circle_area(self,bbox,center,radius):
         #http://www.eex-dev.net/index.php?id=100        
         #[[0.,0,0],[1000,1000,1]]
-        rect=Rectangle(bbox[0][0],bbox[1][0],bbox[0][1],bbox[1][1])#top,bottom, right, left
-#        rect=Rectangle(bbox[1][1],bbox[0][1],bbox[1][0],bbox[0][0])#top,bottom, right, left        
+        #top,bottom, right, left
+#        rect=Rectangle(bbox[0][0],bbox[1][0],bbox[0][1],bbox[1][1])#top,bottom, right, left
+        rect=Rectangle(bbox[1][1],bbox[0][1],bbox[1][0],bbox[0][0])#top,bottom, right, left        
         m=[center[0],center[1]]
         r=radius
-        area = 0.0
+        area = math.pi*r**2
         chs = self.g.check_sphere_inside(rect,m,r)
-        if chs :
-#            print "sphere go outside ",r 
+        if chs : #sph not completly inside
+#            print "rectangle is outside of circle",r 
             ch=self.g.check_rectangle_oustide(rect,m,r)
-            if ch :
+            if ch : #rectangle not outside
                 leftBound,rightBound = self.g.getBoundary(rect,m,r)
-                area = self.g.get_rectangle_cercle_area(rect,m,r,rightBound,leftBound)
+                area = self.g.get_rectangle_cercle_area(rect,m,r,leftBound,rightBound)
 #                print area,leftBound,rightBound
+            else :
+                area = bbox[0][1]**2
         return area
-
 
     def getAxeValue(self,ingrname,axe=0):
         ingrpositions=[self.env.molecules[i][0][axe] for i in xrange(len(self.env.molecules)) if self.env.molecules[i][2].name == ingrname]
@@ -561,8 +614,65 @@ class AnalyseAP:
             else :
                 areas.append(area2-area1)
         return areas
+
+    def ripley(self,positions,dr=25,rMax=None):
+        #K(t) = A*SUM(wij*I(i,j)/n**2)
+        #lambda = n/A A is the area of the region containing all points
+        #I indicator function 1 if its operand is true, 0 otherwise
+        #t is the search radius
+        #if homogenous K(s) = pi*s**2
+        #L(t) = (K(t)/pi)**1/2
+        #A common plot is a graph of t - \hat{L}(t) against t
+        #which will approximately follow the horizontal zero-axis with constant 
+        #dispersion if the data follow a homogeneous Poisson process.
+        N=len(positions)
+        V=1000**2
+        diag = maxdist = np.sqrt(1000**2+1000**2)
+        dr=dr#all_distance.min()
+        if rMax is None :
+            rMax=diag
+        edges = np.arange(dr, rMax+1.1*dr, dr)
+        k=np.zeros((N,len(edges)))
+        dv=[]
+        density=float(N)/float(V)
+        for i,p in enumerate(positions) :
+            di = scipy.spatial.distance.cdist(positions, [p,], 'euclidean')
+            #dV = np.array(analyse.getAreaShell(analyse.bbox,edges,p))
+            for j,e in enumerate(edges) :
+                area0=math.pi*e**2#complete circle
+                area1=self.rectangle_circle_area(self.bbox,p,e)
+                w=area1/area0
+                print w,area1,area0,e ,p
+                k[i,j]=w*len(np.nonzero(di < e)[0])/N**2
+        Kt=V*np.sum(k,axis=0)
+        Lt=(Kt/np.pi)**0.5
+        return Kt,Lt
         
+#        pos=numpy.array(self.env.ingrpositions[ingr.name])#np.array([np.array(p[0]) for p in h.molecules])
+    def rdf(self,positions,dr=10,rMax=None):
+        N=len(positions)
+        V=1000**2
+        diag = np.sqrt(1000**2+1000**2)
+        dr=dr#all_distance.min()
+        if rMax is None :
+            rMax=diag
+        edges = np.arange(0., rMax+1.1*dr, dr)
+        g=np.zeros((N,len(edges)-1))
+        dv=[]
+        density=float(N)/float(V)
+        for i,p in enumerate(positions) :
+            di = scipy.spatial.distance.cdist(positions, [p,], 'euclidean')
+            dN,bins = np.histogram(di,bins=edges)
+            dV = np.array(self.getAreaShell(self.bbox,edges,p))
+            dv.append(dV)
+            g[i] = dN/(dV*density)
+            #print "pos i",i
+        avg= np.average(g,axis=0)#/np.array(dv)
+#        avg[np.isnan(avg)]=0.0
+        return avg
+                
     def rdf_2d(self,ingr):
+        #dN/N / dV/V = dN/dV * V/N 
         distances = numpy.array(self.env.distances[ingr.name])
         basename = self.env.basename
         numpy.savetxt(basename+ingr.name+"_pos.csv", numpy.array(self.env.ingrpositions[ingr.name]), delimiter=",") 
@@ -700,6 +810,72 @@ class AnalyseAP:
         # Number of particles in shell/total number of particles/volume of shell/number density
         # shell volume = 4/3*pi(r_outer**3-r_inner**3)
 
+    def PairCorrelationFunction_2D(self,x,y,S,rMax,dr):
+        """Compute the two-dimensional pair correlation function, also known 
+        as the radial distribution function, for a set of circular particles 
+        contained in a square region of a plane.  This simple function finds 
+        reference particles such that a circle of radius rMax drawn around the 
+        particle will fit entirely within the square, eliminating the need to 
+        compensate for edge effects.  If no such particles exist, an error is
+        returned. Try a smaller rMax...or write some code to handle edge effects! ;) 
+        
+        Arguments:
+            x               an array of x positions of centers of particles
+            y               an array of y positions of centers of particles
+            S               length of each side of the square region of the plane
+            rMax            outer diameter of largest annulus
+            dr              increment for increasing radius of annulus
+    
+        Returns a tuple: (g, radii, interior_x, interior_y)
+            g(r)            a numpy array containing the correlation function g(r)
+            radii           a numpy array containing the radii of the
+                            annuli used to compute g(r)
+            interior_x      x coordinates of reference particles
+            interior_y      y coordinates of reference particles
+        """
+        from numpy import zeros, sqrt, where, pi, average, arange, histogram
+        # Number of particles in ring/area of ring/number of reference particles/number density
+        # area of ring = pi*(r_outer**2 - r_inner**2)
+    
+        # Find particles which are close enough to the box center that a circle of radius
+        # rMax will not cross any edge of the box
+        bools1 = x>1.1*rMax
+        bools2 = x<(S-1.1*rMax)
+        bools3 = y>rMax*1.1
+        bools4 = y<(S-rMax*1.1)
+        interior_indices, = where(bools1*bools2*bools3*bools4)
+        num_interior_particles = len(interior_indices)
+    
+        if num_interior_particles < 1:
+            raise  RuntimeError ("No particles found for which a circle of radius rMax\
+                    will lie entirely within a square of side length S.  Decrease rMax\
+                    or increase the size of the square.")
+    
+        edges = arange(0., rMax+1.1*dr, dr)
+        num_increments = len(edges)-1
+        g = zeros([num_interior_particles, num_increments])
+        radii = zeros(num_increments)
+        numberDensity = len(x)/S**2
+        
+        # Compute pairwise correlation for each interior particle
+        for p in range(num_interior_particles):
+            index = interior_indices[p]
+            d = sqrt((x[index]-x)**2 + (y[index]-y)**2)
+            d[index] = 2*rMax
+    
+            (result,bins) = histogram(d, bins=edges, normed=False)
+            g[p,:] = result/numberDensity
+            
+        # Average g(r) for all interior particles and compute radii
+        g_average = zeros(num_increments)
+        for i in range(num_increments):
+            radii[i] = (edges[i] + edges[i+1])/2.        
+            rOuter = edges[i+1]
+            rInner = edges[i]
+            #divide by the area of sphere cut by sqyare
+            g_average[i] = average(g[:,i])/(pi*(rOuter**2 - rInner**2))
+    
+        return (g_average, radii, interior_indices)
 
     def histo(self,distances,filename,bins=100,size=1000.0):
         pylab.clf()

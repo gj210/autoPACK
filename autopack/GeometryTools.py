@@ -52,11 +52,15 @@ class GeometriTools:
 #      the center of our circle  
 #    // r is the radius of our circle  
 #    // x is the x coordinate to calculate f(x) for  
+#   // circle is x**2+y**2=r
+#      //(x − a)2 + (y − b)2 = r2
+#      //top coordinate is py+r?
+#      //y = cy + sqrt[r*r - (cx-4)**2]
     def UpperCircleFunction(self,m, r,  x):  
-        return m[1] - math.sqrt((r * r) - pow((x - m[0]), 2))  
+        return m[1] + math.sqrt((r * r) - pow((x - m[0]), 2))  
       
     def LowerCircleFunction(self,m, r, x) : 
-        return m[1] + math.sqrt((r * r) - pow((x - m[1]), 2))  
+        return m[1] - math.sqrt((r * r) - pow((x - m[0]), 2))  
 
     def GetDistance(self,p1,p2):
         return math.sqrt(pow(p1[0] - p2[0], 2) + pow(p1[1] - p2[1], 2));  
@@ -66,8 +70,8 @@ class GeometriTools:
         check if the four corner are more than radius away from circle center        
         """
         #1000,0,1000,0 bottom top right left
-        if ((rect.Bottom - m[1]) > r and (rect.Left - m[0]) > r and
-             (m[1] - rect.Top) > r and (m[0] - rect.Right) > r) :
+        if (abs(rect.Bottom - m[1]) > r and abs(rect.Left - m[0]) > r and
+             abs(m[1] - rect.Top) > r and abs(m[0] - rect.Right) > r) :
                  #sphere inside 
                  return 0
         return 1 
@@ -102,16 +106,19 @@ class GeometriTools:
         #//The bounds of our integration  
         leftBound = 0;  
         rightBound = 0;  
-          
-        if (m[1] >= rect.Top and m[1] <= rect.Bottom):  
+#        print m[1] >= rect.Bottom and m[1] <= rect.Top
+        if (m[1] >= rect.Bottom and m[1] <= rect.Top):  
             #//Take care if the circle's center lies 
             #within the rectangle.   
             leftBound =  max(-r + m[0], rect.Left);  
             rightBound = min(r + m[0], rect.Right);  
+#            print leftBound,rightBound
+            return leftBound,rightBound
         elif (r >= abs(nearestRectangleEdge - m[1])) : 
             #//If the circle's center lies outside of the rectangle, we can choose optimal bounds.  
             leftBound = max(-math.sqrt(r * r - abs(pow(nearestRectangleEdge - m[1], 2))) + m[0], rect.Left);  
             rightBound = min(math.sqrt(r * r - abs(pow(nearestRectangleEdge - m[1], 2))) + m[0], rect.Right);  
+            return leftBound,rightBound
         return leftBound,rightBound
     
     def get_rectangle_cercle_area(self,rect,m,r,leftBound,rightBound):
@@ -121,15 +128,14 @@ class GeometriTools:
         # the area 
         a=0.0
         i=leftBound + self.Resolution
-#        print i,rightBound
+#        print a,i,self.Resolution,leftBound,rightBound
         while (i <= rightBound):
-            upperBound = max(self.UpperRectangleFunction(rect, i - self.Resolution / 2.0), 
+            upperBound = min(self.UpperRectangleFunction(rect, i - self.Resolution / 2.0), 
                              self.UpperCircleFunction(m, r, i - self.Resolution / 2.0));  
-            lowerBound = min(self.LowerRectangleFunction(rect, i - self.Resolution / 2.0), 
+            lowerBound = max(self.LowerRectangleFunction(rect, i - self.Resolution / 2.0), 
                              self.LowerCircleFunction(m, r, i - self.Resolution / 2.0));  
 #            print upperBound,lowerBound
-            a += (lowerBound - upperBound) * self.Resolution;
-#            print a
+            a += (upperBound - lowerBound ) * self.Resolution;
             i+=self.Resolution
         return a;  
 

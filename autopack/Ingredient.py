@@ -592,6 +592,7 @@ class Agent:
         self.cb = None
         self.radii = None
         self.recipe = None #weak ref to recipe
+        self.tilling = None
         
     def getProbaBinding(self,val =None):
         #get a value between 0.0 and 1.0and return the weight and success ?
@@ -1065,7 +1066,8 @@ class Ingredient(Agent):
         if self.mesh is not None :
             self.getData()
 
-        
+
+        #add tiling property ? as any ingredient coud tile as hexagon. It is just the packing type
         self.KWDS = { 
                         "overwrite_nbMol_value":{"type":"int","name":"overwrite_nbMol_value","default":0,"value":0,"min":0,"max":50000,"description":"nbMol"},
                         "molarity":{"type":"float","name":"molarity","default":0,"value":0,"min":0,"max":500,"description":"molarity"}, 
@@ -1108,7 +1110,7 @@ class Ingredient(Agent):
                         "excluded_partners_name":{"name":"excluded_partners_name","type":"liste_string", "value":"[]"},
                         "partners_position":{"name":"partners_position","type":"liste_float", "value":"[]"},
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
+                               'randomPartner', 'gradient','hexatile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
                         "gradient":{"name":"gradient","value":"","values":[],"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"gradient name to use if histo.use_gradient"},
                         "proba_not_binding":{"name":"proba_not_binding","type":"float", "value":"0.5"},
@@ -1153,7 +1155,7 @@ class Ingredient(Agent):
 
                         
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
+                               'randomPartner', 'gradient','hexatile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
                         "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "gradient":{"name":"gradient","value":"","values":[],"min":0.,"max":0.,
@@ -1172,6 +1174,13 @@ class Ingredient(Agent):
                         "partners_position":{"name":"partners_position","type":"liste_float", "value":"[]"},
                         "properties":{"name":"properties","value":{},"default":{},"min":0.,"max":1.0,"type":"dic","description":"properties"},
                         }
+
+    def setTilling(self,comp):
+        if self.packingMode == 'hexatile' :
+            from autopack.hexagonTile import tileHexaIngredient
+            #self.histoVol attached to compratmentsmes
+            self.tilling = tileHexaIngredient(self,comp,
+                                         self.encapsulatingRadius)
 
 
     def DecomposeMesh(self,m,edit=True,copy=False,tri=True,transform=True) :         
@@ -4029,6 +4038,7 @@ class Ingredient(Agent):
             organelle = histoVol
         else :
             organelle = histoVol.compartments[abs(self.compNum)-1]
+        compartment = organelle
         compNum = self.compNum
         radius = self.minRadius
         runTimeDisplay = histoVol.runTimeDisplay
@@ -4109,7 +4119,14 @@ class Ingredient(Agent):
         #getListCloseIngredient
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
-        if histoVol.ingrLookForNeighbours:
+        #we need to change here in case tilling, the pos,rot ade deduced fromte tilling.
+        if self.packingMode == 'hexatile' :
+            if self.tilling == None :
+                self.setTilling(compartment)
+            if self.counter!=0 : 
+                #pick the next Hexa pos/rot.
+                trans, rotMat = self.tilling.getNextHexaPosRot()
+        elif histoVol.ingrLookForNeighbours:
             bind = True
             print ("look for ingredient",trans)
             #roll a dice about proba_not_binding
@@ -4385,6 +4402,9 @@ class Ingredient(Agent):
                 organelle.molecules.append([ jtrans, rotMatj, self, ptInd ])
                 histoVol.order[ptInd]=histoVol.lastrank
                 histoVol.lastrank+=1
+                if self.packingMode == 'hexatile' :
+                    nexthexa = self.tilling.dropHexa(self.tilling.idc,
+                                            self.tilling.edge_id,jtrans,rotMatj)                    
 #                if periodic_pos is not None and self.packingMode !="gradient" :
 #                    for p in periodic_pos :
 #                        organelle.molecules.append([ p, rotMatj, self, -1 ])
@@ -4416,6 +4436,10 @@ class Ingredient(Agent):
                 afvi.vi.deleteObject(moving)
             success = False
             self.haveBeenRejected = True
+            if self.packingMode == 'hexatile' :
+                if self.tilling.start.nvisit[self.tilling.edge_id] >= 2 :
+                    self.tilling.start.free_pos[self.tilling.edge_id]=0
+
 #            histoVol.failedJitter.append(
 #                (self, jitterList, collD1, collD2) )#<??
 
