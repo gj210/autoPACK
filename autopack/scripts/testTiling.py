@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 19 16:31:26 2014
+Created on Tue Apr  8 22:34:09 2014
 
-@author: ludovic Autin
-Conver To Ingredient ?
+@author: ludo
 """
-
 import json
 import numpy
 import math
@@ -13,15 +11,13 @@ import upy
 from math import sqrt,asin,cos,sin,pi
 from scipy import spatial
 from numpy import matrix
-import autopack
 from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix,superimposition_matrix,rotation_matrix,affine_matrix_from_points
 from random import randrange,random,seed
 from upy.colors import getRamp
 from time import time
 
 SEED = 12
-#helper = upy.getHelperClass()()
-helper = autopack.helper
+helper = upy.getHelperClass()()
 DEBUG=False
 global HEXAGON_FREE#[iedge_w,]
 global HEXAGON
@@ -107,13 +103,8 @@ def getVertexNormals(vertices, faces):
     return vnormals #areas added by Graham
 
 
-class Tile:
-    def __init__(self,):
-        pass
-    
-class Hexa(Tile):
+class Hexa:
     def __init__(self,name,center,radius,rotation=[]):
-        Tile.__init__(self)
         self.name=name
         self.free_pos=numpy.ones(6)
         self.children=[None,None,None,None,None,None]
@@ -147,7 +138,7 @@ class Hexa(Tile):
             self.edge_tree=spatial.cKDTree(self.tr_edge, leafsize=10) 
             self.nr=helper.ApplyMatrix(self.neighboors_pos,rotation)
 #        self.displaySpheres()
-#        self.displayObject()
+        self.displayObject()
         
     def displaySpheres(self,):
         root = helper.getObject("all_spheres")
@@ -169,7 +160,6 @@ class Hexa(Tile):
         return self.inst
                     
     def getCoordHexagone(self,radius,center=[0,0,0]):
-        #this depends on the pcpal axis of the hexagon, here it is [0,0,1]
         D=2*radius
         dY=D/4.0
         dX=math.sqrt(3)*dY
@@ -319,7 +309,6 @@ class Hexa(Tile):
 #        self.updateColor()
 
     def updateFreePos(self,tiles):
-#        print ("updateFreePos ",len(tiles.HEXAGON),len(tiles.ALL_HEXAGON),self.free_pos)
         #grab surrounding object hexa, fin eac edge they occupied
         T=tiles.all_pos_tree#spatial.cKDTree(tiles.ALL_HEXAGON_POS, leafsize=10)
         liste_surrounding = T.query_ball_point(self.pos,125.0)
@@ -331,8 +320,8 @@ class Hexa(Tile):
             self.children[i]=tiles.ALL_HEXAGON[ih]
             tiles.ALL_HEXAGON[ih].free_pos[self.cb[i]]=0
             tiles.ALL_HEXAGON[ih].children[self.cb[i]]=self   
-#        print (self.free_pos)
-#        self.updateColor()
+        
+        self.updateColor()
         
     def updateColor(self):
         helper.changeObjColorMat(self.inst,self.colors[len(numpy.nonzero(self.free_pos)[0])])
@@ -359,10 +348,8 @@ class Hexa(Tile):
     def nextFree(self):
         return numpy.nonzero(self.free_pos)[0][0]
 
-
-class tileHexaIngredient:
-    def __init__(self,ingredient,comp,hradius,init_seed=12):
-        self.ingredient = ingredient 
+class Tilling:
+    def __init__(self,v,f,vn,inputMesh,hradius,init_seed=12):
         self.HEXAGON_FREE=[]#[iedge_w,]
         self.HEXAGON=[]
         self.ALL_HEXAGON=[]
@@ -370,29 +357,24 @@ class tileHexaIngredient:
         self.all_pos_tree=None
         self.area = 0
         self.surface_covered = 0
-        self.v=comp.vertices
-        self.f=comp.faces
-        self.vn=comp.vnormals
-        self.input_mesh = comp.ref_obj
-        self.area=comp.area
-        self.vtree= comp.OGsrfPtsBht #spatial.cKDTree(v, leafsize=10)
-        #ray ?! helper from upy cando that ?
-#        self.rc = utils.GeRayCollider()#helper ?
-#        self.rc.Init(self.input_mesh)
+        if not len (v):
+            f,v,vn = helper.DecomposeMesh(input_mesh,edit=False,copy=False,tri=True,transform=True)
+            vn,fn,area=getFaceNormalsArea(v, f)
+            self.area = sum(area)
+        self.v=v
+        self.f=f
+        self.vn=vn
+        self.vtree= spatial.cKDTree(v, leafsize=10)
+        self.rc = utils.GeRayCollider()
+        self.rc.Init(input_mesh)
         self.hexamer_radius=hradius#55
         self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
-        self.distance_threshold = [self.hexamer_radius*1.5,self.hexamer_radius*1.85]
-        self.hexa_area = ((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
         self.sphs=[]
-        self.display = False
-        self.idc = 0
-        self.edge_id=""
-        self.start = None
-        
-    def init_seed(self,iseed):
-        #this should have been init by environment
-        numpy.random.seed(iseed)#for gradient
-        seed(iseed)
+        self.distance_threshold = [self.hexamer_radius*1.5,self.hexamer_radius*1.85]
+        self.display = True
+        self.hexa_area = ((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
+        numpy.random.seed(init_seed)#for gradient
+        seed(init_seed)
 
     def getFreePos(self,weight=False):
         T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
@@ -440,17 +422,29 @@ class tileHexaIngredient:
         colors=[]
         for i in range(len(self.HEXAGON)):
             self.HEXAGON[i].updateFreePos(self)
+    #        hid=ALL_HEXAGON.index(HEXAGON[i])
             for j in range(6):
                 if self.HEXAGON[i].free_pos[j] == 1 :#free
                     #find how many neighboors are present for this position
                     pts.append(self.HEXAGON[i].tr_n[j])
                     results = T.query_ball_point(self.HEXAGON[i].tr_n[j],115.0)
+    #                print "r ",j,results
+    #                if hid in results :
+    #                    print "pop ",hid,results.index(hid)
+    #                    results.pop(results.index(hid))
                     R= len(results)
                     if R > 6:
                         R=6
                     w=qw[R]
+    #                print "t ",i,j,results,R,HEXAGON[i].name
+    #                for ii in results :
+    #                    print "ii",ii,HEXAGON[i].name,j,ALL_HEXAGON[ii].name
+    #                d=vdistance(startpos,HEXAGON[i].tr_n[j])
+    #                if d > maxd  : d = maxd
+    #                p=1.0-d/maxd
                     self.HEXAGON_FREE[6 * i + j]=w#(w+p)/2.0
                     colors.append(self.HEXAGON[i].colors[R])
+    #    displayWeights(points,colors)
         return pts,colors
         
     def getRndWeighted(self,w=None,startpos=None):
@@ -476,69 +470,79 @@ class tileHexaIngredient:
 
     def computePosRot(self,next_pos):
         distance,indice = self.vtree.query(next_pos)
-        intersect,v2 = autopack.helper.raycast(self.input_mesh, 
-                                               numpy.array(next_pos)*100.0, 
-                                              [0.,0.,0.], 
-                                            100000, fnormal=True )
-        if not intersect :
+        if self.rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
+            ray_result =self. rc.GetNearestIntersection()
+            n = ray_result["f_normal"].GetNormalized()
+            v2 = helper.ToVec(n)# vn[indice]
+        else :
             v2 = self.vn[indice]#next_pos#vn[indice]
         vnax=numpy.zeros((4,4))
-        if numpy.cross(v2,[0,1,0]).sum() == 0 :
-            vnax[0][:3] = vnorm(numpy.cross(v2,[1,0,0]))
-        else :            
-            vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
+        vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
         vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
         vnax[2][:3] = vnorm(v2)#pcpal axis is [0,0,1]
         euler = euler_from_matrix(vnax)
         rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
         mat = numpy.array(rotMat)
         mat[:3, 3] = next_pos
-        intersect,newposition = autopack.helper.raycast(self.input_mesh, 
-                                               numpy.array(next_pos)*10.0, 
-                                              [0.,0.,0.], 
-                                            100000, hitpos=True )
-        if not intersect :
+        if self.rc.Intersect(helper.FromVec(numpy.array(next_pos)*10.0), helper.FromVec(next_pos)*-1, 100000):
+            ray_result = self.rc.GetNearestIntersection()
+            newposition = helper.ToVec(ray_result["hitpos"])
+        else :
             newposition=self.v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
         mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
         mat[:3, 3] = newposition#+tr
         return indice,newposition,rotMat,mat
 
     def clearOccupied(self):
-#        print ("clearOccupied ", len(self.HEXAGON)-1)
         i=len(self.HEXAGON)-1
+        #T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
         while i > 0:    
+#            results = T.query_ball_point(self.HEXAGON[i].pos,115.0)
+#            print i,self.HEXAGON[i].name,len(numpy.nonzero(self.HEXAGON[i].free_pos)[0])
             if not len(numpy.nonzero(self.HEXAGON[i].free_pos)[0]):
                 try :
+#                    print self.HEXAGON[i].name+" pop"
                     self.HEXAGON.pop(i)
+    #                ALL_HEXAGON.pop(i)
+    #                ALL_HEXAGON_POS.pop(i)
                 except :
                     print self.HEXAGON[i].name+"not in big list"
+    #        else :
+    #           R= len(results)
+    #           if R >= 6:
+    #                HEXAGON[i].free_pos=numpy.zeros(6)
+    #                try :
+    #                    HEXAGON.pop(i)
+    #    #                ALL_HEXAGON.pop(i)
+    #    #                ALL_HEXAGON_POS.pop(i)
+    #                except :
+    #                    print HEXAGON[i].name+"not in big list"
+                
             i=i-1
         
     def firstRandomStart(self):
         p = helper.advance_randpoint_onsphere(650,marge=math.radians(90.0),vector=[0,1,0])
         indice,newposition,rotMat,mat=self.computePosRot(p)
-        start = self.dropHexa(str(len(self.HEXAGON)),"",newposition,mat)
-        return start 
-
-    def dropHexa(self,idc,edge_id,pos,m2):
-        h=Hexa("hexa_"+str(idc)+"_"+str(edge_id),pos,self.hexamer_radius,m2)#(m1*m2).T)
-        self.HEXAGON.append(h)
-        self.ALL_HEXAGON.append(h)
-        self.ALL_HEXAGON_POS.append(pos)
+        start=Hexa("hexa_"+str(len(self.HEXAGON)),newposition,hexamer_radius,mat)
+        self.HEXAGON.append(start)
+        self.ALL_HEXAGON.append(start)
+        self.ALL_HEXAGON_POS.append(start.pos)
         self.all_pos_tree = spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
-        h.updateFreePos(self)
-        return h
+        start.updateFreePos(self)
+#        ids,pts,colors,w=self.getFreePos()
+#        self.displayWeights(pts,colors)
+        return start 
 
     def placeHexa(self,start,idc,edge_id,pos,mata):
         i=edge_id
         start.nvisit[i]+=1
         T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
         if self.display:
-            sp1= autopack.helper.getObject("test1")
+            sp1= helper.getObject("test1")
             if sp1 is None :
-                sp1=autopack.helper.Sphere("test1",pos=numpy.array(pos))[0]
-            autopack.helper.setTranslation(sp1,numpy.array(pos))
-            autopack.helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
+                sp1=helper.Sphere("test1",pos=numpy.array(pos))[0]
+            helper.setTranslation(sp1,numpy.array(pos))
+            helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
         distance,indice = T.query(pos)    
         if distance > self.distance_threshold[1] or distance < self.distance_threshold[0]:#
             print "rejected too close ",distance,self.distance_threshold
@@ -547,31 +551,16 @@ class tileHexaIngredient:
             return None
         #test angle edge         
         m2=matrix(mata.transpose())
-        nexthexa = self.dropHexa(idc,edge_id,pos,mata,numpy.array(m2.T))
+        h=Hexa("hexa_"+str(idc)+"_"+str(i),pos,self.hexamer_radius,m2.T)#(m1*m2).T)
+        self.HEXAGON.append(h)
+        self.ALL_HEXAGON.append(h)
+        self.ALL_HEXAGON_POS.append(pos)
+        self.all_pos_tree = spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+#        print "created hexa_"+str(idc)+"_"+str(i)
+#        start.children[i]=h
+#        start.free_pos[i]=0
+        h.updateFreePos(self)
         return start    
-
-    def getNextHexaPosRot(self):
-        for h in range(len(self.HEXAGON)):
-#            print ("getNextHexaPosRot update free pos",self.HEXAGON[h].name)
-            self.HEXAGON[h].updateFreePos(self)
-        self.clearOccupied()
-        ids,pts,colors,w = self.getFreePos(weight=True)
-        if not len(pts):
-            print ("no hex freePOS ?")
-            return [],[]
-        i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
-        indice,pos,rotMat,mata=self.computePosRot(pts[i])
-        start=self.HEXAGON[ids[i][0]]
-        indicetouse = self.ALL_HEXAGON.index(start)
-#        print ("step ",start.name,indicetouse,ids[i][1],start.free_pos,pts[i],pos)
-        m2=matrix(mata.transpose())
-        self.idc= indicetouse
-        self.edge_id = ids[i][1]
-        self.start = start
-        start.nvisit[self.edge_id]+=1
-#        if start.nvisit[i] >= 2 :
-#            start.free_pos[i]=0
-        return pos, numpy.array(m2.T)
         
     def nextHexa(self):
         for h in range(len(self.HEXAGON)):
@@ -586,7 +575,7 @@ class tileHexaIngredient:
         indice,pos,rotMat,mata=self.computePosRot(pts[i])
         start=self.HEXAGON[ids[i][0]]
         indicetouse = self.ALL_HEXAGON.index(start)
-#        print "step ",start.name,indicetouse,ids[i][1],start.free_pos
+        print "step ",start.name,indicetouse,ids[i][1],start.free_pos
         new_start=self.placeHexa(start,indicetouse,ids[i][1],pos,mata)
         if new_start is not None :
             start = new_start
@@ -658,549 +647,549 @@ class tileHexaIngredient:
         helper.deleteObject("all_spheres") 
         helper.deleteObject("all_hex") 
         
-#def getFaceNormals(vertices, faces,fillBB=None):
-#    """compute the face normal of the compartment mesh"""
-#    normals = []
-#    areas = [] #added by Graham
-#    face = [[0,0,0],[0,0,0],[0,0,0]]
-#    v = [[0,0,0],[0,0,0],[0,0,0]]        
-#    for f in faces:
-#        for i in range(3) :
-#            face [i] = vertices[f[i]]
-#        for i in range(3) :
-#            v[0][i] = face[1][i]-face[0][i]
-#            v[1][i] = face[2][i]-face[0][i]                
-#        normal = vcross(v[0],v[1])
-#        n = vlen(normal)
-#        if n == 0. :
-#            n1=1.
-#        else :
-#            n1 = 1./n
-#        normals.append( (normal[0]*n1, normal[1]*n1, normal[2]*n1) )
-#    return normals, areas #areas added by Graham
-#
-#def vector_norm(data, axis=None, out=None):
-#    """Return length, i.e. Euclidean norm, of ndarray along axis.
-#    >>> v = numpy.random.random(3)
-#    >>> n = vector_norm(v)
-#    >>> numpy.allclose(n, numpy.linalg.norm(v))
-#    True
-#    >>> v = numpy.random.rand(6, 5, 3)
-#    >>> n = vector_norm(v, axis=-1)
-#    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=2)))
-#    True
-#    >>> n = vector_norm(v, axis=1)
-#    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
-#    True
-#    >>> v = numpy.random.rand(5, 4, 3)
-#    >>> n = numpy.empty((5, 3))
-#    >>> vector_norm(v, axis=1, out=n)
-#    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
-#    True
-#    >>> vector_norm([])
-#    0.0
-#    >>> vector_norm([1])
-#    1.0
-#    """
-#    data = numpy.array(data, dtype=numpy.float64, copy=True)
-#    if out is None:
-#        if data.ndim == 1:
-#            return math.sqrt(numpy.dot(data, data))
-#        data *= data
-#        out = numpy.atleast_1d(numpy.sum(data, axis=axis))
-#        numpy.sqrt(out, out)
-#        return out
-#    else:
-#        data *= data
-#        numpy.sum(data, axis=axis, out=out)
-#        numpy.sqrt(out, out)
-#
-#def angle_between_vectors(v0, v1, directed=True, axis=0):
-#    """Return angle between vectors.
-#    If directed is False, the input vectors are interpreted as undirected axes,
-#    i.e. the maximum angle is pi/2.
-#    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3])
-#    >>> numpy.allclose(a, math.pi)
-#    True
-#    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3], directed=False)
-#    >>> numpy.allclose(a, 0)
-#    True
-#    >>> v0 = [[2, 0, 0, 2], [0, 2, 0, 2], [0, 0, 2, 2]]
-#    >>> v1 = [[3], [0], [0]]
-#    >>> a = angle_between_vectors(v0, v1)
-#    >>> numpy.allclose(a, [0, 1.5708, 1.5708, 0.95532])
-#    True
-#    >>> v0 = [[2, 0, 0], [2, 0, 0], [0, 2, 0], [2, 0, 0]]
-#    >>> v1 = [[0, 3, 0], [0, 0, 3], [0, 0, 3], [3, 3, 3]]
-#    >>> a = angle_between_vectors(v0, v1, axis=1)
-#    >>> numpy.allclose(a, [1.5708, 1.5708, 1.5708, 0.95532])
-#    True
-#    """
-#    v0 = numpy.array(v0, dtype=numpy.float64, copy=False)
-#    v1 = numpy.array(v1, dtype=numpy.float64, copy=False)
-#    dot = numpy.sum(v0 * v1, axis=axis)
-#    dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
-#    return numpy.arccos(dot if directed else numpy.fabs(dot))
-#    
-#def rotax( a, b, tau, transpose=1 ):
-#    """
-#    Build 4x4 matrix of clockwise rotation about axis a-->b
-#    by angle tau (radians).
-#    a and b are sequences of 3 floats each
-#    Result is a homogenous 4x4 transformation matrix.
-#    NOTE: This has been changed by Brian, 8/30/01: rotax now returns
-#    the rotation matrix, _not_ the transpose. This is to get
-#    consistency across rotax, mat_to_quat and the classes in
-#    transformation.py
-#    when transpose is 1 (default) a C-style rotation matrix is returned
-#    i.e. to be used is the following way Mx (opposite of OpenGL style which
-#    is using the FORTRAN style)
-#    """
-#
-#    assert len(a) == 3
-#    assert len(b) == 3
-#    if tau <= -2*pi or tau >= 2*pi:
-#        tau = tau%(2*pi)
-#
-#    ct = cos(tau)
-#    ct1 = 1.0 - ct
-#    st = sin(tau)
-#
-#    # Compute unit vector v in the direction of a-->b. If a-->b has length
-#    # zero, assume v = (1,1,1)/sqrt(3).
-#
-#    v = [b[0]-a[0], b[1]-a[1], b[2]-a[2]]
-#    s = v[0]*v[0]+v[1]*v[1]+v[2]*v[2]
-#    if s > 0.0:
-#        s = sqrt(s)
-#        v = [v[0]/s, v[1]/s, v[2]/s]
-#    else:
-#        val = sqrt(1.0/3.0)
-#        v = (val, val, val)
-#
-#    rot = numpy.zeros( (4,4), 'f' )
-#    # Compute 3x3 rotation matrix
-#
-#    v2 = [v[0]*v[0], v[1]*v[1], v[2]*v[2]]
-#    v3 = [(1.0-v2[0])*ct, (1.0-v2[1])*ct, (1.0-v2[2])*ct]
-#    rot[0][0]=v2[0]+v3[0]
-#    rot[1][1]=v2[1]+v3[1]
-#    rot[2][2]=v2[2]+v3[2]
-#    rot[3][3] = 1.0;
-#
-#    v2 = [v[0]*st, v[1]*st, v[2]*st]
-#    rot[1][0]=v[0]*v[1] * ct1-v2[2]
-#    rot[2][1]=v[1]*v[2] * ct1-v2[0]
-#    rot[0][2]=v[2]*v[0] * ct1-v2[1]
-#    rot[0][1]=v[0]*v[1] * ct1+v2[2]
-#    rot[1][2]=v[1]*v[2] * ct1+v2[0]
-#    rot[2][0]=v[2]*v[0] * ct1+v2[1]
-#
-#    # add translation
-#    for i in (0,1,2):
-#        rot[3][i] = a[i]
-#    for j in (0,1,2):
-#        rot[3][i] = rot[3][i]-rot[j][i]*a[j]
-#    rot[i][3]=0.0
-#
-#    if transpose:
-#        return rot
-#    else:
-#        return numpy.transpose(rot)
-#
-#def rotVectToVect(vect1, vect2, i=None):
-#    """returns a 4x4 transformation that will align vect1 with vect2
-#vect1 and vect2 can be any vector (non-normalized)
-#"""
-#    v1x, v1y, v1z = vect1
-#    v2x, v2y, v2z = vect2
-#    
-#    # normalize input vectors
-#    norm = 1.0/sqrt(v1x*v1x + v1y*v1y + v1z*v1z )
-#    v1x *= norm
-#    v1y *= norm
-#    v1z *= norm    
-#    norm = 1.0/sqrt(v2x*v2x + v2y*v2y + v2z*v2z )
-#    v2x *= norm
-#    v2y *= norm
-#    v2z *= norm
-#    
-#    # compute cross product and rotation axis
-#    cx = v1y*v2z - v1z*v2y
-#    cy = v1z*v2x - v1x*v2z
-#    cz = v1x*v2y - v1y*v2x
-#
-#    # normalize
-#    nc = sqrt(cx*cx + cy*cy + cz*cz)
-#    if nc==0.0:
-#        return [ [1., 0., 0., 0.],
-#                 [0., 1., 0., 0.],
-#                 [0., 0., 1., 0.],
-#                 [0., 0., 0., 1.] ]
-#
-#    cx /= nc
-#    cy /= nc
-#    cz /= nc
-#    
-#    # compute angle of rotation
-#    if nc<0.0:
-#        if i is not None:
-#            print ('truncating nc on step:', i, nc)
-#        nc=0.0
-#    elif nc>1.0:
-#        if i is not None:
-#            print ('truncating nc on step:', i, nc)
-#        nc=1.0
-#        
-#    alpha = asin(nc)
-#    if (v1x*v2x + v1y*v2y + v1z*v2z) < 0.0:
-#        alpha = pi - alpha
-#
-#    # rotate about nc by alpha
-#    # Compute 3x3 rotation matrix
-#
-#    ct = cos(alpha)
-#    ct1 = 1.0 - ct
-#    st = sin(alpha)
-#    
-#    rot = [ [0., 0., 0., 0.],
-#            [0., 0., 0., 0.],
-#            [0., 0., 0., 0.],
-#            [0., 0., 0., 0.] ]
-#
-#
-#    rv2x, rv2y, rv2z = cx*cx, cy*cy, cz*cz
-#    rv3x, rv3y, rv3z = (1.0-rv2x)*ct, (1.0-rv2y)*ct, (1.0-rv2z)*ct
-#    rot[0][0] = rv2x + rv3x
-#    rot[1][1] = rv2y + rv3y
-#    rot[2][2] = rv2z + rv3z
-#    rot[3][3] = 1.0;
-#
-#    rv4x, rv4y, rv4z = cx*st, cy*st, cz*st
-#    rot[0][1] = cx * cy * ct1 - rv4z
-#    rot[1][2] = cy * cz * ct1 - rv4x
-#    rot[2][0] = cz * cx * ct1 - rv4y
-#    rot[1][0] = cx * cy * ct1 + rv4z
-#    rot[2][1] = cy * cz * ct1 + rv4x
-#    rot[0][2] = cz * cx * ct1 + rv4y
-#    #rot[2][:3]=[0,0,1]
-#    return rot
-#
-#def getCoordHexagone(radius,center=[0,0,0]):
-#    D=2*radius
-#    dY=D/4.0
-#    dX=math.sqrt(3)*dY
-#    pcpalAxis=[0,0,1]
-#    hexc=coordinates=numpy.array([[0,2.0*dY,0.0],#up
-#                [dX,dY,0],#right-up
-#                [dX,-dY,0],#right-down
-#                [0,-2.0*dY,0],#down
-#                [-dX,-dY,0],#left-down
-#                [-dX,dY,0]#left-up
-#                 ])
-#    #neighboors_pos
-#    #hexc = hexc + numpy.array(center)
-#    neighboors_pos=numpy.zeros([6,3])
-#    for i in range(5):
-#        neighboors_pos[i]=hexc[i]+hexc[i+1]
-#    neighboors_pos[5] =hexc[5]+hexc[0]  
-#    return pcpalAxis,coordinates,neighboors_pos
-#
-#def distanceEdge(hexo, edge_id, coordA,coordB):
-#    #{0:3,1:4,2:5,3:0,4:1,5:2}
-#    #neighbor = self.children[edge_id]
-#    edge1=coordA[hexo.edge_nb[edge_id][0][0]]-coordA[hexo.edge_nb[edge_id][1][0]]
-#    edge2=coordB[hexo.edge_nb[edge_id][0][1]]-coordB[hexo.edge_nb[edge_id][1][1]]
-#    a = angle_between_vectors([edge1], [edge2], axis=1)[0]
-#    D1 = vdistance(coordA[hexo.edge_nb[edge_id][0][0]],coordB[hexo.edge_nb[edge_id][0][1]])
-#    D2 = vdistance(coordA[hexo.edge_nb[edge_id][1][0]],coordB[hexo.edge_nb[edge_id][1][1]])
-##    print (edge_id,"edge distances and angle ",D1,D2,a,math.degrees(a))      
-#    rotMat = numpy.array( rotVectToVect(edge2, edge1 ), 'f') 
-#    return a,D1,D2,rotMat
-#
-#def computePosRot(helper,next_pos,tree):
-#    distance,indice = tree.query(next_pos)
-#    vx, vy, vz = v1 = [0,0,1]#
-#    newv1=v1#helper.ApplyMatrix([v1,],pm)[0]#with threanslation ?
-#    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
-#        ray_result = rc.GetNearestIntersection()
-#        n = ray_result["f_normal"].GetNormalized()
-#        v2 = helper.ToVec(n)# vn[indice]
-#    else :
-#        if is_sphere:
-#            v2 = next_pos
-#        else :   
-#            v2 = vn[indice]#next_pos#vn[indice]
-#    vnax=numpy.zeros((4,4))
-#    vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
-#    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
-#    vnax[2][:3] = vnorm(v2)
-#    euler = euler_from_matrix(vnax)
-#    rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
-#    mat = numpy.array(rotMat)
-#    mat[:3, 3] = next_pos
-#    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*10.0), helper.FromVec(next_pos)*-1, 100000):
-#        ray_result = rc.GetNearestIntersection()
-#        newposition = helper.ToVec(ray_result["hitpos"])
-#    else :
-#        newposition=v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
-#    mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
-#    mat[:3, 3] = newposition#+tr
-##    helper.setObjectMatrix(ipol[1],mat.transpose())  
-#    #test the new post 
-#    return indice,None,None,newposition,rotMat,mat
-#    
-#def one_next(helper,next_pos,tree,rc,v,vn,old_c,old_n,oi,ni,pm,is_sphere=False):
-##    ax,old_c,old_n=getCoordHexagone(55.0)    
-#    distance,indice = tree.query(next_pos)
-#    #align
-#    vx, vy, vz = v1 = [0,0,1]#
-##    R=rotax( [0,0,0], v1, random()*math.radians(3.0), transpose=1 )
-#    newv1=v1#helper.ApplyMatrix([v1,],pm)[0]#with threanslation ?
-#    #next_point should be outisde
-#    if DEBUG :
-#        sp1= helper.getObject("test1")
-#        if sp1 is None :
-#            sp1=helper.Sphere("test1",pos=numpy.array(next_pos)*100.0)[0]
-#        helper.setTranslation(sp1,numpy.array(next_pos)*10)
-#        sp2= helper.getObject("test2")
-#        if sp2 is None :
-#            sp2=helper.Sphere("test2",pos=numpy.array(next_pos)*-1.0)[0]
-#        helper.setTranslation(sp2,numpy.array(next_pos)*-1.0)
-#        l1= helper.getObject("line1")
-#        if l1 is None :
-#            l1=helper.spline("line1", [numpy.array(next_pos)*10,numpy.array(next_pos)*-1.0])[0]
-#        helper.update_spline(l1,[numpy.array(next_pos)*10,numpy.array(next_pos)*-1.0])
-#        helper.update()
-#    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
-#        ray_result = rc.GetNearestIntersection()
-#        n = ray_result["f_normal"].GetNormalized()
-#        v2 = helper.ToVec(n)# vn[indice]
-##        print ray_result
-##    next_pos = v[indice]
-#    else :
-#        if is_sphere:
-#            v2 = next_pos
-#        else :   
-#            v2 = vn[indice]#next_pos#vn[indice]
-##    v2 = vn[indice]
-##    rotMat =superimposition_matrix(newv1,v2)
-#    vnax=numpy.zeros((4,4))
-#    vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
-#    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
-#    vnax[2][:3] = vnorm(v2)
-#    euler = euler_from_matrix(vnax)
-#    rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
-#    
-##    m=numpy.identity(4)
-##    m[:3,:3]=pm[:3,:3]
-##    rotMat = matrix(rotMat)*matrix(m)
-##    rotMat = numpy.array( rotVectToVect(newv1, v2 ), 'f')
-#    #add some random motion around vx, vy, vz
-##    rotMat = numpy.identity(4)
-##    euler = euler_from_matrix(rotMat)
-##    print (math.degrees(euler[0]),math.degrees(euler[1]),math.degrees(euler[2]),)
-#    #filter the rotatio, keep only X-Y
-##    rotMat = numpy.identity(4)
-#    mat = numpy.array(rotMat)
-#    mat[:3, 3] = next_pos
-###    nr=helper.ApplyMatrix(n,rotMat)
-##    ahsphs=helper.instancesSphere("sphereHexagoneA",newci,[1,]*6,s,[[0,1,0]],None,parent=parent)
-##    asphs=helper.instancesSphere("sphereHexagoneNA",newni,[1,]*6,s,[[0,0,1]],None,parent=parent)    
-#    #new position, compareto current ?
-##    Cnew = newci[ni] - newci[ni+1]#edge1
-##    Cold = old_c[oi] - old_c[oi-1]#edge2
-##    rotMat2 = numpy.array( rotVectToVect(Cnew, Cold ), 'f')
-##    mat2 = numpy.array(rotMat2).transpose()
-##    mat[:3, 3] = next_pos-pm[3,:3]
-##    newci2=helper.ApplyMatrix(newci,mat2)
-##    newni2=helper.ApplyMatrix(newni,mat2)    
-#    tr = numpy.array([0,0,0])
-#    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*10.0), helper.FromVec(next_pos)*-1, 100000):
-#        ray_result = rc.GetNearestIntersection()
-#        newposition = helper.ToVec(ray_result["hitpos"])
-#    else :
-#        newposition=v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
-##    helper.setTranslation(sphs[4],pos=newposition,absolue=True)
-#    #need rotation on [0,0,1]
-##    newci=helper.ApplyMatrix(old_c,mat)
-##    newni=helper.ApplyMatrix(old_n,mat)
-##    C1new=newci[ni]
-##    C5old=old_c[oi]
-##    tr=C5old-C1new
-#    mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
-#    mat[:3, 3] = newposition#+tr
-##    helper.setObjectMatrix(ipol[1],mat.transpose())  
-#    #test the new post 
-#    return indice,None,None,newposition,rotMat,mat
-#
-#def testHex(distance,indice,i,start,mata):
-#    if distance <= 75.0 :
-#        return False
-#    
-#def getHex(start,idc,edge_id,pos,mata):
-#    i=edge_id
-#    start.nvisit[i]+=1
-#    T=spatial.cKDTree(ALL_HEXAGON_POS, leafsize=10)
-#    sp1= helper.getObject("test1")
-#    if sp1 is None :
-#        sp1=helper.Sphere("test1",pos=numpy.array(pos))[0]
-#    helper.setTranslation(sp1,numpy.array(pos))
-#    helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
-#    distance,indice = T.query(pos)    
-#    if distance <= 75.0 :#
-#        if start.nvisit[i] >= 2 :
-#            start.free_pos[i]=0
-#        return None
-#    #test angle edge         
-#    m2=matrix(mata.transpose())
-#    h=Hexa("hexa_"+str(idc)+"_"+str(i),pos,hexamer_radius,m2.T)#(m1*m2).T)
-#    HEXAGON.append(h)
-#    ALL_HEXAGON.append(h)
-#    ALL_HEXAGON_POS.append(pos)
-##    helper.update()
-#    print "created hexa_"+str(idc)+"_"+str(i)
-#    start.children[i]=h
-#    start.free_pos[i]=0
-#    return start    
-#    
-#
-#def oneHex(start,edge_id,tree,rc,v,vn,is_sphere,n=99,idc=0):
-#    if start is None :
-#        return
-##    m1=matrix(start.mat.transpose())
-#    i=edge_id
-#    start.nvisit[i]+=1
-#    T=spatial.cKDTree(ALL_HEXAGON_POS, leafsize=10)
-#    ind1,newci,newni,pos,rotMat,mata=one_next(helper,start.tr_n[i],
-#                              tree,rc,v,vn,start.tr_c,start.tr_n,start.nb[i][0],
-#                              start.nb[i][1],start.mat,is_sphere=is_sphere)
-#    sp1= helper.getObject("test1")
-#    if sp1 is None :
-#        sp1=helper.Sphere("test1",pos=numpy.array(pos))[0]
-#    helper.setTranslation(sp1,numpy.array(pos))
-#    helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
-#    distance,indice = T.query(pos)    
-#    if distance <= 77.0 :#
-#        if start.nvisit[i] >= 2 :
-#            start.free_pos[i]=0
-#        return None
-#    #test angle edge         
-#    m2=matrix(mata.transpose())
-#    h=Hexa("hexa_"+str(idc)+"_"+str(i),pos,hexamer_radius,m2.T)#(m1*m2).T)
-#    HEXAGON.append(h)
-#    ALL_HEXAGON.append(h)
-#    ALL_HEXAGON_POS.append(pos)
-##    helper.update()
-#    start.children[i]=h
-#    start.free_pos[i]=0
-#    return start    
-#
-#def oneRing(start,tree,rc,v,vn,is_sphere,n=99,idc=0):
-#    if start is None :
-#        return
+def getFaceNormals(vertices, faces,fillBB=None):
+    """compute the face normal of the compartment mesh"""
+    normals = []
+    areas = [] #added by Graham
+    face = [[0,0,0],[0,0,0],[0,0,0]]
+    v = [[0,0,0],[0,0,0],[0,0,0]]        
+    for f in faces:
+        for i in range(3) :
+            face [i] = vertices[f[i]]
+        for i in range(3) :
+            v[0][i] = face[1][i]-face[0][i]
+            v[1][i] = face[2][i]-face[0][i]                
+        normal = vcross(v[0],v[1])
+        n = vlen(normal)
+        if n == 0. :
+            n1=1.
+        else :
+            n1 = 1./n
+        normals.append( (normal[0]*n1, normal[1]*n1, normal[2]*n1) )
+    return normals, areas #areas added by Graham
+
+def vector_norm(data, axis=None, out=None):
+    """Return length, i.e. Euclidean norm, of ndarray along axis.
+    >>> v = numpy.random.random(3)
+    >>> n = vector_norm(v)
+    >>> numpy.allclose(n, numpy.linalg.norm(v))
+    True
+    >>> v = numpy.random.rand(6, 5, 3)
+    >>> n = vector_norm(v, axis=-1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=2)))
+    True
+    >>> n = vector_norm(v, axis=1)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> v = numpy.random.rand(5, 4, 3)
+    >>> n = numpy.empty((5, 3))
+    >>> vector_norm(v, axis=1, out=n)
+    >>> numpy.allclose(n, numpy.sqrt(numpy.sum(v*v, axis=1)))
+    True
+    >>> vector_norm([])
+    0.0
+    >>> vector_norm([1])
+    1.0
+    """
+    data = numpy.array(data, dtype=numpy.float64, copy=True)
+    if out is None:
+        if data.ndim == 1:
+            return math.sqrt(numpy.dot(data, data))
+        data *= data
+        out = numpy.atleast_1d(numpy.sum(data, axis=axis))
+        numpy.sqrt(out, out)
+        return out
+    else:
+        data *= data
+        numpy.sum(data, axis=axis, out=out)
+        numpy.sqrt(out, out)
+
+def angle_between_vectors(v0, v1, directed=True, axis=0):
+    """Return angle between vectors.
+    If directed is False, the input vectors are interpreted as undirected axes,
+    i.e. the maximum angle is pi/2.
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3])
+    >>> numpy.allclose(a, math.pi)
+    True
+    >>> a = angle_between_vectors([1, -2, 3], [-1, 2, -3], directed=False)
+    >>> numpy.allclose(a, 0)
+    True
+    >>> v0 = [[2, 0, 0, 2], [0, 2, 0, 2], [0, 0, 2, 2]]
+    >>> v1 = [[3], [0], [0]]
+    >>> a = angle_between_vectors(v0, v1)
+    >>> numpy.allclose(a, [0, 1.5708, 1.5708, 0.95532])
+    True
+    >>> v0 = [[2, 0, 0], [2, 0, 0], [0, 2, 0], [2, 0, 0]]
+    >>> v1 = [[0, 3, 0], [0, 0, 3], [0, 0, 3], [3, 3, 3]]
+    >>> a = angle_between_vectors(v0, v1, axis=1)
+    >>> numpy.allclose(a, [1.5708, 1.5708, 1.5708, 0.95532])
+    True
+    """
+    v0 = numpy.array(v0, dtype=numpy.float64, copy=False)
+    v1 = numpy.array(v1, dtype=numpy.float64, copy=False)
+    dot = numpy.sum(v0 * v1, axis=axis)
+    dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
+    return numpy.arccos(dot if directed else numpy.fabs(dot))
+    
+def rotax( a, b, tau, transpose=1 ):
+    """
+    Build 4x4 matrix of clockwise rotation about axis a-->b
+    by angle tau (radians).
+    a and b are sequences of 3 floats each
+    Result is a homogenous 4x4 transformation matrix.
+    NOTE: This has been changed by Brian, 8/30/01: rotax now returns
+    the rotation matrix, _not_ the transpose. This is to get
+    consistency across rotax, mat_to_quat and the classes in
+    transformation.py
+    when transpose is 1 (default) a C-style rotation matrix is returned
+    i.e. to be used is the following way Mx (opposite of OpenGL style which
+    is using the FORTRAN style)
+    """
+
+    assert len(a) == 3
+    assert len(b) == 3
+    if tau <= -2*pi or tau >= 2*pi:
+        tau = tau%(2*pi)
+
+    ct = cos(tau)
+    ct1 = 1.0 - ct
+    st = sin(tau)
+
+    # Compute unit vector v in the direction of a-->b. If a-->b has length
+    # zero, assume v = (1,1,1)/sqrt(3).
+
+    v = [b[0]-a[0], b[1]-a[1], b[2]-a[2]]
+    s = v[0]*v[0]+v[1]*v[1]+v[2]*v[2]
+    if s > 0.0:
+        s = sqrt(s)
+        v = [v[0]/s, v[1]/s, v[2]/s]
+    else:
+        val = sqrt(1.0/3.0)
+        v = (val, val, val)
+
+    rot = numpy.zeros( (4,4), 'f' )
+    # Compute 3x3 rotation matrix
+
+    v2 = [v[0]*v[0], v[1]*v[1], v[2]*v[2]]
+    v3 = [(1.0-v2[0])*ct, (1.0-v2[1])*ct, (1.0-v2[2])*ct]
+    rot[0][0]=v2[0]+v3[0]
+    rot[1][1]=v2[1]+v3[1]
+    rot[2][2]=v2[2]+v3[2]
+    rot[3][3] = 1.0;
+
+    v2 = [v[0]*st, v[1]*st, v[2]*st]
+    rot[1][0]=v[0]*v[1] * ct1-v2[2]
+    rot[2][1]=v[1]*v[2] * ct1-v2[0]
+    rot[0][2]=v[2]*v[0] * ct1-v2[1]
+    rot[0][1]=v[0]*v[1] * ct1+v2[2]
+    rot[1][2]=v[1]*v[2] * ct1+v2[0]
+    rot[2][0]=v[2]*v[0] * ct1+v2[1]
+
+    # add translation
+    for i in (0,1,2):
+        rot[3][i] = a[i]
+    for j in (0,1,2):
+        rot[3][i] = rot[3][i]-rot[j][i]*a[j]
+    rot[i][3]=0.0
+
+    if transpose:
+        return rot
+    else:
+        return numpy.transpose(rot)
+
+def rotVectToVect(vect1, vect2, i=None):
+    """returns a 4x4 transformation that will align vect1 with vect2
+vect1 and vect2 can be any vector (non-normalized)
+"""
+    v1x, v1y, v1z = vect1
+    v2x, v2y, v2z = vect2
+    
+    # normalize input vectors
+    norm = 1.0/sqrt(v1x*v1x + v1y*v1y + v1z*v1z )
+    v1x *= norm
+    v1y *= norm
+    v1z *= norm    
+    norm = 1.0/sqrt(v2x*v2x + v2y*v2y + v2z*v2z )
+    v2x *= norm
+    v2y *= norm
+    v2z *= norm
+    
+    # compute cross product and rotation axis
+    cx = v1y*v2z - v1z*v2y
+    cy = v1z*v2x - v1x*v2z
+    cz = v1x*v2y - v1y*v2x
+
+    # normalize
+    nc = sqrt(cx*cx + cy*cy + cz*cz)
+    if nc==0.0:
+        return [ [1., 0., 0., 0.],
+                 [0., 1., 0., 0.],
+                 [0., 0., 1., 0.],
+                 [0., 0., 0., 1.] ]
+
+    cx /= nc
+    cy /= nc
+    cz /= nc
+    
+    # compute angle of rotation
+    if nc<0.0:
+        if i is not None:
+            print ('truncating nc on step:', i, nc)
+        nc=0.0
+    elif nc>1.0:
+        if i is not None:
+            print ('truncating nc on step:', i, nc)
+        nc=1.0
+        
+    alpha = asin(nc)
+    if (v1x*v2x + v1y*v2y + v1z*v2z) < 0.0:
+        alpha = pi - alpha
+
+    # rotate about nc by alpha
+    # Compute 3x3 rotation matrix
+
+    ct = cos(alpha)
+    ct1 = 1.0 - ct
+    st = sin(alpha)
+    
+    rot = [ [0., 0., 0., 0.],
+            [0., 0., 0., 0.],
+            [0., 0., 0., 0.],
+            [0., 0., 0., 0.] ]
+
+
+    rv2x, rv2y, rv2z = cx*cx, cy*cy, cz*cz
+    rv3x, rv3y, rv3z = (1.0-rv2x)*ct, (1.0-rv2y)*ct, (1.0-rv2z)*ct
+    rot[0][0] = rv2x + rv3x
+    rot[1][1] = rv2y + rv3y
+    rot[2][2] = rv2z + rv3z
+    rot[3][3] = 1.0;
+
+    rv4x, rv4y, rv4z = cx*st, cy*st, cz*st
+    rot[0][1] = cx * cy * ct1 - rv4z
+    rot[1][2] = cy * cz * ct1 - rv4x
+    rot[2][0] = cz * cx * ct1 - rv4y
+    rot[1][0] = cx * cy * ct1 + rv4z
+    rot[2][1] = cy * cz * ct1 + rv4x
+    rot[0][2] = cz * cx * ct1 + rv4y
+    #rot[2][:3]=[0,0,1]
+    return rot
+
+def getCoordHexagone(radius,center=[0,0,0]):
+    D=2*radius
+    dY=D/4.0
+    dX=math.sqrt(3)*dY
+    pcpalAxis=[0,0,1]
+    hexc=coordinates=numpy.array([[0,2.0*dY,0.0],#up
+                [dX,dY,0],#right-up
+                [dX,-dY,0],#right-down
+                [0,-2.0*dY,0],#down
+                [-dX,-dY,0],#left-down
+                [-dX,dY,0]#left-up
+                 ])
+    #neighboors_pos
+    #hexc = hexc + numpy.array(center)
+    neighboors_pos=numpy.zeros([6,3])
+    for i in range(5):
+        neighboors_pos[i]=hexc[i]+hexc[i+1]
+    neighboors_pos[5] =hexc[5]+hexc[0]  
+    return pcpalAxis,coordinates,neighboors_pos
+
+def distanceEdge(hexo, edge_id, coordA,coordB):
+    #{0:3,1:4,2:5,3:0,4:1,5:2}
+    #neighbor = self.children[edge_id]
+    edge1=coordA[hexo.edge_nb[edge_id][0][0]]-coordA[hexo.edge_nb[edge_id][1][0]]
+    edge2=coordB[hexo.edge_nb[edge_id][0][1]]-coordB[hexo.edge_nb[edge_id][1][1]]
+    a = angle_between_vectors([edge1], [edge2], axis=1)[0]
+    D1 = vdistance(coordA[hexo.edge_nb[edge_id][0][0]],coordB[hexo.edge_nb[edge_id][0][1]])
+    D2 = vdistance(coordA[hexo.edge_nb[edge_id][1][0]],coordB[hexo.edge_nb[edge_id][1][1]])
+#    print (edge_id,"edge distances and angle ",D1,D2,a,math.degrees(a))      
+    rotMat = numpy.array( rotVectToVect(edge2, edge1 ), 'f') 
+    return a,D1,D2,rotMat
+
+def computePosRot(helper,next_pos,tree):
+    distance,indice = tree.query(next_pos)
+    vx, vy, vz = v1 = [0,0,1]#
+    newv1=v1#helper.ApplyMatrix([v1,],pm)[0]#with threanslation ?
+    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
+        ray_result = rc.GetNearestIntersection()
+        n = ray_result["f_normal"].GetNormalized()
+        v2 = helper.ToVec(n)# vn[indice]
+    else :
+        if is_sphere:
+            v2 = next_pos
+        else :   
+            v2 = vn[indice]#next_pos#vn[indice]
+    vnax=numpy.zeros((4,4))
+    vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
+    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
+    vnax[2][:3] = vnorm(v2)
+    euler = euler_from_matrix(vnax)
+    rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
+    mat = numpy.array(rotMat)
+    mat[:3, 3] = next_pos
+    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*10.0), helper.FromVec(next_pos)*-1, 100000):
+        ray_result = rc.GetNearestIntersection()
+        newposition = helper.ToVec(ray_result["hitpos"])
+    else :
+        newposition=v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
+    mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
+    mat[:3, 3] = newposition#+tr
+#    helper.setObjectMatrix(ipol[1],mat.transpose())  
+    #test the new post 
+    return indice,None,None,newposition,rotMat,mat
+    
+def one_next(helper,next_pos,tree,rc,v,vn,old_c,old_n,oi,ni,pm,is_sphere=False):
+#    ax,old_c,old_n=getCoordHexagone(55.0)    
+    distance,indice = tree.query(next_pos)
+    #align
+    vx, vy, vz = v1 = [0,0,1]#
+#    R=rotax( [0,0,0], v1, random()*math.radians(3.0), transpose=1 )
+    newv1=v1#helper.ApplyMatrix([v1,],pm)[0]#with threanslation ?
+    #next_point should be outisde
+    if DEBUG :
+        sp1= helper.getObject("test1")
+        if sp1 is None :
+            sp1=helper.Sphere("test1",pos=numpy.array(next_pos)*100.0)[0]
+        helper.setTranslation(sp1,numpy.array(next_pos)*10)
+        sp2= helper.getObject("test2")
+        if sp2 is None :
+            sp2=helper.Sphere("test2",pos=numpy.array(next_pos)*-1.0)[0]
+        helper.setTranslation(sp2,numpy.array(next_pos)*-1.0)
+        l1= helper.getObject("line1")
+        if l1 is None :
+            l1=helper.spline("line1", [numpy.array(next_pos)*10,numpy.array(next_pos)*-1.0])[0]
+        helper.update_spline(l1,[numpy.array(next_pos)*10,numpy.array(next_pos)*-1.0])
+        helper.update()
+    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
+        ray_result = rc.GetNearestIntersection()
+        n = ray_result["f_normal"].GetNormalized()
+        v2 = helper.ToVec(n)# vn[indice]
+#        print ray_result
+#    next_pos = v[indice]
+    else :
+        if is_sphere:
+            v2 = next_pos
+        else :   
+            v2 = vn[indice]#next_pos#vn[indice]
+#    v2 = vn[indice]
+#    rotMat =superimposition_matrix(newv1,v2)
+    vnax=numpy.zeros((4,4))
+    vnax[0][:3] = vnorm(numpy.cross(v2,[0,1,0]))
+    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
+    vnax[2][:3] = vnorm(v2)
+    euler = euler_from_matrix(vnax)
+    rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
+    
+#    m=numpy.identity(4)
+#    m[:3,:3]=pm[:3,:3]
+#    rotMat = matrix(rotMat)*matrix(m)
+#    rotMat = numpy.array( rotVectToVect(newv1, v2 ), 'f')
+    #add some random motion around vx, vy, vz
+#    rotMat = numpy.identity(4)
+#    euler = euler_from_matrix(rotMat)
+#    print (math.degrees(euler[0]),math.degrees(euler[1]),math.degrees(euler[2]),)
+    #filter the rotatio, keep only X-Y
+#    rotMat = numpy.identity(4)
+    mat = numpy.array(rotMat)
+    mat[:3, 3] = next_pos
+##    nr=helper.ApplyMatrix(n,rotMat)
+#    ahsphs=helper.instancesSphere("sphereHexagoneA",newci,[1,]*6,s,[[0,1,0]],None,parent=parent)
+#    asphs=helper.instancesSphere("sphereHexagoneNA",newni,[1,]*6,s,[[0,0,1]],None,parent=parent)    
+    #new position, compareto current ?
+#    Cnew = newci[ni] - newci[ni+1]#edge1
+#    Cold = old_c[oi] - old_c[oi-1]#edge2
+#    rotMat2 = numpy.array( rotVectToVect(Cnew, Cold ), 'f')
+#    mat2 = numpy.array(rotMat2).transpose()
+#    mat[:3, 3] = next_pos-pm[3,:3]
+#    newci2=helper.ApplyMatrix(newci,mat2)
+#    newni2=helper.ApplyMatrix(newni,mat2)    
+    tr = numpy.array([0,0,0])
+    if rc.Intersect(helper.FromVec(numpy.array(next_pos)*10.0), helper.FromVec(next_pos)*-1, 100000):
+        ray_result = rc.GetNearestIntersection()
+        newposition = helper.ToVec(ray_result["hitpos"])
+    else :
+        newposition=v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
+#    helper.setTranslation(sphs[4],pos=newposition,absolue=True)
+    #need rotation on [0,0,1]
+#    newci=helper.ApplyMatrix(old_c,mat)
+#    newni=helper.ApplyMatrix(old_n,mat)
+#    C1new=newci[ni]
+#    C5old=old_c[oi]
+#    tr=C5old-C1new
+    mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
+    mat[:3, 3] = newposition#+tr
+#    helper.setObjectMatrix(ipol[1],mat.transpose())  
+    #test the new post 
+    return indice,None,None,newposition,rotMat,mat
+
+def testHex(distance,indice,i,start,mata):
+    if distance <= 75.0 :
+        return False
+    
+def getHex(start,idc,edge_id,pos,mata):
+    i=edge_id
+    start.nvisit[i]+=1
+    T=spatial.cKDTree(ALL_HEXAGON_POS, leafsize=10)
+    sp1= helper.getObject("test1")
+    if sp1 is None :
+        sp1=helper.Sphere("test1",pos=numpy.array(pos))[0]
+    helper.setTranslation(sp1,numpy.array(pos))
+    helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
+    distance,indice = T.query(pos)    
+    if distance <= 75.0 :#
+        if start.nvisit[i] >= 2 :
+            start.free_pos[i]=0
+        return None
+    #test angle edge         
+    m2=matrix(mata.transpose())
+    h=Hexa("hexa_"+str(idc)+"_"+str(i),pos,hexamer_radius,m2.T)#(m1*m2).T)
+    HEXAGON.append(h)
+    ALL_HEXAGON.append(h)
+    ALL_HEXAGON_POS.append(pos)
+#    helper.update()
+    print "created hexa_"+str(idc)+"_"+str(i)
+    start.children[i]=h
+    start.free_pos[i]=0
+    return start    
+    
+
+def oneHex(start,edge_id,tree,rc,v,vn,is_sphere,n=99,idc=0):
+    if start is None :
+        return
 #    m1=matrix(start.mat.transpose())
-#    count=0
-#    while len(numpy.nonzero(start.free_pos)[0]):
-#        i=start.nextFree()
-#        new_start = oneHex(start,i,tree,rc,v,vn,is_sphere,n=n,idc=idc)
-#        if new_start is None :
-#            if n == count :
-#                break
-#            count+=1
-#            continue
-#        if n == count :
-#            break
-#        count+=1
-#        start = new_start
-#    start.updateChildrenFreePos()
-#    return start
-#
-#def ij(u,width=6):
-#    return [u/width, u%width]
-#   
-#def u(i,j,width=6):
-#    return width * i + j
-#
-#def displayWeights(points,colors,sphs=[]):
-#    parent = helper.getObject("W_iSpheres")
-#    if parent is None :
-#        parent = helper.newEmpty("W_iSpheres")
-#    s = helper.getObject("W_base_sphere")
-#    if s is None :
-#        s,ms = helper.Sphere("W_base_sphere",radius=5.0,res=12,parent=parent)
-#    sphs=helper.updateInstancesSphere("W_spheresH",sphs,points,[1.0,]*len(points),s,
-#                        colors,None,parent=parent,delete=False)
-#    return sphs
-#
-#
-#def getSubWeighted(startpos=None):
-#    """
-#    From http://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/
-#    This method is about twice as fast as the binary-search technique, 
-#    although it has the same complexity overall. Building the temporary 
-#    list of totals turns out to be a major part of the functions runtime.
-#    This approach has another interesting property. If we manage to sort 
-#    the weights in descending order before passing them to 
-#    weighted_choice_sub, it will run even faster since the random 
-#    call returns a uniformly distributed value and larger chunks of 
-#    the total weight will be skipped in the beginning.
-#    """
-#    
-#    weights,pts,colors = weightFreePos(startpos=startpos)#numpy.take(self.weight,listPts)
-#    rnd = random() * sum(weights)
-#    for i, w in enumerate(weights):
-#        rnd -= w
-#        if rnd < 0:
-#            return i
-# 
-#
-#def oneStart(vi):
-#    pos=v[vi]
-#    #m=helper.getTransformation(hexamer_obj)
-#    hax = numpy.identity(4)
-#    v2 = vn[vi]#pos
-#    vnax=numpy.zeros((4,4))
-#    vnax[0][:3] = vnorm(numpy.cross(v2,hax[1][:3]))
-#    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
-#    vnax[2][:3] = vnorm(v2)
-#    euler = euler_from_matrix(vnax)
-#    rotMat = euler_matrix(euler[0],euler[1],0.0)#.transpose()
-#    mat = numpy.array(rotMat)
-#    mat[3, :3] = pos
-#    start=Hexa("hexa_"+str(vi),pos,hexamer_radius,mat.transpose())
-#    HEXAGON.append(start)
-#    ALL_HEXAGON.append(start)
-#    ALL_HEXAGON_POS.append(start.pos)
-#    return start 
-#
-#
-#def pickNext(startpos):
-#    #weight according distance from starting point
-#    #grab all center
-#    centers = [h.pos for h in HEXAGON]
-#    ctree = spatial.cKDTree(centers, leafsize=10)
-#    distance,ind = ctree.query(startpos)
-#    return ind
-#
-#def oneStep(start,sphs=[]):
-#    for h in range(len(HEXAGON)):
-#        HEXAGON[h].updateFreePos()
-#    clearOccupied()
-#    ids,pts,w,HEXAGON = getFreePos(HEXAGON)
-##    print ids
-##    i = randrange(len(pts))
-#    i=getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
-##    idh,edgid = ij(i)
-#    indice,a,b,pos,rotMat,mata=computePosRot(helper,pts[i],tree)
-#    start=HEXAGON[ids[i][0]]
-#    new_start=getHex(start,ids[i][0],ids[i][1],pos,mata)
-#    if new_start is not None :
-#        start = new_start
-##        start.updateFreePos()
-#        weights,pts,colors = weightFreePos()
-#        sphs= displayWeights(pts,colors,sphs=sphs)
-#    return start,new_start    
+    i=edge_id
+    start.nvisit[i]+=1
+    T=spatial.cKDTree(ALL_HEXAGON_POS, leafsize=10)
+    ind1,newci,newni,pos,rotMat,mata=one_next(helper,start.tr_n[i],
+                              tree,rc,v,vn,start.tr_c,start.tr_n,start.nb[i][0],
+                              start.nb[i][1],start.mat,is_sphere=is_sphere)
+    sp1= helper.getObject("test1")
+    if sp1 is None :
+        sp1=helper.Sphere("test1",pos=numpy.array(pos))[0]
+    helper.setTranslation(sp1,numpy.array(pos))
+    helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
+    distance,indice = T.query(pos)    
+    if distance <= 77.0 :#
+        if start.nvisit[i] >= 2 :
+            start.free_pos[i]=0
+        return None
+    #test angle edge         
+    m2=matrix(mata.transpose())
+    h=Hexa("hexa_"+str(idc)+"_"+str(i),pos,hexamer_radius,m2.T)#(m1*m2).T)
+    HEXAGON.append(h)
+    ALL_HEXAGON.append(h)
+    ALL_HEXAGON_POS.append(pos)
+#    helper.update()
+    start.children[i]=h
+    start.free_pos[i]=0
+    return start    
+
+def oneRing(start,tree,rc,v,vn,is_sphere,n=99,idc=0):
+    if start is None :
+        return
+    m1=matrix(start.mat.transpose())
+    count=0
+    while len(numpy.nonzero(start.free_pos)[0]):
+        i=start.nextFree()
+        new_start = oneHex(start,i,tree,rc,v,vn,is_sphere,n=n,idc=idc)
+        if new_start is None :
+            if n == count :
+                break
+            count+=1
+            continue
+        if n == count :
+            break
+        count+=1
+        start = new_start
+    start.updateChildrenFreePos()
+    return start
+
+def ij(u,width=6):
+    return [u/width, u%width]
+   
+def u(i,j,width=6):
+    return width * i + j
+
+def displayWeights(points,colors,sphs=[]):
+    parent = helper.getObject("W_iSpheres")
+    if parent is None :
+        parent = helper.newEmpty("W_iSpheres")
+    s = helper.getObject("W_base_sphere")
+    if s is None :
+        s,ms = helper.Sphere("W_base_sphere",radius=5.0,res=12,parent=parent)
+    sphs=helper.updateInstancesSphere("W_spheresH",sphs,points,[1.0,]*len(points),s,
+                        colors,None,parent=parent,delete=False)
+    return sphs
+
+
+def getSubWeighted(startpos=None):
+    """
+    From http://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/
+    This method is about twice as fast as the binary-search technique, 
+    although it has the same complexity overall. Building the temporary 
+    list of totals turns out to be a major part of the functions runtime.
+    This approach has another interesting property. If we manage to sort 
+    the weights in descending order before passing them to 
+    weighted_choice_sub, it will run even faster since the random 
+    call returns a uniformly distributed value and larger chunks of 
+    the total weight will be skipped in the beginning.
+    """
+    
+    weights,pts,colors = weightFreePos(startpos=startpos)#numpy.take(self.weight,listPts)
+    rnd = random() * sum(weights)
+    for i, w in enumerate(weights):
+        rnd -= w
+        if rnd < 0:
+            return i
+ 
+
+def oneStart(vi):
+    pos=v[vi]
+    #m=helper.getTransformation(hexamer_obj)
+    hax = numpy.identity(4)
+    v2 = vn[vi]#pos
+    vnax=numpy.zeros((4,4))
+    vnax[0][:3] = vnorm(numpy.cross(v2,hax[1][:3]))
+    vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
+    vnax[2][:3] = vnorm(v2)
+    euler = euler_from_matrix(vnax)
+    rotMat = euler_matrix(euler[0],euler[1],0.0)#.transpose()
+    mat = numpy.array(rotMat)
+    mat[3, :3] = pos
+    start=Hexa("hexa_"+str(vi),pos,hexamer_radius,mat.transpose())
+    HEXAGON.append(start)
+    ALL_HEXAGON.append(start)
+    ALL_HEXAGON_POS.append(start.pos)
+    return start 
+
+
+def pickNext(startpos):
+    #weight according distance from starting point
+    #grab all center
+    centers = [h.pos for h in HEXAGON]
+    ctree = spatial.cKDTree(centers, leafsize=10)
+    distance,ind = ctree.query(startpos)
+    return ind
+
+def oneStep(start,sphs=[]):
+    for h in range(len(HEXAGON)):
+        HEXAGON[h].updateFreePos()
+    clearOccupied()
+    ids,pts,w,HEXAGON = getFreePos(HEXAGON)
+#    print ids
+#    i = randrange(len(pts))
+    i=getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
+#    idh,edgid = ij(i)
+    indice,a,b,pos,rotMat,mata=computePosRot(helper,pts[i],tree)
+    start=HEXAGON[ids[i][0]]
+    new_start=getHex(start,ids[i][0],ids[i][1],pos,mata)
+    if new_start is not None :
+        start = new_start
+#        start.updateFreePos()
+        weights,pts,colors = weightFreePos()
+        sphs= displayWeights(pts,colors,sphs=sphs)
+    return start,new_start    
 #    start,new_start=oneStep()
 #def recursiveRing(start,inc,r):
 #    for i in range(6):
@@ -1210,37 +1199,37 @@ class tileHexaIngredient:
 #extendedN=n+numpy.array(n[0])
 
 #parent = helper.newEmpty("iSpheres")
-#s,ms = helper.Sphere("sphere",radius=5.0,res=12)
-##sphs=helper.instancesSphere("sphereHexagone",c,[1,]*6,s,[[0,1,0]],None,parent=parent)
-##sphs=helper.instancesSphere("sphereHexagoneN",n,[1,]*6,s,[[0,0,1]],None,parent=parent)
-##sphs=helper.instancesSphere("sphereHexagoneNE",extendedN,[1,]*6,s,[[1,0,0]],None,parent=parent)
+s,ms = helper.Sphere("sphere",radius=5.0,res=12)
+#sphs=helper.instancesSphere("sphereHexagone",c,[1,]*6,s,[[0,1,0]],None,parent=parent)
+#sphs=helper.instancesSphere("sphereHexagoneN",n,[1,]*6,s,[[0,0,1]],None,parent=parent)
+#sphs=helper.instancesSphere("sphereHexagoneNE",extendedN,[1,]*6,s,[[1,0,0]],None,parent=parent)
+
+hexamer_obj = helper.getObject("hex")
+hexamer_pos=[]
+hexamer_free_nb=[1,1,1,1,1,1]#all free
+hexamer_radius=55#inner radus 0f 40, distance h-h ~80
+ax,c,n=getCoordHexagone(hexamer_radius)
+hexamer_local_pos=[[],]
+from c4d import utils
+sel = helper.getCurrentSelection()
+if not len(sel):
+    input_mesh = helper.getObject("inputMesh")
+else :
+    input_mesh = sel[0]
+
 #
-#hexamer_obj = helper.getObject("hex")
-#hexamer_pos=[]
-#hexamer_free_nb=[1,1,1,1,1,1]#all free
-#hexamer_radius=55#inner radus 0f 40, distance h-h ~80
-#ax,c,n=getCoordHexagone(hexamer_radius)
-#hexamer_local_pos=[[],]
-#from c4d import utils
-#sel = helper.getCurrentSelection()
-#if not len(sel):
-#    input_mesh = helper.getObject("inputMesh")
-#else :
-#    input_mesh = sel[0]
-#
-##
-#nmodels = 1
-#for n in range(nmodels):
-#    tiles=Tilling([],[],[],input_mesh,hexamer_radius,init_seed=n)   
-#    tiles.firstRandomStart()
-#    tiles.firstRandomStart()
-#    tiles.firstRandomStart()
-#    tiles.display=True
-#    tiles.tile(doarea=True,percantage_surface=60.0)
-##    tiles.save("/Users/ludo/Downloads/autopack_ouput/hiv_experiment/ma_models/model_"+str(n)+".json")
-##    tiles.clear()
-#    
-##export the model
+nmodels = 1
+for n in range(nmodels):
+    tiles=Tilling([],[],[],input_mesh,hexamer_radius,init_seed=n)   
+    tiles.firstRandomStart()
+    tiles.firstRandomStart()
+    tiles.firstRandomStart()
+    tiles.display=True
+    tiles.tile(doarea=True,percantage_surface=60.0)
+#    tiles.save("/Users/ludo/Downloads/autopack_ouput/hiv_experiment/ma_models/model_"+str(n)+".json")
+#    tiles.clear()
+    
+#export the model
 
 #600 -> 46 area 60%
 #448 -> 55 area 60%
