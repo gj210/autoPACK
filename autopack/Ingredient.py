@@ -555,7 +555,7 @@ class Agent:
         if "excluded_partners_name" in kw :
             self.excluded_partners_name=kw["excluded_partners_name"]  
         assert packingMode in ['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient']
+                               'randomPartner', 'gradient','hexatile']
         self.packingMode = packingMode
 
         #assert placeType in ['jitter', 'spring','rigid-body']
@@ -3009,6 +3009,10 @@ class Ingredient(Agent):
                 c = len(self.histoVol.rIngr)
                 if (n==c) or n==(c-1) :#or (n==c-2):
                     continue                
+#            if self.packingMode == 'hexatile' :
+#                #no self collition for testing
+#                if self.name == ingr.name :
+#                    continue
             rbnode = ingr.get_rb_model(alt=(ingr.name==self.name))
             if getInfo :
                 nodes.append([rbnode, jtrans, rotMat,ingr])
@@ -4125,8 +4129,15 @@ class Ingredient(Agent):
                 self.setTilling(compartment)
             if self.counter!=0 : 
                 #pick the next Hexa pos/rot.
-                trans, rotMat = self.tilling.getNextHexaPosRot()
-        elif histoVol.ingrLookForNeighbours:
+                t, r = self.tilling.getNextHexaPosRot()
+                if len(t) :
+                    trans = t
+                    rotMat = r
+                    targetPoint = trans
+                else :
+                    self.reject()                
+                    return False, nbFreePoints#,targetPoint, rotMat       
+        elif histoVol.ingrLookForNeighbours and self.packingMode == "closePartner":
             bind = True
             print ("look for ingredient",trans)
             #roll a dice about proba_not_binding
@@ -4232,7 +4243,12 @@ class Ingredient(Agent):
                 afvi.vi.setObjectMatrix(moving,mat,transpose=True)
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
-                
+            if self.packingMode == 'hexatile' :
+#                if self.counter!=0 : 
+                    #pick the next Hexa pos/rot.
+                    #no jitter.
+                    jtrans = targetPoint
+                    rotMatj =  rotMat[:]#self.tilling.getNextHexaPosRot()
 #            closeS = self.checkPointSurface(jtrans,cutoff=float(self.cutoff_surface))
 #            if closeS :
 #                print ("ok reject once")
@@ -4268,8 +4284,8 @@ class Ingredient(Agent):
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},)
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},            
             t=time()   
-            print ("testPoints",r)
             test=self.testPoint(jtrans)
+#            print ("testPoints",r,test,jtrans)
             #       checkif rb collide 
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
             if not test and not ( True in r):
@@ -4326,7 +4342,7 @@ class Ingredient(Agent):
 #            t=time()     
             collision2=( True in r)
             collisionComp = False
-#            print("collide??",collision2)
+#            print("collide??",collision2,r,test)
 #            print ("contactTestPair",collision2,time()-t)
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
@@ -4404,7 +4420,9 @@ class Ingredient(Agent):
                 histoVol.lastrank+=1
                 if self.packingMode == 'hexatile' :
                     nexthexa = self.tilling.dropHexa(self.tilling.idc,
-                                            self.tilling.edge_id,jtrans,rotMatj)                    
+                                            self.tilling.edge_id,jtrans,rotMatj)
+                    print ("drop next hexa",nexthexa.name,self.tilling.idc,self.tilling.edge_id)
+                    #('drop next hexa', 'hexa_0_', 0, '')
 #                if periodic_pos is not None and self.packingMode !="gradient" :
 #                    for p in periodic_pos :
 #                        organelle.molecules.append([ p, rotMatj, self, -1 ])
