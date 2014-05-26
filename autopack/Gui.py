@@ -1056,18 +1056,21 @@ class SubdialogFiller(uiadaptor):
         """
         #the menu for saving the change
         #and also to add it to the available liste of recipe
-        self.menuorder = ["File",]
+        self.menuorder = ["File","Tools"]
         self._menu = self.MENU_ID = {"File":
                       [
                       self._addElemt(name="Save Recipe",action=self.save),
                       self._addElemt(name="Save Recipe as",action=self.saveas),#self.buttonLoad},
                       self._addElemt(name="Append to available recipe as",action=self.appendtoRECIPES),
                       self._addElemt(name="Save Result",action=self.saveResult),
+                      self._addElemt(name="Save Grid",action=self.saveGrid),
+                      ],#self.buttonLoadData
+                      "Tools":[
                       self._addElemt(name="Export to BD_BOX rigid",action=self.export_bd_rigid),
                       self._addElemt(name="Export to BD_BOX flex",action=self.export_bd_flex),
                       self._addElemt(name="Load Result from BD_BOX",action=self.import_BDBOX),
-                      self._addElemt(name="Save Grid",action=self.saveGrid),
-                      ],#self.buttonLoadData
+                      self._addElemt(name="Simulate Fluorescence",action=self.generaeFluorescence),
+                      ]
                        }
         if self.helper.host.find("blender") != -1:
             self.setupMenu()
@@ -2210,6 +2213,13 @@ class SubdialogFiller(uiadaptor):
         
     def saveGrid(self,*args):
         self.saveDialog(label="save grid as",callback=self.saveGrid_cb)
+
+    def generaeFluorescence(self,*args,**kw):
+        #open the subdialog of fluo setp
+        from autopack.fluorescence import fluoSimGui
+        self.fluo_dlg =  fluoSimGui()
+        self.fluo_dlg.setup(environment=self.histoVol)
+        self.drawSubDialog(self.fluo_dlg,555455553)
         
 
 class SubdialogIngredientViewer(uiadaptor):
@@ -2523,14 +2533,16 @@ class SubdialogViewer(uiadaptor):
         """    
         #widget initialization and file menu bar
         """
-        self.menuorder = ["File",]
+        self.menuorder = ["File","Tools"]
         self._menu = self.MENU_ID = {"File":
                       [self._addElemt(name="Load (.apr)",action=self.LoadNewResult),
+                      ],
+                      "Tools":[
                        self._addElemt(name="Export Result to BD_BOX rigid",action=self.export_bd_rigid),
                        self._addElemt(name="Export Result to BD_BOX flex",action=self.export_bd_flex),
                        self._addElemt(name="Load Result from BD_BOX",action=self.import_BDBOX),
                        self._addElemt(name="Simulate Fluorescence",action=self.generaeFluorescence),
-                      ],
+                      ]
                        }
         if self.helper.host.find("blender") != -1:
             self.setupMenu()
@@ -3411,6 +3423,17 @@ class AutoPackGui(uiadaptor):
         self.WidgetBuilder["CreateRec"]=self._addElemt(name="CreateRec",label="Create new Recipe",width=100,height=10,
                          action=self.drawSubsetBuilder,type="button",icon=None,
                                      variable=self.addVariable("int",0))
+        self.WidgetBuilder["Fluos"]=self._addElemt(name="Fluos",label="Generate Fluorescence",width=100,height=10,
+                         action=self.generaeFluorescence,type="button",icon=None,
+                                     variable=self.addVariable("int",0))
+
+
+    def generaeFluorescence(self,*args,**kw):
+        #open the subdialog of fluo setp
+        from autopack.fluorescence import fluoSimGui
+        self.fluo_dlg =  fluoSimGui()
+        self.fluo_dlg.setup(environment=None)
+        self.drawSubDialog(self.fluo_dlg,555455553)
 
     def setupLayout(self):
         """    
@@ -3447,6 +3470,7 @@ class AutoPackGui(uiadaptor):
         elemFrame=[]
         elemFrame.append([self.WidgetBuilder["CreateIngr"],])
         elemFrame.append([self.WidgetBuilder["CreateRec"],])
+        elemFrame.append([self.WidgetBuilder["Fluos"],])
         frame = self._addLayout(id=196,name="Build",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
         #if self.helper.host.find("blender") == -1:
         self._layout.append(frame)

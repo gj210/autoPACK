@@ -619,14 +619,19 @@ class fluoSimGui(uiadaptor):
         self.Widget["options"]["rspace"] = self._addElemt(name="rscpace",
                                 value=200.0, width=100,height=10,action=None,
                                     mini=1,maxi=1000,type="inputFloat")          
-
+        
+        liste_input = ["selection","object name"]
+        label = "Object name:"
+        if self.env is not None :
+            liste_input = ["selection","ingredient name","object name"]
+            label = "Object/Ingredient name:"
         self.Widget["label"]["fluorophore"] = self._addElemt(name="fluorophoreLsbel",label="Fluorophore positions:",width=120)
         self.Widget["options"]["fluorophore"] = self._addElemt(name="psf_type",
-                                    value=["selection","ingredient name","object name"],
+                                    value=liste_input,
                                     width=100,height=10,action=None,
                                     variable=self.addVariable("int",0),
                                     type="pullMenu",)         
-        self.Widget["label"]["selection"] = self._addElemt(name="selectionLsbel",label="Object/Ingredient name:",width=120)
+        self.Widget["label"]["selection"] = self._addElemt(name="selectionLsbel",label=label,width=120)
         self.Widget["options"]["selection"] = self._addElemt(name="selection",
                                     value="",
                                     width=100,height=10,action=None,
