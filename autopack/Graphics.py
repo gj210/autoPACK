@@ -2291,3 +2291,12 @@ class AutopackViewer:
                 parent=self.vi.newEmpty(name,parent=self.orgaToMasterGeom[ingr])
             ingr.bsph=self.vi.instancesSphere(names,ingr.positions[0],ingr.radii[0],
                             self.pesph,[ingr.color],self.sc,parent=parent)
+
+#from collada import *
+
+class ColladaExporter:
+    def __init__(self,env):
+        self.env = env
+        #expot from the host, then correct the instance system.
+        
+    

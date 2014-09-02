@@ -19,7 +19,7 @@ from random import randrange,random,seed
 from upy.colors import getRamp
 from time import time
 
-SEED = 12
+#SEED = 12
 #helper = upy.getHelperClass()()
 helper = autopack.helper
 DEBUG=False
@@ -108,36 +108,25 @@ def getVertexNormals(vertices, faces):
 
 
 class Tile:
-    def __init__(self,):
-        pass
-    
-class Hexa(Tile):
-    def __init__(self,name,center,radius,rotation=[]):
-        Tile.__init__(self)
+    def __init__(self,name="tile",nb_edges=0,center=[],rotation=[]):
+        self.nb_edges=nb_edges
         self.name=name
-        self.free_pos=numpy.ones(6)
-        self.children=[None,None,None,None,None,None]
-        self.nvisit=numpy.zeros(6)
-        self.pcpalAxis,self.coordinates,self.neighboors_pos=self.getCoordHexagone(radius)
+        self.free_pos=numpy.ones(self.nb_edges)
+        self.children=[]
+        for n in range(self.nb_edges) :
+            self.children.append(None)
+        self.nvisit=numpy.zeros(self.nb_edges)
+        self.pcpalAxis,self.coordinates,self.neighboors_pos=self.getCoord()
         self.edge_pos = numpy.array(self.neighboors_pos)/2.0
         self.edge_tree=None
         self.tr_c = self.coordinates[:]
         self.tr_n = self.neighboors_pos[:]
-        self.nr=[]
-        self.nb=[[1,3],[2,4],[2,0],[3,1],[5,1],[5,3]]
-        self.inst=None
-        self.edge_nb=[[[0,4],[1,3]],
-                      [[1,5],[2,4]],
-                      [[2,0],[3,5]],
-                      [[3,1],[4,0]],
-                      [[4,2],[5,1]],
-                      [[5,3],[0,2]]]
-        self.cb={0:3,1:4,2:5,3:0,4:1,5:2}
-#        self.cbi={3:0,4:1,5:2,0:3,1:4,2:5}
+        self.setEdgeIndice()
         self.colors=getRamp([[0,0.6,0],[1,1,0]],size=7)
         self.threshold = 500.0
         self.pos=center
         self.rejected=False
+        self.inst=None
         if len(rotation):
             self.mat = numpy.array(rotation)#.transpose()
             self.mat[:3, 3] = center            
@@ -146,9 +135,29 @@ class Hexa(Tile):
             self.tr_edge=helper.ApplyMatrix(self.edge_pos,self.mat)
             self.edge_tree=spatial.cKDTree(self.tr_edge, leafsize=10) 
             self.nr=helper.ApplyMatrix(self.neighboors_pos,rotation)
-#        self.displaySpheres()
-#        self.displayObject()
-        
+
+    def setEdgeIndice(self,):
+        """overwrtite in children"""
+        pass
+
+    def getCoord(self,):
+        """overwrtite in children"""
+        pass
+
+    def updateFreePos(self,tiles,cutoff=125.0):
+#        print ("updateFreePos ",len(tiles.HEXAGON),len(tiles.ALL_HEXAGON),self.free_pos)
+        #grab surrounding object hexa, fin eac edge they occupied
+        T=tiles.all_pos_tree#spatial.cKDTree(tiles.ALL_HEXAGON_POS, leafsize=10)
+        liste_surrounding = T.query_ball_point(self.pos,cutoff)
+        for ih in liste_surrounding:
+            if tiles.ALL_TILE[ih].name == self.name :
+                continue
+            d,i=self.edge_tree.query(tiles.ALL_TILE[ih].pos)
+            self.free_pos[i]=0
+            self.children[i]=tiles.ALL_TILE[ih]
+            tiles.ALL_TILE[ih].free_pos[self.cb[i]]=0
+            tiles.ALL_TILE[ih].children[self.cb[i]]=self
+            
     def displaySpheres(self,):
         root = helper.getObject("all_spheres")
         if root is None:
@@ -161,16 +170,38 @@ class Hexa(Tile):
         
     def displayObject(self,mobject=None):
         if mobject is None:
-            mobject=helper.getObject("hex")
-        parent = helper.getObject("all_hex")
+            mobject=helper.getObject("tile")
+        parent = helper.getObject("all_tile")
         if parent is None:
-            parent = helper.newEmpty("all_hex")
+            parent = helper.newEmpty("all_tile")
         self.inst=helper.newInstance(self.name+"_obj",mobject,matrice=self.mat,parent=parent)
         return self.inst
                     
-    def getCoordHexagone(self,radius,center=[0,0,0]):
+                    
+class HexaTile(Tile):
+    def __init__(self,name,center,radius,rotation=[]):
+        self.radius = radius
+        Tile.__init__(self,name=name,nb_edges=6,center=center,rotation=rotation)
+#        self.edge_pos = numpy.array(self.neighboors_pos)/2.0
+#        self.displaySpheres()
+#        self.displayObject()
+
+    def setEdgeIndice(self,):
+        self.nr=[]
+        self.nb=[[1,3],[2,4],[2,0],[3,1],[5,1],[5,3]]
+        self.inst=None
+        self.edge_nb=[[[0,4],[1,3]],
+                      [[1,5],[2,4]],
+                      [[2,0],[3,5]],
+                      [[3,1],[4,0]],
+                      [[4,2],[5,1]],
+                      [[5,3],[0,2]]]
+        self.cb={0:3,1:4,2:5,3:0,4:1,5:2}
+        
+
+    def getCoord(self,):
         #this depends on the pcpal axis of the hexagon, here it is [0,0,1]
-        D=2*radius
+        D=2.0*self.radius
         dY=D/4.0
         dX=math.sqrt(3)*dY
         pcpalAxis=[0,0,1]
@@ -318,19 +349,19 @@ class Hexa(Tile):
 #                else : print "None"
 #        self.updateColor()
 
-    def updateFreePos(self,tiles):
-#        print ("updateFreePos ",len(tiles.HEXAGON),len(tiles.ALL_HEXAGON),self.free_pos)
-        #grab surrounding object hexa, fin eac edge they occupied
-        T=tiles.all_pos_tree#spatial.cKDTree(tiles.ALL_HEXAGON_POS, leafsize=10)
-        liste_surrounding = T.query_ball_point(self.pos,125.0)
-        for ih in liste_surrounding:
-            if tiles.ALL_HEXAGON[ih].name == self.name :
-                continue
-            d,i=self.edge_tree.query(tiles.ALL_HEXAGON[ih].pos)
-            self.free_pos[i]=0
-            self.children[i]=tiles.ALL_HEXAGON[ih]
-            tiles.ALL_HEXAGON[ih].free_pos[self.cb[i]]=0
-            tiles.ALL_HEXAGON[ih].children[self.cb[i]]=self   
+#    def updateFreePos(self,tiles):
+##        print ("updateFreePos ",len(tiles.HEXAGON),len(tiles.ALL_HEXAGON),self.free_pos)
+#        #grab surrounding object hexa, fin eac edge they occupied
+#        T=tiles.all_pos_tree#spatial.cKDTree(tiles.ALL_HEXAGON_POS, leafsize=10)
+#        liste_surrounding = T.query_ball_point(self.pos,125.0)
+#        for ih in liste_surrounding:
+#            if tiles.ALL_HEXAGON[ih].name == self.name :
+#                continue
+#            d,i=self.edge_tree.query(tiles.ALL_HEXAGON[ih].pos)
+#            self.free_pos[i]=0
+#            self.children[i]=tiles.ALL_HEXAGON[ih]
+#            tiles.ALL_HEXAGON[ih].free_pos[self.cb[i]]=0
+#            tiles.ALL_HEXAGON[ih].children[self.cb[i]]=self   
 #        print (self.free_pos)
 #        self.updateColor()
         
@@ -359,98 +390,162 @@ class Hexa(Tile):
     def nextFree(self):
         return numpy.nonzero(self.free_pos)[0][0]
 
+class SquareTile(Tile):
+    def __init__(self,name,center,radius,rotation=[]):
+        self.length = radius
+        Tile.__init__(self,name=name,nb_edges=4,center=center,rotation=rotation)
+#        self.edge_pos = numpy.array(self.neighboors_pos)/2.0
+#        self.displaySpheres()
+#        self.displayObject()
 
-class tileHexaIngredient:
-    def __init__(self,ingredient,comp,hradius,init_seed=12):
+    def setEdgeIndice(self,):
+        self.nr=[]
+        self.nb=[[0,2],[1,3],[2,0],[3,1]]
+        self.inst=None
+        self.edge_nb=[[[0,2],[2,0]],
+                      [[1,3],[3,1]],
+                      [[2,0],[0,2]],
+                      [[3,1],[1,3]],]
+        self.cb={0:2,1:3,2:0,3:1}
+
+    def getCoord(self,):
+        #this depends on the pcpal axis of the hexagon, here it is [0,0,1]
+        D=2.0*self.length
+        dY=D
+        dX=D
+        pcpalAxis=[0,0,1]
+        hexc=coordinates=numpy.array([[0,dY,0.0],#N
+                    [dX,0,0],#E
+                    [0,-dY,0],#S
+                    [-dX,0,0],#W
+                     ])
+        neighboors_pos=numpy.zeros([4,3])
+        for i in range(4):
+            neighboors_pos[i]=hexc[i]
+        return pcpalAxis,coordinates,neighboors_pos
+
+
+class TriangleTile(Tile):
+    def __init__(self,name,center,radius,rotation=[],sense=1):
+        self.outer_radius = radius
+        self.sense = sense
+        Tile.__init__(self,name=name,nb_edges=3,center=center,rotation=rotation)
+#        self.edge_pos = numpy.array(self.neighboors_pos)/2.0
+#        self.displaySpheres()
+#        self.displayObject()
+
+    def setEdgeIndice(self,):
+        self.nr=[]
+        self.nb=[[0,0],[1,1],[2,2],]
+        self.inst=None
+        self.edge_nb=[[[0,0],[0,0]],
+                      [[1,1],[1,1]],
+                      [[2,2],[2,2]],]
+        self.cb={0:0,1:1,2:2,}
+
+    def getCoord(self,):
+        #this depends on the pcpal axis. assuming pcp is [0,0,1]
+        #apic is 0,1,0, barycenter is 0,0,0
+        D=self.outer_radius
+        sin60 = math.sin(math.radians(60.0))
+        dY=D
+        dX=D
+        pcpalAxis=[0,0,1]
+        hexc=coordinates=numpy.array([[dX*sin60,dY/2.0,0.0],#right
+                    [0,-dY,0],#bottom
+                    [-dX*sin60,dY/2.0,0],#left
+                     ])*numpy.array([1,self.sense,1])                
+        neighboors_pos=numpy.zeros([3,3])
+        for i in range(3):
+            neighboors_pos[i]=hexc[i]
+        return pcpalAxis,coordinates,neighboors_pos
+
+
+class tileIngredient:
+    def __init__(self,ingredient,comp,size,init_seed=12,nb_edges=0):
         self.ingredient = ingredient 
-        self.HEXAGON_FREE=[]#[iedge_w,]
-        self.HEXAGON=[]
-        self.ALL_HEXAGON=[]
-        self.ALL_HEXAGON_POS=[]
+        self.TILE_FREE=[]#[iedge_w,]
+        self.TILE=[]
+        self.ALL_TILE=[]
+        self.ALL_TILE_POS=[]
         self.all_pos_tree=None
+        self.tile_class=None
+        self.tile_name=""
         self.area = 0
         self.surface_covered = 0
         self.v=comp.vertices
         self.f=comp.faces
         self.vn=comp.vnormals
         self.input_mesh = comp.ref_obj
+        comp.getCenter()
+        self.input_mesh_center = comp.center
         self.area=comp.area
         self.vtree= comp.OGsrfPtsBht #spatial.cKDTree(v, leafsize=10)
-        #ray ?! helper from upy cando that ?
-#        self.rc = utils.GeRayCollider()#helper ?
-#        self.rc.Init(self.input_mesh)
-        self.hexamer_radius=hradius#55
-        self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
-        self.distance_threshold = [self.hexamer_radius*1.5,self.hexamer_radius*1.85]
-        self.hexa_area = ((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
         self.sphs=[]
         self.display = False
         self.idc = 0
         self.edge_id=""
-        self.start = None
-        
+        self.start = None    
+        self.tile_radius = self.size = size
+#        self.hexamer_radius=hradius#55
+#        self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
+        self.distance_threshold = 100.0#[self.hexamer_radius*1.5,self.hexamer_radius*1.85]
+        self.distance_cutoff = self.size*1.5
+        self.tile_area = 0#((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
+        self.nb_edges=nb_edges
+
     def init_seed(self,iseed):
         #this should have been init by environment
         numpy.random.seed(iseed)#for gradient
         seed(iseed)
 
-    def getFreePos(self,weight=False):
+    def getFreePos(self,weight=False,cutoff=115.0):
         T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
         ids=[]
         colors=[]
         pts=[]
         w=[]
-        qw = [0.0,0.001,0.05,0.1,0.25,1,1]
-        for i in range(len(self.HEXAGON)):
+        qw = self.weight_edges
+        for i in range(len(self.TILE)):
             #self.HEXAGON[i].updateFreePos()
-            for j in range(6):
-                if self.HEXAGON[i].free_pos[j] == 1 :#free
+            for j in range(self.nb_edges):
+                if self.TILE[i].free_pos[j] == 1 :#free
                     #find how many neighboors are present for this position
-                    pts.append(self.HEXAGON[i].tr_n[j])                    
+                    pts.append(self.TILE[i].tr_n[j])                    
                     ids.append([i,j])
                     if weight :
-                        results = T.query_ball_point(self.HEXAGON[i].tr_n[j],115.0)
+                        results = T.query_ball_point(self.TILE[i].tr_n[j],cutoff)
                         R= len(results)
-                        if R > 6:
-                            R=6
+                        if R > self.nb_edges:
+                            R=self.nb_edges
                         w.append(qw[R] )
                     else :
                         R=0
-                    colors.append(self.HEXAGON[i].colors[R])
+                    colors.append(self.TILE[i].colors[R])
         return ids,pts,colors,w
-
-    def displayWeights(self,points,colors):
-        parent = helper.getObject("W_iSpheres")
-        if parent is None :
-            parent = helper.newEmpty("W_iSpheres")
-        s = helper.getObject("W_base_sphere")
-        if s is None :
-            s,ms = helper.Sphere("W_base_sphere",radius=5.0,res=12,parent=parent)
-        self.sphs=helper.updateInstancesSphere("W_spheresH",self.sphs,points,[1.0,]*len(points),s,
-                            colors,None,parent=parent,delete=False)
-        
+      
     def weightFreePos(self,startpos=None):
         T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
-        self.HEXAGON_FREE=numpy.zeros((len(self.HEXAGON),6))
-        self.HEXAGON_FREE=self.HEXAGON_FREE.reshape(len(self.HEXAGON)*6)
+        self.TILE_FREE=numpy.zeros((len(self.TILE),self.nb_edges))
+        self.TILE_FREE=self.TILE_FREE.reshape(len(self.TILE)*self.nb_edges)
         #qw=numpy.arange(0.0,1.0+1./6.,1.0/6.0)
         maxd=300.0
-        qw = [0.0,0.001,0.05,0.1,0.25,1,1]
+        qw = self.weight_edges
         pts=[]
         colors=[]
-        for i in range(len(self.HEXAGON)):
-            self.HEXAGON[i].updateFreePos(self)
-            for j in range(6):
-                if self.HEXAGON[i].free_pos[j] == 1 :#free
+        for i in range(len(self.TILE)):
+            self.TILE[i].updateFreePos(self)
+            for j in range(self.nb_edges):
+                if self.TILE[i].free_pos[j] == 1 :#free
                     #find how many neighboors are present for this position
-                    pts.append(self.HEXAGON[i].tr_n[j])
-                    results = T.query_ball_point(self.HEXAGON[i].tr_n[j],115.0)
+                    pts.append(self.TILE[i].tr_n[j])
+                    results = T.query_ball_point(self.TILE[i].tr_n[j],115.0)
                     R= len(results)
-                    if R > 6:
-                        R=6
+                    if R > self.nb_edges:
+                        R=self.nb_edges
                     w=qw[R]
-                    self.HEXAGON_FREE[6 * i + j]=w#(w+p)/2.0
-                    colors.append(self.HEXAGON[i].colors[R])
+                    self.TILE_FREE[self.nb_edges * i + j]=w#(w+p)/2.0
+                    colors.append(self.TILE[i].colors[R])
         return pts,colors
         
     def getRndWeighted(self,w=None,startpos=None):
@@ -469,17 +564,15 @@ class tileHexaIngredient:
         i = numpy.searchsorted(t,numpy.random.rand(1)*s)[0]
         return i   
 
-    def alignToAdjacentPos(self,h):
-        #align the given hexa to his closest adjacent hexa ?
-        #only if angle > threshold
-        pass
-
-    def computePosRot(self,next_pos):
+    def computePosRot(self,next_pos,sense=1):
         distance,indice = self.vtree.query(next_pos)
+        #problem with plane
         intersect,v2 = autopack.helper.raycast(self.input_mesh, 
                                                numpy.array(next_pos)*100.0, 
-                                              [0.,0.,0.], 
+                                              self.input_mesh_center, 
                                             100000, fnormal=True )
+        print "inter1 ",intersect,v2
+#        intersect=False
         if not intersect :
             v2 = self.vn[indice]#next_pos#vn[indice]
         vnax=numpy.zeros((4,4))
@@ -490,79 +583,50 @@ class tileHexaIngredient:
         vnax[1][:3] = vnorm(numpy.cross(v2,vnax[0][:3]))
         vnax[2][:3] = vnorm(v2)#pcpal axis is [0,0,1]
         euler = euler_from_matrix(vnax)
-        rotMat = euler_matrix(euler[0],euler[1],0.0).transpose()
+        eulerZ=0.0
+        if sense == -1 :
+            eulerZ = math.radians(180.0)
+        rotMat = euler_matrix(euler[0],euler[1],eulerZ).transpose()
         mat = numpy.array(rotMat)
         mat[:3, 3] = next_pos
         intersect,newposition = autopack.helper.raycast(self.input_mesh, 
                                                numpy.array(next_pos)*10.0, 
-                                              [0.,0.,0.], 
+                                              self.input_mesh_center, 
                                             100000, hitpos=True )
+        print "inter2 ",intersect,newposition
         if not intersect :
             newposition=self.v[indice]#(next_pos+tr)#-pm.transpose()[3,:3]#+tr#pos+p
+        #rotate 180degree triangle tile eg flip top/bottom            
         mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
         mat[:3, 3] = newposition#+tr
         return indice,newposition,rotMat,mat
 
     def clearOccupied(self):
 #        print ("clearOccupied ", len(self.HEXAGON)-1)
-        i=len(self.HEXAGON)-1
+        i=len(self.TILE)-1
         while i > 0:    
-            if not len(numpy.nonzero(self.HEXAGON[i].free_pos)[0]):
+            if not len(numpy.nonzero(self.TILE[i].free_pos)[0]):
                 try :
-                    self.HEXAGON.pop(i)
+                    self.TILE.pop(i)
                 except :
-                    print self.HEXAGON[i].name+"not in big list"
+                    print self.TILE[i].name+"not in big list"
             i=i-1
         
-    def firstRandomStart(self):
-        p = helper.advance_randpoint_onsphere(650,marge=math.radians(90.0),vector=[0,1,0])
-        indice,newposition,rotMat,mat=self.computePosRot(p)
-        start = self.dropHexa(str(len(self.HEXAGON)),"",newposition,mat)
-        return start 
-
-    def dropHexa(self,idc,edge_id,pos,m2):
-        h=Hexa("hexa_"+str(idc)+"_"+str(edge_id),pos,self.hexamer_radius,m2)#(m1*m2).T)
-        self.HEXAGON.append(h)
-        self.ALL_HEXAGON.append(h)
-        self.ALL_HEXAGON_POS.append(pos)
-        self.all_pos_tree = spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
-        h.updateFreePos(self)
-        return h
-
-    def placeHexa(self,start,idc,edge_id,pos,mata):
-        i=edge_id
-        start.nvisit[i]+=1
-        T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
-        if self.display:
-            sp1= autopack.helper.getObject("test1")
-            if sp1 is None :
-                sp1=autopack.helper.Sphere("test1",pos=numpy.array(pos))[0]
-            autopack.helper.setTranslation(sp1,numpy.array(pos))
-            autopack.helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
-        distance,indice = T.query(pos)    
-        if distance > self.distance_threshold[1] or distance < self.distance_threshold[0]:#
-            print "rejected too close ",distance,self.distance_threshold
-            if start.nvisit[i] >= 2 :
-                start.free_pos[i]=0
-            return None
-        #test angle edge         
-        m2=matrix(mata.transpose())
-        nexthexa = self.dropHexa(idc,edge_id,pos,mata,numpy.array(m2.T))
-        return start    
-
     def getNextHexaPosRot(self):
-        for h in range(len(self.HEXAGON)):
+        for h in range(len(self.TILE)):
 #            print ("getNextHexaPosRot update free pos",self.HEXAGON[h].name)
-            self.HEXAGON[h].updateFreePos(self)
+            self.TILE[h].updateFreePos(self)
         self.clearOccupied()
-        ids,pts,colors,w = self.getFreePos(weight=True)
+        ids,pts,colors,w = self.getFreePos(weight=True,cutoff=self.distance_cutoff*2.0)#cutoff
         if not len(pts):
-            print ("no hex freePOS ?")
+            print ("no tile freePOS ?")
             return [],[]
         i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
-        indice,pos,rotMat,mata=self.computePosRot(pts[i])
-        start=self.HEXAGON[ids[i][0]]
-        indicetouse = self.ALL_HEXAGON.index(start)
+        start=self.TILE[ids[i][0]]
+        indicetouse = self.ALL_TILE.index(start)
+        if self.tile_name == "triangle":
+            psense = start.sense
+        indice,pos,rotMat,mata=self.computePosRot(pts[i],sense=psense*-1)
 #        print ("step ",start.name,indicetouse,ids[i][1],start.free_pos,pts[i],pos)
         m2=matrix(mata.transpose())
         self.idc= indicetouse
@@ -572,91 +636,297 @@ class tileHexaIngredient:
 #        if start.nvisit[i] >= 2 :
 #            start.free_pos[i]=0
         return pos, numpy.array(m2.T)
-        
-    def nextHexa(self):
-        for h in range(len(self.HEXAGON)):
-            self.HEXAGON[h].updateFreePos(self)
-        self.clearOccupied()
-        ids,pts,colors,w = self.getFreePos(weight=True)
-        if not len(pts):
-            return 2
-        i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
-#        i=randrange(len(pts))
-#        idh,edgid = ij(i)
-        indice,pos,rotMat,mata=self.computePosRot(pts[i])
-        start=self.HEXAGON[ids[i][0]]
-        indicetouse = self.ALL_HEXAGON.index(start)
-#        print "step ",start.name,indicetouse,ids[i][1],start.free_pos
-        new_start=self.placeHexa(start,indicetouse,ids[i][1],pos,mata)
-        if new_start is not None :
-            start = new_start
-            return 0
+
+    def dropTile(self,idc,edge_id,pos,m2):
+        if self.tile_name == "triangle" :
+            #parent sense
+            psense =1 
+            if len(self.ALL_TILE):
+                psense = self.ALL_TILE[idc].sense*-1 #first one is 1
+            tile=self.tile_class(self.tile_name+"_"+str(idc)+"_"+str(edge_id),pos,self.tile_radius,m2,sense=psense)#(m1*m2).T)
         else :
-            return 1
+            tile=self.tile_class(self.tile_name+"_"+str(idc)+"_"+str(edge_id),pos,self.tile_radius,m2)#(m1*m2).T)
+        self.TILE.append(tile)
+        self.ALL_TILE.append(tile)
+        self.ALL_TILE_POS.append(pos)
+        self.all_pos_tree = spatial.cKDTree(self.ALL_TILE_POS, leafsize=10)
+        tile.updateFreePos(self,cutoff=self.distance_cutoff)#cutoff?
+        return tile
+        
+    def displayWeights(self,points,colors):
+        parent = helper.getObject("W_iSpheres")
+        if parent is None :
+            parent = helper.newEmpty("W_iSpheres")
+        s = helper.getObject("W_base_sphere")
+        if s is None :
+            s,ms = helper.Sphere("W_base_sphere",radius=5.0,res=12,parent=parent)
+        self.sphs=helper.updateInstancesSphere("W_spheresH",self.sphs,points,[1.0,]*len(points),s,
+                            colors,None,parent=parent,delete=False)
+        
+class tileHexaIngredient(tileIngredient):
+    def __init__(self,ingredient,comp,hradius,init_seed=12):
+        tileIngredient.__init__(self,ingredient,comp,hradius,
+                                init_seed=init_seed, nb_edges=6)
+        self.tile_radius=hradius#55
+        self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
+        self.distance_threshold = [self.tile_radius*1.5,self.tile_radius*1.85]
+        self.tile_area = ((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
+        self.weight_edges=[0.0,0.001,0.05,0.1,0.25,1,1]#
+        self.tile_class = HexaTile
+        self.tile_name="hexa"
+        
+class tileSquareIngredient(tileIngredient):
+    def __init__(self,ingredient,comp,hradius,init_seed=12):
+        tileIngredient.__init__(self,ingredient,comp,hradius,
+                                init_seed=init_seed, nb_edges=4)
+        self.tile_radius=hradius#55
+        self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
+        self.distance_threshold = [self.tile_radius*1.5,self.tile_radius*1.85]
+        self.tile_area = self.alpha*self.alpha
+        self.weight_edges=[0.0,0.05,0.25,1,1]#
+        self.tile_class = SquareTile
+        self.tile_name="square"
 
-    def tile(self,doarea=False,countThreshold=10,percantage_surface=100):
-        #main loop
-        t1 = time()
-        done = False
-        asa=0
-        asac=1500
-        countH=0
-        parea=0
-        while not done:
-            helper.progressBar(progress=int((float(asa) / asac)*100.0),
-                           label="i "+str(asa)+" / "+str(asac)+" _ "+str(countH) +" _ "+str(parea) )
-            countH=len(self.ALL_HEXAGON)
-            if not len(self.HEXAGON) :
-                print "stop len hexagon"
-                break                    
-            if asa > asac :
-                print "stop asac"
-                done = True
-                break      
-            if self.display:
-                helper.deleteObject("W_iSpheres");
-            res  = self.nextHexa()
-            if self.display:
-                helper.update()
-            if res == 1 :
-#                startpos = start.pos
-                asa+=1
-                continue
-            elif res == 2 :
-                break
-            else :
-                if doarea:
-                    self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
-                    parea = (self.surface_covered*100.0)/self.area
-                    if parea >= percantage_surface :
-                        print str(parea)+" % is covered,stop" , percantage_surface,  parea >= percantage_surface           
-                        break
-                else :
-                    if countH > countThreshold :
-                        print "stop countH"
-                        break 
-                if self.display:
-                    tiles.sphs=[];
-                    ids,pts,colors,w=self.getFreePos();
-                    self.displayWeights(pts,colors)
-                asa+=1        
-        print "elapsed time is ",time()-t1,len(self.ALL_HEXAGON)
-        self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
-        print (self.surface_covered*100.0)/self.area," % is covered"
-        helper.resetProgressBar()
-        helper.progressBar(label="Tilling Complete in "+str(time()-t1)+" secs")
+class tileTriangleIngredient(tileIngredient):
+    def __init__(self,ingredient,comp,hradius,init_seed=12):
+        tileIngredient.__init__(self,ingredient,comp,hradius,
+                                init_seed=init_seed, nb_edges=3)
+        self.tile_radius=hradius#55
+        self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
+        self.distance_threshold = [self.tile_radius*1.5,self.tile_radius*1.85]
+        self.tile_area = self.alpha*self.alpha
+        self.weight_edges=[1,1,1,1]#
+        self.tile_class = TriangleTile
+        self.tile_name="triangle"
+        #all edge are rotated 180degree.
 
-    def save(self,filename):
-        #export [[567.30621337890625, -76.661155700683594, 318.21942138671875], [[0.42438143491744995, 3.5741718014068754e-09, 0.9054835279589204, 0.0], [0.23323895037174225, 0.96625566434317833, -0.10931429396496474, 0.0], [-0.87492853403091431, 0.25758499087995512, 0.41006097498201871, 0.0], [0.0, 0.0, 0.0, 1.0]], "MA_hexagone", 1, 0]
-        results=[]        
-        for h in self.ALL_HEXAGON:
-            results.append([h.pos,h.mat.tolist(),"MA_hexagone",1,0])
-        with open(filename, 'w') as fp :#doesnt work with symbol link ?
-            json.dump(results,fp)
 
-    def clear(self):
-        helper.deleteObject("all_spheres") 
-        helper.deleteObject("all_hex") 
+#    def getFreePos(self,weight=False):
+#        T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+#        ids=[]
+#        colors=[]
+#        pts=[]
+#        w=[]
+#        qw = [0.0,0.001,0.05,0.1,0.25,1,1]
+#        for i in range(len(self.HEXAGON)):
+#            #self.HEXAGON[i].updateFreePos()
+#            for j in range(6):
+#                if self.HEXAGON[i].free_pos[j] == 1 :#free
+#                    #find how many neighboors are present for this position
+#                    pts.append(self.HEXAGON[i].tr_n[j])                    
+#                    ids.append([i,j])
+#                    if weight :
+#                        results = T.query_ball_point(self.HEXAGON[i].tr_n[j],115.0)
+#                        R= len(results)
+#                        if R > 6:
+#                            R=6
+#                        w.append(qw[R] )
+#                    else :
+#                        R=0
+#                    colors.append(self.HEXAGON[i].colors[R])
+#        return ids,pts,colors,w
+#
+#        
+#    def weightFreePos(self,startpos=None):
+#        T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+#        self.HEXAGON_FREE=numpy.zeros((len(self.HEXAGON),6))
+#        self.HEXAGON_FREE=self.HEXAGON_FREE.reshape(len(self.HEXAGON)*6)
+#        #qw=numpy.arange(0.0,1.0+1./6.,1.0/6.0)
+#        maxd=300.0
+#        qw = [0.0,0.001,0.05,0.1,0.25,1,1]
+#        pts=[]
+#        colors=[]
+#        for i in range(len(self.HEXAGON)):
+#            self.HEXAGON[i].updateFreePos(self)
+#            for j in range(6):
+#                if self.HEXAGON[i].free_pos[j] == 1 :#free
+#                    #find how many neighboors are present for this position
+#                    pts.append(self.HEXAGON[i].tr_n[j])
+#                    results = T.query_ball_point(self.HEXAGON[i].tr_n[j],115.0)
+#                    R= len(results)
+#                    if R > 6:
+#                        R=6
+#                    w=qw[R]
+#                    self.HEXAGON_FREE[6 * i + j]=w#(w+p)/2.0
+#                    colors.append(self.HEXAGON[i].colors[R])
+#        return pts,colors
+#        
+#    def getRndWeighted(self,w=None,startpos=None):
+#        """
+#        From http://glowingpython.blogspot.com/2012/09/weighted-random-choice.html
+#        Weighted random selection
+#        returns n_picks random indexes.
+#        the chance to pick the index i 
+#        is give by the weight weights[i].
+#        """
+#        weight = w
+#        if weight is None :
+#            weight,pts,colors = self.weightFreePos(startpos=startpos)#numpy.take(self.weight,listPts)
+#        t = numpy.cumsum(weight)
+#        s = numpy.sum(weight)
+#        i = numpy.searchsorted(t,numpy.random.rand(1)*s)[0]
+#        return i   
+
+    def alignToAdjacentPos(self,h):
+        #align the given hexa to his closest adjacent hexa ?
+        #only if angle > threshold
+        pass
+
+
+#    def clearOccupied(self):
+##        print ("clearOccupied ", len(self.HEXAGON)-1)
+#        i=len(self.HEXAGON)-1
+#        while i > 0:    
+#            if not len(numpy.nonzero(self.HEXAGON[i].free_pos)[0]):
+#                try :
+#                    self.HEXAGON.pop(i)
+#                except :
+#                    print self.HEXAGON[i].name+"not in big list"
+#            i=i-1
+#        
+    def firstRandomStart(self):
+        p = helper.advance_randpoint_onsphere(650,marge=math.radians(90.0),vector=[0,1,0])
+        indice,newposition,rotMat,mat=self.computePosRot(p)
+        start = self.dropHexa(str(len(self.HEXAGON)),"",newposition,mat)
+        return start 
+
+#    def dropHexa(self,idc,edge_id,pos,m2):
+#        h=Hexa("hexa_"+str(idc)+"_"+str(edge_id),pos,self.hexamer_radius,m2)#(m1*m2).T)
+#        self.HEXAGON.append(h)
+#        self.ALL_HEXAGON.append(h)
+#        self.ALL_HEXAGON_POS.append(pos)
+#        self.all_pos_tree = spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+#        h.updateFreePos(self)
+#        return h
+
+#    def placeHexa(self,start,idc,edge_id,pos,mata):
+#        i=edge_id
+#        start.nvisit[i]+=1
+#        T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+#        if self.display:
+#            sp1= autopack.helper.getObject("test1")
+#            if sp1 is None :
+#                sp1=autopack.helper.Sphere("test1",pos=numpy.array(pos))[0]
+#            autopack.helper.setTranslation(sp1,numpy.array(pos))
+#            autopack.helper.changeObjColorMat(sp1,[start.nvisit[i]/2.0,0,0])
+#        distance,indice = T.query(pos)    
+#        if distance > self.distance_threshold[1] or distance < self.distance_threshold[0]:#
+#            print "rejected too close ",distance,self.distance_threshold
+#            if start.nvisit[i] >= 2 :
+#                start.free_pos[i]=0
+#            return None
+#        #test angle edge         
+#        m2=matrix(mata.transpose())
+#        nexthexa = self.dropHexa(idc,edge_id,pos,mata,numpy.array(m2.T))
+#        return start    
+
+#    def getNextHexaPosRot(self):
+#        for h in range(len(self.HEXAGON)):
+##            print ("getNextHexaPosRot update free pos",self.HEXAGON[h].name)
+#            self.HEXAGON[h].updateFreePos(self)
+#        self.clearOccupied()
+#        ids,pts,colors,w = self.getFreePos(weight=True)
+#        if not len(pts):
+#            print ("no hex freePOS ?")
+#            return [],[]
+#        i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
+#        indice,pos,rotMat,mata=self.computePosRot(pts[i])
+#        start=self.HEXAGON[ids[i][0]]
+#        indicetouse = self.ALL_HEXAGON.index(start)
+##        print ("step ",start.name,indicetouse,ids[i][1],start.free_pos,pts[i],pos)
+#        m2=matrix(mata.transpose())
+#        self.idc= indicetouse
+#        self.edge_id = ids[i][1]
+#        self.start = start
+#        start.nvisit[self.edge_id]+=1
+##        if start.nvisit[i] >= 2 :
+##            start.free_pos[i]=0
+#        return pos, numpy.array(m2.T)
+#        
+#    def nextHexa(self):
+#        for h in range(len(self.HEXAGON)):
+#            self.HEXAGON[h].updateFreePos(self)
+#        self.clearOccupied()
+#        ids,pts,colors,w = self.getFreePos(weight=True)
+#        if not len(pts):
+#            return 2
+#        i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
+##        i=randrange(len(pts))
+##        idh,edgid = ij(i)
+#        indice,pos,rotMat,mata=self.computePosRot(pts[i])
+#        start=self.HEXAGON[ids[i][0]]
+#        indicetouse = self.ALL_HEXAGON.index(start)
+##        print "step ",start.name,indicetouse,ids[i][1],start.free_pos
+#        new_start=self.placeHexa(start,indicetouse,ids[i][1],pos,mata)
+#        if new_start is not None :
+#            start = new_start
+#            return 0
+#        else :
+#            return 1
+#
+#    def tile(self,doarea=False,countThreshold=10,percantage_surface=100):
+#        #main loop
+#        t1 = time()
+#        done = False
+#        asa=0
+#        asac=1500
+#        countH=0
+#        parea=0
+#        while not done:
+#            helper.progressBar(progress=int((float(asa) / asac)*100.0),
+#                           label="i "+str(asa)+" / "+str(asac)+" _ "+str(countH) +" _ "+str(parea) )
+#            countH=len(self.ALL_HEXAGON)
+#            if not len(self.HEXAGON) :
+#                print "stop len hexagon"
+#                break                    
+#            if asa > asac :
+#                print "stop asac"
+#                done = True
+#                break      
+#            if self.display:
+#                helper.deleteObject("W_iSpheres");
+#            res  = self.nextHexa()
+#            if self.display:
+#                helper.update()
+#            if res == 1 :
+##                startpos = start.pos
+#                asa+=1
+#                continue
+#            elif res == 2 :
+#                break
+#            else :
+#                if doarea:
+#                    self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
+#                    parea = (self.surface_covered*100.0)/self.area
+#                    if parea >= percantage_surface :
+#                        print str(parea)+" % is covered,stop" , percantage_surface,  parea >= percantage_surface           
+#                        break
+#                else :
+#                    if countH > countThreshold :
+#                        print "stop countH"
+#                        break 
+#                if self.display:
+#                    tiles.sphs=[];
+#                    ids,pts,colors,w=self.getFreePos();
+#                    self.displayWeights(pts,colors)
+#                asa+=1        
+#        print "elapsed time is ",time()-t1,len(self.ALL_HEXAGON)
+#        self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
+#        print (self.surface_covered*100.0)/self.area," % is covered"
+#        helper.resetProgressBar()
+#        helper.progressBar(label="Tilling Complete in "+str(time()-t1)+" secs")
+#
+#    def save(self,filename):
+#        #export [[567.30621337890625, -76.661155700683594, 318.21942138671875], [[0.42438143491744995, 3.5741718014068754e-09, 0.9054835279589204, 0.0], [0.23323895037174225, 0.96625566434317833, -0.10931429396496474, 0.0], [-0.87492853403091431, 0.25758499087995512, 0.41006097498201871, 0.0], [0.0, 0.0, 0.0, 1.0]], "MA_hexagone", 1, 0]
+#        results=[]        
+#        for h in self.ALL_HEXAGON:
+#            results.append([h.pos,h.mat.tolist(),"MA_hexagone",1,0])
+#        with open(filename, 'w') as fp :#doesnt work with symbol link ?
+#            json.dump(results,fp)
+#
+#    def clear(self):
+#        helper.deleteObject("all_spheres") 
+#        helper.deleteObject("all_hex") 
         
 #def getFaceNormals(vertices, faces,fillBB=None):
 #    """compute the face normal of the compartment mesh"""
@@ -1215,18 +1485,16 @@ class tileHexaIngredient:
 ##sphs=helper.instancesSphere("sphereHexagoneN",n,[1,]*6,s,[[0,0,1]],None,parent=parent)
 ##sphs=helper.instancesSphere("sphereHexagoneNE",extendedN,[1,]*6,s,[[1,0,0]],None,parent=parent)
 #
-#hexamer_obj = helper.getObject("hex")
-#hexamer_pos=[]
-#hexamer_free_nb=[1,1,1,1,1,1]#all free
-#hexamer_radius=55#inner radus 0f 40, distance h-h ~80
-#ax,c,n=getCoordHexagone(hexamer_radius)
-#hexamer_local_pos=[[],]
-#from c4d import utils
-#sel = helper.getCurrentSelection()
-#if not len(sel):
-#    input_mesh = helper.getObject("inputMesh")
-#else :
-#    input_mesh = sel[0]
+#def test():
+#    hexamer_obj = helper.getObject("hex")
+#    sel = helper.getCurrentSelection()
+#    if not len(sel):
+#        input_mesh = helper.getObject("inputMesh")
+#    else :
+#        input_mesh = sel[0]
+#    tiles  = tileTriangleIngredient(self,comp,
+#                                         self.encapsulatingRadius)
+#    tiles=Tilling([],[],[],input_mesh,hexamer_radius,init_seed=n) 
 #
 ##
 #nmodels = 1
