@@ -59,6 +59,7 @@ from time import time,sleep
 import math
 from .ray import vlen, vdiff, vcross
 from RAPID import RAPIDlib
+from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix,superimposition_matrix,rotation_matrix,affine_matrix_from_points
 
 #RAPID require a uniq mesh. not an empty or an instance
 #need to combine the vertices and the build the rapid model
@@ -555,7 +556,8 @@ class Agent:
         if "excluded_partners_name" in kw :
             self.excluded_partners_name=kw["excluded_partners_name"]  
         assert packingMode in ['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient','hexatile']
+                               'randomPartner', 'gradient','hexatile','squaretile',
+                               'triangletile']
         self.packingMode = packingMode
 
         #assert placeType in ['jitter', 'spring','rigid-body']
@@ -1110,7 +1112,7 @@ class Ingredient(Agent):
                         "excluded_partners_name":{"name":"excluded_partners_name","type":"liste_string", "value":"[]"},
                         "partners_position":{"name":"partners_position","type":"liste_float", "value":"[]"},
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient','hexatile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
+                               'randomPartner', 'gradient','hexatile','squaretile','triangletile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
                         "gradient":{"name":"gradient","value":"","values":[],"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"gradient name to use if histo.use_gradient"},
                         "proba_not_binding":{"name":"proba_not_binding","type":"float", "value":"0.5"},
@@ -1155,7 +1157,7 @@ class Ingredient(Agent):
 
                         
                         "packingMode":{"name":"packingMode","value":"random","values":['random', 'close', 'closePartner',
-                               'randomPartner', 'gradient','hexatile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
+                               'randomPartner', 'gradient','hexatile','squaretile','triangletile'],"min":0.,"max":0.,"default":'random',"type":"liste","description":"packingMode"},
                         "placeType":{"name":"placeType","value":"jitter","values":autopack.LISTPLACEMETHOD,"min":0.,"max":0.,
                                         "default":"jitter","type":"liste","description":"placeType"},
                         "gradient":{"name":"gradient","value":"","values":[],"min":0.,"max":0.,
@@ -1180,7 +1182,20 @@ class Ingredient(Agent):
             from autopack.hexagonTile import tileHexaIngredient
             #self.histoVol attached to compratmentsmes
             self.tilling = tileHexaIngredient(self,comp,
-                                         self.encapsulatingRadius)
+                                         self.encapsulatingRadius,
+                                         init_seed=self.histoVol.seed_used)
+        elif self.packingMode == 'squaretile' :
+            from autopack.hexagonTile import tileSquareIngredient
+            #self.histoVol attached to compratmentsmes
+            self.tilling = tileSquareIngredient(self,comp,
+                                         self.encapsulatingRadius,
+                                         init_seed=self.histoVol.seed_used)
+        elif self.packingMode == 'triangletile' :
+            from autopack.hexagonTile import tileTriangleIngredient
+            #self.histoVol attached to compratmentsmes
+            self.tilling = tileTriangleIngredient(self,comp,
+                                         self.encapsulatingRadius,
+                                         init_seed=self.histoVol.seed_used)
 
 
     def DecomposeMesh(self,m,edit=True,copy=False,tri=True,transform=True) :         
@@ -4124,7 +4139,7 @@ class Ingredient(Agent):
         #should se a distance_of_influence ? or self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0
         #or the grid diagonal
         #we need to change here in case tilling, the pos,rot ade deduced fromte tilling.
-        if self.packingMode == 'hexatile' :
+        if self.packingMode[-4:] == 'tile' :
             if self.tilling == None :
                 self.setTilling(compartment)
             if self.counter!=0 : 
@@ -4134,9 +4149,16 @@ class Ingredient(Agent):
                     trans = t
                     rotMat = r
                     targetPoint = trans
+                    if runTimeDisplay and self.mesh:
+                        mat = rotMat.copy()
+                        mat[:3, 3] = targetPoint
+                        afvi.vi.setObjectMatrix(moving,mat,transpose=True)
+                        afvi.vi.update()                                                   
                 else :
                     self.reject()                
-                    return False, nbFreePoints#,targetPoint, rotMat       
+                    return False, nbFreePoints#,targetPoint, rotMat  
+            else :
+                self.tilling.init_seed(histoVol.seed_used)
         elif histoVol.ingrLookForNeighbours and self.packingMode == "closePartner":
             bind = True
             print ("look for ingredient",trans)
@@ -4236,6 +4258,13 @@ class Ingredient(Agent):
                 else :
                     rotMatj=histoVol.randomRot.get()  #Graham turned this back on to replace rotMat.copy() so ing rotate each time
 #                    rotMatj = rotMat.copy()
+            if self.packingMode[-4:] == 'tile' :
+                if self.counter==0 : 
+                    euler = euler_from_matrix(rotMat)
+                    print euler
+#                    rotMat = euler_matrix(euler[0],euler[1],0).transpose()
+                jtrans = targetPoint
+                rotMatj =  rotMat[:]#self.tilling.getNextHexaPosRot()
             if runTimeDisplay and moving is not None :
 #                print "ok rot copy"
                 mat = rotMatj.copy()
@@ -4243,12 +4272,6 @@ class Ingredient(Agent):
                 afvi.vi.setObjectMatrix(moving,mat,transpose=True)
 #                afvi.vi.setTranslation(moving,pos=jtrans)
                 afvi.vi.update()
-            if self.packingMode == 'hexatile' :
-#                if self.counter!=0 : 
-                    #pick the next Hexa pos/rot.
-                    #no jitter.
-                    jtrans = targetPoint
-                    rotMatj =  rotMat[:]#self.tilling.getNextHexaPosRot()
 #            closeS = self.checkPointSurface(jtrans,cutoff=float(self.cutoff_surface))
 #            if closeS :
 #                print ("ok reject once")
@@ -4418,8 +4441,8 @@ class Ingredient(Agent):
                 organelle.molecules.append([ jtrans, rotMatj, self, ptInd ])
                 histoVol.order[ptInd]=histoVol.lastrank
                 histoVol.lastrank+=1
-                if self.packingMode == 'hexatile' :
-                    nexthexa = self.tilling.dropHexa(self.tilling.idc,
+                if self.packingMode[-4:] == 'tile' :
+                    nexthexa = self.tilling.dropTile(self.tilling.idc,
                                             self.tilling.edge_id,jtrans,rotMatj)
                     print ("drop next hexa",nexthexa.name,self.tilling.idc,self.tilling.edge_id)
                     #('drop next hexa', 'hexa_0_', 0, '')
@@ -4454,7 +4477,7 @@ class Ingredient(Agent):
                 afvi.vi.deleteObject(moving)
             success = False
             self.haveBeenRejected = True
-            if self.packingMode == 'hexatile' :
+            if self.packingMode[-4:] == 'tile' :
                 if self.tilling.start.nvisit[self.tilling.edge_id] >= 2 :
                     self.tilling.start.free_pos[self.tilling.edge_id]=0
 

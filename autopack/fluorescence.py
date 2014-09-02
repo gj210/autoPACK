@@ -159,6 +159,7 @@ class fluoSim:
         if values is None :
             values = self.values
         if values is not None :
+            #filter values not inside the Box boundingBox
             xyz = np.meshgrid(self.x,self.y,self.z,copy=False)
             grid = np.array(xyz).T
             tr=spatial.cKDTree(grid.reshape((self.nx*self.ny*self.nz,3)), leafsize=10)
@@ -537,6 +538,7 @@ class fluoSim:
         mat = helper.createTexturedMaterial(name+"_Mat",imfilename)
         #assign the material to the plane
         helper.assignMaterial(p,mat,texture=True)
+        #could use c4d viewport viewport[c4d.symbols.BASEDRAW_DATA_PICTURE] = "/tmp/arpmv.jpg" 
         return p
 
     def drawAPlane(self,helper,output,ax):
