@@ -857,7 +857,7 @@ class Ingredient(Agent):
         print (packingPriority,self.packingPriority)
         if name == None:
             name = "%f"% molarity
-        print "CREATE INGREDIENT",str(name),("rejectionThreshold" in kw)
+        print ("CREATE INGREDIENT",str(name),("rejectionThreshold" in kw))
         self.name = str(name)
         self.o_name = str(name)
         self.Type = Type
@@ -981,7 +981,7 @@ class Ingredient(Agent):
             self.coordsystem = kw["coordsystem"]
         self.rejectionThreshold = 30
         if "rejectionThreshold" in kw:
-            print "rejectionThreshold",kw["rejectionThreshold"]
+            print ("rejectionThreshold",kw["rejectionThreshold"])
             self.rejectionThreshold = kw["rejectionThreshold"]
 
         #get the collision mesh
@@ -1198,20 +1198,22 @@ class Ingredient(Agent):
                                          init_seed=self.histoVol.seed_used)
 
 
-    def DecomposeMesh(self,m,edit=True,copy=False,tri=True,transform=True) :         
+    def DecomposeMesh(self,poly,edit=True,copy=False,tri=True,transform=True) :         
         helper = autopack.helper
 #        if hasattr(m,"getFaces"):#DejaVu object
 #            faces = m.getFaces()
 #            vertices = m.getVertices()
 #            vnormals = m.getVNormals()       
 #        else :
+        m=None
         if helper.host == "dejavu" :
-            m = helper.getMesh(m)
+            m = helper.getMesh(poly)
             tr=False
         else :
-            m = helper.getMesh(helper.getName(m))
+            m = helper.getMesh(helper.getName(poly))
             tr=True
-        #print ("Decompose Mesh")
+        print ("Decompose Mesh",helper.getName(poly),m)
+        #what about empty, hyerarchi
         faces,vertices,vnormals = helper.DecomposeMesh(m,
                        edit=edit,copy=copy,tri=tri,transform=tr) 
         return faces,vertices,vnormals
@@ -1309,6 +1311,7 @@ class Ingredient(Agent):
         helper = autopack.helper
         if mesh is None :
             mesh = self.mesh
+        print ("getEncapsulatingRadius ",self.mesh,mesh )
         faces,vertices,vnormals = self.DecomposeMesh(mesh,
                            edit=True,copy=False,tri=True) 
         #print ("create the triangle",len(faces))
@@ -4261,7 +4264,7 @@ class Ingredient(Agent):
             if self.packingMode[-4:] == 'tile' :
                 if self.counter==0 : 
                     euler = euler_from_matrix(rotMat)
-                    print euler
+                    print (euler)
 #                    rotMat = euler_matrix(euler[0],euler[1],0).transpose()
                 jtrans = targetPoint
                 rotMatj =  rotMat[:]#self.tilling.getNextHexaPosRot()
@@ -5878,7 +5881,7 @@ class SingleSphereIngr(Ingredient):
                         autopack.helper.toggleDisplay(p,False)
                 self.mesh = autopack.helper.Sphere(self.name+"_basic",
                                 radius=self.radii[0][0],color=self.color,
-                                parent="autopackHider",res=24)[0]
+                                parent=p,res=24)[0]
             else :
                 self.mesh = autopack.helper.unitSphere(self.name+"_basic",5,
                                 radius=self.radii[0][0])[0]
@@ -7079,7 +7082,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         #check how far from surface ?
                         closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
                 if not inside or closeS or not inComp:
-                    print "inside,closeS ",not inside,closeS,not inComp,newPt,marge
+                    print ("inside,closeS ",not inside,closeS,not inComp,newPt,marge)
                     if not self.constraintMarge :
                         if marge >=175 :
                             print ("no second point not constraintMarge 1 ", marge)

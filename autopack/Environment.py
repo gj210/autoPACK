@@ -1215,7 +1215,7 @@ class Environment(CompartmentList):
             geom = str(onode.getAttribute("geom"))
             rep =  str(onode.getAttribute("rep"))
             rep_file=str(onode.getAttribute("rep_file"))
-            print len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0
+            print (len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0)
             if rep != "None" and len(rep) != 0 and rep != '' and rep == "":
                 rname =  rep_file.split("/")[-1]
                 fileName, fileExtension = os.path.splitext(rname)
@@ -1228,7 +1228,7 @@ class Environment(CompartmentList):
             else :
                 rep=None
                 rep_file=None
-                print "NONENE"
+                print ("NONENE")
             print ("add compartment ",name,geom,rep,rep_file)
             o = Compartment(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
             print ("added compartment ",name)
@@ -4727,7 +4727,7 @@ h1 = Environment()
         #apply the coordinate from a trajectory at step step.
         #correspondance ingredients instance <-> coordinates file
         #trajectory class to handle 
-        print "Step is "+str(step)
+        print ("Step is "+str(step))
         #if self.traj.traj_type=="dcd" or self.traj.traj_type=="xyz":
         self.traj.applyState_primitive_name(self,step)
             #ho can we apply to parent instance the rotatiotn?

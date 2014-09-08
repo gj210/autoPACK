@@ -243,7 +243,7 @@ def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
         name = filename.split("/")[-1]#the recipe name
         tmpFileName = cache_dir[cache]+os.sep+destination+name
         if not os.path.exists(cache_dir[cache]+os.sep+destination):
-		    os.makedirs(cache_dir[cache]+os.sep+destination)
+            os.makedirs(cache_dir[cache]+os.sep+destination)
         #check if exist first
         #print ("isfile ",tmpFileName)
         if not os.path.isfile(tmpFileName) or force :

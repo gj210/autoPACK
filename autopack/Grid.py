@@ -254,7 +254,7 @@ class Grid:
         if NX == 0 : NX=1
         if NY == 0 : NY=1
         if NZ == 0 : NZ=1
-        print NX,NY,NZ
+        print (NX,NY,NZ)
         # we want the diagonal of the voxel, not the diagonal of the plane, so the second 1.1547 is was incorrect
         environmentBoxEqualFillBox = True
         #np.linspace(2.0, 3.0, num=5)

@@ -435,7 +435,7 @@ class AnalyseAP:
                             ingrpos[ingrname]=[]                            
                         ingrrot[ingrname].append(data[recipe][ingrname]['results'][k][1])
                         ingrpos[ingrname].append(data[recipe][ingrname]['results'][k][0])
-            print i
+            print (i)
         return ingrpos,ingrrot
 
     def grabResultFromTXT(self,n,doanalyze=False):
@@ -445,7 +445,7 @@ class AnalyseAP:
         ingrpos3=[]
         ingrrot3=[]
         for i in range(1000):
-            print i    
+            print (i)    
             files=open("results_seed_"+str(i)+".txt","r")
             lines = files.readlines()
             files.close()
@@ -642,7 +642,7 @@ class AnalyseAP:
                 area0=math.pi*e**2#complete circle
                 area1=self.rectangle_circle_area(self.bbox,p,e)
                 w=area1/area0
-                print w,area1,area0,e ,p
+                print (w,area1,area0,e ,p)
                 k[i,j]=w*len(np.nonzero(di < e)[0])/N**2
         Kt=V*np.sum(k,axis=0)
         Lt=(Kt/np.pi)**0.5
@@ -706,7 +706,7 @@ class AnalyseAP:
         G=dnr/Vshell
         numpy.savetxt(basename+ingr.name+"_rdf_simple.csv", numpy.array(G), delimiter=",")
         self.plot(numpy.array(G),radii[:-1],basename+ingr.name+"_rdf_simple.png")
-        print G
+        print (G)
         
     def axis_distribution_total(self,all_positions):
         basename = self.env.basename
@@ -961,10 +961,10 @@ class AnalyseAP:
         import gc
         import pprint
         for i in range(2):
-            print 'Collecting %d ...' % i
+            print ('Collecting %d ...' % i)
             n = gc.collect()
-            print 'Unreachable objects:', n
-            print 'Remaining Garbage:', 
+            print ('Unreachable objects:', n)
+            print ('Remaining Garbage:') 
             pprint.pprint(gc.garbage)
             del gc.garbage[:]
             print
@@ -972,7 +972,7 @@ class AnalyseAP:
     def merge(self,d1, d2, merge=lambda x,y:y):
         result = dict(d1)
         for k,v in d2.iteritems():
-            print k
+            print (k)
             if k in result:
                 result[k].extend(v)
             else:
