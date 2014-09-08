@@ -148,7 +148,7 @@ class  Compartment(CompartmentList):
         if vertices == None :
             if "filename" in kw :
                 self.faces,self.vertices,self.vnormals = self.getMesh(filename=kw["filename"])
-                print self.vertices[0]
+                print (self.vertices[0])
                 self.filename=kw["filename"]
                 self.ref_obj = name
                 #print ("mesh",self.name,self.filename)

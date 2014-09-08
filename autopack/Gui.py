@@ -578,7 +578,7 @@ class SubdialogIngrdient(uiadaptor):
         aStr += '   r = self.ingr.recipe\n'        
         aStr += '   o = self.ingr.OPTIONS["'+name+'"]\n'
         aStr += '   for ingre in r.ingredients :\n'
-        aStr += '       print ingre,ingre.name,"'+name+'",o["type"]\n'        
+        aStr += '       print (ingre,ingre.name,"'+name+'",o["type"])\n'        
         aStr += '       if o["type"] == "vector" :\n'
         aStr += '           v=[self.getVal(w) for w in self.Widget["options"]["'+name+'"]]\n'
         aStr += '           setattr(ingre,"'+name+'",v)       \n'
@@ -3187,7 +3187,7 @@ class AutoPackGui(uiadaptor):
             vi = kw["vi"]
         self.helper = upy.getHelperClass()(vi=vi)
         autopack.helper = self.helper
-        print autopack.helper.getCurrentScene()
+        print (autopack.helper.getCurrentScene())
         self.histoVol={}
         self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
