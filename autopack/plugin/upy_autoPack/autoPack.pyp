@@ -131,7 +131,7 @@ if not local :
 else :
     sys.path.append(MGL_ROOT+'/MGLToolsPckgs/PIL')
     sys.path.insert(1,MGL_ROOT+'/MGLToolsPckgs/lib-tk')
-	
+    sys.path.insert(0,MGL_ROOT+'/MGLToolsPckgs/Panda3D/lib')	
 	
 #be sure to use a unique ID obtained from www.plugincafe.com
 #from Blender import Draw
@@ -152,7 +152,6 @@ import c4d
 #plugdir = os.path.abspath(os.curdir)
 
 sys.path.insert(0,plugdir)
-#sys.path.insert(0,"/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs")
 sys.path.insert(0,localpath)
 
 #this gave access to all the module inside AutoFill folder.
