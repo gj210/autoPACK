@@ -4271,7 +4271,10 @@ h1 = Environment()
 #            loadPrcFileData('', 'bullet-enable-contact-events true')
             loadPrcFileData('', 'bullet-max-objects 10240')#10240
             loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
-            loadPrcFileData('', 'bullet-sap-extents '+str(self.grid.diag))#
+            if self.grid is None :
+                loadPrcFileData('', 'bullet-sap-extents 10000.0')#
+            else :
+                loadPrcFileData('', 'bullet-sap-extents '+str(self.grid.diag))#
             
             import direct.directbase.DirectStart 
             from panda3d.core import Vec3
