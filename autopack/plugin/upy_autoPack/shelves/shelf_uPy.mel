@@ -21,8 +21,8 @@ global proc shelf_uPy () {
         -imageOverlayLabel "ePMV" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
-        -image "/Library/MGLTools/1.5.6.up/MGLToolsPckgs/ePMV/images/pmv.tif" 
-        -image1 "/Library/MGLTools/1.5.6.up/MGLToolsPckgs/ePMV/images/pmv.tif" 
+        -image "pmv.tif" 
+        -image1 "pmv.tif" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -38,7 +38,7 @@ global proc shelf_uPy () {
         -manage 1
         -visible 1
         -preventOverride 0
-        -annotation "import maya\nmaya.cmds.AutoFill()\n" 
+        -annotation "import maya\nmaya.cmds.autopack()\n" 
         -enableBackground 0
         -align "center" 
         -label "AutoFill" 
@@ -52,7 +52,7 @@ global proc shelf_uPy () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "import maya\nmaya.cmds.AutoFill()\n" 
+        -command "import maya\nmaya.cmds.autopack()\n" 
         -sourceType "python" 
         -commandRepeatable 1
     ;
