@@ -102,7 +102,7 @@ upy.setUIClass() #set the class
 #get the pluginClass
 plugTypeClass,opType = upy.getPluginClass(plug="command")#= operator in blender
 
-from autopack import AFGui
+from autopack import Gui
 
 class af_Dialog(plugTypeClass):
     plugin_name =  "autopack"
@@ -111,7 +111,7 @@ class af_Dialog(plugTypeClass):
     hasGui = True
 
     def setgui(self,dname):
-        self.gui = AFGui.AFGui()
+        self.gui = Gui.AutoPackGui() 
         self.gui.setup(rep=dname,host=upy.host)
         self.hasGui = True
         self.gui.display()
