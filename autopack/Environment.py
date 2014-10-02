@@ -88,14 +88,7 @@ LOG = False
 verbose = 0
 
 #PANDA3D Physics engine ODE and Bullet
-try :
-    import panda3d
-    print ("got Panda3D raw")
-except :    
-    #MAC PATH
-    p="/Developer/Panda3D/lib"#sys.path.append("/Developer/Panda3D/lib/")
-    sys.path.append(p)
-    print ("Trying Panda3D Except with path = ", p)
+#path are setup in autopack.__init__
 try :
     import panda3d
     print ("Should have Panda3D now because panda3d = ", panda3d)
@@ -4259,22 +4252,20 @@ h1 = Environment()
         },"ode":
             {"SingleSphere":self.addSingleSphereRBODE,}
             }
+        from panda3d.core import loadPrcFileData
+        if self.grid is not None :
+            loadPrcFileData('', 'bullet-sap-extents '+str(self.grid.diag))#grid may not be setup 
         if self.world is None :
             if panda3d is None :
                 return
-            from panda3d.core import loadPrcFileData
-            
-            loadPrcFileData("", "window-type none" ) 
+#            loadPrcFileData("", "window-type none" ) 
             # Make sure we don't need a graphics engine 
             #(Will also prevent X errors / Display errors when starting on linux without X server)
             loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
 #            loadPrcFileData('', 'bullet-enable-contact-events true')
             loadPrcFileData('', 'bullet-max-objects 10240')#10240
             loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
-            if self.grid is None :
-                loadPrcFileData('', 'bullet-sap-extents 10000.0')#
-            else :
-                loadPrcFileData('', 'bullet-sap-extents '+str(self.grid.diag))#
+            loadPrcFileData('', 'bullet-sap-extents 10000.0')#
             
             import direct.directbase.DirectStart 
             from panda3d.core import Vec3

@@ -1321,7 +1321,7 @@ class Ingredient(Agent):
         self.encapsulatingRadius = max(l)   
 
     def getData(self):
-        if not len(self.vertices) :
+        if self.vertices is None or not len(self.vertices) :
             if self.mesh :
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
@@ -1329,7 +1329,7 @@ class Ingredient(Agent):
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
-        if not len(self.vertices) :
+        if self.vertices is None or not len(self.vertices) :
             if self.mesh :
 #                helper = autopack.helper
 #                #should get the mesh
@@ -1349,7 +1349,7 @@ class Ingredient(Agent):
     def create_rapid_model(self):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
-        if not len(self.vertices) :
+        if self.vertices is None or not len(self.vertices) :
             if self.mesh :
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
