@@ -44,6 +44,8 @@ try :
 except :
     import urllib
 
+afdir = os.path.abspath(__path__[0])
+
 #==============================================================================
 # #Setup autopack data directory.
 #==============================================================================
@@ -66,6 +68,23 @@ if not os.path.exists(appdata):
     print("autoPACK data dir created")
     print(appdata)
 
+#==============================================================================
+# setup Panda directory
+#==============================================================================
+PANDA_PATH=""
+if sys.platform == 'darwin':
+    PANDA_PATH=afdir+os.sep+".."+os.sep+"Panda3D"       
+elif sys.platform == 'win32':
+    PANDA_PATH=afdir+os.sep+".."+os.sep+"Panda3d-1.9.0-x64"
+    PANDA_PATH_BIN=PANDA_PATH+os.sep+"bin"
+    try:
+        if PANDA_PATH_BIN not in os.environ.get('PATH', ''):
+            os.environ['PATH'] = os.pathsep.join((PANDA_PATH_BIN, os.environ.get('PATH', '')))
+    except Exception:
+        pass
+else :#linux ? blender and maya ?
+    pass
+sys.path.append(PANDA_PATH+os.sep+"lib")
 #==============================================================================
 # setup the cache directory inside the app data folder
 #==============================================================================
@@ -115,7 +134,7 @@ helper = None
 #    LISTPLACEMETHOD =  ["jitter","spring","rigid-body"]
 
 LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax","pandaDev","RAPID"]
-afdir = os.path.abspath(__path__[0])
+
 ncpus = 2
 #forceFetch is for any file not only recipe/ingredient etc...
 forceFetch = False
