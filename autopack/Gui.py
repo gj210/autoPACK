@@ -3167,7 +3167,8 @@ class SubdialogViewer(uiadaptor):
 class AutoPackGui(uiadaptor):
     __url__=["http://autopack.org",
              "http://autopack.org/documentation/autofill-api",
-             "http://mgldev.scripps.edu/projects/AF/update_notes.txt"
+#             "http://mgldev.scripps.edu/projects/AF/update_notes.txt"
+             "https://upy.googlecode.com/svn/branches/updates/update_notes_all.json"
              #  "https://sites.google.com/site/autofill21/",
              #  "https://sites.google.com/site/autofill21/documentation/autofill-api",
     ]

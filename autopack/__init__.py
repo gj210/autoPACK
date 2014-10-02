@@ -82,6 +82,8 @@ elif sys.platform == 'win32':
             os.environ['PATH'] = os.pathsep.join((PANDA_PATH_BIN, os.environ.get('PATH', '')))
     except Exception:
         pass
+    sys.path.append(PANDA_PATH_BIN)
+    sys.path.append(PANDA_PATH)
 else :#linux ? blender and maya ?
     pass
 sys.path.append(PANDA_PATH+os.sep+"lib")
