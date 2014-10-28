@@ -974,8 +974,6 @@ class Ingredient(Agent):
         #TODO : "med":{"method":"cms","parameters":{"gridres":30}}
         #TODO : "high":{"method":"msms","parameters":{"gridres":30}}
         #TODO : etc...
-        if "encapsulatingRadius" in kw:
-            self.encapsulatingRadius = kw["encapsulatingRadius"]
         self.coordsystem="left"
         if "coordsystem" in kw:
             self.coordsystem = kw["coordsystem"]
@@ -1001,6 +999,9 @@ class Ingredient(Agent):
             self.mesh = meshObject
         if self.mesh is not None :
            self.getEncapsulatingRadius()
+        if "encapsulatingRadius" in kw:
+            #we force the encapsulatingRadius
+            self.encapsulatingRadius = kw["encapsulatingRadius"]
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -2718,7 +2719,7 @@ class Ingredient(Agent):
         elif self.modelType=='Cylinders':
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-            #print "cent transformed \n",cent1T,cent2T
+            print ("cent transformed \n",cent1T,cent2T)
             for radc, p1, p2 in zip(self.radii[-1], cent1T, cent2T):
                 x1, y1, z1 = p1
                 x2, y2, z2 = p2
@@ -2730,6 +2731,7 @@ class Ingredient(Agent):
                 #bb = ( [cx-radt, cy-radt, cz-radt], [cx+radt, cy+radt, cz+radt] )
                 bb = self.correctBB(posc,posc,radt)#p1,p2,radc
                 pointsInCube = grid.getPointsInCube(bb, posc, radt)
+                print ("correct BB ",bb," posc ",posc, " radt ",radt," poInCube",max(pointsInCube))
                 if hasattr(self,"histoVol") and self.histoVol.runTimeDisplay > 1:
                     box = self.vi.getObject("insidePtBox")
                     if box is None:
@@ -2996,14 +2998,15 @@ class Ingredient(Agent):
         for nid,n in enumerate(close_indice["indices"]):
             if n == -1 :
                 continue
-            if n == len(close_indice["indices"]):
-                continue
+#            if n == len(close_indice["indices"]):
+#                continue
             if n >= len(self.histoVol.rIngr):
                 continue
-            if distances[nid] == 0.0 : continue
             ingr= self.histoVol.rIngr[n]
-            if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
-                continue
+            if len(distances):
+                if distances[nid] == 0.0 : continue
+                if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
+                    continue
 #            print ("distance",nid,n,distances[nid],(ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER)
 #            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
 #            print self.name+" is close to "+ingr.name
@@ -3040,129 +3043,63 @@ class Ingredient(Agent):
         #append organelle rb nodes
         for o in self.histoVol.compartments:
             if self.compNum > 0 and o.name == organelle.name:
-                continue
-            if o.rbnode is not None : 
+                #this i notworking for growing ingredient like hair.
+                #should had after second segments
+                if self.Type != "Grow":
+                    continue
+                else :
+                    #whats the current length 
+                    if len(self.results) <= 1 :
+                        continue
+            orbnode = o.get_rb_model()        
+            if orbnode is not None : 
                 #test distance to surface ? 
                 res = o.OGsrfPtsBht.query(tuple(numpy.array([currentpt,])))
                 if len(res) == 2 :
                     d = res[0][0]
                     if d < self.encapsulatingRadius :
                         if not getInfo :
-                            nodes.append(o.rbnode)
+                            nodes.append(orbnode)
                         else :
-                            nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
+                            nodes.append([orbnode, [0,0,0], numpy.identity(4),o])
 #        if self.compNum < 0 or self.compNum == 0 :     
 #            for o in self.histoVol.compartments:
 #                if o.rbnode is not None : 
 #                    if not getInfo :
 #                        nodes.append(o.rbnode)
-#        print len(nodes),nodes
+#        print ("GetNode ",len(nodes),nodes)
         self.histoVol.nodes = nodes
         return nodes
 
-    def get_rbNodesOld(self,close_indice,currentpt,removelast=False,prevpoint=None,
-                     getInfo=False):
-        #move around the rbnode and return it
-        #self.histoVol.loopThroughIngr( self.histoVol.reset_rbnode )   
-        if self.compNum == 0 :
-            organelle = self.histoVol
-        else :
-            organelle = self.histoVol.compartments[abs(self.compNum)-1]
-        nodes = self.histoVol.rb_panda[:-1]
-        for n in nodes:
-            #reset everything 
-            #print ("delete node ",n)
-            self.histoVol.delRB(n)
-        nodes = []
-        ingrCounter={}
-        a=numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]]
-        b=numpy.array([currentpt,])
-        distances=spatial.distance.cdist(a,b)
-        print ("retrieve ",len(close_indice["indices"]))
-        for nid,n in enumerate(close_indice["indices"]):
-            if n >= len(self.histoVol.rIngr):
-                continue
-#            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
-            ingr= self.histoVol.rIngr[n]
-#            print self.name+" is close to "+ingr.name
-            jtrans=self.histoVol.rTrans[n]
-            rotMat=self.histoVol.rRot[n]
-            if prevpoint != None :
-                #if prevpoint == jtrans : continue
-                d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(prevpoint))
-                if d == 0 : #same point
-                    continue
-            if ingr.name not in ingrCounter:
-                ingrCounter[ingr.name]=0
-#            print n,distances[nid][0],(ingr.encapsulatingRadius+self.encapsulatingRadius)
-#            d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(currentpt))
-            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
-                continue
-            if self.Type == "Grow":
-                if self.name == ingr.name :
-                    c = len(self.histoVol.rIngr)
-                    if (n==c) or n==(c-1) :#or  (n==(c-2)):
-                        continue
-            if ingr.name in self.partners and self.Type == "Grow":
-                c = len(self.histoVol.rIngr)
-                if (n==c) or n==(c-1) or (n==c-2):
-                    continue   
-            if ingrCounter[ingr.name] >= len(ingr.rb_nodes):
-                if ingr.Type == "Grow": 
-                    #shouldnt we use sphere instead
-                    tr=self.histoVol.result[n][0]
-                    if ingr.use_rbsphere :
-                        rbnode = ingr.addRBsegment(tr[0],tr[1],nodeid=str(nid))
-                    else :  
-                        oldpos1=ingr.positions
-                        oldpos2=ingr.positions2
-                        ingr.positions=[[tr[0]],]
-                        ingr.positions2=[[tr[1]],]
-                        rbnode = self.histoVol.addRB(ingr,numpy.array([0,0,0]), numpy.identity(4),rtype=ingr.Type)#cylinder
-                        #histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
-                        ingr.positions=oldpos1
-                        ingr.positions2=oldpos2
-                else :    
-                    rbnode = self.histoVol.addRB(ingr,jtrans, rotMat,rtype=ingr.Type)
-                    ingr.rb_nodes.append(rbnode)
-#                rTrans,rRot=self.histoVol.getRotTransRB(rbnode)
-#                print ("set ",jtrans," get ", rTrans)
-#                print ("create",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
-            else :
-                rbnode = ingr.rb_nodes[ingrCounter[ingr.name]]
-                self.histoVol.moveRBnode(rbnode, jtrans, rotMat)  #Pb here ?
-#                rTrans,rRot=self.histoVol.getRotTransRB(rbnode)
-#                print ("set ",jtrans," get ", rTrans)
-#                print ("move",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
-            ingrCounter[ingr.name]+=1
-            if getInfo :
-                nodes.append([rbnode, jtrans, rotMat,ingr])
-            else :
-                nodes.append(rbnode)
-        #append organelle rb nodes
-        for o in self.histoVol.compartments:
-            if self.compNum > 0 and o.name == organelle.name:
-                continue
-            if o.rbnode is not None : 
-                if not getInfo :
-                    nodes.append(o.rbnode)
-                else :
-                    nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
-#        if self.compNum < 0 or self.compNum == 0 :     
-#            for o in self.histoVol.compartments:
-#                if o.rbnode is not None : 
-#                    if not getInfo :
-#                        nodes.append(o.rbnode)
-#        print len(nodes),nodes
-        self.histoVol.nodes = nodes
-        return nodes
-        
+    def getClosePairIngredient(self,point,histoVol,cutoff=10.0): 
+        R={"indices":[],"distances":[]}
+        radius = [ingr.encapsulatingRadius for ingr in self.histoVol.rIngr]
+        radius.append(self.encapsulatingRadius)
+        pos = self.histoVol.rTrans[:]#).tolist()
+        pos.append([point[0],point[1],point[2]])
+        ind = len(pos)-1
+        bht=bhtreelib.BHtree( pos, radius, 10)
+        # find all pairs for which the distance is less than 1.1
+        # times the sum of the radii
+        pairs = bht.closePointsPairsInTree(1.) 
+        for p in pairs :
+            if p[0] == ind :
+                R["indices"].append(p[1])
+            elif p[1] == ind :
+                R["indices"].append(p[0])
+        bhtreelib.freeBHtree(bht)
+        print ("getClosePairIngredient ",R)
+        print ("all pairs ",pairs)
+        print ("query was ind ",ind)
+        return R
+       
     def getClosestIngredient(self,point,histoVol,cutoff=10.0):
         #may have to rebuild the whale tree every time we add a point
         #grab the current result
         #set the bhtree
         #get closest ClosePoints() 
 #        raw_input()
+#        return self.getClosePairIngredient(point,histoVol,cutoff=cutoff) 
         R={"indices":[],"distances":[]}
         result = numpy.zeros(histoVol.totalNbIngr ).astype('i')        
         nb=0
@@ -3182,7 +3119,7 @@ class Ingredient(Agent):
                         distance=[distance]
                         nb=[nb]
                     R["indices"] = nb
-                    R["distances"] = distance
+                    R["distances"] = distance#sorted by distance short -> long
                 return R
         else :
             return R
@@ -6120,7 +6057,7 @@ class GrowIngrediant(MultiCylindersIngr):
         else :
             v,u = self.vi.measure_distance(self.positions,self.positions2,vec=True)
             self.uLength = abs(u)
-        self.encapsulatingRadius = self.uLength
+        self.encapsulatingRadius = self.uLength/2.0
         self.unitNumberF = 0 #number of unit pose so far forward
         self.unitNumberR = 0 #number of unit pose so far reverse
         self.orientation = orientation
@@ -6158,6 +6095,8 @@ class GrowIngrediant(MultiCylindersIngr):
             self.cutoff_surface = kw["cutoff_surface"]
         if "use_rbsphere" in kw :
             self.use_rbsphere = kw["use_rbsphere"]
+        if "encapsulatingRadius" in kw :
+            self.use_rbsphere = kw["encapsulatingRadius"]
         #mesh object representing one uLength? or a certain length
         self.unitParent = None
         self.unitParentLength = 0.
@@ -6219,7 +6158,8 @@ class GrowIngrediant(MultiCylindersIngr):
         self.alternate_interval = 0
         #keep record of point Id that are bound to alternate and change the 
         #representation according.
-
+        self.safetycutoff = 10
+        
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -7776,9 +7716,9 @@ class GrowIngrediant(MultiCylindersIngr):
             parent = histoVol.afviewer.orgaToMasterGeom[self]
         k=0
         success = False
-        safetycutoff = 50
-        if self.constraintMarge:
-            safetycutoff = 50
+        safetycutoff = self.safetycutoff
+#        if self.constraintMarge:
+#            safetycutoff = 50
         counter = 0
         mask=None
         if self.walkingMode == "lattice" and self.compNum > 0:

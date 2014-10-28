@@ -2056,7 +2056,7 @@ h1 = Environment()
             if autopack.verbose :
                 print("in Environment, compartment.isOrthogonalBoudingBox =",
                       compartment.isOrthogonalBoudingBox)
-            a,b = compartment.BuildGrid(self)
+            a,b = compartment.BuildGrid(self)#return inside and surface point
             aInteriorGrids.append(a)
             aSurfaceGrids.append(b)
     
@@ -2108,12 +2108,16 @@ h1 = Environment()
             if autopack.verbose : 
                 print ("new Grid with  ",boundingBox,self.grid.gridVolume)       
             if rebuild :
-                verts = []            
-                for orga in self.compartments:
-                    if len(orga.vertices):
-                        for pt3d in orga.vertices:
-                            verts.append( pt3d )
-                self.grid.set_surfPtsBht(verts)
+#                if len(self.compartments):
+#                    verts=numpy.array(self.compartments[0].vertices)
+#                    for i in range(1,len(self.compartments)):
+#                        verts=numpy.vstack([verts,self.compartments[i].vertices])
+##                verts = []            
+##                for orga in self.compartments:
+##                    if len(orga.vertices):
+##                        for pt3d in orga.vertices:
+##                            verts.append( pt3d )
+#                self.grid.set_surfPtsBht(verts.tolist())#should do it only on inside grid point
                 self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:] 
                 nbPoints = self.grid.gridVolume
         else :
@@ -2141,6 +2145,11 @@ h1 = Environment()
             self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
         else :
             print ("file is not rebuild nor restore from file")
+        if len(self.compartments):
+            verts=numpy.array(self.compartments[0].surfacePointsCoords)
+            for i in range(1,len(self.compartments)):
+                verts=numpy.vstack([verts,self.compartments[i].surfacePointsCoords])
+            self.grid.set_surfPtsBht(verts.tolist())#should do it only on inside grid point
         if gridFileOut is not None and gridFileIn is None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
