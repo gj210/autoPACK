@@ -624,6 +624,7 @@ class tileIngredient:
         i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
         start=self.TILE[ids[i][0]]
         indicetouse = self.ALL_TILE.index(start)
+        psense=1
         if self.tile_name == "triangle":
             psense = start.sense
         indice,pos,rotMat,mata=self.computePosRot(pts[i],sense=psense*-1)

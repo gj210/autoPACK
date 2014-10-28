@@ -707,7 +707,10 @@ class Grid:
             nb = self.surfPtsBht.closePoints(tuple(pt), radius, result )
 #            nb = self.surfPtsBht.query(tuple(pt),k=self.nbSurfacePoints)
             dimx, dimy, dimz = self.nbGridPoints
-            ptIndices.extend(list(map(lambda x, length=(self.gridVolume/1.1547):x+length,
+            #divide by 1.1547?
+#            ptIndices.extend(list(map(lambda x, length=(self.gridVolume/1.1547):x+length,
+#                             result[:nb])) )
+            ptIndices.extend(list(map(lambda x, length=self.gridVolume:x+length,
                              result[:nb])) )
         return ptIndices
 
@@ -728,13 +731,13 @@ class Grid:
     def set_surfPtsBht(self,verts):
         from bhtree import bhtreelib
         self.surfPtsBht = None
-        if verts :
+        if verts != None and len(verts):
             self.surfPtsBht = bhtreelib.BHtree( verts, None, 10)
 
     def set_surfPtscht(self,verts):
         from scipy import spatial
         self.surfPtsBht = None
-        if verts :
+        if verts != None and len(verts):
             self.surfPtsBht = spatial.cKDTree( verts, leafsize=10)
 
     def computeExteriorVolume(self,compartments=None,space=None,fbox_bb=None):

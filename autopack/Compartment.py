@@ -88,6 +88,24 @@ except :
     helper = None
 print ("helper is "+str(helper))
 
+try :
+    import panda3d
+    print ("Should have Panda3D now because panda3d = ", panda3d)
+    
+    from panda3d.core import Mat3,Mat4,Vec3,Point3
+    from panda3d.core import TransformState
+    from panda3d.core import BitMask32
+    from panda3d.bullet import BulletSphereShape,BulletBoxShape,BulletCylinderShape
+    #        from panda3d.bullet import BulletUpAxis
+    from panda3d.bullet import BulletRigidBodyNode
+    from panda3d.ode import OdeBody, OdeMass
+    from panda3d.ode import OdeSphereGeom
+    from panda3d.core import NodePath
+    print ("Got Panda3D Except")
+except :
+    panda3d = None
+    print ("Failed to get Panda, because panda3d = ", panda3d)
+
 #from autopack import intersect_RayTriangle as iRT
 #from autopack.Environment import Grid   
 if sys.version > "3.0.0":
@@ -248,6 +266,79 @@ class  Compartment(CompartmentList):
             self.create_rapid_model()
         return self.rapid_model 
 
+    def addMeshRB(self,):
+        from panda3d.bullet import BulletRigidBodyNode
+        inodenp = self.parent.worldNP.attachNewNode(BulletRigidBodyNode(self.name))
+        inodenp.node().setMass(1.0)
+        helper = autopack.helper
+        from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
+        from panda3d.core import GeomVertexReader
+        from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
+        #step 1) create GeomVertexData and add vertex information
+        format=GeomVertexFormat.getV3()
+        vdata=GeomVertexData("vertices", format, Geom.UHStatic)        
+        vertexWriter=GeomVertexWriter(vdata, "vertex")
+        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in self.vertices]
+
+        #step 2) make primitives and assign vertices to them
+        tris=GeomTriangles(Geom.UHStatic)
+        [self.setGeomFaces(tris,face) for face in self.faces]
+
+        #step 3) make a Geom object to hold the primitives
+        geom=Geom(vdata)
+        geom.addPrimitive(tris)
+        #step 4) create the bullet mesh and node
+#        if ingr.convex_hull:
+#            shape = BulletConvexHullShape()
+#            shape.add_geom(geom)
+#        else :
+        mesh = BulletTriangleMesh()
+        mesh.addGeom(geom)    
+        shape = BulletTriangleMeshShape(mesh, dynamic=False)#BulletConvexHullShape            
+        print ("shape ok",shape)
+        #inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
+        #inodenp.node().setMass(1.0)
+        inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
+        return inodenp
+
+    def create_rbnode(self, ):
+        # Sphere
+        if panda3d is None :
+            return None
+        trans=[0,0,0]
+        rotMat = mat = numpy.identity(4)
+        mat = mat.transpose().reshape((16,))
+        mat3x3 =Mat3(mat[0],mat[1],mat[2],
+                     mat[4],mat[5],mat[6],
+                     mat[8],mat[9],mat[10])
+        pmat   = Mat4(mat[0],mat[1],mat[2],mat[3],
+                                           mat[4],mat[5],mat[6],mat[7],
+                                           mat[8],mat[9],mat[10],mat[11],
+                                           trans[0],trans[1],trans[2],mat[15],)
+        pMat = TransformState.makeMat(pmat)
+        if self.parent.panda_solver == "ode":
+            pMat = mat3x3
+        shape = None
+        inodenp = self.addMeshRB(pMat,trans,rotMat)
+        if self.panda_solver == "bullet":
+            inodenp.setCollideMask(BitMask32.allOn())
+            inodenp.node().setAngularDamping(1.0)
+            inodenp.node().setLinearDamping(1.0)
+            inodenp.setMat(pmat)
+            self.parent.world.attachRigidBody(inodenp.node())
+            inodenp = inodenp.node()
+        elif self.panda_solver == "ode":
+            inodenp.setCollideBits(BitMask32(0x00000002))
+            inodenp.setCategoryBits(BitMask32(0x00000001))
+            #boxGeom.setBody(boxBody)
+        self.parent.rb_panda.append(inodenp)
+        #self.moveRBnode(inodenp.node(), trans, rotMat)
+        return inodenp
+        
+    def get_rb_model(self):
+        if self.rbnode is None :
+            self.rbnode=self.create_rbnode()
+        return self.rbnode
        
     def getMesh(self,filename=None,rep=None,**kw):
         """

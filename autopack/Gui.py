@@ -2943,6 +2943,9 @@ class SubdialogViewer(uiadaptor):
             self.helper.deleteObject(parent) #is this dleete the child ?
         ingr.ipoly = None
         del ingr.ipoly
+        if ingr.tilling  is not None : 
+            del ingr.tilling 
+            ingr.tilling = None
         #need to do the same for cylinder
 #        if self.afviewer.doSpheres :
 #            self.delIngrPrim(ingr)

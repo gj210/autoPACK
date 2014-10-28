@@ -73,7 +73,9 @@ if not os.path.exists(appdata):
 #==============================================================================
 PANDA_PATH=""
 if sys.platform == 'darwin':
-    PANDA_PATH=afdir+os.sep+".."+os.sep+"Panda3D"       
+    PANDA_PATH=afdir+os.sep+".."+os.sep+"Panda3D"     
+    sys.path.append("/Developer/Panda3D/lib/")#in case already installed
+    #TODO need to fix the dependancy that are locally set to /Developer/Panda3D/lib/
 elif sys.platform == 'win32':
     PANDA_PATH=afdir+os.sep+".."+os.sep+"Panda3d-1.9.0-x64"
     PANDA_PATH_BIN=PANDA_PATH+os.sep+"bin"
