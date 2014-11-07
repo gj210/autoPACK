@@ -3004,7 +3004,7 @@ class Ingredient(Agent):
                 continue
             ingr= self.histoVol.rIngr[n]
             if len(distances):
-                if distances[nid] == 0.0 : continue
+                if distances[nid] == 0.0 : continue#?
                 if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
                     continue
 #            print ("distance",nid,n,distances[nid],(ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER)
