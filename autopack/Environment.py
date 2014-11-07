@@ -4269,7 +4269,7 @@ h1 = Environment()
         if self.world is None :
             if panda3d is None :
                 return
-#            loadPrcFileData("", "window-type none" ) 
+            loadPrcFileData("", "window-type none" ) 
             # Make sure we don't need a graphics engine 
             #(Will also prevent X errors / Display errors when starting on linux without X server)
             loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
