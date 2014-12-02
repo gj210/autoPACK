@@ -163,7 +163,7 @@ autopack_user_path_pref_file = preferences+os.sep+"path_user_preferences.json"
 
 
 #Default values    
-autoPACKserver="http://autofill.googlecode.com/git"
+autoPACKserver="http://autofill.googlecode.com/git"#XML
 filespath = autoPACKserver+"/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
@@ -236,7 +236,8 @@ RECIPES = {}
 USER_RECIPES={}
 
 def resetDefault():
-    os.remove(autopack_user_path_pref_file)
+    if os.path.isfile(autopack_user_path_pref_file):
+        os.remove(autopack_user_path_pref_file)
     autoPACKserver="http://autofill.googlecode.com/git"
     filespath = autoPACKserver+"/autoPACK_filePaths.json"
     recipeslistes = autoPACKserver+"/autopack_recipe.json"
@@ -247,6 +248,12 @@ def checkURL(URL):
     except :
         return False
     return response.code != 404
+
+
+def revertOnePath(p):
+    for v in replace_path:
+        p=p.replace(v[1],v[0])
+    return p
 
 def fixOnePath(p):
     for v in replace_path:
@@ -339,7 +346,7 @@ def checkPath(autopack_path_pref_file):
         if checkURL(fname):
             urllib.urlretrieve(fname, autopack_path_pref_file)
         else :
-            print ("problem accessing "+fname)
+            print ("problem accessing path "+fname)
     else :
         autopack_path_pref_file = fname
         
@@ -354,7 +361,7 @@ def checkRecipeAvailable():
     if checkURL(fname):
         urllib.urlretrieve(fname, recipe_web_pref_file)
     else :
-        print ("problem accessing "+fname)
+        print ("problem accessing recipe "+fname)
         
 def updateRecipAvailableJSON(recipesfile):
     if not os.path.isfile(recipesfile):
@@ -436,7 +443,7 @@ def saveRecipeAvailable(recipe_dictionary,recipefile):
 
 def saveRecipeAvailableJSON(recipe_dictionary,filename):
     with open(filename, 'w') as fp :#doesnt work with symbol link ?
-        json.dump(recipe_dictionary,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
+        json.dump(recipe_dictionary,fp,indent=1, separators=(',', ': '))#,indent=4, separators=(',', ': ')
     
 #we should read a file to fill the RECIPE Dictionary so we can add some and write/save setup 
 #afdir  or user_pref

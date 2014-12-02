@@ -60,7 +60,7 @@ from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 from autopack.ray import vlen, vdiff, vcross
-from autopack.IOutils import GrabResult
+from autopack import IOutils
 from bhtree import bhtreelib
 from scipy import spatial
 import math
@@ -109,6 +109,8 @@ except :
 
 #coul replace by a faster json python library
 import json
+from json import encoder
+encoder.FLOAT_REPR = lambda o: format(o, '.8g')
 
 LISTPLACEMETHOD = autopack.LISTPLACEMETHOD
     
@@ -1146,12 +1148,12 @@ class Environment(CompartmentList):
             for k in self.OPTIONS:
                 if k == "gradients": 
                     continue
-                v=self.getValueToXMLNode(self.OPTIONS[k]["type"],options,k)
+                v=IOutils.getValueToXMLNode(self.OPTIONS[k]["type"],options,k)
                 if v is not None :
                     setattr(self,k,v)
-            v=self.getValueToXMLNode("vector",options,"boundingBox")
+            v=IOutils.getValueToXMLNode("vector",options,"boundingBox")
             self.boundingBox = v
-            v=self.getValueToXMLNode("string",options,"version")
+            v=IOutils.getValueToXMLNode("string",options,"version")
             self.version = v
             
         gradientsnode=root.getElementsByTagName("gradients")
@@ -1267,314 +1269,33 @@ class Environment(CompartmentList):
 #        if self.placeMethod.find("panda") != -1 :
 #            self.setupPanda()
             
-    def getValueToXMLNode(self,vtype,node,attrname):
-        """
-        Helper function to get the value from a given xml node attribute of a given type 
-        """
-        value = node.getAttribute(attrname)
-        value = str(value)
-        if not len(value):
-            return None
-        if vtype not in ["liste","filename","string"] :
-            value=eval(value)
+
+
+    def loadRecipe(self,setupfile):
+        if setupfile == None:
+            setupfile = self.setupfile
+        #check the extension of the filename none, txt or json
+        fileName, fileExtension = os.path.splitext(setupfile)
+        if fileExtension == '.xml':     
+            self.load_XML(setupfile)
+        elif fileExtension == '.py':   #execute ?  
+            return IOutils.load_Python(self,setupfile)
+        elif fileExtension == '.json':
+            return IOutils.load_Json(self,setupfile)  
         else :
-            value=str(value)
-        return value
-
-    def getStringValueOptions(self,value,attrname):
-        """
-        Helper function to return the given environment option as a string to
-        be write in the xml file.
-        """
-        if value is None:
-            return "None"
-        if attrname == "color" :
-            if type(value) != list and type(value) != tuple :
-                if autopack.helper is not None : 
-                    value=helper.getMaterialProperty(value,["color"])[0]
-                else :
-                    value = [1.,0.,0.]
-        if type (value) == numpy.ndarray :
-            value = value.tolist()
-        elif type(value) == list :
-            for i,v in enumerate(value) :
-                if type(v) == numpy.ndarray :
-                    value[i] = v.tolist()
-                elif type(v) == list :
-                    for j,va in enumerate(v) :
-                        if type(va) == numpy.ndarray :
-                            v[j] = va.tolist() 
-        if type(value) == str :
-            value = '"'+value+'"'
-        return str(value)
+            print  ("can't read or recognize "+resultfilename)
+            return [],[],[]
+        return result
         
-    def setValueToXMLNode(self,value,node,attrname):
-        """
-        Helper function to apply the given environment option value to the 
-        given xml node.
-        """
-        if value is None:
-            return
-        if attrname == "color" :
-            if type(value) != list and type(value) != tuple :
-                if autopack.helper is not None : 
-                    value=helper.getMaterialProperty(value,["color"])[0]
-                else :
-                    value = [1.,0.,0.]
-        if type (value) == numpy.ndarray :
-            value = value.tolist()
-        elif type(value) == list :
-            for i,v in enumerate(value) :
-                if type(v) == numpy.ndarray :
-                    value[i] = v.tolist()
-                elif type(v) == list :
-                    for j,va in enumerate(v) :
-                        if type(va) == numpy.ndarray :
-                            v[j] = va.tolist()                        
-#        print ("setValueToXMLNode ",attrname,value,str(value))  
-        node.setAttribute(attrname,str(value))
-            
-    def save_asXML(self,setupfile,useXref=True):
-        """
-        Save the current environment setup as an xml file.
-        """
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        self.setupfile = setupfile
-        pathout=os.path.dirname(os.path.abspath(self.setupfile))
-        #export all information as xml
-        #histovol is a tag, option are attribute of the tag
-        from xml.dom.minidom import getDOMImplementation
-        impl = getDOMImplementation()
-        #what about afviewer
-        self.xmldoc = impl.createDocument(None, "autopackSetup", None)
-        root = self.xmldoc.documentElement
-        root.setAttribute("name",str(self.name))
-        options=self.xmldoc.createElement("options")
-        for k in self.OPTIONS:
-            v = getattr(self,k)
-            if k == "gradients" :
-                v = self.gradients.keys()
-#            elif k == "runTimeDisplay"
-            self.setValueToXMLNode(v,options,k)
-        #add the boundin box
-        self.setValueToXMLNode(self.boundingBox,options,"boundingBox")
-        self.setValueToXMLNode(self.version,options,"version")#version?
-        root.appendChild(options)
-        
-        if len(self.gradients):
-            gradientsnode=self.xmldoc.createElement("gradients")
-            root.appendChild(gradientsnode)
-            for gname in self.gradients:
-                g = self.gradients[gname]
-                grnode = self.xmldoc.createElement("gradient")
-                gradientsnode.appendChild(grnode)
-                grnode.setAttribute("name",str(g.name))
-                for k in g.OPTIONS:
-                    v = getattr(g,k)
-                    self.setValueToXMLNode(v,grnode,k)      
-
-        #grid path information
-        if self.grid.filename is not None or self.grid.result_filename is not None:
-            gridnode=self.xmldoc.createElement("grid")
-            root.appendChild(gridnode)
-            gridnode.setAttribute("grid_storage",str(self.grid.filename))
-            gridnode.setAttribute("grid_result",str(self.grid.result_filename))
-        
-        r =  self.exteriorRecipe
-        if r :
-            rnode=self.xmldoc.createElement("cytoplasme")
-            root.appendChild(rnode)
-            for ingr in r.ingredients:                
-                if useXref :
-                    io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                    ingrnode = self.xmldoc.createElement("ingredient")
-                    rnode.appendChild(ingrnode)
-                    ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml"))                    
-                else :
-                    ingrnode = self.xmldoc.createElement("ingredient")
-                    rnode.appendChild(ingrnode)
-                    ingrnode.setAttribute("name",str(ingr.name))
-                    for k in ingr.KWDS:
-                        v = getattr(ingr,k)
-    #                    print ingr.name+" keyword ",k,v
-                        self.setValueToXMLNode(v,ingrnode,k)
-        for o in self.compartments:
-            onode=self.xmldoc.createElement("compartment")
-            root.appendChild(onode)
-            onode.setAttribute("name",str(o.name))
-            onode.setAttribute("geom",str(o.filename))#should point to the used filename
-            onode.setAttribute("rep",str(o.representation))#None
-            if o.representation is not None :
-                fileName, fileExtension = os.path.splitext(o.representation_file)
-            else :
-                fileName = None
-            onode.setAttribute("rep_file",str(fileName))#None
-            rs = o.surfaceRecipe
-            if rs :
-                onodesurface=self.xmldoc.createElement("surface")
-                onode.appendChild(onodesurface)
-                for ingr in rs.ingredients: 
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodesurface.appendChild(ingrnode)
-                        ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml")) 
-                    else :
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodesurface.appendChild(ingrnode)
-                        ingrnode.setAttribute("name",str(ingr.name))                       
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-                            self.setValueToXMLNode(v,ingrnode,k)
-            ri = o.innerRecipe
-            if ri :
-                onodeinterior=self.xmldoc.createElement("interior")
-                onode.appendChild(onodeinterior)             
-                for ingr in ri.ingredients: 
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodeinterior.appendChild(ingrnode)
-                        ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml")) 
-                    else :
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodeinterior.appendChild(ingrnode)
-                        ingrnode.setAttribute("name",str(ingr.name))                       
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-                            self.setValueToXMLNode(v,ingrnode,k)
-        f = open(setupfile,"w")        
-        self.xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
-        f.close()
-
-    def save_asPython(self,setupfile,useXref=True):
-        """
-        Save the current environment setup as a python script file.
-        """
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        self.setupfile = setupfile
-        pathout=os.path.dirname(os.path.abspath(self.setupfile))
-        #add the import statement
-        setupStr="""
-import sys
-import os
-#autopack
-import autopack
-localdir = wrkDir = autopack.__path__[0]
-from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr
-from autopack.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
-from autopack.Compartment import Compartment
-from autopack.Recipe import Recipe
-from autopack.Environment import Environment
-from autopack.Graphics import AutopackViewer as AFViewer
-#access the helper
-helper = autopack.helper
-if helper is None :
-    import upy
-    helperClass = upy.getHelperClass()
-    helper =helperClass()
-#create the viewer
-ViewerType=autopack.helper.host    
-afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
-#make some option here     
-afviewer.doPoints = False
-afviewer.doSpheres = False
-afviewer.quality = 1 #lowest quality for sphere and cylinder
-afviewer.visibleMesh = True #mesh default visibility 
-#create the env
-h1 = Environment()
-"""
-        setupStr+="h1.name='"+self.name+"'\n"    
-        for k in self.OPTIONS:
-            v = getattr(self,k)
-            if k == "gradients" :
-                v = self.gradients.keys()
-            vstr=self.getStringValueOptions(v,k)#self.setValueToXMLNode(v,options,k)
-            setupStr+="h1.%s=%s\n" % (k,vstr)
-        #add the boundin box
-        vstr=self.getStringValueOptions(self.boundingBox,"boundingBox")#self.setValueToXMLNode(v,options,k)
-        setupStr+="h1.%s=%s\n" % ("boundingBox",vstr)
-        vstr=self.getStringValueOptions(self.version,k)#self.setValueToXMLNode(v,options,k)
-        setupStr+="h1.%s=%s\n" % ("version",vstr)
-        
-#TODO : GRADIENT
-#        if len(self.gradients):
-#            gradientsnode=self.xmldoc.createElement("gradients")
-#            root.appendChild(gradientsnode)
-#            for gname in self.gradients:
-#                g = self.gradients[gname]
-#                grnode = self.xmldoc.createElement("gradient")
-#                gradientsnode.appendChild(grnode)
-#                grnode.setAttribute("name",str(g.name))
-#                for k in g.OPTIONS:
-#                    v = getattr(g,k)
-#                    self.setValueToXMLNode(v,grnode,k)      
-#
-#        grid path information
-#        if self.grid.filename is not None or self.grid.result_filename is not None:
-#            gridnode=self.xmldoc.createElement("grid")
-#            root.appendChild(gridnode)
-#            gridnode.setAttribute("grid_storage",str(self.grid.filename))
-#            gridnode.setAttribute("grid_result",str(self.grid.result_filename))
-#        
-        r =  self.exteriorRecipe
-        if r :
-            setupStr+="cytoplasme = Recipe()\n"
-            for ingr in r.ingredients:                
-                if useXref :
-                    io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                    setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':cytoplasme})\n"
-                else :
-                    ingrnode = io_ingr.ingrPythonNode(ingr,recipe="cytoplasme")
-                    setupStr+=ingrnode
-            setupStr+="h1.setExteriorRecipe(cytoplasme)\n"                    
-        for o in self.compartments:
-            setupStr+=o.name+" = Compartment('"+o.name+"',None, None, None,\n"
-            setupStr+="         filename='"+o.filename+"',\n"
-            if o.representation is not None:
-                setupStr+="         object_name ='"+o.representation+"',\n"
-                setupStr+="         object_filename ='"+o.representation_file+"'\n"
-            setupStr+="         )\n"
-            setupStr+="h1.addCompartment("+o.name+")\n"
-            rs = o.surfaceRecipe
-            if rs :
-                setupStr+=o.name+"_surface = Recipe(name='"+o.name+"_surf')\n"
-                for ingr in rs.ingredients:                
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                        setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':"+o.name+"_surface})\n"
-                    else :
-                        ingrnode = io_ingr.ingrPythonNode(ingr,recipe=o.name+"_surface")
-                        setupStr+=ingrnode 
-                setupStr+=o.name+".setSurfaceRecipe("+o.name+"_surface)\n"
-            ri = o.innerRecipe
-            if ri :
-                setupStr+=o.name+"_inner = Recipe(name='"+o.name+"_int')\n"
-                for ingr in rs.ingredients:                
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                        setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':"+o.name+"_inner})\n"
-                    else :
-                        ingrnode = io_ingr.ingrPythonNode(ingr,recipe=o.name+"_inner")
-                        setupStr+=ingrnode   
-                setupStr+=o.name+".setInnerRecipe("+o.name+"_inner)\n"
-        setupStr+="afviewer.SetHistoVol(h1,0,display=False)\n"
-        setupStr+="afviewer.displayPreFill()\n"
-        setupStr+="bbox = afviewer.helper.getObject('histvolBB')\n"
-        setupStr+="if bbox is None : bbox = afviewer.helper.box('histvolBB',cornerPoints=h1.boundingBox)\n"
-        setupStr+="helper = afviewer.helper\n"
-        setupStr+="noGUI = False\n"
-        setupStr+="try :\n"
-        setupStr+="    print ('try')\n"
-        setupStr+="    AFGui.Set('"+self.name+"',helper=afviewer.helper,afviewer=afviewer,histoVol=h1,bbox=bbox)\n"
-        setupStr+="except:\n"
-        setupStr+="    print ('no GUI')\n"
-        setupStr+="    noGUI = True\n"
-        f = open(setupfile,"w")        
-        f.write(setupStr)
-        f.close()
+    def saveRecipe(self,setupfile,useXref=True,format_output="json"):
+        if format_output == "json":
+            IOutils.save_asJson(self,setupfile,useXref=useXref)
+        elif format_output == "xml":
+            IOutils.save_asXML(self,setupfile,useXref=useXref)
+        elif format_output == "python":
+            IOutils.save_asPython(self,setupfile,useXref=useXref)
+        else :
+            print("format output "+format_output+" not recognized (json,xml,python)")
             
     def includeIngrRecipes(self,ingrname, include):
         """
@@ -3247,7 +2968,7 @@ h1 = Environment()
                     o.rbnode = self.addMeshRBOrganelle(o)
         if usePP :
             import pp
-            self.grab_cb = GrabResult() 
+            self.grab_cb = IOutils.GrabResult() 
             self.pp_server = pp.Server(ncpus=autopack.ncpus)
 #==============================================================================
 #         #the big loop
@@ -4044,12 +3765,13 @@ h1 = Environment()
                 ingr.listePtLinear[i]=lp.tolist()                 
                 rdic[ingr.name]["curve"+str(i)] = ingr.listePtLinear[i]
        
-    def store_asJson(self,resultfilename=None):
+    def store_asJson(self,resultfilename=None,indent = True):
         if resultfilename == None:
             resultfilename = self.resultfile
         resultfilename=autopack.fixOnePath(resultfilename)
         self.collectResultPerIngredient()
         self.result_json={}
+        self.result_json["recipe"]=self.setupfile#replace server?
         r =  self.exteriorRecipe
         if r :
             self.result_json["exteriorRecipe"]={}
@@ -4071,8 +3793,11 @@ h1 = Environment()
                 for ingr in ri.ingredients:
                     self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])
         with open(resultfilename+".json", 'w') as fp :#doesnt work with symbol link ?
-            json.dump(self.result_json,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
-        
+            if indent : 
+                json.dump(self.result_json,fp,indent=1, separators=(',', ': '))#,indent=4, separators=(',', ': ')
+            else :
+                json.dump(self.result_json,fp,separators=(',', ': '))#,indent=4, separators=(',', ': ')
+                    
     def store_asTxt(self,resultfilename=None):
         if resultfilename == None:
             resultfilename = self.resultfile
@@ -4082,6 +3807,7 @@ h1 = Environment()
         #OR 
         result=[]
         line=""
+        line+="<recipe include = "+self.setupfile+">\n"
         for pos, rot, ingr, ptInd in self.molecules:
             line+=self.dropOneIngr(pos,rot,ingr.name,ingr.compNum,ptInd,rad=ingr.encapsulatingRadius)
             #result.append([pos,rot,ingr.name,ingr.compNum,ptInd])
