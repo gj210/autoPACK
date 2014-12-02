@@ -1043,12 +1043,12 @@ class Ingredient(Agent):
 
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
-        self.cutoff_surface = self.encapsulatingRadius
+        self.cutoff_surface = float(self.encapsulatingRadius)
         if "cutoff_boundary" in kw:
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw:
             if kw["cutoff_surface"] != 0.0 :
-                self.cutoff_surface = kw["cutoff_surface"]
+                self.cutoff_surface = float(kw["cutoff_surface"])
         self.properties ={}#four tout
         if "properties" in kw:
             self.properties = kw["properties"]
@@ -1319,7 +1319,7 @@ class Ingredient(Agent):
         #encapsulating radius ?
         v=numpy.array(vertices,'f')
         l=numpy.sqrt((v*v).sum(axis=1))
-        self.encapsulatingRadius = max(l)   
+        self.encapsulatingRadius = float(max(l))
 
     def getData(self):
         if self.vertices is None or not len(self.vertices) :
@@ -3004,7 +3004,7 @@ class Ingredient(Agent):
                 continue
             ingr= self.histoVol.rIngr[n]
             if len(distances):
-                if distances[nid] == 0.0 : continue#?
+                if distances[nid] == 0.0 : continue
                 if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
                     continue
 #            print ("distance",nid,n,distances[nid],(ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER)
@@ -5899,7 +5899,7 @@ class MultiSphereIngr(Ingredient):
                  placeType="jitter",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,

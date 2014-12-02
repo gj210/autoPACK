@@ -162,7 +162,7 @@ class SubdialogPreferencesPath(uiadaptor):
                          action=self.Save,type="button",icon=None,
                                      variable=self.addVariable("int",0))
         self.BTN["restore"]=self._addElemt(name="RestoreDefault",width=50,height=10,
-                         action=self.Save,type="button",icon=None,
+                         action=self.RestoreDefault,type="button",icon=None,
                                      variable=self.addVariable("int",0))
        #need to add browse button for all of them
         
@@ -211,6 +211,9 @@ class SubdialogPreferencesPath(uiadaptor):
         self.setVal(self.Widget["options"]["recipeslistes"],autopack.recipeslistes)
         self.setVal(self.Widget["options"]["filespath"],autopack.filespath)
         self.parent.UpdateRecipesList()
+        print (autopack.autoPACKserver)
+        print (autopack.recipeslistes)
+        print (autopack.filespath)
         
 #upy dialog type
 #you can look at the upy documentation and exampl for futher informations
@@ -2135,6 +2138,9 @@ class SubdialogFiller(uiadaptor):
     def setupResultFile(self,*args):
         self.saveDialog(label="choose a file (result.apr)",callback=self.setupResultFile_cb)
 
+    def saveRecipe(self,filename):
+        self.histoVol.saveRecipe(filename,useXref=True,format_output="json")
+
     def savexml(self,filename):
         self.histoVol.save_asXML(filename)
         self.setupfile=filename
@@ -2142,12 +2148,12 @@ class SubdialogFiller(uiadaptor):
     def save(self,*args):
         filename= autopack.RECIPES[self.recipe]["setupfile"]
         if filename.find(".py") != -1 :
-            self.saveDialog(label="choose a xml file",callback=self.savexml)
+            self.saveDialog(label="choose a json file",callback=self.saveRecipe)
             return
-        self.savexml(filename)
+        self.saveRecipe(filename)
     
     def saveas(self,*args):
-        self.saveDialog(label="choose a xml file",callback=self.savexml)
+        self.saveDialog(label="choose a json file",callback=self.saveRecipe)
         
     def append2recipe(self,name,version="1.0"):
         n,v = name.split(" ")
