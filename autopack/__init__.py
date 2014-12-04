@@ -38,7 +38,10 @@ packageContainsVFCommands = 1
 import sys
 import os
 from os import path, environ
-import json
+try :
+    import simplejson as json
+except :
+    import json
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
@@ -120,6 +123,7 @@ cache_dir={
 "recipes":cache_recipes,
 "prefs":preferences,
 }
+
 #    
 #autopack_cache_data (e.g. recipe_available.json)
 #or call this autopack_cache_recipelists
@@ -161,9 +165,8 @@ recipe_dev_pref_file = preferences+os.sep+"autopack_serverDeveloper_recipeList.j
 autopack_path_pref_file = preferences+os.sep+"path_preferences.json"
 autopack_user_path_pref_file = preferences+os.sep+"path_user_preferences.json"
 
-
 #Default values    
-autoPACKserver="http://autofill.googlecode.com/git"#XML
+autoPACKserver="https://autofill.googlecode.com/git/autoPACK_database_1.0.0"#XML
 filespath = autoPACKserver+"/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
@@ -201,7 +204,8 @@ replace_autopackdir=["autopackdir",autopackdir]
 replace_autopackdata=["autopackdata",appdata]
 
 replace_path=[replace_autoPACKserver,replace_autopackdir,replace_autopackdata]
-
+global current_recipe_path
+current_recipe_path=appdata
 #we keep the file here, it come with the distribution 
 #wonder if the cache shouldn use the version like other appDAta
 #ie appData/AppName/Version/etc...
@@ -238,7 +242,7 @@ USER_RECIPES={}
 def resetDefault():
     if os.path.isfile(autopack_user_path_pref_file):
         os.remove(autopack_user_path_pref_file)
-    autoPACKserver="http://autofill.googlecode.com/git"
+    autoPACKserver="http://autofill.googlecode.com/git/autoPACK_database_1.0.0"
     filespath = autoPACKserver+"/autoPACK_filePaths.json"
     recipeslistes = autoPACKserver+"/autopack_recipe.json"
     
@@ -259,13 +263,23 @@ def fixOnePath(p):
     for v in replace_path:
         p=p.replace(v[0],v[1])
     return p
- 
-def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
+
+def updateReplacePath(newPaths):
+    for w in newPaths :    
+        found=False
+        for i,v in enumerate(replace_path):
+            if v[0]==w[0]:
+                replace_path[i][1]=w[1]
+                found=True
+        if not found:
+            replace_path.append(w)
+                
+def retrieveFile(filename,destination="",cache="geoms",force=None):
 #    helper = autopack.helper
     if force is None :
         force = forceFetch
     filename=fixOnePath(filename)
-    print ("autopack retrieve ",filename)
+    print ("autopack retrieve file ",filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
         reporthook = None
         if helper is not None:        
@@ -286,7 +300,23 @@ def retrieveFile(filename,destination=os.sep,cache="geoms",force=None):
         filename = tmpFileName
         print ("autopack return grabbed ",filename)
         return filename
-    print ("autopack return ",filename)
+    #print ("autopack return ",filename)
+    #if no folder provided, use the current_recipe_folder
+    if not os.path.isfile(filename):#use the cache system ? geom / recipes / ingredients / others ?
+        if  os.path.isfile(cache_dir[cache]+os.sep+filename):
+            return cache_dir[cache]+os.sep+filename
+        elif checkURL(autoPACKserver+"/"+cache+"/"+filename):
+            reporthook = None
+            if helper is not None:        
+                reporthook=helper.reporthook
+            name = filename.split("/")[-1]#the recipe name
+            tmpFileName = cache_dir[cache]+os.sep+destination+name
+            urllib.urlretrieve(autoPACKserver+"/"+cache+"/"+filename, tmpFileName,reporthook=reporthook)
+            return tmpFileName
+        elif os.path.isfile(current_recipe_path+os.sep+filename):
+            return current_recipe_path+os.sep+filename
+        else :
+            print (filename," not found ")
     return filename
 
 def fixPath(adict):#, k, v):
@@ -353,7 +383,7 @@ def checkPath(autopack_path_pref_file):
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
 #    fname = "https://sites.google.com/site/autofill21/recipe_available/recipe_available.xml?attredirects=0&d=1"#revision2
-    fname = recipeslistes#autoPACKserver+"/autopack_recipe.json"
+    fname = fixOnePath(recipeslistes)#autoPACKserver+"/autopack_recipe.json"
     try :
         import urllib.request as urllib# , urllib.parse, urllib.error
     except :

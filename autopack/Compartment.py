@@ -183,7 +183,7 @@ class  Compartment(CompartmentList):
         self.representation_file = None
         if "object_name" in kw :
             if kw["object_name"] is not None:
-                #print ("rep",kw["object_name"],kw["object_filename"])
+                print ("rep",kw["object_name"],kw["object_filename"])
                 self.representation = kw["object_name"]
                 self.representation_file =  kw["object_filename"]
                 self.getMesh(filename=self.representation_file,rep=self.representation)
@@ -371,7 +371,7 @@ class  Compartment(CompartmentList):
         else :
             filename =autopack.retrieveFile(filename,cache="geoms")  
         if filename is None :
-            print ("problem with "+filename)
+            print ("problem with getMesh of compartm",self.name,fileName, fileExtension,rep)
             return            
         if not os.path.isfile(filename) and fileExtension != '' :
             print ("problem with "+filename)

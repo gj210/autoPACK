@@ -3808,7 +3808,7 @@ Copyright: Graham Johnson ©2010
         print (self.recipe_available[recipe][version]["setupfile"])        
         setupfile = self.recipe_available[recipe][version]["setupfile"]
         setupfile = autopack.retrieveFile(setupfile,
-                            destination = recipe+os.sep+"recipe"+os.sep,
+                            #destination = recipe+os.sep+"recipe"+os.sep,
                             cache="recipes",force = forceRecipe)        
         
 #        if setupfile.find("http") != -1 or setupfile.find("ftp") != -1:
@@ -3863,7 +3863,7 @@ Copyright: Graham Johnson ©2010
 #            print (self.histoVol) 
             self.histoVol[recipe].setupfile = setupfile
             return True
-        elif  fileExtension == ".xml":
+        elif  fileExtension == ".xml" or fileExtension == ".json" :
             self.loadxml(setupfile,recipe=recipe)
             return True
 
@@ -3875,7 +3875,7 @@ Copyright: Graham Johnson ©2010
             n=os.path.basename(fileName)
         self.histoVol[n] = Environment(name=n)
         recipe=n
-        self.histoVol[n].load_XML(filename)
+        self.histoVol[n].loadRecipe(filename)
         afviewer = AutopackViewer(ViewerType=self.helper.host,helper=self.helper)
         self.histoVol[n].name=n
         afviewer.SetHistoVol(self.histoVol[n],0.0,display=False)#padding !
