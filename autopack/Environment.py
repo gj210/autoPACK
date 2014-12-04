@@ -65,7 +65,11 @@ from bhtree import bhtreelib
 from scipy import spatial
 import math
 import sys
-
+try :
+    from collections import OrderedDict
+except :
+    from ordereddict import OrderedDict
+    
 if sys.version > "3.0.0":
     xrange = range
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -108,8 +112,12 @@ except :
     print ("Failed to get Panda, because panda3d = ", panda3d)
 
 #coul replace by a faster json python library
-import json
-from json import encoder
+try :
+    import simplejson as json
+    from simplejson import encoder    
+except :
+    import json
+    from json import encoder
 encoder.FLOAT_REPR = lambda o: format(o, '.8g')
 
 LISTPLACEMETHOD = autopack.LISTPLACEMETHOD
@@ -957,6 +965,8 @@ class Environment(CompartmentList):
         self.saveResult = False
         self.resultfile = ""
         self.setupfile = ""
+        self.current_path=None#the path of the recipe file
+        self.useXref=True
         self.grid_filename =None#
         self.grid_result_filename = None#str(gridn.getAttribute("grid_result"))
 
@@ -1006,7 +1016,9 @@ class Environment(CompartmentList):
         self.rb_func_dic={}
         self.use_periodicity = False
         self.gridbiasedPeriodicity = None#unsused here
-        
+        #need options for the save/server data etc....
+        #should it be in __init__ like other general options ?
+                
         self.OPTIONS = {
                     "smallestProteinSize":{"name":"smallestProteinSize","value":15,"default":15,
                                            "type":"int","description":"Smallest ingredient packing radius override (low=accurate | high=fast)",
@@ -1130,164 +1142,29 @@ class Environment(CompartmentList):
             else : print ("PROBLEM creating ingredient from ",ingrnode)
             #look for overwritten attribute
         
-    def load_XML(self,setupfile):
-        """
-        Setup the environment according the given xml file. 
-        """
-        self.setupfile = setupfile
-        from autopack import Ingredient as ingr
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        from xml.dom.minidom import parse
-        self.xmldoc = parse(setupfile) # parse an XML file by name
-        root = self.xmldoc.documentElement
-        self.name = str(root.getAttribute("name"))
-        options=root.getElementsByTagName("options")
-        if len(options) :
-            options=options[0]
-            for k in self.OPTIONS:
-                if k == "gradients": 
-                    continue
-                v=IOutils.getValueToXMLNode(self.OPTIONS[k]["type"],options,k)
-                if v is not None :
-                    setattr(self,k,v)
-            v=IOutils.getValueToXMLNode("vector",options,"boundingBox")
-            self.boundingBox = v
-            v=IOutils.getValueToXMLNode("string",options,"version")
-            self.version = v
-            
-        gradientsnode=root.getElementsByTagName("gradients")
-        if len(gradientsnode) :
-            gradientnode=gradientsnode[0]
-            grnodes = gradientnode.getElementsByTagName("gradient")
-            for grnode in grnodes:
-                name = str(grnode.getAttribute("name"))
-                mode = str(grnode.getAttribute("mode"))
-                weight_mode = str(grnode.getAttribute("weight_mode"))
-                pick_mode = str(grnode.getAttribute("pick_mode"))
-                direction = str(grnode.getAttribute("direction"))#vector
-                description=str(grnode.getAttribute("description"))
-                radius=float(str(grnode.getAttribute("radius")))
-#                print "weight_mode",weight_mode
-                self.setGradient(name=name,mode=mode, direction=eval(direction),
-                            weight_mode=weight_mode,description=description,
-                            pick_mode=pick_mode,radius=radius)
-
-        gridnode=root.getElementsByTagName("grid")
-        if len(gridnode) :
-            gridn=gridnode[0]
-            self.grid_filename = str(gridn.getAttribute("grid_storage"))
-            self.grid_result_filename = str(gridn.getAttribute("grid_result"))
-
-        rnode=root.getElementsByTagName("cytoplasme")
-        if len(rnode) :
-            rCyto = Recipe()
-            rnode=rnode[0]
-            #check for include list of ingredients
-            ingredients_xmlfile = str(rnode.getAttribute("include"))
-            if ingredients_xmlfile :#open the file and parse the ingredient:
-                #check if multiple include filename, aumngo',' in the path
-                liste_xmlfile = ingredients_xmlfile.split(",")
-                for xmlf in liste_xmlfile :                    
-                    xmlfile = autopack.retrieveFile(xmlf,
-                            destination = self.name+os.sep+"recipe"+os.sep,
-                            cache="recipes")
-                    if xmlfile :
-                        xmlinclude = parse(xmlfile).documentElement
-                        self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
-                
-            self.set_recipe_ingredient(rnode,rCyto,io_ingr)                
-            #setup recipe
-            self.setExteriorRecipe(rCyto)
-            
-        onodes = root.getElementsByTagName("compartment")#Change to Compartment
-        if not len(onodes) :
-            #backward compatibility
-            onodes = root.getElementsByTagName("organelle")#Change to Compartment            
-        from autopack.Compartment import Compartment
-        for onode in onodes:
-            name = str(onode.getAttribute("name"))
-            geom = str(onode.getAttribute("geom"))
-            rep =  str(onode.getAttribute("rep"))
-            rep_file=str(onode.getAttribute("rep_file"))
-            #print ("is it working")
-            print ("xml parsing ",name,geom,rep,rep_file)
-            #print (rep,rep_file,len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0)
-            if (rep != "None" and len(rep) != 0) :
-                rname =  rep_file.split("/")[-1]
-                fileName, fileExtension = os.path.splitext(rname)
-                if fileExtension == "" :
-                    fileExtension = autopack.helper.hext
-                    if fileExtension == "" :
-                        rep_file = rep_file+fileExtension
-                    else :
-                        rep_file = rep_file+"."+fileExtension   
-            else :
-                rep=None
-                rep_file=None
-                print ("no representation found")
-            print ("add compartment ",name,geom,rep,rep_file)
-            o = Compartment(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
-            print ("added compartment ",name)
-            self.addCompartment(o)
-            rsnodes = onode.getElementsByTagName("surface")
-            if len(rsnodes) :
-                rSurf = Recipe(name=o.name+"_surf")
-                rsnodes=rsnodes[0]
-                ingredients_xmlfile = str(rsnodes.getAttribute("include"))
-                if ingredients_xmlfile :#open the file and parse the ingredient:
-                    #check if multiple include filename, aumngo',' in the path
-                    liste_xmlfile = ingredients_xmlfile.split(",")
-                    for xmlf in liste_xmlfile :                    
-                        xmlfile = autopack.retrieveFile(xmlf,
-                                destination = self.name+os.sep+"recipe"+os.sep,
-                                cache="recipes")
-                        if xmlfile :
-                            xmlinclude = parse(xmlfile).documentElement
-                            self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
-                self.set_recipe_ingredient(rsnodes,rSurf,io_ingr)                
-                o.setSurfaceRecipe(rSurf)                
-            rinodes = onode.getElementsByTagName("interior")
-            if len(rinodes) :
-                rMatrix = Recipe(name=o.name+"_int")
-                rinodes=rinodes[0]
-                ingredients_xmlfile = str(rinodes.getAttribute("include"))
-                if ingredients_xmlfile :#open the file and parse the ingredient:
-                    #check if multiple include filename, aumngo',' in the path
-                    liste_xmlfile = ingredients_xmlfile.split(",")
-                    for xmlf in liste_xmlfile :
-                        xmlfile = autopack.retrieveFile(xmlf,
-                                destination = self.name+os.sep+"recipe"+os.sep,
-                            cache="recipes")
-                        if xmlfile :
-                            xmlinclude = parse(xmlfile).documentElement
-                            self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
-                self.set_recipe_ingredient(rinodes,rMatrix,io_ingr)                
-                o.setInnerRecipe(rMatrix)
-        #Go through all ingredient and setup the partner  
-        self.loopThroughIngr(self.set_partners_ingredient)
-#        if self.placeMethod.find("panda") != -1 :
-#            self.setupPanda()
-            
 
 
     def loadRecipe(self,setupfile):
         if setupfile == None:
             setupfile = self.setupfile
+        else :
+            self.setupfile = setupfile
         #check the extension of the filename none, txt or json
         fileName, fileExtension = os.path.splitext(setupfile)
         if fileExtension == '.xml':     
-            self.load_XML(setupfile)
+            return IOutils.load_XML(self,setupfile)
         elif fileExtension == '.py':   #execute ?  
             return IOutils.load_Python(self,setupfile)
         elif fileExtension == '.json':
             return IOutils.load_Json(self,setupfile)  
         else :
-            print  ("can't read or recognize "+resultfilename)
-            return [],[],[]
-        return result
+            print  ("can't read or recognize "+setupfile)
+            return None
+        return None
         
-    def saveRecipe(self,setupfile,useXref=True,format_output="json"):
+    def saveRecipe(self,setupfile,useXref=None,format_output="json"):
+        if useXref is None :
+            useXref = self.useXref
         if format_output == "json":
             IOutils.save_asJson(self,setupfile,useXref=useXref)
         elif format_output == "xml":
@@ -3183,7 +3060,7 @@ class Environment(CompartmentList):
             self.grid.result_filename = self.resultfile+"grid"
             self.store()
             self.store_asTxt()
-            self.store_asJson()            
+            self.store_asJson(resultfilename=self.resultfile+".json")            
             #self.saveGridToFile_asTxt(self.resultfile+"grid")freePointsAfterFill
             #should we save to text as well
             print('time to save in fil5', time.time()-t2)
@@ -3533,6 +3410,7 @@ class Environment(CompartmentList):
         if resultfilename == None:
             resultfilename = self.resultfile
         #check the extension of the filename none, txt or json
+#        resultfilename = autopack.retrieveFile(resultfilename,cache="results")
         fileName, fileExtension = os.path.splitext(resultfilename)
         if fileExtension == '':
             try :
@@ -3682,7 +3560,7 @@ class Environment(CompartmentList):
         if resultfilename == None:
             resultfilename = self.resultfile
         with open(resultfilename, 'r') as fp :#doesnt work with symbol link ?
-            self.result_json=json.load(fp)#,indent=4, separators=(',', ': ')
+            self.result_json=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
         #needto parse
         result=[]
         orgaresult=[[],]*len(self.compartments)
@@ -3748,7 +3626,7 @@ class Environment(CompartmentList):
         return result,orgaresult,freePoint
         
     def dropOneIngrJson(self,ingr,rdic):
-        rdic[ingr.name]={}
+        rdic[ingr.name]=OrderedDict()
         rdic[ingr.name]["compNum"]= ingr.compNum
         rdic[ingr.name]["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
         rdic[ingr.name]["results"]=[] 
@@ -3768,13 +3646,16 @@ class Environment(CompartmentList):
     def store_asJson(self,resultfilename=None,indent = True):
         if resultfilename == None:
             resultfilename = self.resultfile
-        resultfilename=autopack.fixOnePath(resultfilename)
+        resultfilename=autopack.fixOnePath(resultfilename)#retireve?
+        #if result file_name start with http?
+        if resultfilename.find("http") != -1 or resultfilename.find("ftp")!= -1 :
+            print ("please provide a correct file name for the result file ",resultfilename)
         self.collectResultPerIngredient()
-        self.result_json={}
+        self.result_json=OrderedDict()
         self.result_json["recipe"]=self.setupfile#replace server?
         r =  self.exteriorRecipe
         if r :
-            self.result_json["exteriorRecipe"]={}
+            self.result_json["exteriorRecipe"]=OrderedDict()
             for ingr in r.ingredients:
                 self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
 
@@ -3783,20 +3664,20 @@ class Environment(CompartmentList):
             #compartment surface ingr
             rs =  orga.surfaceRecipe
             if rs :
-                self.result_json[orga.name+"_surfaceRecipe"]={}
+                self.result_json[orga.name+"_surfaceRecipe"]=OrderedDict()
                 for ingr in rs.ingredients:
                     self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
             #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
-                self.result_json[orga.name+"_innerRecipe"]={}
+                self.result_json[orga.name+"_innerRecipe"]=OrderedDict()
                 for ingr in ri.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])
-        with open(resultfilename+".json", 'w') as fp :#doesnt work with symbol link ?
+                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
+        with open(resultfilename, 'w') as fp :#doesnt work with symbol link ?
             if indent : 
-                json.dump(self.result_json,fp,indent=1, separators=(',', ': '))#,indent=4, separators=(',', ': ')
+                json.dump(self.result_json,fp,indent=1, separators=(',', ':'))#,indent=4, separators=(',', ': ')
             else :
-                json.dump(self.result_json,fp,separators=(',', ': '))#,indent=4, separators=(',', ': ')
+                json.dump(self.result_json,fp,separators=(',', ':'))#,indent=4, separators=(',', ': ')
                     
     def store_asTxt(self,resultfilename=None):
         if resultfilename == None:
