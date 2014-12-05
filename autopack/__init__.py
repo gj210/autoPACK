@@ -37,11 +37,17 @@ AF
 packageContainsVFCommands = 1
 import sys
 import os
+import re
+import shutil
 from os import path, environ
 try :
     import simplejson as json
 except :
     import json
+try :
+    from collections import OrderedDict
+except :
+    from ordereddict import OrderedDict
 try :
     import urllib.request as urllib# , urllib.parse, urllib.error
 except :
@@ -92,6 +98,16 @@ elif sys.platform == 'win32':
 else :#linux ? blender and maya ?
     pass
 sys.path.append(PANDA_PATH+os.sep+"lib")
+
+def checkURL(URL):
+    try :
+        response = urllib.urlopen(URL)
+    except :
+        return False
+    return response.code != 404
+
+
+
 #==============================================================================
 # setup the cache directory inside the app data folder
 #==============================================================================
@@ -101,7 +117,7 @@ if not os.path.exists(cache_results):
 cache_geoms = appdata+os.sep+"cache_geometries"
 if not os.path.exists(cache_geoms):
     os.makedirs(cache_geoms)
-cache_sphere = appdata+os.sep+"cache_geometries"+os.sep+"sphereTree"
+cache_sphere = appdata+os.sep+"cache_collisionTrees"
 if not os.path.exists(cache_sphere):
     os.makedirs(cache_sphere)
 #cacheo = appdata+os.sep+"cache_organelles"
@@ -149,7 +165,7 @@ forceFetch = False
 checkAtstartup = True
 testPeriodicity = False
 biasedPeriodicity = None#[1,1,1]
-
+fixpath = False
 verbose = 0 
 messag = '''Welcome to autoPACK.
 Please update to the latest version under the Help menu.
@@ -171,9 +187,25 @@ filespath = autoPACKserver+"/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
 autopackdir=str(afdir)#copy
+def checkPath(autopack_path_pref_file):
+    fname = filespath#autoPACKserver+"/autoPACK_filePaths.json"
+    if fname.find("http") != -1 or fname.find("ftp")!= -1 :
+        try :
+            import urllib.request as urllib# , urllib.parse, urllib.error
+        except :
+            import urllib
+        if checkURL(fname):
+            urllib.urlretrieve(fname, autopack_path_pref_file)
+        else :
+            print ("problem accessing path "+fname)
+    else :
+        autopack_path_pref_file = fname
+        
 #get user / default value 
 if not os.path.isfile(autopack_path_pref_file):
     print (autopack_path_pref_file+" file is not found")
+    checkPath(autopack_path_pref_file)
+
 doit=False
 if os.path.isfile(autopack_user_path_pref_file):
     f=open(autopack_user_path_pref_file,"r")  
@@ -225,7 +257,7 @@ info_dic = ["setupfile","resultfile","wrkdir"]
 
 #hard code recipe here is possible
 global RECIPES
-RECIPES = {}
+RECIPES = OrderedDict()
 # = {
 #"Test_CylindersSpheres2D":{
 #    "1.0":
@@ -246,21 +278,29 @@ def resetDefault():
     filespath = autoPACKserver+"/autoPACK_filePaths.json"
     recipeslistes = autoPACKserver+"/autopack_recipe.json"
     
-def checkURL(URL):
-    try :
-        response = urllib.urlopen(URL)
-    except :
-        return False
-    return response.code != 404
-
 
 def revertOnePath(p):
     for v in replace_path:
         p=p.replace(v[1],v[0])
     return p
 
+def checkErrorInPath(p,toreplace):
+    #if in p we already have part of the replace path
+    part = p.split(os.sep)
+    newpath=""
+    for i,e in enumerate(part) :
+        f=re.findall('{0}'.format(re.escape(e)), toreplace)
+        if not len(f):
+            newpath+=e+"/"
+    if part[0] == "http:":
+        newpath="http://"+newpath[6:]
+    return newpath[:-1]
+
 def fixOnePath(p):
     for v in replace_path:
+        #fix before
+        if fixpath and re.findall('{0}'.format(re.escape(v[0])), p):
+            p=checkErrorInPath(p,v[1])
         p=p.replace(v[0],v[1])
     return p
 
@@ -278,7 +318,8 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
 #    helper = autopack.helper
     if force is None :
         force = forceFetch
-    filename=fixOnePath(filename)
+    if filename.find("http") == -1 and filename.find("ftp")== -1 :
+        filename=fixOnePath(filename)
     print ("autopack retrieve file ",filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
         reporthook = None
@@ -321,7 +362,7 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
 
 def fixPath(adict):#, k, v):
     for key in list(adict.keys()):
-        if type(adict[key]) is dict:
+        if type(adict[key]) is dict or type(adict[key]) is OrderedDict:
             fixPath(adict[key])
         else :
 #        if key == k:
@@ -365,20 +406,6 @@ def updatePath():
         pass#updateRecipAvailableXML(recipesfile)
     elif fileExtension.lower() == ".json":
         updatePathJSON()
-            
-def checkPath(autopack_path_pref_file):
-    fname = filespath#autoPACKserver+"/autoPACK_filePaths.json"
-    if fname.find("http") != -1 or fname.find("ftp")!= -1 :
-        try :
-            import urllib.request as urllib# , urllib.parse, urllib.error
-        except :
-            import urllib
-        if checkURL(fname):
-            urllib.urlretrieve(fname, autopack_path_pref_file)
-        else :
-            print ("problem accessing path "+fname)
-    else :
-        autopack_path_pref_file = fname
         
 def checkRecipeAvailable():
 #    fname = "http://mgldev.scripps.edu/projects/AF/datas/recipe_available.xml"
@@ -399,7 +426,7 @@ def updateRecipAvailableJSON(recipesfile):
         return
     #replace shortcut pathby hard path
     f=open(recipesfile,"r")
-    recipes=json.load(f) 
+    recipes=json.load(f,object_pairs_hook=OrderedDict) 
     f.close()
     RECIPES.update(recipes)
     print ("recipes updated "+str(len(RECIPES)))
@@ -474,7 +501,16 @@ def saveRecipeAvailable(recipe_dictionary,recipefile):
 def saveRecipeAvailableJSON(recipe_dictionary,filename):
     with open(filename, 'w') as fp :#doesnt work with symbol link ?
         json.dump(recipe_dictionary,fp,indent=1, separators=(',', ': '))#,indent=4, separators=(',', ': ')
-    
+
+def clearCaches(*args):
+    #can't work if file are open!
+    for k in cache_dir:
+        try :
+            shutil.rmtree(cache_dir[k])
+            os.makedirs(cache_dir[k])
+        except:
+            print ("problem cleaning ",cache_dir[k])
+   
 #we should read a file to fill the RECIPE Dictionary so we can add some and write/save setup 
 #afdir  or user_pref
 

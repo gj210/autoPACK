@@ -3626,27 +3626,29 @@ class Environment(CompartmentList):
         return result,orgaresult,freePoint
         
     def dropOneIngrJson(self,ingr,rdic):
-        rdic[ingr.name]=OrderedDict()
-        rdic[ingr.name]["compNum"]= ingr.compNum
-        rdic[ingr.name]["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
-        rdic[ingr.name]["results"]=[] 
+        adic=OrderedDict()#[ingr.name]
+        adic["compNum"]= ingr.compNum
+        adic["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
+        adic["results"]=[] 
         for r in ingr.results:  
             if hasattr(r[0],"tolist"):
                 r[0]=r[0].tolist()
             if hasattr(r[1],"tolist"):
                 r[1]=r[1].tolist()
-            rdic[ingr.name]["results"].append([r[0],r[1]])
+            adic["results"].append([r[0],r[1]])
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
-            rdic[ingr.name]["nbCurve"]=ingr.nbCurve
+            adic["nbCurve"]=ingr.nbCurve
             for i in range(ingr.nbCurve):
                 lp = numpy.array(ingr.listePtLinear[i])
                 ingr.listePtLinear[i]=lp.tolist()                 
-                rdic[ingr.name]["curve"+str(i)] = ingr.listePtLinear[i]
+                adic["curve"+str(i)] = ingr.listePtLinear[i]
+#        print adic
+        return adic
        
     def store_asJson(self,resultfilename=None,indent = True):
         if resultfilename == None:
             resultfilename = self.resultfile
-        resultfilename=autopack.fixOnePath(resultfilename)#retireve?
+            resultfilename=autopack.fixOnePath(resultfilename)#retireve?
         #if result file_name start with http?
         if resultfilename.find("http") != -1 or resultfilename.find("ftp")!= -1 :
             print ("please provide a correct file name for the result file ",resultfilename)
@@ -3657,7 +3659,7 @@ class Environment(CompartmentList):
         if r :
             self.result_json["exteriorRecipe"]=OrderedDict()
             for ingr in r.ingredients:
-                self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
+                self.result_json["exteriorRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
 
         #compartment ingr
         for orga in self.compartments:
@@ -3666,13 +3668,13 @@ class Environment(CompartmentList):
             if rs :
                 self.result_json[orga.name+"_surfaceRecipe"]=OrderedDict()
                 for ingr in rs.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
+                    self.result_json[orga.name+"_surfaceRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
             #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
-                self.result_json[orga.name+"_innerRecipe"]=OrderedDict()
+                self.result_json[orga.name+"_innerRecipe"]={}#OrderedDict()
                 for ingr in ri.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
+                    self.result_json[orga.name+"_surfaceRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
         with open(resultfilename, 'w') as fp :#doesnt work with symbol link ?
             if indent : 
                 json.dump(self.result_json,fp,indent=1, separators=(',', ':'))#,indent=4, separators=(',', ': ')
