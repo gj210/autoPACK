@@ -881,34 +881,38 @@ class Ingredient(Agent):
         children = []
         self.sphereFile = None
         if sphereFile is not None:
-            self.sphereFile=sphereFile
+            sphereFileo = autopack.retrieveFile(sphereFile,cache="spheres") 
             fileName, fileExtension = os.path.splitext(sphereFile)
-            if fileExtension == ".mstr" : #BD_BOX format
-                data = numpy.loadtxt(sphereFile,converters = {0: lambda s: 0})
-                positions = data[:,1:4]
-                radii = data[:,4]
-                self.minRadius = min(radii)
-                #np.apply_along_axis(np.linalg.norm, 1, c)
-                self.encapsulatingRadius = max(numpy.sqrt(numpy.einsum('ij,ij->i',positions,positions)))#shoud be max distance
-                positions=[positions]
-                radii=[radii]
-            else :
-                rm, rM, positions, radii, children = self.getSpheres(sphereFile)
-                if not len(radii):
-                    self.minRadius = 1.0
-                    self.encapsulatingRadius = 1.0
+            print ("sphereTree",sphereFileo)
+            if sphereFileo is not None :
+                self.sphereFile=sphereFile
+                sphereFile=sphereFileo
+                if fileExtension == ".mstr" : #BD_BOX format
+                    data = numpy.loadtxt(sphereFileo,converters = {0: lambda s: 0})
+                    positions = data[:,1:4]
+                    radii = data[:,4]
+                    self.minRadius = min(radii)
+                    #np.apply_along_axis(np.linalg.norm, 1, c)
+                    self.encapsulatingRadius = max(numpy.sqrt(numpy.einsum('ij,ij->i',positions,positions)))#shoud be max distance
+                    positions=[positions]
+                    radii=[radii]
                 else :
-                    # minRadius is used to compute grid spacing. It represents the
-                    # smallest radius around the anchor point(i.e. 
-                    # the point where the
-                    # ingredient is dropped that needs to be free
-                    self.minRadius = rm
-                    # encapsulatingRadius is the radius of the sphere 
-                    # centered at 0,0,0
-                    # and encapsulate the ingredient
-                    self.encapsulatingRadius = rM
-            
-        elif positions is None or positions[0] is None or positions[0][0] is None:#[0][0]
+                    rm, rM, positions, radii, children = self.getSpheres(sphereFileo)
+                    if not len(radii):
+                        self.minRadius = 1.0
+                        self.encapsulatingRadius = 1.0
+                    else :
+                        # minRadius is used to compute grid spacing. It represents the
+                        # smallest radius around the anchor point(i.e. 
+                        # the point where the
+                        # ingredient is dropped that needs to be free
+                        self.minRadius = rm
+                        # encapsulatingRadius is the radius of the sphere 
+                        # centered at 0,0,0
+                        # and encapsulate the ingredient
+                        self.encapsulatingRadius = rM
+                
+        if positions is None or positions[0] is None or positions[0][0] is None:#[0][0]
             positions = [[[0,0,0]]]
             if radii is not None :    
                 self.minRadius = [radii[0]]
@@ -926,7 +930,8 @@ class Ingredient(Agent):
         
         if radii is not None :
             self.maxLevel = len(radii)-1
-        
+        if radii is None :
+            radii = [[0]]
         self.radii = radii
         self.positions = positions
         self.positions2 = positions2
@@ -1231,7 +1236,6 @@ class Ingredient(Agent):
                            # of spheres in next level covererd by this sphere
         # ...
         # int: number of spheres in second level
-        sphereFile = autopack.retrieveFile(sphereFile,cache="spheres") 
         f = open(sphereFile)
         datao = f.readlines()
         f.close()
@@ -5792,7 +5796,7 @@ class SingleSphereIngr(Ingredient):
                  placeType="jitter",Type="SingleSphere",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=[[radius],], positions=[[position]], positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=[[radius],], positions=[[position]], #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,
@@ -5852,7 +5856,7 @@ class SingleCubeIngr(Ingredient):
                  placeType="jitter",Type="SingleCube",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,

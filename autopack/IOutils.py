@@ -398,9 +398,14 @@ def save_asJson(env,setupfile,useXref=True):
         env is the environment / recipe to be exported.
         """
         io_ingr = IOingredientTool(env=env)
-        env.setupfile = setupfile#+".json"
+        env.setupfile = setupfile#+".json"provide the server?
         #the output path for this recipes files
-        pathout=os.path.dirname(os.path.abspath(env.setupfile))
+        if env.setupfile.find("http") != -1 or env.setupfile.find("ftp")!= -1 :
+            pathout=os.path.dirname(os.path.abspath(autopack.retrieveFile( env.setupfile)))
+        else :
+            pathout=os.path.dirname(os.path.abspath(env.setupfile))
+        if env.version is None :
+            env.version = "1.0"
         env.jsondic = OrderedDict({"recipe":{"name":env.name,"version":env.version}})
         if env.custom_paths :
             #this was the used path at loading time
@@ -448,6 +453,7 @@ def save_asJson(env,setupfile,useXref=True):
                         v = getattr(ingr,k)
     #                    print ingr.name+" keyword ",k,v
                         env.jsondic["cytoplasme"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
         if len(env.compartments):
             env.jsondic["compartments"]=OrderedDict()
         for o in env.compartments:
@@ -476,7 +482,7 @@ def save_asJson(env,setupfile,useXref=True):
                             v = getattr(ingr,k)
         #                    print ingr.name+" keyword ",k,v
                             env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
-
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
             ri = o.innerRecipe
             if ri :
                 env.jsondic["compartments"][str(o.name)]["interior"]={}
@@ -493,6 +499,7 @@ def save_asJson(env,setupfile,useXref=True):
                             v = getattr(ingr,k)
         #                    print ingr.name+" keyword ",k,v
                             env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
         with open(setupfile, 'w') as fp :#doesnt work with symbol link ?
             json.dump(env.jsondic,fp,indent=1,separators=(',', ':'))#,indent=4, separators=(',', ': ')
         print ("recipe saved to ",setupfile)
