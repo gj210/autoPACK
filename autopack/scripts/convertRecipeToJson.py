@@ -31,7 +31,7 @@ else :
 autopack.helper = helper
 autopack.fixpath = True
 check_result = True
-export_json = True
+export_json = False
 useXref = True
 if len(sys.argv) > 1 :
     filename = sys.argv[1]
