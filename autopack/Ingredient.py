@@ -877,6 +877,8 @@ class Ingredient(Agent):
         self.encapsulatingRadius = 0
         self.maxLevel = 1
         self.is_previous = False
+        self.vertices=[]
+        self.faces=[]
         #self._place = self.place
         children = []
         self.sphereFile = None
@@ -970,7 +972,7 @@ class Ingredient(Agent):
         self.rad=None
         self.rapid_model = None
         if self.encapsulatingRadius <= 0.0 or self.encapsulatingRadius < max(self.radii[0]):
-            self.encapsulatingRadius = max(self.radii[0])
+            self.encapsulatingRadius = max(self.radii[0])#
         #TODO : geometry : 3d object or procedural from PDB
         #TODO : usekeyword resolution->options dictionary of res :
         #TODO : {"simple":{"cms":{"parameters":{"gridres":12}},
@@ -1069,8 +1071,6 @@ class Ingredient(Agent):
         self.centT = None #transformed position
 
         self.results =[]
-        self.vertices=[]
-        self.faces=[]
         if self.mesh is not None :
             self.getData()
 
@@ -1218,7 +1218,7 @@ class Ingredient(Agent):
         else :
             m = helper.getMesh(helper.getName(poly))
             tr=True
-        print ("Decompose Mesh",helper.getName(poly),m)
+        print ("Decompose Mesh ingredient",helper.getName(poly),m)
         #what about empty, hyerarchi
         faces,vertices,vnormals = helper.DecomposeMesh(m,
                        edit=edit,copy=copy,tri=tri,transform=tr) 
@@ -1313,21 +1313,24 @@ class Ingredient(Agent):
                 self.compMask = kw["compMask"]
 
     def getEncapsulatingRadius(self,mesh=None):
-        helper = autopack.helper
-        if mesh is None :
-            mesh = self.mesh
-        print ("getEncapsulatingRadius ",self.mesh,mesh )
-        faces,vertices,vnormals = self.DecomposeMesh(mesh,
-                           edit=True,copy=False,tri=True) 
+        if self.vertices is None or not len(self.vertices) :
+            if self.mesh :
+                helper = autopack.helper
+                if mesh is None :
+                    mesh = self.mesh
+                print ("getEncapsulatingRadius ",self.mesh,mesh )
+                self.faces,self.vertices,vnormals = self.DecomposeMesh(mesh,
+                                   edit=True,copy=False,tri=True) 
         #print ("create the triangle",len(faces))
         #encapsulating radius ?
-        v=numpy.array(vertices,'f')
+        v=numpy.array(self.vertices,'f')
         l=numpy.sqrt((v*v).sum(axis=1))
         self.encapsulatingRadius = float(max(l))
 
     def getData(self):
         if self.vertices is None or not len(self.vertices) :
             if self.mesh :
+                print ("getData ",self.mesh )
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
         
@@ -1472,6 +1475,21 @@ class Ingredient(Agent):
 #                    vn = self.getVertexNormals(v,f)     
                     geom = helper.createsNmesh(geomname,v,None,f)[0]
                     return geom
+                else :
+                    coll=True
+                    try :
+                        import collada
+                    except :
+                        print ("no collada")
+                        coll = False
+                    if coll :
+                        from upy.dejavuTk.dejavuHelper import dejavuHelper
+                        #need to get the mesh directly. Only possible if dae or dejavu format
+                        #get the dejavu heper but without the View, and in nogui mode
+                        h =  dejavuHelper(vi="nogui")
+                        dgeoms = h.read(filename)
+                        #should combine both
+                        self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"]                    
                 helper.read(filename)
 #                helper.update()
                 geom = helper.getObject(geomname)

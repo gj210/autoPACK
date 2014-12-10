@@ -3581,14 +3581,17 @@ class Environment(CompartmentList):
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle ingr
-        for orga in self.compartments:
+        for i, orga in enumerate(self.compartments):
             #organelle surface ingr
             rs =  orga.surfaceRecipe
             if rs :
-                if orga.name+"_surfaceRecipe" in self.result_json:
+                if orga.name+"_surfaceRecipe" in self.result_json :
                     for ingr in rs.ingredients:
                         name_ingr = ingr.name
-                        if name_ingr not in self.result_json[orga.name+"_surfaceRecipe"] : 
+                        #replace number by name ?
+                        if orga.name+"_surf__"+ingr.o_name in self.result_json[orga.name+"_surfaceRecipe"]:
+                            name_ingr=orga.name+"_surf__"+ingr.o_name
+                        if name_ingr not in self.result_json[orga.name+"_surfaceRecipe"]  : 
                             #backward compatiblity 
                             if ingr.o_name not in self.result_json[orga.name+"_surfaceRecipe"] : 
                                 continue
@@ -3605,6 +3608,8 @@ class Environment(CompartmentList):
                 if orga.name+"_innerRecipe" in self.result_json:
                     for ingr in ri.ingredients:                    
                         name_ingr = ingr.name
+                        if orga.name+"_int__"+ingr.o_name in self.result_json[orga.name+"_innerRecipe"]:
+                            name_ingr=orga.name+"_int__"+ingr.o_name
                         if name_ingr not in self.result_json[orga.name+"_innerRecipe"] : 
                             #backward compatiblity 
                             if ingr.o_name not in self.result_json[orga.name+"_innerRecipe"] : 

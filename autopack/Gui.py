@@ -2652,10 +2652,10 @@ class SubdialogViewer(uiadaptor):
     def oneIngredientWidget(self,ingr):
         hostWidth = 60
         a="hfit"
-        self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="%s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
+        self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="%s"%ingr.o_name,width=self.wc[6],alignement=a)#,height=50)
         if autopack.helper.host == 'maya':
                 hostWidth = 30
-                self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="   %s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
+                self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="   %s"%ingr.o_name,width=self.wc[6],alignement=a)#,height=50)
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"build")
         self.ingr_build[ingr.name] = self._addElemt(name=ingr.name+'Build',
                     width=hostWidth,height=10,alignement=a,#self.wc[1]
@@ -2674,6 +2674,7 @@ class SubdialogViewer(uiadaptor):
                 width=hostWidth,height=10,alignement=a,#2
                 action=inr_cb,type="checkbox",icon=None,#self.toggleOrganelDisplayPrimitive
                 variable=self.addVariable("int",0),value=0,label="----  ")
+
 #        self.ingr_resolution[ingr.name] = self._addElemt(name=ingr.name+"Res",
 #                    value=self.listeRes,alignement=a,
 #                    width=self.wc[4],height=10,action=self.toggleQuality,
