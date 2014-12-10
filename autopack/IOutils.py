@@ -6,7 +6,7 @@ Created on Sun Jan 27 09:04:10 2013
 """
 import os
 import numpy
-
+import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant,KWDS
 
@@ -26,6 +26,8 @@ except :
 
 #if python 2.6 need to convert keyword from unicode to string
 def flatten_unicode_keys(d):
+    if sys.version[0:3] > "2.6" :
+        return d
     for k in d:
         if isinstance(k, unicode):
             v = d[k]
@@ -988,7 +990,8 @@ def load_Json(env,setupfile):
                     snode=comp_dic["surface"]
                     ingrs_dic = snode["ingredients"]
                     if len(ingrs_dic) :
-                        rSurf = Recipe(name=o.name+"_surf")
+                        rSurf = Recipe(name="surf_"+str(len(env.compartments)-1))
+#                        rSurf = Recipe(name=o.name+"_surf")
                         for ing_name in ingrs_dic:
                             #either xref or defined
                             ing_dic = ingrs_dic[ing_name]
@@ -1000,7 +1003,8 @@ def load_Json(env,setupfile):
                     snode=comp_dic["interior"]
                     ingrs_dic = snode["ingredients"]
                     if len(ingrs_dic) :
-                        rMatrix = Recipe(name=o.name+"_int")
+#                        rMatrix = Recipe(name=o.name+"_int")
+                        rMatrix = Recipe(name="int_"+str(len(env.compartments)-1))
                         for ing_name in ingrs_dic:
                             #either xref or defined
                             ing_dic = ingrs_dic[ing_name]
