@@ -1083,6 +1083,10 @@ class AutopackViewer:
                     if self.helper.host == 'dejavu':
                         mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
                         mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
+                    if self.helper.instance_dupliFace :
+#                        if self.helper.host.find("blender") != -1:
+                        mat = rot.copy().transpose()
+                        mat[3][:3]=pos
                     if ingr not in meshGeoms:
                         inds[ingr] = [ptInd]
                         meshGeoms[ingr] = [mat]
@@ -1113,10 +1117,10 @@ class AutopackViewer:
                 if ingr not in meshGeoms:
                     continue
                 axis = numpy.array(ingr.principalVector[:])
-                if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
-                    if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                        axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-                        print (self.helper.getType(self.helper.getChilds(polygon)[0]))
+                if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+#                    if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                    print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                 ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.name,
                                             matrices=meshGeoms[ingr],
                                             mesh=polygon,parent = parent,
@@ -1216,7 +1220,10 @@ class AutopackViewer:
                     if self.helper.host == 'dejavu':
                         mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
                         mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
-
+                    if self.helper.instance_dupliFace :
+#                        self.helper.host.find("blender") != -1 :
+                        mat = rot.copy().transpose()
+                        mat[3][:3]=pos
                     if ingr not in matrices:
                         matrices[ingr] = []
                     matrices[ingr].append(mat)
@@ -1253,10 +1260,10 @@ class AutopackViewer:
                             parent = None                           
                         print("ri instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
-                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
+                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                            print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,
@@ -1302,10 +1309,10 @@ class AutopackViewer:
                             parent = None                           
                         print("rs instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert : 
-                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
+                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
                                                     mesh=polygon,

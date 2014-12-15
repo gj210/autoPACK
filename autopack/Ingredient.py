@@ -1495,9 +1495,16 @@ class Ingredient(Agent):
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
                 #rotate ?
-                if helper.host == "3dsmax" or helper.host.find("blender") != -1:
+                if helper.host == "3dsmax" :#or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing??maybe not?
-                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage":#and helper.host.find("blender") == -1:
+                if helper.host.find("blender") != -1 :
+                    helper.resetTransformation(geom)
+                    if self.coordsystem == "left" :
+                        mA = helper.rotation_matrix(-math.pi/2.0,[1.0,0.0,0.0])
+                        mB = helper.rotation_matrix(math.pi/2.0,[0.0,0.0,1.0])
+                        m=matrix(mA)*matrix(mB)
+                        helper.setObjectMatrix(geom,matrice=m)
+                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage" and helper.host.find("blender") == -1:
                     #what about softimage
                     #need to rotate the transform that carry the shape, maya ? or not ?
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle

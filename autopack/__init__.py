@@ -183,6 +183,7 @@ autopack_user_path_pref_file = preferences+os.sep+"path_user_preferences.json"
 
 #Default values    
 autoPACKserver="https://autofill.googlecode.com/git/autoPACK_database_1.0.0"#XML
+autoPACKserver_alt="http://mgldev.scripps.edu/projects/autoPACK/data/autopack_git/autoPACK_database_1.0.0"
 filespath = autoPACKserver+"/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
@@ -340,10 +341,15 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
                     return  None
         filename = tmpFileName
         print ("autopack return grabbed ",filename)
+        #check the file is not an error            
         return filename
-    #print ("autopack return ",filename)
+    print ("autopack search ",filename)
     #if no folder provided, use the current_recipe_folder
     if not os.path.isfile(filename):#use the cache system ? geom / recipes / ingredients / others ?
+        print ("search in cache",cache_dir[cache]+os.sep+filename)
+        print ("search on server",autoPACKserver+"/"+cache+"/"+filename)
+        print ("search on alternate_backup_server",autoPACKserver_alt+"/"+cache+"/"+filename)
+        print ("search in curr_dir",current_recipe_path+os.sep+filename)
         if  os.path.isfile(cache_dir[cache]+os.sep+filename):
             return cache_dir[cache]+os.sep+filename
         elif checkURL(autoPACKserver+"/"+cache+"/"+filename):
@@ -352,7 +358,26 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
                 reporthook=helper.reporthook
             name = filename.split("/")[-1]#the recipe name
             tmpFileName = cache_dir[cache]+os.sep+destination+name
-            urllib.urlretrieve(autoPACKserver+"/"+cache+"/"+filename, tmpFileName,reporthook=reporthook)
+            try:
+                urllib.urlretrieve(autoPACKserver+"/"+cache+"/"+filename, tmpFileName,reporthook=reporthook)
+                return tmpFileName
+            except:
+                print ("try alternate server")
+                urllib.urlretrieve(autoPACKserver_alt+"/"+cache+"/"+filename, tmpFileName,reporthook=reporthook)
+                #check the file is not an error
+                return tmpFileName
+        elif checkURL(autoPACKserver_alt+"/"+cache+"/"+filename):
+            reporthook = None
+            if helper is not None:        
+                reporthook=helper.reporthook
+            name = filename.split("/")[-1]#the recipe name
+            tmpFileName = cache_dir[cache]+os.sep+destination+name
+            try:
+                urllib.urlretrieve(autoPACKserver_alt+"/"+cache+"/"+filename, tmpFileName,reporthook=reporthook)
+            except:
+                print ("not on alternate server")
+                return None
+            #check the file is not an error
             return tmpFileName
         elif os.path.isfile(current_recipe_path+os.sep+filename):
             return current_recipe_path+os.sep+filename
