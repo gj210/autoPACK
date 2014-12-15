@@ -2386,6 +2386,7 @@ class SubdialogViewer(uiadaptor):
         self.build = True
         self.build_grid = True
         self.result_filame = None
+        t1=time()
         if "build_grid" in kw :
             self.build_grid=kw["build_grid"]
         if "build" in kw :
@@ -2403,7 +2404,7 @@ class SubdialogViewer(uiadaptor):
             self.loadResult()
         if self._show :
             self.displayResult()
-        
+        print ("time to load and display result",time()-t1)
         #second setup the histoVol that will decribe the recipe from 2 files:
         #thi should actuallu go in the main AFGui as reused in Filler
         #- recipe : compartment and ingredient   : execfile or textfile to parse ?  
@@ -3326,9 +3327,9 @@ class AutoPackGui(uiadaptor):
                                             width=150,height=10,
                                               action=self.toggleCheckLatestRecipe,type="checkbox",icon=None,
                                               variable=self.addVariable("int",int(autopack.checkAtstartup)),value=autopack.checkAtstartup)
-        if self.host.find("blender") != -1 :
+        if self.host.find("blender") != -1 or self.host=="c4d" :
             self.use_dupli_vert = self._addElemt(name="useDupli",
-                                            label="use vertex instance vs individual instance (only Blender for now)",
+                                            label="use dupliVert/cloner instance vs individual instance (only C4D and Blender for now)",
                                             width=150,height=10,
                                               action=None,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=True)
@@ -3490,7 +3491,7 @@ class AutoPackGui(uiadaptor):
         elemFrame.append([self.LABELGMODE,self.gmode])
         elemFrame.append([self.forceRecipeAvailable])
         elemFrame.append([self.WidgetViewer["forceFetchRecipe"]])
-        if self.host.find("blender") != -1 :
+        if self.host.find("blender") != -1 or self.host == "c4d":
             elemFrame.append([self.use_dupli_vert])
         elemFrame.append([self.LABELSV])
         frame = self._addLayout(id=196,name="Options",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
@@ -3922,8 +3923,8 @@ Copyright: Graham Johnson ©2010
         if version is None :
             version = "1.0"
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"]) 
-        if self.host.find("blender") != -1 :
-            self.helper.dupliVert = self.getVal(self.use_dupli_vert)
+        if self.host.find("blender") != -1 or self.host == "c4d":
+            self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
         if recipe == "Load":
             self.fileDialog(label="choose a file",callback=self.loadxml)
             self.Viewer_dialog(self.current_recipe,version=version)
@@ -3965,8 +3966,8 @@ Copyright: Graham Johnson ©2010
         version = self.getVal(self.WidgetFiller["recipeversion"])
         self.setVal(self.WidgetViewer["BuildUponLoad"],False) 
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"])  
-        if self.host.find("blender") != -1 :
-            self.helper.dupliVert = self.getVal(self.use_dupli_vert)
+        if self.host.find("blender") != -1 or self.host == "c4d" :
+            self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
 #        print "drawSubsetFiller", recipe,version
 #        self.setVal(self.WidgetViewer["ShowUponLoad"]) 
         if recipe == "Load":
