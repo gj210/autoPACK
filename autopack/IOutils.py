@@ -33,6 +33,8 @@ def flatten_unicode_keys(d):
             v = d[k]
             del d[k]
             d[str(k)] = v
+        if isinstance(k, unicode):
+            d[str(k)] = str(v)
     return d
             
 def getValueToXMLNode(vtype,node,attrname):
@@ -905,7 +907,10 @@ def load_Json(env,setupfile):
     if setupfile == None:
         setupfile = env.setupfile
     with open(setupfile, 'r') as fp :#doesnt work with symbol link ?
-        env.jsondic=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+        if autopack.use_json_hook:
+            env.jsondic=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+        else :
+            env.jsondic=json.load(fp)
     env.current_path=os.path.dirname(os.path.abspath(env.setupfile))   
     from autopack import Ingredient as ingr
     io_ingr = IOingredientTool(env=env)
