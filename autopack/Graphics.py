@@ -928,6 +928,9 @@ class AutopackViewer:
                 radii.append( ingr.radii[level][ii] )
         mat = rot.copy()
         mat[:3, 3] = pos
+        if self.helper.instance_dupliFace :
+            mat = rot.copy().transpose()
+            mat[3][:3]=pos
         return verts,radii,numpy.array(mat)
 
     def replaceIngrMesh(self,ingredient, newMesh):
@@ -1004,11 +1007,15 @@ class AutopackViewer:
             if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or dejavui:
                 color = [ingredient.color] if ingredient.color is not None else None
 #                print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
+                axis = numpy.array(ingredient.principalVector[:])
+                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
+#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
                 ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
                                         transpose= True,colors=color,
-                                        axis=ingredient.principalVector)
+                                        axis=axis)
         
     
     def displayInstancesIngredient(self,ingredient, matrices):
@@ -1023,11 +1030,15 @@ class AutopackViewer:
             if parent is None :
                 parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingredient])
 #                    self.vi.AddObject(parent)
+            axis = numpy.array(ingredient.principalVector[:])
+            if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
+#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
             ingredient.ipoly = self.vi.instancePolygon(self.histo.FillName[self.histo.cFill]+ingredient.name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
                                         transpose= True,colors=[ingredient.color],
-                                        axis=ingredient.principalVector)
+                                        axis=axis)
         
     def displayCytoplasmIngredients(self):
         verts = {}
@@ -1117,7 +1128,7 @@ class AutopackViewer:
                 if ingr not in meshGeoms:
                     continue
                 axis = numpy.array(ingr.principalVector[:])
-                if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                    if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
                     axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                    print (self.helper.getType(self.helper.getChilds(polygon)[0]))
@@ -1130,7 +1141,7 @@ class AutopackViewer:
                 #print ingr.ipoly
                 if self.vi.host.find("blender") != -1 :
                     self.orgaToMasterGeom[ingr] = polygon
-                    if not self.vi.dupliVert :
+                    if not self.vi.instance_dupliFace :
                         self.vi.setLayers(polygon,[1])#and do it for child too.
 #                    else :    
 #                        if ingr.coordsystem == "left":
@@ -1260,7 +1271,7 @@ class AutopackViewer:
                             parent = None                           
                         print("ri instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
                             axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                            print (self.helper.getType(self.helper.getChilds(polygon)[0]))
@@ -1273,7 +1284,7 @@ class AutopackViewer:
                         #principal vector rotate by 90degree for blender dupliVert?
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
-                            if not self.vi.dupliVert : 
+                            if not self.vi.instance_dupliFace : 
                                 self.vi.setLayers(polygon,[1])#and do it for child too.
 #                            else :    
 #                                if ingr.coordsystem == "left":
@@ -1309,7 +1320,7 @@ class AutopackViewer:
                             parent = None                           
                         print("rs instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.dupliVert and ingr.coordsystem == "left": 
+                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
                             axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
@@ -1321,7 +1332,7 @@ class AutopackViewer:
                                                     axis=axis)            
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
-                            if not self.vi.dupliVert :
+                            if not self.vi.instance_dupliFace :
                                 self.vi.setLayers(polygon,[1])#and do it for child too.
 #                            else :    
 #                                if ingr.coordsystem == "left":

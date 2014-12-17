@@ -2661,12 +2661,12 @@ class SubdialogViewer(uiadaptor):
         self.ingr_build[ingr.name] = self._addElemt(name=ingr.name+'Build',
                     width=hostWidth,height=10,alignement=a,#self.wc[1]
                     action=inr_cb,type="checkbox",icon=None,#self.buildIngredients
-                    variable=self.addVariable("int",1),value=self.build,label="----")
+                    variable=self.addVariable("int",0),value=0,label="----")
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"show")
         self.ingr_display[ingr.name] = self._addElemt(name=ingr.name+'Display',
                     width=hostWidth,height=10,alignement=a,#0
                     action=inr_cb,type="checkbox",icon=None,#self.toggleOrganelDisplay
-                    variable=self.addVariable("int",1),value=self._show,label="----")
+                    variable=self.addVariable("int",0),value=self._show,label="----")
         hostWidth = 75
         if autopack.helper.host == 'maya':
             hostWidth = 30
@@ -3327,9 +3327,9 @@ class AutoPackGui(uiadaptor):
                                             width=150,height=10,
                                               action=self.toggleCheckLatestRecipe,type="checkbox",icon=None,
                                               variable=self.addVariable("int",int(autopack.checkAtstartup)),value=autopack.checkAtstartup)
-        if self.host.find("blender") != -1 or self.host=="c4d" :
+        if self.host.find("blender") != -1 or self.host=="c4d" or self.host=="maya":
             self.use_dupli_vert = self._addElemt(name="useDupli",
-                                            label="use dupliVert/cloner instance vs individual instance (only C4D and Blender for now)",
+                                            label="use dupliVert/cloner/particle instance vs individual instance",
                                             width=150,height=10,
                                               action=None,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=True)
@@ -3491,7 +3491,7 @@ class AutoPackGui(uiadaptor):
         elemFrame.append([self.LABELGMODE,self.gmode])
         elemFrame.append([self.forceRecipeAvailable])
         elemFrame.append([self.WidgetViewer["forceFetchRecipe"]])
-        if self.host.find("blender") != -1 or self.host == "c4d":
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
             elemFrame.append([self.use_dupli_vert])
         elemFrame.append([self.LABELSV])
         frame = self._addLayout(id=196,name="Options",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
@@ -3923,7 +3923,7 @@ Copyright: Graham Johnson ©2010
         if version is None :
             version = "1.0"
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"]) 
-        if self.host.find("blender") != -1 or self.host == "c4d":
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
             self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
         if recipe == "Load":
             self.fileDialog(label="choose a file",callback=self.loadxml)
@@ -3966,7 +3966,7 @@ Copyright: Graham Johnson ©2010
         version = self.getVal(self.WidgetFiller["recipeversion"])
         self.setVal(self.WidgetViewer["BuildUponLoad"],False) 
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"])  
-        if self.host.find("blender") != -1 or self.host == "c4d" :
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
             self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
 #        print "drawSubsetFiller", recipe,version
 #        self.setVal(self.WidgetViewer["ShowUponLoad"]) 

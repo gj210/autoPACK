@@ -7,8 +7,19 @@ Hoe to run autopack from xml file
 """
 # Show the effect of garbage collection
 import sys
+sys.path.append("/Users/ludo/Library/Preferences/Autodesk/maya/2015-x64/plug-ins/MGLToolsPckgs")
+sys.path.append("/Users/ludo/Library/Preferences/Autodesk/maya/2015-x64/plug-ins/MGLToolsPckgs/PIL")
+
+#maya standalone special
+import maya.standalone
+maya.standalone.initialize()
+#load plugin
+import maya
+maya.cmds.loadPlugin("fbxmaya")
 import numpy
-sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/")
+
+print sys.argv
+#sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/")
 #should have dejavu...
 import gc
 import pprint
@@ -23,8 +34,8 @@ for i in range(2):
     
 import os
 import sys
-sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs")
-sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/PIL/")
+#sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs")
+#sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14 Student_7B992864/plugins/ePMV/mgl64/MGLToolsPckgs/PIL/")
 import autopack
 #wrkDir = AutoFill.__path__[0]
 localdir = wrkDir = autopack.__path__[0]
@@ -34,7 +45,7 @@ from autopack.Graphics import AutopackViewer as AFViewer
 from autopack.Analysis import AnalyseAP
 TWOD = 1
 NOGUI = 1
-ANALYSIS = 1
+ANALYSIS = 0
 helper = autopack.helper
 if helper is None and not NOGUI:
     import upy
@@ -44,19 +55,25 @@ else :
     import upy
     helperClass = upy.getHelperClass()
     helper = helperClass(vi="nogui")
+    print helper
 autopack.helper = helper
 #filename = "/Users/ludo/Desktop/cell.xml"
 #filename = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/Test_Spheres2D1.1.xml"
 #filename = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/Test_Spheres2Dgradients1.0.xml"
 #filename = "/Users/ludo/DEV/autopack_git/data/Mycoplasma/recipe/Mycoplasma1.3.xml"
 #filename = "/Users/ludo/Desktop/cell_hack.xml"
-filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml"
+#filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureC1.3.xml"
+#filename = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/HIV-1_0.1.6.xml"
+#filename = "/Users/ludo/Library/Application Support/autoPACK/cache_recipes/HIV-1_0.1.6.xml"
+filename = "/Users/ludo/Library/Application Support/autoPACK/cache_recipes/HIV-1_0.1.6.json"
+
 fileName, fileExtension = os.path.splitext(filename)
 n=os.path.basename(fileName)
 h = Environment(name=n)
 #h.helper = helper
 recipe=n
-h.load_XML(filename)
+h.loadRecipe(filename)
+#h.loadRecipe("myTest.json")
 afviewer=None
 if not NOGUI :
     print h,helper
@@ -70,7 +87,7 @@ h.saveResult = False
 #resultfilename = h1.resultfile = wrkDir+os.sep+"autoFillRecipeScripts"+os.sep+"2DsphereFill"+os.sep+"results"+os.sep+"SpherefillResult.afr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/2DsphereFill/results/2DsphereFill_1.1.apr"
 #resultfilename = h.resultfile = wrkDir+os.sep+"autoFillRecipeScripts/Mycoplasma/results/MycoplasmaPackResult_3"
-resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1/NM_Analysis_C"
+#resultfilename = h.resultfile = "/Users/ludo/DEV/autoPACKresults/NM_Analysis_C1/NM_Analysis_C"
 
 #h.smallestProteinSize=15
 #h.exteriorRecipe.ingredients[0].uLength = 100.0
@@ -119,10 +136,10 @@ else :
     h.boundingBox =[[-2482, -2389.0, 100.0], [2495, 2466, 2181.0]]
 #    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
 #                          gridFileOut=gridfile,previousFill=False)
-    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=gridfile,rebuild=True ,
-                          gridFileOut=None,previousFill=False)
-
-    h.fill5(verbose = 0,usePP=True)
+#    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=gridfile,rebuild=True ,
+#                          gridFileOut=None,previousFill=False)
+#
+#    h.fill5(verbose = 0,usePP=False)
 #    if not NOGUI :
 #        afviewer.displayFill()  
 
@@ -135,4 +152,9 @@ else :
 #    pprint.pprint(gc.garbage)
 #    del gc.garbage[:]
 #    print
+#h.saveRecipe("/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/HIV-1_0.1.6.json")
+#resultfilename = autopack.retrieveFile(h.resultfile+".json",cache="results")
+#result,orgaresult,freePoint=h.load(resultfilename=resultfilename,restore_grid=False)#load text ?#this will restore the grid  
+#h.ingredients = h.restore(result,orgaresult,freePoint)
+#h.store_asJson("HIV1.6_result.json",indent=False)
 #execfile("/Users/ludo/DEV/autoPACK_github/autopack/scripts/testAF_xml.py")       
