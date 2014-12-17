@@ -182,8 +182,10 @@ autopack_path_pref_file = preferences+os.sep+"path_preferences.json"
 autopack_user_path_pref_file = preferences+os.sep+"path_user_preferences.json"
 
 #Default values    
-autoPACKserver="https://autofill.googlecode.com/git/autoPACK_database_1.0.0"#XML
-autoPACKserver_alt="http://mgldev.scripps.edu/projects/autoPACK/data/autopack_git/autoPACK_database_1.0.0"
+#autoPACKserver="https://autofill.googlecode.com/git/autoPACK_database_1.0.0"#XML
+autoPACKserver="https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"
+autoPACKserver_default="https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"#XML
+autoPACKserver_alt="http://mgldev.scripps.edu/projects/autoPACK/data/cellPACK_data/cellPACK_database_1.1.0"
 filespath = autoPACKserver+"/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
@@ -275,7 +277,7 @@ USER_RECIPES={}
 def resetDefault():
     if os.path.isfile(autopack_user_path_pref_file):
         os.remove(autopack_user_path_pref_file)
-    autoPACKserver="http://autofill.googlecode.com/git/autoPACK_database_1.0.0"
+    autoPACKserver=autoPACKserver_default#"http://autofill.googlecode.com/git/autoPACK_database_1.0.0"
     filespath = autoPACKserver+"/autoPACK_filePaths.json"
     recipeslistes = autoPACKserver+"/autopack_recipe.json"
     
@@ -323,6 +325,10 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
         filename=fixOnePath(filename)
     print ("autopack retrieve file ",filename)
     if filename.find("http") != -1 or filename.find("ftp")!= -1 :
+        #check if usin autoPACKserver
+        useAPServer = False
+        if filename.find(autoPACKserver) != -1 :
+            useAPServer = True
         reporthook = None
         if helper is not None:        
             reporthook=helper.reporthook
@@ -334,7 +340,12 @@ def retrieveFile(filename,destination="",cache="geoms",force=None):
         #print ("isfile ",tmpFileName)
         if not os.path.isfile(tmpFileName) or force :
             if checkURL(filename):
-                urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
+                try:
+                    urllib.urlretrieve(filename, tmpFileName,reporthook=reporthook)
+                except:
+                    if useAPServer :
+                        print ("try alternate server")
+                        urllib.urlretrieve(autoPACKserver_alt+"/"+cache+"/"+name, tmpFileName,reporthook=reporthook)                        
             else :
                 if not os.path.isfile(tmpFileName)  :
                     print ("not isfile ",tmpFileName)

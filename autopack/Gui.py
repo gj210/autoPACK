@@ -2661,7 +2661,7 @@ class SubdialogViewer(uiadaptor):
         self.ingr_build[ingr.name] = self._addElemt(name=ingr.name+'Build',
                     width=hostWidth,height=10,alignement=a,#self.wc[1]
                     action=inr_cb,type="checkbox",icon=None,#self.buildIngredients
-                    variable=self.addVariable("int",0),value=0,label="----")
+                    variable=self.addVariable("int",1),value=1,label="----")
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"show")
         self.ingr_display[ingr.name] = self._addElemt(name=ingr.name+'Display',
                     width=hostWidth,height=10,alignement=a,#0
@@ -3695,14 +3695,14 @@ class AutoPackGui(uiadaptor):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
                       "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
-        up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="dev")
+        up = Updater(host="all",helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="dev")
         up.checkUpdate()
 
     def stdCheckUpdate(self,*args):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
                       "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
-        up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin)
+        up = Updater(host="all",helper=self.helper,gui=self,liste_plugin=liste_plugin)
         up.checkUpdate()
 
     def checkUpdate(self,*args):
