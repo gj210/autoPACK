@@ -3560,7 +3560,10 @@ class Environment(CompartmentList):
         if resultfilename == None:
             resultfilename = self.resultfile
         with open(resultfilename, 'r') as fp :#doesnt work with symbol link ?
-            self.result_json=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+            if autopack.use_json_hook:
+                self.result_json=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+            else :
+                self.result_json=json.load(fp)
         #needto parse
         result=[]
         orgaresult=[[],]*len(self.compartments)

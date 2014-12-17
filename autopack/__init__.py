@@ -40,10 +40,15 @@ import os
 import re
 import shutil
 from os import path, environ
+use_json_hook=True
+#in casesimplejson not there
 try :
     import simplejson as json
+    #we can use the hookup at loading
 except :
     import json
+    if sys.version[0:3] <= "2.6" :
+        use_json_hook=False
 try :
     from collections import OrderedDict
 except :
@@ -462,7 +467,10 @@ def updateRecipAvailableJSON(recipesfile):
         return
     #replace shortcut pathby hard path
     f=open(recipesfile,"r")
-    recipes=json.load(f,object_pairs_hook=OrderedDict) 
+    if use_json_hook:
+        recipes=json.load(f,object_pairs_hook=OrderedDict) 
+    else :
+        recipes=json.load(f)       
     f.close()
     RECIPES.update(recipes)
     print ("recipes updated "+str(len(RECIPES)))
