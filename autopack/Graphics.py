@@ -379,7 +379,9 @@ class AutopackViewer:
             if p is None :
                 p = self.vi.newEmpty(name,parent='O%s'%orga.name)
             print ("orga.representation ",name, p, orga.representation)
-            self.vi.reParent(orga.representation,p)  
+            op = self.vi.getObject(orga.representation)
+            if op is not None :
+                self.vi.reParent(orga.representation,p)  
     #        orga.ref_obj = name
 
     def createOrganelMesh(self, orga ):
@@ -1011,7 +1013,8 @@ class AutopackViewer:
                 if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
                     axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-                ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.name,
+                print ("build ipoly ",ingredient.o_name)
+                ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.o_name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
                                         transpose= True,colors=color,
@@ -1030,11 +1033,12 @@ class AutopackViewer:
             if parent is None :
                 parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingredient])
 #                    self.vi.AddObject(parent)
-            axis = numpy.array(ingredient.principalVector[:])
-            if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
-#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-            ingredient.ipoly = self.vi.instancePolygon(self.histo.FillName[self.histo.cFill]+ingredient.name,
+            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None :
+                axis = numpy.array(ingredient.principalVector[:])
+                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
+    #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+                ingredient.ipoly = self.vi.instancePolygon(self.histo.FillName[self.histo.cFill]+ingredient.name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
                                         transpose= True,colors=[ingredient.color],
@@ -1086,16 +1090,14 @@ class AutopackViewer:
             meshGeoms = {}#self.meshGeoms#{}
             inds = {}
             for pos, rot, ingr, ptInd in self.histo.molecules:
-                #print "ingr",ingr,ingr.mesh,ingr.mesh_3d                
+#                print ("ingr",ingr,ingr.mesh,ingr.mesh_3d)               
                 if ingr.mesh: # display mesh
-#                    geom = ingr.mesh
                     mat = rot.copy()
                     mat[:3, 3] = pos
                     if self.helper.host == 'dejavu':
                         mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
                         mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
                     if self.helper.instance_dupliFace :
-#                        if self.helper.host.find("blender") != -1:
                         mat = rot.copy().transpose()
                         mat[3][:3]=pos
                     if ingr not in meshGeoms:
@@ -1112,51 +1114,42 @@ class AutopackViewer:
                         #    self.vi.AddObject(geom, parent=self.orgaToMasterGeom[ingr])
             j=0
             for ingr in r.ingredients:
-                #self.vi.progressBar(j/ningr,label="instances for "+str(j)+" "+ingr.name+" "+str(len(meshGeoms[ingr]))) 
+#                print("process ",ingr.o_name) 
                 geom = ingr.mesh
-                #geom.Set(instanceMatrices=meshGeoms[ingr], visible=1)        
-                #if self.ViewerType != 'dejavu':
-                    #find the polygon and the ingr?#polygon = ingr.mesh_3d
                 polygon = ingr.mesh_3d
                 name = "Meshs_"+ingr.name.replace(" ","_")
                 parent = self.vi.getObject(name)
                 if parent is None :
                     parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingr])
-#                    self.vi.AddObject(parent)
                 if self.helper.host == 'dejavu':
                     parent = None
                 if ingr not in meshGeoms:
+                    print ("ingr not in meshGeoms",ingr,meshGeoms)
                     continue
                 axis = numpy.array(ingr.principalVector[:])
                 if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
-#                    if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
                     axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
-#                    print (self.helper.getType(self.helper.getChilds(polygon)[0]))
-                ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.name,
+#                print ("make ipoly",)
+                ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.o_name,
                                             matrices=meshGeoms[ingr],
                                             mesh=polygon,parent = parent,
                                             transpose= True,colors=[ingr.color],
                                             axis=axis)
-#                if self.doOrder :
-                #print ingr.ipoly
                 if self.vi.host.find("blender") != -1 :
                     self.orgaToMasterGeom[ingr] = polygon
                     if not self.vi.instance_dupliFace :
                         self.vi.setLayers(polygon,[1])#and do it for child too.
-#                    else :    
-#                        if ingr.coordsystem == "left":
-#                            self.vi.rotateObj(polygon,[0.0,-math.pi/2.0,0.0])
-
                 elif self.vi.host == "dejavu" or self.vi.host == "softimage":
                     self.orgaToMasterGeom[ingr] = ingr.mesh
                 if self.helper.host != 'dejavu':
-                    if type(ingr.ipoly) != list : return
-                    for i,ip in enumerate(ingr.ipoly):
-    #                    print i,ip,type(ip)
-                        name = self.vi.getName(ip)
-                        if inds[ingr][i] in self.histo.order:
-    #                        print name,name+"_"+str(self.histo.order[inds[ingr][i]])
-                            self.vi.setName(ip,name+"_"+str(self.histo.order[inds[ingr][i]]))
+                    if not self.helper.instance_dupliFace:
+                        if type(ingr.ipoly) != list  : return
+                        for i,ip in enumerate(ingr.ipoly):
+        #                    print i,ip,type(ip)
+                            name = self.vi.getName(ip)
+                            if inds[ingr][i] in self.histo.order:
+        #                        print name,name+"_"+str(self.histo.order[inds[ingr][i]])
+                                self.vi.setName(ip,name+"_"+str(self.histo.order[inds[ingr][i]]))
 #                self.vi.progressBar(j/ningr,label="instances for "+str(j)+" "+ingr.name+" "+str(len(meshGeoms[ingr]))) 
                 j+=1
                 
