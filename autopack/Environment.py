@@ -3487,11 +3487,11 @@ class Environment(CompartmentList):
 
 #    @classmethod
     def getOneIngrJson(self,ingr,ingrdic):
-        name_ingr = ingr.name
-        if name_ingr not in ingrdic:
-            name_ingr = ingr.o_name
-        for r in ingr.results:  
-            ingrdic[name_ingr]["results"].append([r[0]],r[1],)
+#        name_ingr = ingr.name
+#        if name_ingr not in ingrdic:
+#            name_ingr = ingr.o_name
+#        for r in ingr.results:  
+#            ingrdic[name_ingr]["results"].append([r[0]],r[1],)
 #        print ("growingr?",ingr,ingr.name,isinstance(ingr, GrowIngrediant))
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             ingr.nbCurve = ingrdic["nbCurve"]
