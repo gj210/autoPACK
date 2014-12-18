@@ -202,4 +202,4 @@ def unregister():
 def initializePlugin(mobject):
     pass
 def uninitializePlugin(mobject):
-    epmv_plugin.deregister(object=mobject)
+    af_plugin.deregister(object=mobject)
