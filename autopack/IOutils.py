@@ -311,20 +311,22 @@ class IOingredientTool(object):
         ingre = self.makeIngredient(**kw)                    
         return ingre
         
-    def ingrJsonNode(self,ingr):
+    def ingrJsonNode(self,ingr,result=False):
         ingdic={}
         for k in ingr.KWDS:
             v = getattr(ingr,k)
             if hasattr(v,"tolist"):
                 v=v.tolist()
             ingdic[k] = v
-        ingdic["results"]=[] 
-        for r in ingr.results:  
-            if hasattr(r[0],"tolist"):
-                r[0]=r[0].tolist()
-            if hasattr(r[1],"tolist"):
-                r[1]=r[1].tolist()
-            ingdic["results"].append([r[0],r[1]])
+        #reslt ?s
+        if result :
+            ingdic["results"]=[] 
+            for r in ingr.results:  
+                if hasattr(r[0],"tolist"):
+                    r[0]=r[0].tolist()
+                if hasattr(r[1],"tolist"):
+                    r[1]=r[1].tolist()
+                ingdic["results"].append([r[0],r[1]])
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             ingdic["nbCurve"]=ingr.nbCurve
             for i in range(ingr.nbCurve):
@@ -453,6 +455,7 @@ def save_asJson(env,setupfile,useXref=True):
                     env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":ing_filename}
                 else :
                     env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name}
+                    #ingrJsonNode?
                     for k in ingr.KWDS:
                         v = getattr(ingr,k)
     #                    print ingr.name+" keyword ",k,v

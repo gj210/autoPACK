@@ -1597,9 +1597,13 @@ class Environment(CompartmentList):
                 #print ingr.name
                 if name == ingr.name :
                     return ingr
+                elif name == ingr.o_name :
+                    return ingr
             for ingr in r.exclude:
                 if name == ingr.name :
                     return ingr        
+                elif name == ingr.o_name :
+                    return ingr
         return None
         
     def getIngrFromName(self,name,compNum=None):
@@ -3347,6 +3351,7 @@ class Environment(CompartmentList):
             pos,rot,name,compNum,ptInd = elem
             #needto check the name if it got the comp rule
             ingr = self.getIngrFromName(name,compNum)
+#            print ("inr,name,compNum",ingr.name,name,compNum)
             if ingr is not None:
                 molecules.append([pos, numpy.array(rot), ingr, ptInd])
                 if name not  in ingredients :
@@ -3369,6 +3374,7 @@ class Environment(CompartmentList):
                 for elem in orgaresult[i] :
                     pos,rot,name,compNum,ptInd = elem
                     ingr = self.getIngrFromName(name,compNum)
+#                    print ("inr,name,compNum",ingr.name,name,compNum,i,o.name)
                     if ingr is not None:
                         molecules.append([pos, numpy.array(rot), ingr, ptInd])
                         if name not in ingredients :
@@ -3499,7 +3505,7 @@ class Environment(CompartmentList):
             for i in range(ingr.nbCurve):
                 ingr.listePtLinear.append( ingrdic["curve"+str(i)] )
 #            print ("nbCurve?",ingr.nbCurve,ingrdic["nbCurve"])
-        return ingrdic["results"], ingr.name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
+        return ingrdic["results"], ingr.o_name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
 
     def load_asTxt(self,resultfilename=None):
 #        from upy.hostHelper import Helper as helper 
@@ -3566,7 +3572,7 @@ class Environment(CompartmentList):
                 self.result_json=json.load(fp)
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.compartments)
+        orgaresult=[]
         r =  self.exteriorRecipe
         if r :
             if "exteriorRecipe" in self.result_json:
@@ -3580,11 +3586,15 @@ class Environment(CompartmentList):
                             name_ingr = ingr.o_name
                     iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                           self.result_json["exteriorRecipe"][name_ingr])
+#                    print ("rlen ",len(iresults),name_ingr)
+                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        ingr.results.append([numpy.array(r[0]),rot])
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle ingr
         for i, orga in enumerate(self.compartments):
+            orgaresult.append([])
             #organelle surface ingr
             rs =  orga.surfaceRecipe
             if rs :
@@ -3602,8 +3612,11 @@ class Environment(CompartmentList):
                                 name_ingr = ingr.o_name
                         iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                                     self.result_json[orga.name+"_surfaceRecipe"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                        ingr.results=[]
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            ingr.results.append([numpy.array(r[0]),rot])
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
             #organelle matrix ingr
             ri =  orga.innerRecipe
@@ -3621,8 +3634,11 @@ class Environment(CompartmentList):
                                 name_ingr = ingr.o_name
                         iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                                            self.result_json[orga.name+"_innerRecipe"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                        ingr.results=[]
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            ingr.results.append([numpy.array(r[0]),rot])
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         freePoint = []# pickle.load(rfile)
         try :
@@ -3638,6 +3654,7 @@ class Environment(CompartmentList):
         adic["compNum"]= ingr.compNum
         adic["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
         adic["results"]=[] 
+#        print ("dropi ",ingr.name,len(ingr.results))
         for r in ingr.results:  
             if hasattr(r[0],"tolist"):
                 r[0]=r[0].tolist()
@@ -3680,15 +3697,16 @@ class Environment(CompartmentList):
             #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
-                self.result_json[orga.name+"_innerRecipe"]={}#OrderedDict()
+                self.result_json[orga.name+"_innerRecipe"]=OrderedDict()
                 for ingr in ri.ingredients:
-                    self.result_json[orga.name+"_surfaceRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
+                    self.result_json[orga.name+"_innerRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
         with open(resultfilename, 'w') as fp :#doesnt work with symbol link ?
             if indent : 
                 json.dump(self.result_json,fp,indent=1, separators=(',', ':'))#,indent=4, separators=(',', ': ')
             else :
                 json.dump(self.result_json,fp,separators=(',', ':'))#,indent=4, separators=(',', ': ')
-                    
+        print ("ok dump",resultfilename)
+        
     def store_asTxt(self,resultfilename=None):
         if resultfilename == None:
             resultfilename = self.resultfile
