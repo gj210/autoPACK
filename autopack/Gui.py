@@ -2475,7 +2475,7 @@ class SubdialogViewer(uiadaptor):
             #what about grid
             if self.build_grid :                     
                 self.buildGrid()
-            result,orgaresult,freePoint=self.histoVol.load(resultfilename=fname,restore_grid=self.build_grid)#load text ?#this will restore the grid  
+            result,orgaresult,freePoint=self.histoVol.loadResult(resultfilename=fname,restore_grid=self.build_grid)#load text ?#this will restore the grid  
             self.ingredients = self.histoVol.restore(result,orgaresult,freePoint)
             return True
         else :
@@ -2509,7 +2509,7 @@ class SubdialogViewer(uiadaptor):
         gridFileOut=None
         #the gridfile in ? shoud it be in the histoVol from the xml
         if self.recipe in autopack.RECIPES:
-            gridFileIn=autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+            gridFileIn=os.path.abspath(autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"])+os.sep+"results"+os.sep+"fill_grid"
         else :
             gridFileIn = self.grid_filename#or grid_filename?
 #        1 ("gridFileIn check ",gridFileIn)
@@ -3199,7 +3199,6 @@ class AutoPackGui(uiadaptor):
             vi = kw["vi"]
         self.helper = upy.getHelperClass()(vi=vi)
         autopack.helper = self.helper
-        print (autopack.helper.getCurrentScene())
         self.histoVol={}
         self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
