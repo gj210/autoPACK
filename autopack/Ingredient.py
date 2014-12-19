@@ -863,6 +863,8 @@ class Ingredient(Agent):
         self.Type = Type
         self.pdb = pdb        #pmv ?
         self.color = color    # color used for sphere display
+        if self.color == "None":
+            self.color = None
         self.modelType='Spheres'
         self.rRot=[]
         self.tTrans=[]
@@ -882,7 +884,7 @@ class Ingredient(Agent):
         #self._place = self.place
         children = []
         self.sphereFile = None
-        if sphereFile is not None:
+        if sphereFile is not None and str(sphereFile) != "None":
             sphereFileo = autopack.retrieveFile(sphereFile,cache="spheres") 
             fileName, fileExtension = os.path.splitext(sphereFile)
             print ("sphereTree",sphereFileo)
