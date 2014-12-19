@@ -185,9 +185,9 @@ class IOingredientTool(object):
         elif fileExtension == '.json':
             pass#return IOutils.load_Json(env,setupfile) 
             
-    def write(self,ingr,filename,ingr_format="xml"):
+    def write(self,ingr,filename,ingr_format="xml",kwds=None,result=False):
         if ingr_format == "json" :
-            ingdic = self.ingrJsonNode(ingr)
+            ingdic = self.ingrJsonNode(ingr,result=result,kwds=kwds)
             with open(filename+".json", 'w') as fp :#doesnt work with symbol link ?
                 json.dump(ingdic,fp,indent=1,separators=(',', ':'))#,indent=4, separators=(',', ': ')            
         elif ingr_format == "xml" :
@@ -201,7 +201,7 @@ class IOingredientTool(object):
             f.write(ingrnode)
             f.close()            
         elif ingr_format == "all" :
-            ingdic = self.ingrJsonNode(ingr)
+            ingdic = self.ingrJsonNode(ingr,result=result,kwds=kwds)
             with open(filename+".json", 'w') as fp :#doesnt work with symbol link ?
                 json.dump(ingdic,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')            
             ingrnode,xmldoc = self.ingrXmlNode(ingr)
@@ -311,13 +311,16 @@ class IOingredientTool(object):
         ingre = self.makeIngredient(**kw)                    
         return ingre
         
-    def ingrJsonNode(self,ingr,result=False):
+    def ingrJsonNode(self,ingr,result=False,kwds=None):
         ingdic={}
-        for k in ingr.KWDS:
+        if kwds==None :
+            kwds=ingr.KWDS
+        for k in kwds:
             v = getattr(ingr,k)
-            if hasattr(v,"tolist"):
-                v=v.tolist()
-            ingdic[k] = v
+#            if hasattr(v,"tolist"):
+#                v=v.tolist()
+#            ingdic[k] = v
+            ingdic.update(setValueToJsonNode(v,k))
         #reslt ?s
         if result :
             ingdic["results"]=[] 
@@ -327,12 +330,12 @@ class IOingredientTool(object):
                 if hasattr(r[1],"tolist"):
                     r[1]=r[1].tolist()
                 ingdic["results"].append([r[0],r[1]])
-        if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
-            ingdic["nbCurve"]=ingr.nbCurve
-            for i in range(ingr.nbCurve):
-                lp = numpy.array(ingr.listePtLinear[i])
-                ingr.listePtLinear[i]=lp.tolist()                 
-                ingdic["curve"+str(i)] = ingr.listePtLinear[i]
+            if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
+                ingdic["nbCurve"]=ingr.nbCurve
+                for i in range(ingr.nbCurve):
+                    lp = numpy.array(ingr.listePtLinear[i])
+                    ingr.listePtLinear[i]=lp.tolist()                 
+                    ingdic["curve"+str(i)] = ingr.listePtLinear[i]
         ingdic["name"]=ingr.o_name
         return ingdic
 
@@ -377,7 +380,9 @@ class IOingredientTool(object):
         elif kw["Type"]=="Actine":
             ingr = ActinIngrediant(**kw)       
         if "gradient" in kw and kw["gradient"] != "" and kw["gradient"]!= "None":
-            ingr.gradient = kw["gradient"]           
+            ingr.gradient = kw["gradient"]  
+        if "results" in kw :
+            ingr.results = kw["results"]
         return ingr    
 
     def set_recipe_ingredient(self,xmlnode,recipe):
@@ -398,7 +403,7 @@ class IOingredientTool(object):
         
     
 #put here the export/import ?
-def save_asJson(env,setupfile,useXref=True):
+def save_asJson(env,setupfile,useXref=True,indent=True):
         """
         Save the current environment setup as an json file.
         env is the environment / recipe to be exported.
@@ -454,12 +459,12 @@ def save_asJson(env,setupfile,useXref=True):
                     ing_filename = ingr.o_name+".json"#autopack.revertOnePath(pathout+os.sep+ingr.o_name+".json")
                     env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":ing_filename}
                 else :
-                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name}
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr)#{"name":ingr.o_name}
                     #ingrJsonNode?
-                    for k in ingr.KWDS:
-                        v = getattr(ingr,k)
-    #                    print ingr.name+" keyword ",k,v
-                        env.jsondic["cytoplasme"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+#                    for k in ingr.KWDS:
+#                        v = getattr(ingr,k)
+#    #                    print ingr.name+" keyword ",k,v
+#                        env.jsondic["cytoplasme"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
                     env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
         if len(env.compartments):
             env.jsondic["compartments"]=OrderedDict()
@@ -484,11 +489,11 @@ def save_asJson(env,setupfile,useXref=True):
                         #use reference file
                         env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
                     else :
-                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]={"name":ingr.o_name}
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-        #                    print ingr.name+" keyword ",k,v
-                            env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr)#{"name":ingr.o_name}
+#                        for k in ingr.KWDS:
+#                            v = getattr(ingr,k)
+#        #                    print ingr.name+" keyword ",k,v
+#                            env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
                         env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
             ri = o.innerRecipe
             if ri :
@@ -501,15 +506,139 @@ def save_asJson(env,setupfile,useXref=True):
                         #use reference file
                         env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
                     else :
-                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]={"name":ingr.o_name}
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-        #                    print ingr.name+" keyword ",k,v
-                            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr)#{"name":ingr.o_name}
+#                        for k in ingr.KWDS:
+#                            v = getattr(ingr,k)
+#        #                    print ingr.name+" keyword ",k,v
+#                            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
                         env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
         with open(setupfile, 'w') as fp :#doesnt work with symbol link ?
-            json.dump(env.jsondic,fp,indent=1,separators=(',', ':'))#,indent=4, separators=(',', ': ')
+            if indent :
+                json.dump(env.jsondic,fp,indent=1,separators=(',', ':'))#,indent=4, separators=(',', ': ')
+            else :
+                json.dump(env.jsondic,fp,separators=(',', ':'))#,indent=4, separators=(',', ': ')                
         print ("recipe saved to ",setupfile)
+
+def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
+                      grid=False,packing_options=False,indent=True):
+        """
+        Save the current environment setup as an json file.
+        env is the environment / recipe to be exported.
+        """
+        io_ingr = IOingredientTool(env=env)
+        env.setupfile = setupfile#+".json"provide the server?
+        #the output path for this recipes files
+        if env.setupfile.find("http") != -1 or env.setupfile.find("ftp")!= -1 :
+            pathout=os.path.dirname(os.path.abspath(autopack.retrieveFile( env.setupfile)))
+        else :
+            pathout=os.path.dirname(os.path.abspath(env.setupfile))
+        if env.version is None :
+            env.version = "1.0"
+        env.jsondic = OrderedDict({"recipe":{"name":env.name,"version":env.version}})
+        if env.custom_paths :
+            #this was the used path at loading time
+            env.jsondic["recipe"]["paths"]=env.custom_paths
+        if result :
+            env.jsondic["recipe"]["setupfile"]=env.setupfile
+        if packing_options:    
+            env.jsondic["options"]={}
+            for k in env.OPTIONS:
+                v = getattr(env,k)
+                if k == "gradients" :
+                    v = env.gradients.keys()
+    #            elif k == "runTimeDisplay"
+                env.jsondic["options"].update(setValueToJsonNode(v,k))
+            #add the boundin box
+            env.jsondic["options"].update(setValueToJsonNode(env.boundingBox,"boundingBox"))
+        if grid :
+            #grid path information
+            if env.grid is not None :
+                if env.grid.filename is not None or env.grid.result_filename is not None:
+                    env.jsondic["grid"]={"grid_storage":str(env.grid.filename),
+                                    "grid_result":str(env.grid.result_filename)}
+
+        if packing_options:    
+            #gradient information
+            if len(env.gradients):
+                env.jsondic["gradients"]={}
+                for gname in env.gradients:
+                    g = env.gradients[gname]
+                    env.jsondic["gradients"][str(g.name)]={}
+                    for k in g.OPTIONS:
+                        v = getattr(g,k)
+                        env.jsondic["gradients"][str(g.name)].update(setValueToJsonNode(v,k))      
+            
+        r =  env.exteriorRecipe
+        if r :
+            env.jsondic["cytoplasme"]={}
+            env.jsondic["cytoplasme"]["ingredients"]={}
+            for ingr in r.ingredients:                
+                if useXref and packing_options:
+                    #write the json file for this ingredient
+                    io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",kwds=kwds,result=result)
+                    #use reference file : str(pathout+os.sep+ingr.o_name+".json")
+                    ing_filename = ingr.o_name+".json"#autopack.revertOnePath(pathout+os.sep+ingr.o_name+".json")
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":ing_filename}
+                else :
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+                    #ingrJsonNode?
+#                    for k in ingr.KWDS:
+#                        v = getattr(ingr,k)
+#    #                    print ingr.name+" keyword ",k,v
+#                        env.jsondic["cytoplasme"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+        if len(env.compartments):
+            env.jsondic["compartments"]=OrderedDict()
+        for o in env.compartments:
+            env.jsondic["compartments"][str(o.name)]=OrderedDict()
+            if packing_options: 
+                env.jsondic["compartments"][str(o.name)]["geom"]=str(o.filename)#should point to the used filename
+                env.jsondic["compartments"][str(o.name)]["name"]=str(o.ref_obj)
+                if o.representation is not None :
+                    fileName, fileExtension = os.path.splitext(o.representation_file)
+                    env.jsondic["compartments"][str(o.name)]["rep"]=str(o.representation)#None
+                    env.jsondic["compartments"][str(o.name)]["rep_file"]=str(fileName)
+            rs = o.surfaceRecipe
+            if rs :
+                env.jsondic["compartments"][str(o.name)]["surface"]={}
+                env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"]={}
+                for ingr in rs.ingredients: 
+                    if useXref and packing_options :
+                        #write the json file for this ingredient
+                        io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",
+                                      result=result,kwds=kwds)
+                        #use reference file
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
+                    else :
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+#                        for k in ingr.KWDS:
+#                            v = getattr(ingr,k)
+#        #                    print ingr.name+" keyword ",k,v
+#                            env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+            ri = o.innerRecipe
+            if ri :
+                env.jsondic["compartments"][str(o.name)]["interior"]={}
+                env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"]={}
+                for ingr in ri.ingredients: 
+                    if useXref and packing_options:
+                        #write the json file for this ingredient
+                        io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",result=result,kwds=kwds)
+                        #use reference file
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
+                    else :
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+#                        for k in ingr.KWDS:
+#                            v = getattr(ingr,k)
+#        #                    print ingr.name+" keyword ",k,v
+#                            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k)) 
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+        with open(setupfile, 'w') as fp :#doesnt work with symbol link ?
+            if indent :
+                json.dump(env.jsondic,fp,indent=1,separators=(',', ':'))#,indent=4, separators=(',', ': ')
+            else :
+                json.dump(env.jsondic,fp,separators=(',', ':'))#,indent=4, separators=(',', ': ')                
+        print ("Mixed recipe saved to ",setupfile)
         
 def save_asXML(env,setupfile,useXref=True):
         """
@@ -1025,3 +1154,94 @@ def load_Json(env,setupfile):
 #        if env.placeMethod.find("panda") != -1 :
 #            env.setupPanda()
         
+def load_MixedasJson(env,resultfilename=None):
+#        from upy.hostHelper import Helper as helper 
+    if resultfilename == None:
+        resultfilename = env.resultfile
+    #use the current dictionary ?jsondic
+    with open(resultfilename, 'r') as fp :#doesnt work with symbol link ?
+        if autopack.use_json_hook:
+            env.result_json=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+        else :
+            env.result_json=json.load(fp)
+    #needto parse
+    result=[]
+    orgaresult=[]
+    r =  env.exteriorRecipe
+    if r :
+        if "cytoplasme" in env.result_json :
+            if "ingredients" in env.result_json["cytoplasme"]:
+                for ingr in r.ingredients:   
+                    name_ingr = ingr.name
+                    if name_ingr not in env.result_json["cytoplasme"]["ingredients"] : 
+                        #backward compatiblity 
+                        if ingr.o_name not in env.result_json["cytoplasme"]["ingredients"] : 
+                            continue
+                        else :
+                            name_ingr = ingr.o_name
+                    iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
+                          env.result_json["cytoplasme"]["ingredients"][name_ingr])
+    #                    print ("rlen ",len(iresults),name_ingr)
+                    ingr.results=[]
+                    for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        ingr.results.append([numpy.array(r[0]),rot])
+                        result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+    #organelle ingr
+    for i, orga in enumerate(env.compartments):
+        orgaresult.append([])
+        #organelle surface ingr
+        if orga.name not in env.result_json["compartments"] :
+            continue
+        rs =  orga.surfaceRecipe
+        if rs :
+            if "surface" in env.result_json["compartments"][orga.name] :
+                for ingr in rs.ingredients:
+                    name_ingr = ingr.name
+                    #replace number by name ?
+                    if orga.name+"_surf__"+ingr.o_name in env.result_json["compartments"][orga.name]["surface"]["ingredients"]:
+                        name_ingr=orga.name+"_surf__"+ingr.o_name
+                    if name_ingr not in env.result_json["compartments"][orga.name]["surface"]["ingredients"]  : 
+                        #backward compatiblity 
+                        if ingr.o_name not in env.result_json["compartments"][orga.name]["surface"]["ingredients"] : 
+                            continue
+                        else :
+                            name_ingr = ingr.o_name
+                    iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
+                                env.result_json["compartments"][orga.name]["surface"]["ingredients"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                    ingr.results=[]
+                    for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        ingr.results.append([numpy.array(r[0]),rot])
+                        orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+        #organelle matrix ingr
+        ri =  orga.innerRecipe
+        if ri :
+            if "interior" in env.result_json["compartments"][orga.name]:
+                for ingr in ri.ingredients:                    
+                    name_ingr = ingr.name
+                    if orga.name+"_int__"+ingr.o_name in env.result_json["compartments"][orga.name]["interior"]["ingredients"]:
+                        name_ingr=orga.name+"_int__"+ingr.o_name
+                    if name_ingr not in env.result_json["compartments"][orga.name]["interior"]["ingredients"] : 
+                        #backward compatiblity 
+                        if ingr.o_name not in env.result_json["compartments"][orga.name]["interior"]["ingredients"] : 
+                            continue
+                        else :
+                            name_ingr = ingr.o_name
+                    iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
+                                       env.result_json["compartments"][orga.name]["interior"]["ingredients"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                    ingr.results=[]
+                    for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        ingr.results.append([numpy.array(r[0]),rot])
+                        orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
+    freePoint = []# pickle.load(rfile)
+    try :
+        rfile = open(resultfilename+"freePoints",'rb')
+        freePoint = pickle.load(rfile)
+        rfile.close()
+    except :
+        pass
+    return result,orgaresult,freePoint

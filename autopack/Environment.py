@@ -966,6 +966,7 @@ class Environment(CompartmentList):
         self.resultfile = ""
         self.setupfile = ""
         self.current_path=None#the path of the recipe file
+        self.custom_paths=None
         self.useXref=True
         self.grid_filename =None#
         self.grid_result_filename = None#str(gridn.getAttribute("grid_result"))
@@ -1162,17 +1163,55 @@ class Environment(CompartmentList):
             return None
         return None
         
-    def saveRecipe(self,setupfile,useXref=None,format_output="json"):
+    def saveRecipe(self,setupfile,useXref=None,format_output="json",mixed=False,
+                   kwds=None,result=False,
+                   grid=False,packing_options=False,
+                   indent=False):
         if useXref is None :
             useXref = self.useXref
         if format_output == "json":
-            IOutils.save_asJson(self,setupfile,useXref=useXref)
+            if mixed:                
+                IOutils.save_Mixed_asJson(self,setupfile,useXref=useXref,
+                                          kwds=kwds,result=result,indent=indent,
+                                          grid=grid,packing_options=packing_options)
+            else :
+                IOutils.save_asJson(self,setupfile,useXref=useXref,indent=indent)
         elif format_output == "xml":
             IOutils.save_asXML(self,setupfile,useXref=useXref)
         elif format_output == "python":
             IOutils.save_asPython(self,setupfile,useXref=useXref)
         else :
             print("format output "+format_output+" not recognized (json,xml,python)")
+
+    def loadResult(self,resultfilename=None,restore_grid=True,backward=False):
+        result=[],[],[]        
+        if resultfilename == None:
+            resultfilename = self.resultfile
+        #check the extension of the filename none, txt or json
+#        resultfilename = autopack.retrieveFile(resultfilename,cache="results")
+        fileName, fileExtension = os.path.splitext(resultfilename)
+        if fileExtension == '':
+            try :
+                result= pickle.load( open(resultfilename,'rb'))
+            except :
+                print  ("can't read "+resultfilename)
+                return [],[],[]
+        elif fileExtension == '.apr':     
+            try :
+                result= pickle.load( open(resultfilename,'rb'))
+            except :
+                 return self.load_asTxt(resultfilename=resultfilename)
+        elif fileExtension == '.txt':     
+            return self.load_asTxt(resultfilename=resultfilename)
+        elif fileExtension == '.json':
+            if backward :
+                return self.load_asJson(resultfilename=resultfilename)
+            else :                
+                return IOutils.load_MixedasJson(self,resultfilename=resultfilename)  
+        else :
+            print  ("can't read or recognize "+resultfilename)
+            return [],[],[]
+        return result
             
     def includeIngrRecipes(self,ingrname, include):
         """
@@ -3411,32 +3450,7 @@ class Environment(CompartmentList):
         self.distancesAfterFill= self.grid.distToClosestSurf
         
             
-    def load(self,resultfilename=None,restore_grid=True):
-        result=[],[],[]        
-        if resultfilename == None:
-            resultfilename = self.resultfile
-        #check the extension of the filename none, txt or json
-#        resultfilename = autopack.retrieveFile(resultfilename,cache="results")
-        fileName, fileExtension = os.path.splitext(resultfilename)
-        if fileExtension == '':
-            try :
-                result= pickle.load( open(resultfilename,'rb'))
-            except :
-                print  ("can't read "+resultfilename)
-                return [],[],[]
-        elif fileExtension == '.apr':     
-            try :
-                result= pickle.load( open(resultfilename,'rb'))
-            except :
-                 return self.load_asTxt(resultfilename=resultfilename)
-        elif fileExtension == '.txt':     
-            return self.load_asTxt(resultfilename=resultfilename)
-        elif fileExtension == '.json':
-            return self.load_asJson(resultfilename=resultfilename)  
-        else :
-            print  ("can't read or recognize "+resultfilename)
-            return [],[],[]
-        return result
+
         
     def loadFreePoint(self,resultfilename):
         rfile = open(resultfilename+"freePoints",'rb')
@@ -3560,7 +3574,7 @@ class Environment(CompartmentList):
                     pass#already store
                 else :
                     ingr.results.append([pos,rot])                                
-
+        
     def load_asJson(self,resultfilename=None):
 #        from upy.hostHelper import Helper as helper 
         if resultfilename == None:
@@ -3575,7 +3589,7 @@ class Environment(CompartmentList):
         orgaresult=[]
         r =  self.exteriorRecipe
         if r :
-            if "exteriorRecipe" in self.result_json:
+            if "exteriorRecipe" in self.result_json :
                 for ingr in r.ingredients:   
                     name_ingr = ingr.name
                     if name_ingr not in self.result_json["exteriorRecipe"] : 
