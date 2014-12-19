@@ -33,7 +33,7 @@ def flatten_unicode_keys(d):
             v = d[k]
             del d[k]
             d[str(k)] = v
-        if isinstance(k, unicode):
+        if isinstance(k, unicode) or isinstance(v, unicode):
             d[str(k)] = str(v)
     return d
             
