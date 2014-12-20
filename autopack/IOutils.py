@@ -33,8 +33,8 @@ def flatten_unicode_keys(d):
             v = d[k]
             del d[k]
             d[str(k)] = v
-        if isinstance(k, unicode) or isinstance(v, unicode):
-            d[str(k)] = str(v)
+        if isinstance(k, unicode) or isinstance(d[k], unicode):
+            d[str(k)] = str(d[str(k)])
     return d
             
 def getValueToXMLNode(vtype,node,attrname):
