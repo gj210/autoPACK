@@ -33,7 +33,7 @@ def flatten_unicode_keys(d):
             v = d[k]
             del d[k]
             d[str(k)] = v
-        if isinstance(k, unicode) or isinstance(d[k], unicode):
+        if isinstance(d[k], unicode):
             d[str(k)] = str(d[str(k)])
     return d
             
@@ -1182,7 +1182,7 @@ def load_MixedasJson(env,resultfilename=None):
                     iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
                           env.result_json["cytoplasme"]["ingredients"][name_ingr])
     #                    print ("rlen ",len(iresults),name_ingr)
-                    ingr.results=[]
+#                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
                         ingr.results.append([numpy.array(r[0]),rot])
@@ -1210,10 +1210,10 @@ def load_MixedasJson(env,resultfilename=None):
                     iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
                                 env.result_json["compartments"][orga.name]["surface"]["ingredients"][name_ingr])
 #                        print ("rlen ",len(iresults),name_ingr)
-                    ingr.results=[]
+#                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                        ingr.results.append([numpy.array(r[0]),rot])
+#                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle matrix ingr
         ri =  orga.innerRecipe
@@ -1232,10 +1232,10 @@ def load_MixedasJson(env,resultfilename=None):
                     iresults, ingrname,ingrcompNum,ptInd,rad = env.getOneIngrJson(ingr,
                                        env.result_json["compartments"][orga.name]["interior"]["ingredients"][name_ingr])
 #                        print ("rlen ",len(iresults),name_ingr)
-                    ingr.results=[]
+#                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                        ingr.results.append([numpy.array(r[0]),rot])
+#                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     freePoint = []# pickle.load(rfile)
     try :
