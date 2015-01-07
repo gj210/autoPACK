@@ -253,6 +253,8 @@ class IOingredientTool(object):
         for k in KWDS:
             v=getValueToXMLNode(KWDS[k]["type"],ingrnode,k)
 #example of debugging...
+            if k=="sphereFile":
+                print k,v
 #            if k == "rejectionThreshold" :
 #                print "rejectionThreshold",KWDS[k]["type"],v,v is not None
 #                print "rejectionThreshold",ingrnode.getAttribute(k)
@@ -321,6 +323,11 @@ class IOingredientTool(object):
 #                v=v.tolist()
 #            ingdic[k] = v
             ingdic.update(setValueToJsonNode(v,k))
+        #if sphereTree file present should not use the pos-radii keyword
+        if ingr.sphereFile is not None:
+            #remove the position and radii key
+            ingdic.pop("positions",None)
+            ingdic.pop("radii",None)
         #reslt ?s
         if result :
             ingdic["results"]=[] 

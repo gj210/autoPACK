@@ -9,8 +9,8 @@ could also use to test  recipe if they correctly load
 import sys
 import os
 
-Maya= True
-if Maya :
+Maya= False
+if Maya :#on mac
     import sys
     sys.path.append("/Users/ludo/Library/Preferences/Autodesk/maya/2015-x64/plug-ins/MGLToolsPckgs")
     sys.path.append("/Users/ludo/Library/Preferences/Autodesk/maya/2015-x64/plug-ins/MGLToolsPckgs/PIL")    
@@ -44,7 +44,7 @@ autopack.helper = helper
 autopack.fixpath = True
 check_result = True
 export_json = True
-useXref = False
+useXref = True
 mixedJson = True
 
 #def convertOneRecipe()
@@ -64,11 +64,12 @@ if len(sys.argv) > 1 :
     h = Environment(name=n)     
     h.loadRecipe(setupfile)
     h.setupfile=filename
-    h.resultfile=resultfile
+    if resultfile is not None :
+        h.resultfile=resultfile
     fileName, fileExtension = os.path.splitext(setupfile)
     if export_json:
         print ("expot json recipe ",fileName)
-        h.saveRecipe(fileName+".json",useXref=useXref)
+        h.saveRecipe(fileName+".json",useXref=useXref,indent=True)
     if check_result:
         rfile = h.resultfile
         resultfilename = autopack.retrieveFile(rfile,cache="results")
@@ -82,8 +83,8 @@ if len(sys.argv) > 1 :
 #        print ("json ?",h.result_json)
         if export_json :
             fileName, fileExtension = os.path.splitext(resultfilename)
-            h.store_asJson("/Users/ludo/"+n+"_result.json",indent=False)#fileName+"1.json",indent=False)     
-            print ("ok ","/Users/ludo/"+n+"_result.json",fileName+".json")
+            h.store_asJson(n+"_result.json",indent=False)#fileName+"1.json",indent=False)     
+            print ("ok ",n+"_result.json",fileName+".json")
     if mixedJson and export_json:
         h.setupfile=filename
         h.saveRecipe(fileName+"_mixed.json",useXref=useXref,mixed=True,
