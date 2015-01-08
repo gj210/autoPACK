@@ -106,6 +106,7 @@ KWDS = {
                         "color":{"type":"vector"},
                         "principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"},
+                        "meshName":{"type":"string"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
@@ -848,7 +849,7 @@ class Ingredient(Agent):
                  sphereFile=None, packingPriority=0, name=None, pdb='????', 
                  color=None, nbJitter=5, jitterMax=(1,1,1),
                  perturbAxisAmplitude = 0.1, principalVector=(1,0,0),
-                 meshFile=None, packingMode='random',placeType="jitter",
+                 meshFile=None, meshName=None,packingMode='random',placeType="jitter",
                  meshObject=None,nbMol=0,Type="MultiSphere",**kw):
         Agent.__init__(self, name, molarity, packingMode=packingMode, 
                        placeType=placeType, **kw)
@@ -993,11 +994,15 @@ class Ingredient(Agent):
 
         #get the collision mesh
         self.meshFile = None
+        self.meshName = meshName
         self.mesh = None
         self.meshObject= None
         if meshFile is not None:
             print ("OK, meshFile is not none, it is = ",meshFile,self.name,self.coordsystem)
-            self.mesh = self.getMesh(meshFile, self.name)
+            gname = self.name
+            if self.meshName is not None :
+                gname = self.meshName
+            self.mesh = self.getMesh(meshFile, gname)#self.name)
             print ("OK got",self.mesh)
             if self.mesh is None :
                 #display a message ?
@@ -1091,6 +1096,7 @@ class Ingredient(Agent):
                         "pdb":{"type":"string"}, 
                         "color":{"type":"vector"},"principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"}, 
+                        "meshName":{"type":"string"}, 
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},

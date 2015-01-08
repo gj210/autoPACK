@@ -322,7 +322,8 @@ class IOingredientTool(object):
 #            if hasattr(v,"tolist"):
 #                v=v.tolist()
 #            ingdic[k] = v
-            ingdic.update(setValueToJsonNode(v,k))
+            if type(v) != type(None):
+                ingdic.update(setValueToJsonNode(v,k))
         #if sphereTree file present should not use the pos-radii keyword
         if ingr.sphereFile is not None:
             #remove the position and radii key
