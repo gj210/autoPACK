@@ -1629,20 +1629,25 @@ class Environment(CompartmentList):
         if r :
             #check if name start with comp name
             #backward compatibility
-            #print name,r.name
-            if name.find(r.name) == -1 :
-                name = r.name+"__"+name
+            #print name,r.name               
+#            if name.find(r.name) == -1 :
+#                name = r.name+"__"+name
+            #legacy code                
             for ingr in r.ingredients:
                 #print ingr.name
                 if name == ingr.name :
                     return ingr
                 elif name == ingr.o_name :
                     return ingr
+                elif name.find(ingr.o_name) != -1 :
+                    return ingr
             for ingr in r.exclude:
                 if name == ingr.name :
                     return ingr        
                 elif name == ingr.o_name :
                     return ingr
+                elif name.find(ingr.o_name) != -1 :
+                    return ingr                    
         return None
         
     def getIngrFromName(self,name,compNum=None):
@@ -3378,7 +3383,7 @@ class Environment(CompartmentList):
 #        cancel=c4d.gui.QuestionDialog('WannaCancel?') # Removed by Graham on July 10, 2012 because it may no longer be needed, but test it TODO
 #        return cancel
 
-    def restore(self,result,orgaresult,freePoint):
+    def restore(self,result,orgaresult,freePoint,tree=False):
         #should we used the grid ? the freePoint can be computed
         #result is [pos,rot,ingr.name,ingr.compNum,ptInd]
         #orgaresult is [[pos,rot,ingr.name,ingr.compNum,ptInd],[pos,rot,ingr.name,ingr.compNum,ptInd]...]
@@ -3403,7 +3408,7 @@ class Environment(CompartmentList):
                 self.rTrans.append(numpy.array(pos).flatten())
                 self.rRot.append(numpy.array(rot))#rotMatj 
                 self.rIngr.append(ingr)
-
+                ingr.results.append([pos,rot])
         self.molecules = molecules
         if self.exteriorRecipe:
             self.exteriorRecipe.molecules = molecules
@@ -3413,7 +3418,7 @@ class Environment(CompartmentList):
                 for elem in orgaresult[i] :
                     pos,rot,name,compNum,ptInd = elem
                     ingr = self.getIngrFromName(name,compNum)
-#                    print ("inr,name,compNum",ingr.name,name,compNum,i,o.name)
+                    print ("inr,name,compNum",name,compNum,i,o.name,ingr)
                     if ingr is not None:
                         molecules.append([pos, numpy.array(rot), ingr, ptInd])
                         if name not in ingredients :
@@ -3426,9 +3431,10 @@ class Environment(CompartmentList):
                         self.rTrans.append(numpy.array(pos).flatten())
                         self.rRot.append(numpy.array(rot))#rotMatj 
                         self.rIngr.append(ingr)
+                        ingr.results.append([pos,rot])
                 o.molecules = molecules
         #consider that one filling have occured
-        if len(self.rTrans):
+        if len(self.rTrans) and tree:
             if self.treemode == "bhtree":# "cKDTree"
                 if len(self.rTrans) >= 1 : bhtreelib.freeBHtree(self.close_ingr_bhtree)
                 self.close_ingr_bhtree=bhtreelib.BHtree( self.rTrans, None, 10)
@@ -3528,7 +3534,9 @@ class Environment(CompartmentList):
         rfile = open(resultfilename,'r')
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.compartments)
+        orgaresult=[]#[[],]*len(self.compartments)
+        for i in range(len(self.compartments)):
+            orgaresult.append([])
 #        mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
 #        numpy.array([[0.0, 1.0, 0.0, 0.0], 
 #                 [-1., 0.0, 0.0, 0.0], 
