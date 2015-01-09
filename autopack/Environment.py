@@ -4078,8 +4078,9 @@ class Environment(CompartmentList):
         helper = autopack.helper
         if ingr.mesh is None:
             return
-        faces,vertices,vnormals = helper.DecomposeMesh(ingr.mesh,
-                               edit=False,copy=False,tri=True,transform=True)        
+        ingr.getData()
+        if not len(ingr.vertices) :
+            return inodenp
         from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
         from panda3d.core import GeomVertexReader
         from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
@@ -4087,11 +4088,11 @@ class Environment(CompartmentList):
         format=GeomVertexFormat.getV3()
         vdata=GeomVertexData("vertices", format, Geom.UHStatic)        
         vertexWriter=GeomVertexWriter(vdata, "vertex")
-        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in vertices]
+        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in ingr.vertices]
 
         #step 2) make primitives and assign vertices to them
         tris=GeomTriangles(Geom.UHStatic)
-        [self.setGeomFaces(tris,face) for face in faces]
+        [self.setGeomFaces(tris,face) for face in ingr.faces]
 
         #step 3) make a Geom object to hold the primitives
         geom=Geom(vdata)

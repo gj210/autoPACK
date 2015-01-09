@@ -1011,8 +1011,8 @@ class Ingredient(Agent):
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
-        if self.mesh is not None :
-           self.getEncapsulatingRadius()
+#        if self.mesh is not None :
+#           self.getEncapsulatingRadius()
         if "encapsulatingRadius" in kw:
             #we force the encapsulatingRadius
             self.encapsulatingRadius = kw["encapsulatingRadius"]
@@ -1028,8 +1028,6 @@ class Ingredient(Agent):
         #how to get the geom of different res?
         self.representation = None
         self.representation_file = None
-
-        
 
         self.useRotAxis = False    
         if "useRotAxis" in kw:
@@ -1078,8 +1076,8 @@ class Ingredient(Agent):
         self.centT = None #transformed position
 
         self.results =[]
-        if self.mesh is not None :
-            self.getData()
+#        if self.mesh is not None :
+#            self.getData()
 
 
         #add tiling property ? as any ingredient coud tile as hexagon. It is just the packing type
@@ -1227,7 +1225,7 @@ class Ingredient(Agent):
             m = helper.getMesh(helper.getName(poly))
             tr=True
         print ("Decompose Mesh ingredient",helper.getName(poly),m)
-        #what about empty, hyerarchi
+        #what about empty, hyerarchi, should merged all the data?
         faces,vertices,vnormals = helper.DecomposeMesh(m,
                        edit=edit,copy=copy,tri=tri,transform=tr) 
         return faces,vertices,vnormals
@@ -1345,31 +1343,17 @@ class Ingredient(Agent):
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
-        if self.vertices is None or not len(self.vertices) :
-            if self.mesh :
-#                helper = autopack.helper
-#                #should get the mesh
-#                if helper.host == "dejavu" :
-#                    m = helper.getMesh(self.mesh)
-#                    tr=False
-#                else :
-#                    m = helper.getMesh(helper.getName(self.mesh))
-#                    tr=True
-#                print ("Decompose Mesh")
-                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
-                                   edit=True,copy=False,tri=True) 
-#                print ("create the triangle",len(faces))
-        rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        self.getData()
+        if len(self.vertices) :
+            rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
         return rapid_model       
             
     def create_rapid_model(self):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
-        if self.vertices is None or not len(self.vertices) :
-            if self.mesh :
-                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
-                                   edit=True,copy=False,tri=True) 
-        self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        self.getData()
+        if len(self.vertices) :
+            self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
                    
     def get_rapid_model(self):
         if (self.rapid_model is None ):
@@ -1473,7 +1457,8 @@ class Ingredient(Agent):
                 #get the dejavu heper but without the View, and in nogui mode
                 h =  dejavuHelper(vi="nogui")
                 dgeoms = h.read(filename)
-                v,vn,f = dgeoms.values()[0]["mesh"]
+                #v,vn,f = dgeoms.values()[0]["mesh"]
+                self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
                 geom = h.createsNmesh(geomname,v,None,f)[0]
                 return geom
             else : #if helper is not None:#neeed the helper
@@ -1481,7 +1466,9 @@ class Ingredient(Agent):
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
 #                    vn = self.getVertexNormals(v,f)     
-                    geom = helper.createsNmesh(geomname,v,None,f)[0]
+                    self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
+                    
+                    geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
                 else :
                     coll=True
@@ -5859,7 +5846,7 @@ class SingleSphereIngr(Ingredient):
             else :
                 self.mesh = autopack.helper.unitSphere(self.name+"_basic",5,
                                 radius=self.radii[0][0])[0]
-            self.getData()
+#            self.getData()
         #should do that for all ingredient type
         if self.representation is None and not hasattr(self.mesh,"getFaces"):#this is not working with dejavu
             #and should go in the graphics.
@@ -6022,7 +6009,7 @@ class MultiCylindersIngr(Ingredient):
 #                                self.positions[0][0],self.positions2[0][0],
 #                                radius=self.radii[0][0]*1.24,
 #                                parent = p,color=self.color)
-            self.getData()
+#            self.getData()
 
         self.KWDS["useLength"]={}
 
@@ -6170,7 +6157,7 @@ class GrowIngrediant(MultiCylindersIngr):
 #                                self.positions[0][0],self.positions2[0][0],
 #                                radius=self.radii[0][0]*1.24,
 #                                parent = p,color=self.color)
-            self.getData()
+#            self.getData()
         self.sphere_points_nb = 50000    
         self.sphere_points = numpy.array(SphereHalton(self.sphere_points_nb,5))
         self.sphere_points_mask = numpy.ones(self.sphere_points_nb,'i')
