@@ -818,7 +818,7 @@ class AutopackViewer:
                 
     def displayIngrediants(self,recipes):
         for ingr in recipes.ingredients:
-            if ingr.mesh == None :#mes_3d?
+            if type(ingr.mesh) == type(None) :#mes_3d?
                 #try get it
                 ingr.mesh = self.helper.getObject(ingr.name) 
             if ingr.mesh: # display mesh
@@ -1274,6 +1274,7 @@ class AutopackViewer:
                                                     parent = parent,
                                                     transpose=True,colors=[ingr.color],
                                                     axis=axis)
+                        #print ("ingr instance build, reparent".ingr.ipoly,self.orgaToMasterGeom[ingr])
                         #principal vector rotate by 90degree for blender dupliVert?
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
@@ -1322,7 +1323,8 @@ class AutopackViewer:
                                                     mesh=polygon,
                                                     parent = parent,
                                                     transpose= True,colors=[ingr.color],
-                                                    axis=axis)            
+                                                    axis=axis) 
+                        #print ("ingr instance build, reparent".ingr.ipoly,self.orgaToMasterGeom[ingr])
                         if self.vi.host.find("blender") != -1 :
                             self.orgaToMasterGeom[ingr] = polygon
                             if not self.vi.instance_dupliFace :
