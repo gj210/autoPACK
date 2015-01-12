@@ -768,7 +768,7 @@ class AutopackViewer:
                     extruder,shape = self.vi.extrudeSpline(snake,shape=circle,parent=parent)#shoud use the radius for a circle ?
                     #reparent ?
                     #should wereparent the extruder
-
+        #what about primitive display self.doSpheres
     def delIngredientGrow(self,ingr):
         print ("delIngrGrow",ingr,ingr.nbCurve)
         o = ingr.recipe.compartment

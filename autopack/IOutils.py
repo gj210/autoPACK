@@ -170,6 +170,12 @@ class GrabResult(object):
         self.collision.append(value)
         #self.lock.release()
 
+
+class ExportCollada(object):
+    def __init__(self,env):
+        self.env=env
+    
+
 class IOingredientTool(object):
     #parser that can return an ingredient
     def __init__(self,env=None):
@@ -1193,7 +1199,7 @@ def load_MixedasJson(env,resultfilename=None):
 #                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-                        ingr.results.append([numpy.array(r[0]),rot])
+#                        ingr.results.append([numpy.array(r[0]),rot])
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     #organelle ingr
     for i, orga in enumerate(env.compartments):
