@@ -1940,7 +1940,9 @@ class Ingredient(Agent):
             y = rot[1][0]*xs + rot[1][1]*ys + rot[1][2]*zs + ty
             z = rot[2][0]*xs + rot[2][1]*ys + rot[2][2]*zs + tz
             pos.append( [x,y,z] )
-        return pos
+#        print ("transform to",points,rot,trans, pos)
+#        print (autopack.helper.ApplyMatrix(points,rot)+numpy.array(trans))
+        return numpy.array(pos)
 
     def alignRotation(self,jtrans):
         # for surface points we compute the rotation which
@@ -2741,9 +2743,10 @@ class Ingredient(Agent):
                         else:
                             newDistPoints[pt] = d
         elif self.modelType=='Cylinders':
+#            print ("cent transformed \n",rotMatj,self.positions[-1],self.positions2[-1])            
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-            print ("cent transformed \n",cent1T,cent2T)
+#            print ("cent transformed \n",cent1T,cent2T,rotMatj,self.positions[-1],self.positions2[-1])
             for radc, p1, p2 in zip(self.radii[-1], cent1T, cent2T):
                 x1, y1, z1 = p1
                 x2, y2, z2 = p2
@@ -2753,9 +2756,11 @@ class Ingredient(Agent):
                 cx, cy, cz = posc = x1+vx*.5, y1+vy*.5, z1+vz*.5
                 radt = l + radc + dpad
                 #bb = ( [cx-radt, cy-radt, cz-radt], [cx+radt, cy+radt, cz+radt] )
+#                print (p1,p2,posc,radc)
                 bb = self.correctBB(posc,posc,radt)#p1,p2,radc
+#                print (bb,rotMatj)
                 pointsInCube = grid.getPointsInCube(bb, posc, radt)
-                print ("correct BB ",bb," posc ",posc, " radt ",radt," poInCube",max(pointsInCube))
+#                print ("correct BB ",bb," posc ",posc, " radt ",radt," poInCube",max(pointsInCube))
                 if hasattr(self,"histoVol") and self.histoVol.runTimeDisplay > 1:
                     box = self.vi.getObject("insidePtBox")
                     if box is None:
@@ -2801,6 +2806,7 @@ class Ingredient(Agent):
                                     insidePoints[pt] = d
                             else:
                                 insidePoints[pt] = d
+#                print ("ok",len(pointsInCube))
         elif self.modelType=='Cube': 
             insidePoints,newDistPoints = self.getDistancesCube(jtrans, rotMatj,gridPointsCoords, distance, grid)
         return insidePoints,newDistPoints
@@ -6152,7 +6158,7 @@ class GrowIngrediant(MultiCylindersIngr):
             #is axis working ?
             self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 12, parent="autopackHider",axis=self.orientation)[0]                
+                                res= 32, parent="autopackHider",axis=self.orientation)[0]                
 #            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
 #                                self.positions[0][0],self.positions2[0][0],
 #                                radius=self.radii[0][0]*1.24,
@@ -6341,30 +6347,42 @@ class GrowIngrediant(MultiCylindersIngr):
             length = self.uLength
         #print "input is ",pt1,pt2,self.orientation
         v = numpy.array(pt2) - numpy.array(pt1)
-        pmx = rotVectToVect(v,numpy.array(self.orientation) * length, i=None)
+        pmx = rotVectToVect(numpy.array(self.orientation) * length,v, i=None)
         return numpy.array(pmx),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans      
 
     def getJtransRot(self,pt1,pt2):
 #        print "input is ",pt1,pt2
+#        v = numpy.array(pt1) - numpy.array(pt2)
+#        pmx = rotVectToVect(v,numpy.array(self.orientation) * self.uLength, i=None)
+#        return  numpy.array(pmx),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans      
         v,d = self.vi.measure_distance(pt1,pt2,vec=True)
-
+        length, mat = autopack.helper.getTubePropertiesMatrix(pt1,pt2)
+        return  numpy.array(mat),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans    
+        
+        
         #Start jtrans section that is new since Sept 8, 2011 version
         n = numpy.array(pt1) - numpy.array(pt2)
         #normalize the vector n
         nn=self.vi.unit_vector(n) #why normalize ?
+#        print ("getJtranseRot for")
+#        print (nn)
+#        print (numpy.array(self.orientation))
         
         #get axis of rotation between the plane normal and Z
         v1 = nn
-        v2 = [0.,0.,1.0]
+        v2 = numpy.array([0.,0.,1.0])#self.orientation) #[0.,0.,1.0]
         cr = numpy.cross(v1,v2)
         axis = self.vi.unit_vector(cr)
+        
         #get the angle between the plane normal and Z
         angle = self.vi.angle_between_vectors(v2,v1)
         #get the rotation matrix between plane normal and Z
-        mx = self.vi.rotation_matrix(-angle, axis)#.transpose()
+        print (axis,angle)
+
+        mx = self.vi.rotation_matrix(-angle, axis)#.transpose()-angle ?
         jtrans = n
         #End jtrans section that is new since Sept 8, 2011 version       
-        matrix = self.vi.ToMat(mx).transpose()#
+        matrix = mx.transpose()# self.vi.ToMat(mx).transpose()#Why ToMat here ?
         rotMatj = matrix.reshape((4,4))
         return rotMatj.transpose(),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans
 
@@ -7827,6 +7845,7 @@ class GrowIngrediant(MultiCylindersIngr):
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
             print ("here is output of walk",secondPoint,startingPoint,success,alternate,len(secondPoint))             
+            print  (cent1T,cent2T,jtrans, rotMatj)           
             if success:
                 print ("success grow")
                 #do not append if alternate was used
@@ -7843,12 +7862,12 @@ class GrowIngrediant(MultiCylindersIngr):
                 self.currentLength +=d
 #                self.completion = float(self.currentLength)/self.length
 #                print "compl",self.completion
-                cent1T = startingPoint#self.transformPoints(jtrans, rotMatj, self.positions[-1])
-                cent2T = secondPoint#self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-                if len(cent1T) == 1 :
-                    cent1T=cent1T[0]
-                if len(cent2T) == 1 :
-                    cent2T=cent2T[0]
+#                cent1T = startingPoint#self.transformPoints(jtrans, rotMatj, self.positions[-1])
+#                cent2T = secondPoint#self.transformPoints(jtrans, rotMatj, self.positions2[-1])
+#                if len(cent1T) == 1 :
+#                    cent1T=cent1T[0]
+#                if len(cent2T) == 1 :
+#                    cent2T=cent2T[0]
 #                print cent1T,cent2T
                 if runTimeDisplay:
                     print ("cylinder with",cent1T,cent2T) 
@@ -7874,36 +7893,38 @@ class GrowIngrediant(MultiCylindersIngr):
                     #cent1T=self.transformPoints(jtrans, rotMatj, self.positions[-1])
                     insidePoints = {}
                     newDistPoints = {}
-                    rotMatj=[[ 1.,  0.,  0.,  0.],
-                       [ 0.,  1.,  0.,  0.],
-                       [ 0.,  0.,  1.,  0.],
-                       [ 0.,  0.,  0.,  1.]]
-                    jtrans = [0.,0.,0.]
-                    #move it or generate it inplace
-                    oldpos1=self.positions
-                    oldpos2=self.positions2
-                    if len(cent1T) == 1 :
-                        cent1T=cent1T[0]
-                    if len(cent2T) == 1 :
-                        cent2T=cent2T[0]                    
-                    self.positions=[[cent1T],]
-                    self.positions2=[[cent2T],]
+#                    rotMatj=[[ 1.,  0.,  0.,  0.],
+#                       [ 0.,  1.,  0.,  0.],
+#                       [ 0.,  0.,  1.,  0.],
+#                       [ 0.,  0.,  0.,  1.]]
+#                    jtrans = [0.,0.,0.]
+#                    #move it or generate it inplace
+#                    oldpos1=self.positions
+#                    oldpos2=self.positions2
+#                    if len(cent1T) == 1 :
+#                        cent1T=cent1T[0]
+#                    if len(cent2T) == 1 :
+#                        cent2T=cent2T[0]                    
+#                    self.positions=[[cent1T],]
+#                    self.positions2=[[cent2T],]
                     #rbnode = histoVol.callFunction(histoVol.addRB,(self, numpy.array(jtrans), numpy.array(rotMatj),),{"rtype":self.Type},)#cylinder
                     #histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
-                    
+#                    print ("before getInsidePoints ok")
                     insidePoints,newDistPoints = self.getInsidePoints(histoVol.grid,
                                         gridPointsCoords,dpad,distance,
                                         centT=cent1T,
                                         jtrans=jtrans, 
                                         rotMatj=rotMatj)
-                    
-                    self.positions=oldpos1
-                    self.positions2=oldpos2
+#                    print ("getInsidePoints ok",len(insidePoints))
+#                    
+#                    self.positions=oldpos1
+#                    self.positions2=oldpos2
                     # update free points
                     #print "update free points",len(insidePoints)
                     nbFreePoints = self.updateDistances(histoVol,insidePoints, newDistPoints, 
                                 freePoints, nbFreePoints, distance, 
                                 gridPointsCoords, verbose)
+#                    print ("updateDistances ok",nbFreePoints)
     #                print "distance",d
 #                    print "free",nbFreePoints
             #Start Graham on 5/16/12 This progress bar doesn't work properly... compare with my version in HistoVol
@@ -7919,6 +7940,7 @@ class GrowIngrediant(MultiCylindersIngr):
                     Done = True
                     self.counter = counter +1
 #                    return success, nbFreePoints
+#                print ("end while loop ok",self.currentLength)
             else :
                 secondPoint = startingPoint
                 break

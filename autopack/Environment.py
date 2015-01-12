@@ -4037,6 +4037,7 @@ class Environment(CompartmentList):
             pMat = self.pandaMatrice(mat)
 #            d = numpy.array(p1) - numpy.array(p2)
 #            s = numpy.sum(d*d)
+            a= Point3(ingr.principalVector[0],ingr.principalVector[1],ingr.principalVector[2])
             shape = BulletCylinderShape(radc, length,1)#math.sqrt(s), 1)# { XUp = 0, YUp = 1, ZUp = 2 } or LVector3f const half_extents
             inodenp.node().addShape(shape, TransformState.makeMat(pMat))#
         return inodenp

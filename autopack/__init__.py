@@ -100,7 +100,11 @@ elif sys.platform == 'win32':
         pass
     sys.path.append(PANDA_PATH_BIN)
     sys.path.append(PANDA_PATH)
-else :#linux ? blender and maya ?
+elif sys.platform == "linux2" :#linux ? blender and maya ?
+    PANDA_PATH="/usr/lib/python2.7/dist-packages/"
+    PANDA_PATH_BIN="/usr/lib/panda3d/"
+    #sys.path.append(PANDA_PATH)
+else :
     pass
 sys.path.append(PANDA_PATH+os.sep+"lib")
 
