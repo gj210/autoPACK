@@ -764,11 +764,14 @@ class AutopackViewer:
                 #what about a reall long one -> cloner or instance
             else :
                 if self.vi.host.find("blender") != -1 :
+                    #is that not correctly scaled ?
                     circle = self.vi.build_2dshape(name+"_shape",opts=[ ingr.encapsulatingRadius,])[0]
                     extruder,shape = self.vi.extrudeSpline(snake,shape=circle,parent=parent)#shoud use the radius for a circle ?
                     #reparent ?
                     #should wereparent the extruder
         #what about primitive display self.doSpheres
+
+
     def delIngredientGrow(self,ingr):
         print ("delIngrGrow",ingr,ingr.nbCurve)
         o = ingr.recipe.compartment
@@ -1035,9 +1038,9 @@ class AutopackViewer:
 #                    self.vi.AddObject(parent)
             if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None :
                 axis = numpy.array(ingredient.principalVector[:])
-                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
+#                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
     #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
                 ingredient.ipoly = self.vi.instancePolygon(self.histo.FillName[self.histo.cFill]+ingredient.name,
                                         matrices=matrices,
                                         mesh=polygon,parent = parent,
@@ -1094,9 +1097,9 @@ class AutopackViewer:
                 if ingr.mesh: # display mesh
                     mat = rot.copy()
                     mat[:3, 3] = pos
-                    if self.helper.host == 'dejavu':
-                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
-                        mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
+#                    if self.helper.host == 'dejavu':
+#                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
+#                        mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
                     if self.helper.instance_dupliFace :
                         mat = rot.copy().transpose()
                         mat[3][:3]=pos
@@ -1127,8 +1130,8 @@ class AutopackViewer:
                     print ("ingr not in meshGeoms",ingr,meshGeoms)
                     continue
                 axis = numpy.array(ingr.principalVector[:])
-                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
-                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
+#                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                print ("make ipoly",)
                 ingr.ipoly = self.vi.instancePolygon("cyto_"+self.histo.FillName[self.histo.cFill]+ingr.o_name,
                                             matrices=meshGeoms[ingr],
@@ -1221,9 +1224,9 @@ class AutopackViewer:
                     #print pos                          
                     mat = rot.copy()
                     mat[:3, 3] = pos
-                    if self.helper.host == 'dejavu':
-                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
-                        mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
+#                    if self.helper.host == 'dejavu':
+#                        mry90 = self.helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
+#                        mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))
                     if self.helper.instance_dupliFace :
 #                        self.helper.host.find("blender") != -1 :
                         mat = rot.copy().transpose()
@@ -1264,9 +1267,9 @@ class AutopackViewer:
                             parent = None                           
                         print("ri instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
+#                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                            print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
@@ -1314,9 +1317,9 @@ class AutopackViewer:
                             parent = None                           
                         print("rs instanciation of polygon",polygon)
                         axis = numpy.array(ingr.principalVector[:])
-                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
+#                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                            axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
 #                                print (self.helper.getType(self.helper.getChilds(polygon)[0]))
                         ingr.ipoly = self.vi.instancePolygon(orga.name+self.histo.FillName[self.histo.cFill]+ingr.name,
                                                     matrices=matrices[ingr],
@@ -2195,11 +2198,13 @@ class AutopackViewer:
                 
     def clearRecipe(self,recipe,*args):
         """ will clear everything related to self.recipe"""
-        parent = self.helper.getObject(recipe)
-        if parent is not None :
-            instances = self.helper.getChilds(parent)
-            [self.helper.deleteObject(o) for o in instances]
-            self.helper.deleteObject(parent)
+        if not self.helper.instance_dupliFace :
+            parent = self.helper.getObject(recipe)
+            if parent is not None :
+                instances = self.helper.getChilds(parent)
+                [self.helper.deleteObject(o) for o in instances]
+                self.helper.deleteObject(parent)
+        
 
     def clearAll(self,recipe):
         #shoud remove everything

@@ -259,8 +259,8 @@ class IOingredientTool(object):
         for k in KWDS:
             v=getValueToXMLNode(KWDS[k]["type"],ingrnode,k)
 #example of debugging...
-            if k=="sphereFile":
-                print k,v
+#            if k=="sphereFile":
+#                print (k,v)
 #            if k == "rejectionThreshold" :
 #                print "rejectionThreshold",KWDS[k]["type"],v,v is not None
 #                print "rejectionThreshold",ingrnode.getAttribute(k)
