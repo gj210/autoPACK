@@ -1471,20 +1471,21 @@ class Ingredient(Agent):
                     geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
                 else :
-                    coll=True
-                    try :
-                        import collada
-                    except :
-                        print ("no collada")
-                        coll = False
-                    if coll :
-                        from upy.dejavuTk.dejavuHelper import dejavuHelper
-                        #need to get the mesh directly. Only possible if dae or dejavu format
-                        #get the dejavu heper but without the View, and in nogui mode
-                        h =  dejavuHelper(vi="nogui")
-                        dgeoms = h.read(filename)
-                        #should combine both
-                        self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"]                    
+                    if helper.host != "dejavu":
+                        coll=True
+                        try :
+                            import collada
+                        except :
+                            print ("no collada")
+                            coll = False
+                        if coll :
+                            from upy.dejavuTk.dejavuHelper import dejavuHelper
+                            #need to get the mesh directly. Only possible if dae or dejavu format
+                            #get the dejavu heper but without the View, and in nogui mode
+                            h =  dejavuHelper(vi="nogui")
+                            dgeoms = h.read(filename)
+                            #should combine both
+                            self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"]                    
                 helper.read(filename)
 #                helper.update()
                 geom = helper.getObject(geomname)
@@ -1494,15 +1495,15 @@ class Ingredient(Agent):
                     helper.resetTransformation(geom)#remove rotation and scale from importing??maybe not?
                 if helper.host.find("blender") != -1 :
                     helper.resetTransformation(geom)
-                    if self.coordsystem == "left" :
-                        mA = helper.rotation_matrix(-math.pi/2.0,[1.0,0.0,0.0])
-                        mB = helper.rotation_matrix(math.pi/2.0,[0.0,0.0,1.0])
-                        m=matrix(mA)*matrix(mB)
-                        helper.setObjectMatrix(geom,matrice=m)
-                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage" and helper.host.find("blender") == -1:
+#                    if self.coordsystem == "left" :
+#                        mA = helper.rotation_matrix(-math.pi/2.0,[1.0,0.0,0.0])
+#                        mB = helper.rotation_matrix(math.pi/2.0,[0.0,0.0,1.0])
+#                        m=matrix(mA)*matrix(mB)
+#                        helper.setObjectMatrix(geom,matrice=m)
+#                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage" and helper.host.find("blender") == -1:
                     #what about softimage
                     #need to rotate the transform that carry the shape, maya ? or not ?
-                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
+#                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
                     #swicth the axe?
 #                    oldv = self.principalVector[:]
 #                    self.principalVector = [oldv[2],oldv[1],oldv[0]]
