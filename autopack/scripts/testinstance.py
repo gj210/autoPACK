@@ -29,20 +29,26 @@ except :
     from json import encoder
 
 #f=open("/Users/ludo/Library/Application Support/autoPACK/cache_results/HIV_16_result.json","r")
+f=open("/Users/ludo/Library/Application Support/autoPACK/cache_results/HIV-1_0.1.6_3.apr.json","r")
 #f=open("/home/ludo/.autoPACK/cache_results/HIV_16_result.json","r")
-f=open("/home/ludo/.autoPACK/cache_results/HIV-1_0.1.6_3.apr.json","r")
+#f=open("/home/ludo/.autoPACK/cache_results/HIV-1_0.1.6_3.apr.json","r")
 data = json.load(f)
 f.close()
 
-def oneMat(tr,rot):
-    rot = numpy.array(rot).transpose()
-    rot[3][:3]=tr
-    return rot
     
 Helper = upy.getHelperClass()
 helper = Helper()
-helper.instance_dupliFace = True
 
+def oneMat(tr,rot):
+    if helper.instance_dupliFace :
+        rot = numpy.array(rot).transpose()
+        rot[3][:3]=tr
+        return rot
+    else :
+        rot = numpy.array(rot)
+        rot[:3,3]=tr
+        return rot
+        
 def makeQuad(vector):
     mY=helper.rotation_matrix(-math.pi/2.0,[0.0,1.0,0.0])
     axis=helper.ApplyMatrix([vector,],mY) [0]
@@ -58,10 +64,16 @@ def makeQuad(vector):
     f.append([i*4+0,i*4+1,i*4+2,i*4+3])
     q=helper.createsNmesh("quad"+str(axe),quad,[],f,color=[1,0,0])
     return q
-    
+
+def allQuad():
+    for a in ["+X","-X","+Y","-Y","+Z","-Z"]:
+        v=numpy.array(helper.quad[a])*50.0
+        f=[[0,1,2,3]]
+        me=helper.createsNmesh(a[1]+a[0],v,[],f)
+        
 def testOneIngredient(name,iname,oname,principalVector):
-    helper.read("/home/ludo/.autoPACK/cache_geometries/"+name+".dae")
-#    helper.read("/Users/ludo/Library/Application Support/autoPACK/cache_geometries/"+name+".dae")
+#    helper.read("/home/ludo/.autoPACK/cache_geometries/"+name+".dae")
+    helper.read("/Users/ludo/Library/Application Support/autoPACK/cache_geometries/"+name+".dae")
     obj = helper.getObject(iname)
     print (obj,name,iname)
     #blender
@@ -90,9 +102,13 @@ def testOneIngredient(name,iname,oname,principalVector):
     helper.instancePolygon("instOf"+oname, matrices=listM, mesh=inst1,
                                    axis=axis,transpose=True)
     
-
-testOneIngredient("HIV1_MA_Hyb_0_1_0","HIV1_MA_Hyb_0_1_0","MA",[0,1,0])     #=> Z 90
+#allQuad()
+#testOneIngredient("HIV1_MA_Hyb_0_1_0","HIV1_MA_Hyb_0_1_0","MA",[0,1,0])     #=> Z 90
+helper.instance_dupliFace = True
 testOneIngredient("HIV1_ENV_4nco_0_1_2_Left","HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) #=> X 90
+#helper.instance_dupliFace = False
+#testOneIngredient("HIV1_ENV_4nco_0_1_2_Left","HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) #=> X 90
+
 #makeQuad([0,0,-1]) 
 testOneIngredient("HIV1_NEF_Hyb_0_2_0","HIV1_NEF_Hyb_0_2_0","Nef",[0,0,1]) 
 #testOneIngredient("HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) 
