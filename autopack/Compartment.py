@@ -426,9 +426,9 @@ class  Compartment(CompartmentList):
 #                helper.update()
                 if helper.host == "3dsmax" or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing
-                if helper.host != "c4d"  and helper.host != "dejavu"  and helper.host != "softimage":
+#                if helper.host != "c4d"  and helper.host != "dejavu"  and helper.host != "softimage":
                     #need to rotate the transform that carry the shape
-                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
+#                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
                 if helper.host =="softimage"  :
                     helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0],primitive=True)#need to rotate the primitive                    
 #                if helper.host =="c4d"  :
