@@ -40,14 +40,13 @@ Helper = upy.getHelperClass()
 helper = Helper()
 
 def oneMat(tr,rot):
-    if helper.instance_dupliFace :
-        rot = numpy.array(rot).transpose()
-        rot[3][:3]=tr
-        return rot
-    else :
-        rot = numpy.array(rot)
-        rot[:3,3]=tr
-        return rot
+    rot = numpy.array(rot).transpose()
+    rot[3][:3]=tr
+    return rot
+def oneMat2(tr,rot):
+    rot = numpy.array(rot)
+    rot[:3,3]=tr
+    return rot
         
 def makeQuad(vector):
     mY=helper.rotation_matrix(-math.pi/2.0,[0.0,1.0,0.0])
@@ -71,10 +70,12 @@ def allQuad():
         f=[[0,1,2,3]]
         me=helper.createsNmesh(a[1]+a[0],v,[],f)
         
-def testOneIngredient(name,iname,oname,principalVector):
+def testOneIngredient(name,iname,oname,principalVector,cname="surface"):
 #    helper.read("/home/ludo/.autoPACK/cache_geometries/"+name+".dae")
-    helper.read("/Users/ludo/Library/Application Support/autoPACK/cache_geometries/"+name+".dae")
     obj = helper.getObject(iname)
+    if obj is None :
+        helper.read("/Users/ludo/Library/Application Support/autoPACK/cache_geometries/"+name+".dae")
+        obj = helper.getObject(iname)
     print (obj,name,iname)
     #blender
     axis=numpy.array(principalVector[:])#helper.ApplyMatrix([principalVector,],mY) [0]
@@ -93,26 +94,49 @@ def testOneIngredient(name,iname,oname,principalVector):
          helper.resetTransformation(obj)
 #        helper.rotateObj(obj,[0.0,-math.pi/2.0,0.0])
 #    print ("rotated ",helper.ApplyMatrix([principalVector,],mY) [0])
-    inst1 = helper.newInstance(oname,obj)
+    inst1 = helper.getObject(oname)
+    if inst1 is None :
+        inst1 = helper.newInstance(oname,obj)
 #    print (iname)
 #    print (data['compartments']['HIV1_envelope_Pack_145_0_2_0']['surface']['ingredients'].keys())
-    res2=numpy.array(data['compartments']['HIV1_envelope_Pack_145_0_2_0']['surface']['ingredients'][iname]["results"])
-    listM=[oneMat(d[0],d[1]) for d in res2]
+    res2=numpy.array(data['compartments']['HIV1_envelope_Pack_145_0_2_0'][cname]['ingredients'][iname]["results"])
+    if helper.instance_dupliFace :
+        listM=[oneMat(d[0],d[1]) for d in res2]
+    else :
+        listM=[oneMat2(d[0],d[1]) for d in res2]   
     print ("principalVector",axis)
-    helper.instancePolygon("instOf"+oname, matrices=listM, mesh=inst1,
+    helper.instancePolygon("instOf"+oname, matrices=[listM[0]], mesh=inst1,
                                    axis=axis,transpose=True)
-    
+helper.quad={"+Z" : [ [-1,-1,0],[-1,1,0],[1,1,0],[1,-1,0],],#XY
+               "+Y" :[[-1,0,-1],[-1,0,1],[1,0,1],[1,0,-1] ],#XZ
+               "-X" :[[0,-1,1],[0,1,1],[0,1,-1], [0,-1,-1]],#YZ
+               "-Z" :[[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0]],#XY
+               "-Y" :[[-1,0,1],[1,0,1],[1,0,-1], [-1,0,-1]],#XZ
+               "+X" :[[0,-1,1],[0,1,1],[0,1,-1], [0,-1,-1]],#YZ
+           } 
+
+helper.eq={"+X":[helper.track_axis_dic["+Y"][1],-math.pi/2.0],
+            "+Y":[helper.track_axis_dic["-X"][1],math.pi/2.0],
+            "+Z":[helper.track_axis_dic["-Z"][1],0.0],
+            "-X":[helper.track_axis_dic["-Y"][1],-math.pi/2.0],
+            "-Y":[helper.track_axis_dic["-X"][1],math.pi/2.0],
+            "-Z":[helper.track_axis_dic["-Z"][1],-math.pi/2.0]}
 #allQuad()
 #testOneIngredient("HIV1_MA_Hyb_0_1_0","HIV1_MA_Hyb_0_1_0","MA",[0,1,0])     #=> Z 90
 helper.instance_dupliFace = True
-testOneIngredient("HIV1_ENV_4nco_0_1_2_Left","HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) #=> X 90
-#helper.instance_dupliFace = False
 #testOneIngredient("HIV1_ENV_4nco_0_1_2_Left","HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) #=> X 90
-
+testOneIngredient("HIV1_MA_Hyb_0_1_1","HIV1_MA_Hyb_0_1_0","MA",[0,1,0])     #=> Z 90
+#testOneIngredient("HIV1_NEF_Hyb_0_2_1","HIV1_NEF_Hyb_0_2_0","Nef",[0,0,1]) 
+testOneIngredient("HIV1_CAhex_0_1_1","HIV1_CAhex_0_1_0","CA",[1,0,0],cname="interior")
+helper.instance_dupliFace = False
+#testOneIngredient("HIV1_ENV_4nco_0_1_2_Left","HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) #=> X 90
+#testOneIngredient("HIV1_NEF_Hyb_0_2_1","HIV1_NEF_Hyb_0_2_0","Nef",[0,0,1]) 
+testOneIngredient("HIV1_MA_Hyb_0_1_1","HIV1_MA_Hyb_0_1_0","MA",[0,1,0])     #=> Z 90
+testOneIngredient("HIV1_CAhex_0_1_1","HIV1_CAhex_0_1_0","CA",[1,0,0],cname="interior")
 #makeQuad([0,0,-1]) 
-testOneIngredient("HIV1_NEF_Hyb_0_2_0","HIV1_NEF_Hyb_0_2_0","Nef",[0,0,1]) 
+#testOneIngredient("HIV1_NEF_Hyb_0_2_0","HIV1_NEF_Hyb_0_2_0","Nef",[0,0,1]) 
 #testOneIngredient("HIV1_ENV_4nco_0_1_1","ENV",[0,0,-1]) 
-testOneIngredient("HIV1_HLA_1dlh_0_1_0","HIV1_HLA_1dlh_0_1_0","hla",[0,0,-1]) 
+#testOneIngredient("HIV1_HLA_1dlh_0_1_0","HIV1_HLA_1dlh_0_1_0","hla",[0,0,-1]) 
 
 ##execfile("/Users/ludo/DEV/autoPACK_github/autopack/scripts/testinstance.py")
 ##execfile("/opt/data/dev/autoPACK/autopack/scripts/testinstance.py")
