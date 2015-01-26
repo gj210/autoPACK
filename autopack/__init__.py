@@ -142,9 +142,9 @@ if not os.path.exists(preferences):
 #we can now use some json/xml file for storing preferences and options.
     
 cache_dir={
-"geoms":cache_geoms,
+"geometries":cache_geoms,
 "results":cache_results,
-"spheres":cache_sphere,
+"collisionTrees":cache_sphere,
 "recipes":cache_recipes,
 "prefs":preferences,
 }
@@ -328,7 +328,7 @@ def updateReplacePath(newPaths):
         if not found:
             replace_path.append(w)
                 
-def retrieveFile(filename,destination="",cache="geoms",force=None):
+def retrieveFile(filename,destination="",cache="geometries",force=None):
 #    helper = autopack.helper
     if force is None :
         force = forceFetch

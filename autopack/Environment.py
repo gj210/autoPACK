@@ -3108,7 +3108,10 @@ class Environment(CompartmentList):
             self.grid.result_filename = self.resultfile+"grid"
             self.store()
             self.store_asTxt()
-            self.store_asJson(resultfilename=self.resultfile+".json")            
+#            self.store_asJson(resultfilename=self.resultfile+".json") 
+            self.saveRecipe(self.resultfile+".json",useXref=False,mixed=True,
+                     kwds=["compNum"],result=True,
+                   grid=False,packing_options=False,indent=False)
             #self.saveGridToFile_asTxt(self.resultfile+"grid")freePointsAfterFill
             #should we save to text as well
             print('time to save in fil5', time.time()-t2)

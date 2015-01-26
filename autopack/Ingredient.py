@@ -886,7 +886,7 @@ class Ingredient(Agent):
         children = []
         self.sphereFile = None
         if sphereFile is not None and str(sphereFile) != "None":
-            sphereFileo = autopack.retrieveFile(sphereFile,cache="spheres") 
+            sphereFileo = autopack.retrieveFile(sphereFile,cache="collisionTrees") 
             fileName, fileExtension = os.path.splitext(sphereFile)
             print ("sphereTree",sphereFileo)
             if sphereFileo is not None :
@@ -1401,11 +1401,11 @@ class Ingredient(Agent):
         fileName, fileExtension = os.path.splitext(name)
         print ("retrieve ",filename,fileExtension)
         if fileExtension is '' :  
-            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
-            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
+            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geometries")
+            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geometries")
             filename = os.path.splitext(tmpFileName1)[0]
         else :
-            filename =autopack.retrieveFile(filename,cache="geoms") 
+            filename =autopack.retrieveFile(filename,cache="geometries") 
         if filename is None :
             print ("problem")
             return None
