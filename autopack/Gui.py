@@ -1330,7 +1330,7 @@ class SubdialogFiller(uiadaptor):
                 self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                             action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                 self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                  value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                  value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
 #                print "molarity",ingr.molarity,str(ingr.molarity)
                 self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
                   value=ingr.overwrite_nbMol_value,type="inputInt",
@@ -1372,9 +1372,9 @@ class SubdialogFiller(uiadaptor):
                     self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                                 action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                     self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
                     self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=1000)   
+                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=100000)   
                     self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                     self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                       value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 
@@ -1400,9 +1400,9 @@ class SubdialogFiller(uiadaptor):
                     self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                                 action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                     self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
                     self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=1000)   
+                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=100000)   
                     self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                     self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                       value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 

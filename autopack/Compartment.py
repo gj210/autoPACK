@@ -365,11 +365,11 @@ class  Compartment(CompartmentList):
         name = filename.split("/")[-1]
         fileName, fileExtension = os.path.splitext(name)
         if fileExtension is '' :  
-            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
-            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
+            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geometries")
+            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geometries")
             filename = os.path.splitext(tmpFileName1)[0]
         else :
-            filename =autopack.retrieveFile(filename,cache="geoms")  
+            filename =autopack.retrieveFile(filename,cache="geometries")  
         if filename is None :
             print ("problem with getMesh of compartm",self.name,fileName, fileExtension,rep)
             return            
