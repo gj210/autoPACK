@@ -5853,7 +5853,7 @@ class SingleSphereIngr(Ingredient):
             else :
                 self.mesh = autopack.helper.unitSphere(self.name+"_basic",5,
                                 radius=self.radii[0][0])[0]
-#            self.getData()
+                self.getData()
         #should do that for all ingredient type
         if self.representation is None and not hasattr(self.mesh,"getFaces"):#this is not working with dejavu
             #and should go in the graphics.
@@ -6160,11 +6160,7 @@ class GrowIngrediant(MultiCylindersIngr):
             self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
                                 res= 32, parent="autopackHider",axis=self.orientation)[0]                
-#            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
-#                                self.positions[0][0],self.positions2[0][0],
-#                                radius=self.radii[0][0]*1.24,
-#                                parent = p,color=self.color)
-#            self.getData()
+            if autopack.helper.nogui : self.getData()
         self.sphere_points_nb = 50000    
         self.sphere_points = numpy.array(SphereHalton(self.sphere_points_nb,5))
         self.sphere_points_mask = numpy.ones(self.sphere_points_nb,'i')
