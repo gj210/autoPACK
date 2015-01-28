@@ -1013,9 +1013,9 @@ class AutopackViewer:
                 color = [ingredient.color] if ingredient.color is not None else None
 #                print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
                 axis = numpy.array(ingredient.principalVector[:])
-                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
-#                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
-                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
+#                if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingredient.coordsystem == "left": 
+##                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:
+#                    axis = self.vi.rotatePoint(axis,[0.,0.,0.],[0.0,1.0,0.0,-math.pi/2.0])
                 print ("build ipoly ",ingredient.o_name)
                 ingredient.ipoly = self.vi.instancePolygon(o.name+self.histo.FillName[self.histo.cFill]+ingredient.o_name,
                                         matrices=matrices,
