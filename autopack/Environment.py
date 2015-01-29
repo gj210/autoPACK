@@ -60,12 +60,16 @@ from autopack.Compartment import CompartmentList
 from autopack.Recipe import Recipe
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant
 from autopack.ray import vlen, vdiff, vcross
-from autopack.IOutils import GrabResult
+from autopack import IOutils
 from bhtree import bhtreelib
 from scipy import spatial
 import math
 import sys
-
+try :
+    from collections import OrderedDict
+except :
+    from ordereddict import OrderedDict
+    
 if sys.version > "3.0.0":
     xrange = range
     import urllib.request as urllib# , urllib.parse, urllib.error
@@ -108,7 +112,13 @@ except :
     print ("Failed to get Panda, because panda3d = ", panda3d)
 
 #coul replace by a faster json python library
-import json
+try :
+    import simplejson as json
+    from simplejson import encoder    
+except :
+    import json
+    from json import encoder
+encoder.FLOAT_REPR = lambda o: format(o, '.8g')
 
 LISTPLACEMETHOD = autopack.LISTPLACEMETHOD
     
@@ -905,7 +915,7 @@ class Environment(CompartmentList):
         # smallest and largest protein radii acroos all recipes
         self.smallestProteinSize = 99999999
         self.largestProteinSize = 0
-        self.scaleER = 1.0 # hack in case problem with encapsulating radius
+        self.scaleER = 2.5 # hack in case problem with encapsulating radius
         self.computeGridParams = True
         
         self.EnviroOnly = False
@@ -955,6 +965,9 @@ class Environment(CompartmentList):
         self.saveResult = False
         self.resultfile = ""
         self.setupfile = ""
+        self.current_path=None#the path of the recipe file
+        self.custom_paths=None
+        self.useXref=True
         self.grid_filename =None#
         self.grid_result_filename = None#str(gridn.getAttribute("grid_result"))
 
@@ -1004,7 +1017,9 @@ class Environment(CompartmentList):
         self.rb_func_dic={}
         self.use_periodicity = False
         self.gridbiasedPeriodicity = None#unsused here
-        
+        #need options for the save/server data etc....
+        #should it be in __init__ like other general options ?
+                
         self.OPTIONS = {
                     "smallestProteinSize":{"name":"smallestProteinSize","value":15,"default":15,
                                            "type":"int","description":"Smallest ingredient packing radius override (low=accurate | high=fast)",
@@ -1128,451 +1143,75 @@ class Environment(CompartmentList):
             else : print ("PROBLEM creating ingredient from ",ingrnode)
             #look for overwritten attribute
         
-    def load_XML(self,setupfile):
-        """
-        Setup the environment according the given xml file. 
-        """
-        self.setupfile = setupfile
-        from autopack import Ingredient as ingr
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        from xml.dom.minidom import parse
-        self.xmldoc = parse(setupfile) # parse an XML file by name
-        root = self.xmldoc.documentElement
-        self.name = str(root.getAttribute("name"))
-        options=root.getElementsByTagName("options")
-        if len(options) :
-            options=options[0]
-            for k in self.OPTIONS:
-                if k == "gradients": 
-                    continue
-                v=self.getValueToXMLNode(self.OPTIONS[k]["type"],options,k)
-                if v is not None :
-                    setattr(self,k,v)
-            v=self.getValueToXMLNode("vector",options,"boundingBox")
-            self.boundingBox = v
-            v=self.getValueToXMLNode("string",options,"version")
-            self.version = v
-            
-        gradientsnode=root.getElementsByTagName("gradients")
-        if len(gradientsnode) :
-            gradientnode=gradientsnode[0]
-            grnodes = gradientnode.getElementsByTagName("gradient")
-            for grnode in grnodes:
-                name = str(grnode.getAttribute("name"))
-                mode = str(grnode.getAttribute("mode"))
-                weight_mode = str(grnode.getAttribute("weight_mode"))
-                pick_mode = str(grnode.getAttribute("pick_mode"))
-                direction = str(grnode.getAttribute("direction"))#vector
-                description=str(grnode.getAttribute("description"))
-                radius=float(str(grnode.getAttribute("radius")))
-#                print "weight_mode",weight_mode
-                self.setGradient(name=name,mode=mode, direction=eval(direction),
-                            weight_mode=weight_mode,description=description,
-                            pick_mode=pick_mode,radius=radius)
 
-        gridnode=root.getElementsByTagName("grid")
-        if len(gridnode) :
-            gridn=gridnode[0]
-            self.grid_filename = str(gridn.getAttribute("grid_storage"))
-            self.grid_result_filename = str(gridn.getAttribute("grid_result"))
 
-        rnode=root.getElementsByTagName("cytoplasme")
-        if len(rnode) :
-            rCyto = Recipe()
-            rnode=rnode[0]
-            #check for include list of ingredients
-            ingredients_xmlfile = str(rnode.getAttribute("include"))
-            if ingredients_xmlfile :#open the file and parse the ingredient:
-                #check if multiple include filename, aumngo',' in the path
-                liste_xmlfile = ingredients_xmlfile.split(",")
-                for xmlf in liste_xmlfile :                    
-                    xmlfile = autopack.retrieveFile(xmlf,
-                            destination = self.name+os.sep+"recipe"+os.sep,
-                            cache="recipes")
-                    if xmlfile :
-                        xmlinclude = parse(xmlfile).documentElement
-                        self.set_recipe_ingredient(xmlinclude,rCyto,io_ingr)
-                
-            self.set_recipe_ingredient(rnode,rCyto,io_ingr)                
-            #setup recipe
-            self.setExteriorRecipe(rCyto)
-            
-        onodes = root.getElementsByTagName("compartment")#Change to Compartment
-        if not len(onodes) :
-            #backward compatibility
-            onodes = root.getElementsByTagName("organelle")#Change to Compartment            
-        from autopack.Compartment import Compartment
-        for onode in onodes:
-            name = str(onode.getAttribute("name"))
-            geom = str(onode.getAttribute("geom"))
-            rep =  str(onode.getAttribute("rep"))
-            rep_file=str(onode.getAttribute("rep_file"))
-            print (len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0)
-            if rep != "None" and len(rep) != 0 and rep != '' and rep == "":
-                rname =  rep_file.split("/")[-1]
-                fileName, fileExtension = os.path.splitext(rname)
-                if fileExtension == "" :
-                    fileExtension = autopack.helper.hext
-                    if fileExtension == "" :
-                        rep_file = rep_file+fileExtension
-                    else :
-                        rep_file = rep_file+"."+fileExtension   
-            else :
-                rep=None
-                rep_file=None
-                print ("NONENE")
-            print ("add compartment ",name,geom,rep,rep_file)
-            o = Compartment(name,None, None, None,filename=geom,object_name=rep,object_filename=rep_file)
-            print ("added compartment ",name)
-            self.addCompartment(o)
-            rsnodes = onode.getElementsByTagName("surface")
-            if len(rsnodes) :
-                rSurf = Recipe(name=o.name+"_surf")
-                rsnodes=rsnodes[0]
-                ingredients_xmlfile = str(rsnodes.getAttribute("include"))
-                if ingredients_xmlfile :#open the file and parse the ingredient:
-                    #check if multiple include filename, aumngo',' in the path
-                    liste_xmlfile = ingredients_xmlfile.split(",")
-                    for xmlf in liste_xmlfile :                    
-                        xmlfile = autopack.retrieveFile(xmlf,
-                                destination = self.name+os.sep+"recipe"+os.sep,
-                                cache="recipes")
-                        if xmlfile :
-                            xmlinclude = parse(xmlfile).documentElement
-                            self.set_recipe_ingredient(xmlinclude,rSurf,io_ingr)
-                self.set_recipe_ingredient(rsnodes,rSurf,io_ingr)                
-                o.setSurfaceRecipe(rSurf)                
-            rinodes = onode.getElementsByTagName("interior")
-            if len(rinodes) :
-                rMatrix = Recipe(name=o.name+"_int")
-                rinodes=rinodes[0]
-                ingredients_xmlfile = str(rinodes.getAttribute("include"))
-                if ingredients_xmlfile :#open the file and parse the ingredient:
-                    #check if multiple include filename, aumngo',' in the path
-                    liste_xmlfile = ingredients_xmlfile.split(",")
-                    for xmlf in liste_xmlfile :
-                        xmlfile = autopack.retrieveFile(xmlf,
-                                destination = self.name+os.sep+"recipe"+os.sep,
-                            cache="recipes")
-                        if xmlfile :
-                            xmlinclude = parse(xmlfile).documentElement
-                            self.set_recipe_ingredient(xmlinclude,rMatrix,io_ingr)
-                self.set_recipe_ingredient(rinodes,rMatrix,io_ingr)                
-                o.setInnerRecipe(rMatrix)
-        #Go through all ingredient and setup the partner  
-        self.loopThroughIngr(self.set_partners_ingredient)
-#        if self.placeMethod.find("panda") != -1 :
-#            self.setupPanda()
-            
-    def getValueToXMLNode(self,vtype,node,attrname):
-        """
-        Helper function to get the value from a given xml node attribute of a given type 
-        """
-        value = node.getAttribute(attrname)
-        value = str(value)
-        if not len(value):
-            return None
-        if vtype not in ["liste","filename","string"] :
-            value=eval(value)
+    def loadRecipe(self,setupfile):
+        if setupfile == None:
+            setupfile = self.setupfile
         else :
-            value=str(value)
-        return value
-
-    def getStringValueOptions(self,value,attrname):
-        """
-        Helper function to return the given environment option as a string to
-        be write in the xml file.
-        """
-        if value is None:
-            return "None"
-        if attrname == "color" :
-            if type(value) != list and type(value) != tuple :
-                if autopack.helper is not None : 
-                    value=helper.getMaterialProperty(value,["color"])[0]
-                else :
-                    value = [1.,0.,0.]
-        if type (value) == numpy.ndarray :
-            value = value.tolist()
-        elif type(value) == list :
-            for i,v in enumerate(value) :
-                if type(v) == numpy.ndarray :
-                    value[i] = v.tolist()
-                elif type(v) == list :
-                    for j,va in enumerate(v) :
-                        if type(va) == numpy.ndarray :
-                            v[j] = va.tolist() 
-        if type(value) == str :
-            value = '"'+value+'"'
-        return str(value)
+            self.setupfile = setupfile
+        #check the extension of the filename none, txt or json
+        fileName, fileExtension = os.path.splitext(setupfile)
+        if fileExtension == '.xml':     
+            return IOutils.load_XML(self,setupfile)
+        elif fileExtension == '.py':   #execute ?  
+            return IOutils.load_Python(self,setupfile)
+        elif fileExtension == '.json':
+            return IOutils.load_Json(self,setupfile)  
+        else :
+            print  ("can't read or recognize "+setupfile)
+            return None
+        return None
         
-    def setValueToXMLNode(self,value,node,attrname):
-        """
-        Helper function to apply the given environment option value to the 
-        given xml node.
-        """
-        if value is None:
-            return
-        if attrname == "color" :
-            if type(value) != list and type(value) != tuple :
-                if autopack.helper is not None : 
-                    value=helper.getMaterialProperty(value,["color"])[0]
-                else :
-                    value = [1.,0.,0.]
-        if type (value) == numpy.ndarray :
-            value = value.tolist()
-        elif type(value) == list :
-            for i,v in enumerate(value) :
-                if type(v) == numpy.ndarray :
-                    value[i] = v.tolist()
-                elif type(v) == list :
-                    for j,va in enumerate(v) :
-                        if type(va) == numpy.ndarray :
-                            v[j] = va.tolist()                        
-#        print ("setValueToXMLNode ",attrname,value,str(value))  
-        node.setAttribute(attrname,str(value))
-            
-    def save_asXML(self,setupfile,useXref=True):
-        """
-        Save the current environment setup as an xml file.
-        """
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        self.setupfile = setupfile
-        pathout=os.path.dirname(os.path.abspath(self.setupfile))
-        #export all information as xml
-        #histovol is a tag, option are attribute of the tag
-        from xml.dom.minidom import getDOMImplementation
-        impl = getDOMImplementation()
-        #what about afviewer
-        self.xmldoc = impl.createDocument(None, "autopackSetup", None)
-        root = self.xmldoc.documentElement
-        root.setAttribute("name",str(self.name))
-        options=self.xmldoc.createElement("options")
-        for k in self.OPTIONS:
-            v = getattr(self,k)
-            if k == "gradients" :
-                v = self.gradients.keys()
-#            elif k == "runTimeDisplay"
-            self.setValueToXMLNode(v,options,k)
-        #add the boundin box
-        self.setValueToXMLNode(self.boundingBox,options,"boundingBox")
-        self.setValueToXMLNode(self.version,options,"version")#version?
-        root.appendChild(options)
-        
-        if len(self.gradients):
-            gradientsnode=self.xmldoc.createElement("gradients")
-            root.appendChild(gradientsnode)
-            for gname in self.gradients:
-                g = self.gradients[gname]
-                grnode = self.xmldoc.createElement("gradient")
-                gradientsnode.appendChild(grnode)
-                grnode.setAttribute("name",str(g.name))
-                for k in g.OPTIONS:
-                    v = getattr(g,k)
-                    self.setValueToXMLNode(v,grnode,k)      
-
-        #grid path information
-        if self.grid.filename is not None or self.grid.result_filename is not None:
-            gridnode=self.xmldoc.createElement("grid")
-            root.appendChild(gridnode)
-            gridnode.setAttribute("grid_storage",str(self.grid.filename))
-            gridnode.setAttribute("grid_result",str(self.grid.result_filename))
-        
-        r =  self.exteriorRecipe
-        if r :
-            rnode=self.xmldoc.createElement("cytoplasme")
-            root.appendChild(rnode)
-            for ingr in r.ingredients:                
-                if useXref :
-                    io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                    ingrnode = self.xmldoc.createElement("ingredient")
-                    rnode.appendChild(ingrnode)
-                    ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml"))                    
-                else :
-                    ingrnode = self.xmldoc.createElement("ingredient")
-                    rnode.appendChild(ingrnode)
-                    ingrnode.setAttribute("name",str(ingr.name))
-                    for k in ingr.KWDS:
-                        v = getattr(ingr,k)
-    #                    print ingr.name+" keyword ",k,v
-                        self.setValueToXMLNode(v,ingrnode,k)
-        for o in self.compartments:
-            onode=self.xmldoc.createElement("compartment")
-            root.appendChild(onode)
-            onode.setAttribute("name",str(o.name))
-            onode.setAttribute("geom",str(o.filename))#should point to the used filename
-            onode.setAttribute("rep",str(o.representation))#None
-            if o.representation is not None :
-                fileName, fileExtension = os.path.splitext(o.representation_file)
+    def saveRecipe(self,setupfile,useXref=None,format_output="json",mixed=False,
+                   kwds=None,result=False,
+                   grid=False,packing_options=False,
+                   indent=False):
+        if useXref is None :
+            useXref = self.useXref
+        if format_output == "json":
+            if mixed:                
+                IOutils.save_Mixed_asJson(self,setupfile,useXref=useXref,
+                                          kwds=kwds,result=result,indent=indent,
+                                          grid=grid,packing_options=packing_options)
             else :
-                fileName = None
-            onode.setAttribute("rep_file",str(fileName))#None
-            rs = o.surfaceRecipe
-            if rs :
-                onodesurface=self.xmldoc.createElement("surface")
-                onode.appendChild(onodesurface)
-                for ingr in rs.ingredients: 
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodesurface.appendChild(ingrnode)
-                        ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml")) 
-                    else :
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodesurface.appendChild(ingrnode)
-                        ingrnode.setAttribute("name",str(ingr.name))                       
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-                            self.setValueToXMLNode(v,ingrnode,k)
-            ri = o.innerRecipe
-            if ri :
-                onodeinterior=self.xmldoc.createElement("interior")
-                onode.appendChild(onodeinterior)             
-                for ingr in ri.ingredients: 
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="xml")
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodeinterior.appendChild(ingrnode)
-                        ingrnode.setAttribute("include",str(pathout+os.sep+ingr.name+".xml")) 
-                    else :
-                        ingrnode = self.xmldoc.createElement("ingredient")
-                        onodeinterior.appendChild(ingrnode)
-                        ingrnode.setAttribute("name",str(ingr.name))                       
-                        for k in ingr.KWDS:
-                            v = getattr(ingr,k)
-                            self.setValueToXMLNode(v,ingrnode,k)
-        f = open(setupfile,"w")        
-        self.xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
-        f.close()
+                IOutils.save_asJson(self,setupfile,useXref=useXref,indent=indent)
+        elif format_output == "xml":
+            IOutils.save_asXML(self,setupfile,useXref=useXref)
+        elif format_output == "python":
+            IOutils.save_asPython(self,setupfile,useXref=useXref)
+        else :
+            print("format output "+format_output+" not recognized (json,xml,python)")
 
-    def save_asPython(self,setupfile,useXref=True):
-        """
-        Save the current environment setup as a python script file.
-        """
-        from autopack.Ingredient import IOingredientTool
-        io_ingr = IOingredientTool()
-        self.setupfile = setupfile
-        pathout=os.path.dirname(os.path.abspath(self.setupfile))
-        #add the import statement
-        setupStr="""
-import sys
-import os
-#autopack
-import autopack
-localdir = wrkDir = autopack.__path__[0]
-from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr
-from autopack.Ingredient import MultiCylindersIngr,GrowIngrediant,ActinIngrediant
-from autopack.Compartment import Compartment
-from autopack.Recipe import Recipe
-from autopack.Environment import Environment
-from autopack.Graphics import AutopackViewer as AFViewer
-#access the helper
-helper = autopack.helper
-if helper is None :
-    import upy
-    helperClass = upy.getHelperClass()
-    helper =helperClass()
-#create the viewer
-ViewerType=autopack.helper.host    
-afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
-#make some option here     
-afviewer.doPoints = False
-afviewer.doSpheres = False
-afviewer.quality = 1 #lowest quality for sphere and cylinder
-afviewer.visibleMesh = True #mesh default visibility 
-#create the env
-h1 = Environment()
-"""
-        setupStr+="h1.name='"+self.name+"'\n"    
-        for k in self.OPTIONS:
-            v = getattr(self,k)
-            if k == "gradients" :
-                v = self.gradients.keys()
-            vstr=self.getStringValueOptions(v,k)#self.setValueToXMLNode(v,options,k)
-            setupStr+="h1.%s=%s\n" % (k,vstr)
-        #add the boundin box
-        vstr=self.getStringValueOptions(self.boundingBox,"boundingBox")#self.setValueToXMLNode(v,options,k)
-        setupStr+="h1.%s=%s\n" % ("boundingBox",vstr)
-        vstr=self.getStringValueOptions(self.version,k)#self.setValueToXMLNode(v,options,k)
-        setupStr+="h1.%s=%s\n" % ("version",vstr)
-        
-#TODO : GRADIENT
-#        if len(self.gradients):
-#            gradientsnode=self.xmldoc.createElement("gradients")
-#            root.appendChild(gradientsnode)
-#            for gname in self.gradients:
-#                g = self.gradients[gname]
-#                grnode = self.xmldoc.createElement("gradient")
-#                gradientsnode.appendChild(grnode)
-#                grnode.setAttribute("name",str(g.name))
-#                for k in g.OPTIONS:
-#                    v = getattr(g,k)
-#                    self.setValueToXMLNode(v,grnode,k)      
-#
-#        grid path information
-#        if self.grid.filename is not None or self.grid.result_filename is not None:
-#            gridnode=self.xmldoc.createElement("grid")
-#            root.appendChild(gridnode)
-#            gridnode.setAttribute("grid_storage",str(self.grid.filename))
-#            gridnode.setAttribute("grid_result",str(self.grid.result_filename))
-#        
-        r =  self.exteriorRecipe
-        if r :
-            setupStr+="cytoplasme = Recipe()\n"
-            for ingr in r.ingredients:                
-                if useXref :
-                    io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                    setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':cytoplasme})\n"
-                else :
-                    ingrnode = io_ingr.ingrPythonNode(ingr,recipe="cytoplasme")
-                    setupStr+=ingrnode
-            setupStr+="h1.setExteriorRecipe(cytoplasme)\n"                    
-        for o in self.compartments:
-            setupStr+=o.name+" = Compartment('"+o.name+"',None, None, None,\n"
-            setupStr+="         filename='"+o.filename+"',\n"
-            if o.representation is not None:
-                setupStr+="         object_name ='"+o.representation+"',\n"
-                setupStr+="         object_filename ='"+o.representation_file+"'\n"
-            setupStr+="         )\n"
-            setupStr+="h1.addCompartment("+o.name+")\n"
-            rs = o.surfaceRecipe
-            if rs :
-                setupStr+=o.name+"_surface = Recipe(name='"+o.name+"_surf')\n"
-                for ingr in rs.ingredients:                
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                        setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':"+o.name+"_surface})\n"
-                    else :
-                        ingrnode = io_ingr.ingrPythonNode(ingr,recipe=o.name+"_surface")
-                        setupStr+=ingrnode 
-                setupStr+=o.name+".setSurfaceRecipe("+o.name+"_surface)\n"
-            ri = o.innerRecipe
-            if ri :
-                setupStr+=o.name+"_inner = Recipe(name='"+o.name+"_int')\n"
-                for ingr in rs.ingredients:                
-                    if useXref :
-                        io_ingr.write(ingr,pathout+os.sep+ingr.name,ingr_format="python")
-                        setupStr+="execfile('"+pathout+os.sep+ingr.name+".py',globals(),{'recipe':"+o.name+"_inner})\n"
-                    else :
-                        ingrnode = io_ingr.ingrPythonNode(ingr,recipe=o.name+"_inner")
-                        setupStr+=ingrnode   
-                setupStr+=o.name+".setInnerRecipe("+o.name+"_inner)\n"
-        setupStr+="afviewer.SetHistoVol(h1,0,display=False)\n"
-        setupStr+="afviewer.displayPreFill()\n"
-        setupStr+="bbox = afviewer.helper.getObject('histvolBB')\n"
-        setupStr+="if bbox is None : bbox = afviewer.helper.box('histvolBB',cornerPoints=h1.boundingBox)\n"
-        setupStr+="helper = afviewer.helper\n"
-        setupStr+="noGUI = False\n"
-        setupStr+="try :\n"
-        setupStr+="    print ('try')\n"
-        setupStr+="    AFGui.Set('"+self.name+"',helper=afviewer.helper,afviewer=afviewer,histoVol=h1,bbox=bbox)\n"
-        setupStr+="except:\n"
-        setupStr+="    print ('no GUI')\n"
-        setupStr+="    noGUI = True\n"
-        f = open(setupfile,"w")        
-        f.write(setupStr)
-        f.close()
+    def loadResult(self,resultfilename=None,restore_grid=True,backward=False):
+        result=[],[],[]        
+        if resultfilename == None:
+            resultfilename = self.resultfile
+        #check the extension of the filename none, txt or json
+#        resultfilename = autopack.retrieveFile(resultfilename,cache="results")
+        fileName, fileExtension = os.path.splitext(resultfilename)
+        if fileExtension == '':
+            try :
+                result= pickle.load( open(resultfilename,'rb'))
+            except :
+                print  ("can't read "+resultfilename)
+                return [],[],[]
+        elif fileExtension == '.apr':     
+            try :
+                result= pickle.load( open(resultfilename,'rb'))
+            except :
+                 return self.load_asTxt(resultfilename=resultfilename)
+        elif fileExtension == '.txt':     
+            return self.load_asTxt(resultfilename=resultfilename)
+        elif fileExtension == '.json':
+            if backward :
+                return self.load_asJson(resultfilename=resultfilename)
+            else :                
+                return IOutils.load_MixedasJson(self,resultfilename=resultfilename)  
+        else :
+            print  ("can't read or recognize "+resultfilename)
+            return [],[],[]
+        return result
             
     def includeIngrRecipes(self,ingrname, include):
         """
@@ -1990,16 +1629,25 @@ h1 = Environment()
         if r :
             #check if name start with comp name
             #backward compatibility
-            #print name,r.name
-            if name.find(r.name) == -1 :
-                name = r.name+"__"+name
+            #print name,r.name               
+#            if name.find(r.name) == -1 :
+#                name = r.name+"__"+name
+            #legacy code                
             for ingr in r.ingredients:
                 #print ingr.name
                 if name == ingr.name :
                     return ingr
+                elif name == ingr.o_name :
+                    return ingr
+                elif name.find(ingr.o_name) != -1 :
+                    return ingr
             for ingr in r.exclude:
                 if name == ingr.name :
                     return ingr        
+                elif name == ingr.o_name :
+                    return ingr
+                elif name.find(ingr.o_name) != -1 :
+                    return ingr                    
         return None
         
     def getIngrFromName(self,name,compNum=None):
@@ -2056,7 +1704,7 @@ h1 = Environment()
             if autopack.verbose :
                 print("in Environment, compartment.isOrthogonalBoudingBox =",
                       compartment.isOrthogonalBoudingBox)
-            a,b = compartment.BuildGrid(self)
+            a,b = compartment.BuildGrid(self)#return inside and surface point
             aInteriorGrids.append(a)
             aSurfaceGrids.append(b)
     
@@ -2108,12 +1756,16 @@ h1 = Environment()
             if autopack.verbose : 
                 print ("new Grid with  ",boundingBox,self.grid.gridVolume)       
             if rebuild :
-                verts = []            
-                for orga in self.compartments:
-                    if len(orga.vertices):
-                        for pt3d in orga.vertices:
-                            verts.append( pt3d )
-                self.grid.set_surfPtsBht(verts)
+#                if len(self.compartments):
+#                    verts=numpy.array(self.compartments[0].vertices)
+#                    for i in range(1,len(self.compartments)):
+#                        verts=numpy.vstack([verts,self.compartments[i].vertices])
+##                verts = []            
+##                for orga in self.compartments:
+##                    if len(orga.vertices):
+##                        for pt3d in orga.vertices:
+##                            verts.append( pt3d )
+#                self.grid.set_surfPtsBht(verts.tolist())#should do it only on inside grid point
                 self.grid.distToClosestSurf_store = self.grid.distToClosestSurf[:] 
                 nbPoints = self.grid.gridVolume
         else :
@@ -2141,6 +1793,11 @@ h1 = Environment()
             self.exteriorVolume = self.grid.computeExteriorVolume(compartments=self.compartments,space=self.smallestProteinSize,fbox_bb=self.fbox_bb)
         else :
             print ("file is not rebuild nor restore from file")
+        if len(self.compartments):
+            verts=numpy.array(self.compartments[0].surfacePointsCoords)
+            for i in range(1,len(self.compartments)):
+                verts=numpy.vstack([verts,self.compartments[i].surfacePointsCoords])
+            self.grid.set_surfPtsBht(verts.tolist())#should do it only on inside grid point
         if gridFileOut is not None and gridFileIn is None:
             self.saveGridToFile(gridFileOut)
             self.grid.filename = gridFileOut
@@ -3236,7 +2893,7 @@ h1 = Environment()
                     o.rbnode = self.addMeshRBOrganelle(o)
         if usePP :
             import pp
-            self.grab_cb = GrabResult() 
+            self.grab_cb = IOutils.GrabResult() 
             self.pp_server = pp.Server(ncpus=autopack.ncpus)
 #==============================================================================
 #         #the big loop
@@ -3451,7 +3108,10 @@ h1 = Environment()
             self.grid.result_filename = self.resultfile+"grid"
             self.store()
             self.store_asTxt()
-            self.store_asJson()            
+#            self.store_asJson(resultfilename=self.resultfile+".json") 
+            self.saveRecipe(self.resultfile+".json",useXref=False,mixed=True,
+                     kwds=["compNum"],result=True,
+                   grid=False,packing_options=False,indent=False)
             #self.saveGridToFile_asTxt(self.resultfile+"grid")freePointsAfterFill
             #should we save to text as well
             print('time to save in fil5', time.time()-t2)
@@ -3726,7 +3386,7 @@ h1 = Environment()
 #        cancel=c4d.gui.QuestionDialog('WannaCancel?') # Removed by Graham on July 10, 2012 because it may no longer be needed, but test it TODO
 #        return cancel
 
-    def restore(self,result,orgaresult,freePoint):
+    def restore(self,result,orgaresult,freePoint,tree=False):
         #should we used the grid ? the freePoint can be computed
         #result is [pos,rot,ingr.name,ingr.compNum,ptInd]
         #orgaresult is [[pos,rot,ingr.name,ingr.compNum,ptInd],[pos,rot,ingr.name,ingr.compNum,ptInd]...]
@@ -3738,6 +3398,7 @@ h1 = Environment()
             pos,rot,name,compNum,ptInd = elem
             #needto check the name if it got the comp rule
             ingr = self.getIngrFromName(name,compNum)
+#            print ("inr,name,compNum",ingr.name,name,compNum)
             if ingr is not None:
                 molecules.append([pos, numpy.array(rot), ingr, ptInd])
                 if name not  in ingredients :
@@ -3750,7 +3411,7 @@ h1 = Environment()
                 self.rTrans.append(numpy.array(pos).flatten())
                 self.rRot.append(numpy.array(rot))#rotMatj 
                 self.rIngr.append(ingr)
-
+                ingr.results.append([pos,rot])
         self.molecules = molecules
         if self.exteriorRecipe:
             self.exteriorRecipe.molecules = molecules
@@ -3760,6 +3421,7 @@ h1 = Environment()
                 for elem in orgaresult[i] :
                     pos,rot,name,compNum,ptInd = elem
                     ingr = self.getIngrFromName(name,compNum)
+                    print ("inr,name,compNum",name,compNum,i,o.name,ingr)
                     if ingr is not None:
                         molecules.append([pos, numpy.array(rot), ingr, ptInd])
                         if name not in ingredients :
@@ -3772,9 +3434,10 @@ h1 = Environment()
                         self.rTrans.append(numpy.array(pos).flatten())
                         self.rRot.append(numpy.array(rot))#rotMatj 
                         self.rIngr.append(ingr)
+                        ingr.results.append([pos,rot])
                 o.molecules = molecules
         #consider that one filling have occured
-        if len(self.rTrans):
+        if len(self.rTrans) and tree:
             if self.treemode == "bhtree":# "cKDTree"
                 if len(self.rTrans) >= 1 : bhtreelib.freeBHtree(self.close_ingr_bhtree)
                 self.close_ingr_bhtree=bhtreelib.BHtree( self.rTrans, None, 10)
@@ -3796,31 +3459,7 @@ h1 = Environment()
         self.distancesAfterFill= self.grid.distToClosestSurf
         
             
-    def load(self,resultfilename=None,restore_grid=True):
-        result=[],[],[]        
-        if resultfilename == None:
-            resultfilename = self.resultfile
-        #check the extension of the filename none, txt or json
-        fileName, fileExtension = os.path.splitext(resultfilename)
-        if fileExtension == '':
-            try :
-                result= pickle.load( open(resultfilename,'rb'))
-            except :
-                print  ("can't read "+resultfilename)
-                return [],[],[]
-        elif fileExtension == '.apr':     
-            try :
-                result= pickle.load( open(resultfilename,'rb'))
-            except :
-                 return self.load_asTxt(resultfilename=resultfilename)
-        elif fileExtension == '.txt':     
-            return self.load_asTxt(resultfilename=resultfilename)
-        elif fileExtension == '.json':
-            return self.load_asJson(resultfilename=resultfilename)  
-        else :
-            print  ("can't read or recognize "+resultfilename)
-            return [],[],[]
-        return result
+
         
     def loadFreePoint(self,resultfilename):
         rfile = open(resultfilename+"freePoints",'rb')
@@ -3877,11 +3516,11 @@ h1 = Environment()
 
 #    @classmethod
     def getOneIngrJson(self,ingr,ingrdic):
-        name_ingr = ingr.name
-        if name_ingr not in ingrdic:
-            name_ingr = ingr.o_name
-        for r in ingr.results:  
-            ingrdic[name_ingr]["results"].append([r[0]],r[1],)
+#        name_ingr = ingr.name
+#        if name_ingr not in ingrdic:
+#            name_ingr = ingr.o_name
+#        for r in ingr.results:  
+#            ingrdic[name_ingr]["results"].append([r[0]],r[1],)
 #        print ("growingr?",ingr,ingr.name,isinstance(ingr, GrowIngrediant))
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             ingr.nbCurve = ingrdic["nbCurve"]
@@ -3889,7 +3528,7 @@ h1 = Environment()
             for i in range(ingr.nbCurve):
                 ingr.listePtLinear.append( ingrdic["curve"+str(i)] )
 #            print ("nbCurve?",ingr.nbCurve,ingrdic["nbCurve"])
-        return ingrdic["results"], ingr.name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
+        return ingrdic["results"], ingr.o_name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
 
     def load_asTxt(self,resultfilename=None):
 #        from upy.hostHelper import Helper as helper 
@@ -3898,7 +3537,9 @@ h1 = Environment()
         rfile = open(resultfilename,'r')
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.compartments)
+        orgaresult=[]#[[],]*len(self.compartments)
+        for i in range(len(self.compartments)):
+            orgaresult.append([])
 #        mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])
 #        numpy.array([[0.0, 1.0, 0.0, 0.0], 
 #                 [-1., 0.0, 0.0, 0.0], 
@@ -3944,19 +3585,22 @@ h1 = Environment()
                     pass#already store
                 else :
                     ingr.results.append([pos,rot])                                
-
+        
     def load_asJson(self,resultfilename=None):
 #        from upy.hostHelper import Helper as helper 
         if resultfilename == None:
             resultfilename = self.resultfile
         with open(resultfilename, 'r') as fp :#doesnt work with symbol link ?
-            self.result_json=json.load(fp)#,indent=4, separators=(',', ': ')
+            if autopack.use_json_hook:
+                self.result_json=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+            else :
+                self.result_json=json.load(fp)
         #needto parse
         result=[]
-        orgaresult=[[],]*len(self.compartments)
+        orgaresult=[]
         r =  self.exteriorRecipe
         if r :
-            if "exteriorRecipe" in self.result_json:
+            if "exteriorRecipe" in self.result_json :
                 for ingr in r.ingredients:   
                     name_ingr = ingr.name
                     if name_ingr not in self.result_json["exteriorRecipe"] : 
@@ -3967,18 +3611,25 @@ h1 = Environment()
                             name_ingr = ingr.o_name
                     iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                           self.result_json["exteriorRecipe"][name_ingr])
+#                    print ("rlen ",len(iresults),name_ingr)
+                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        ingr.results.append([numpy.array(r[0]),rot])
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle ingr
-        for orga in self.compartments:
+        for i, orga in enumerate(self.compartments):
+            orgaresult.append([])
             #organelle surface ingr
             rs =  orga.surfaceRecipe
             if rs :
-                if orga.name+"_surfaceRecipe" in self.result_json:
+                if orga.name+"_surfaceRecipe" in self.result_json :
                     for ingr in rs.ingredients:
                         name_ingr = ingr.name
-                        if name_ingr not in self.result_json[orga.name+"_surfaceRecipe"] : 
+                        #replace number by name ?
+                        if orga.name+"_surf__"+ingr.o_name in self.result_json[orga.name+"_surfaceRecipe"]:
+                            name_ingr=orga.name+"_surf__"+ingr.o_name
+                        if name_ingr not in self.result_json[orga.name+"_surfaceRecipe"]  : 
                             #backward compatiblity 
                             if ingr.o_name not in self.result_json[orga.name+"_surfaceRecipe"] : 
                                 continue
@@ -3986,8 +3637,11 @@ h1 = Environment()
                                 name_ingr = ingr.o_name
                         iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                                     self.result_json[orga.name+"_surfaceRecipe"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                        ingr.results=[]
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            ingr.results.append([numpy.array(r[0]),rot])
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
             #organelle matrix ingr
             ri =  orga.innerRecipe
@@ -3995,6 +3649,8 @@ h1 = Environment()
                 if orga.name+"_innerRecipe" in self.result_json:
                     for ingr in ri.ingredients:                    
                         name_ingr = ingr.name
+                        if orga.name+"_int__"+ingr.o_name in self.result_json[orga.name+"_innerRecipe"]:
+                            name_ingr=orga.name+"_int__"+ingr.o_name
                         if name_ingr not in self.result_json[orga.name+"_innerRecipe"] : 
                             #backward compatiblity 
                             if ingr.o_name not in self.result_json[orga.name+"_innerRecipe"] : 
@@ -4003,8 +3659,11 @@ h1 = Environment()
                                 name_ingr = ingr.o_name
                         iresults, ingrname,ingrcompNum,ptInd,rad = self.getOneIngrJson(ingr,
                                            self.result_json[orga.name+"_innerRecipe"][name_ingr])
+#                        print ("rlen ",len(iresults),name_ingr)
+                        ingr.results=[]
                         for r in iresults:
                             rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            ingr.results.append([numpy.array(r[0]),rot])
                             orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         freePoint = []# pickle.load(rfile)
         try :
@@ -4016,51 +3675,62 @@ h1 = Environment()
         return result,orgaresult,freePoint
         
     def dropOneIngrJson(self,ingr,rdic):
-        rdic[ingr.name]={}
-        rdic[ingr.name]["compNum"]= ingr.compNum
-        rdic[ingr.name]["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
-        rdic[ingr.name]["results"]=[] 
+        adic=OrderedDict()#[ingr.name]
+        adic["compNum"]= ingr.compNum
+        adic["encapsulatingRadius"]= float(ingr.encapsulatingRadius)
+        adic["results"]=[] 
+#        print ("dropi ",ingr.name,len(ingr.results))
         for r in ingr.results:  
             if hasattr(r[0],"tolist"):
                 r[0]=r[0].tolist()
             if hasattr(r[1],"tolist"):
                 r[1]=r[1].tolist()
-            rdic[ingr.name]["results"].append([r[0],r[1]])
+            adic["results"].append([r[0],r[1]])
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
-            rdic[ingr.name]["nbCurve"]=ingr.nbCurve
+            adic["nbCurve"]=ingr.nbCurve
             for i in range(ingr.nbCurve):
                 lp = numpy.array(ingr.listePtLinear[i])
                 ingr.listePtLinear[i]=lp.tolist()                 
-                rdic[ingr.name]["curve"+str(i)] = ingr.listePtLinear[i]
+                adic["curve"+str(i)] = ingr.listePtLinear[i]
+#        print adic
+        return adic
        
-    def store_asJson(self,resultfilename=None):
+    def store_asJson(self,resultfilename=None,indent = True):
         if resultfilename == None:
             resultfilename = self.resultfile
-        resultfilename=autopack.fixOnePath(resultfilename)
+            resultfilename=autopack.fixOnePath(resultfilename)#retireve?
+        #if result file_name start with http?
+        if resultfilename.find("http") != -1 or resultfilename.find("ftp")!= -1 :
+            print ("please provide a correct file name for the result file ",resultfilename)
         self.collectResultPerIngredient()
-        self.result_json={}
+        self.result_json=OrderedDict()
+        self.result_json["recipe"]=self.setupfile#replace server?
         r =  self.exteriorRecipe
         if r :
-            self.result_json["exteriorRecipe"]={}
+            self.result_json["exteriorRecipe"]=OrderedDict()
             for ingr in r.ingredients:
-                self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
+                self.result_json["exteriorRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json["exteriorRecipe"])
 
         #compartment ingr
         for orga in self.compartments:
             #compartment surface ingr
             rs =  orga.surfaceRecipe
             if rs :
-                self.result_json[orga.name+"_surfaceRecipe"]={}
+                self.result_json[orga.name+"_surfaceRecipe"]=OrderedDict()
                 for ingr in rs.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
+                    self.result_json[orga.name+"_surfaceRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_surfaceRecipe"])
             #compartment matrix ingr
             ri =  orga.innerRecipe
             if ri :
-                self.result_json[orga.name+"_innerRecipe"]={}
+                self.result_json[orga.name+"_innerRecipe"]=OrderedDict()
                 for ingr in ri.ingredients:
-                    self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])
-        with open(resultfilename+".json", 'w') as fp :#doesnt work with symbol link ?
-            json.dump(self.result_json,fp,indent=4, separators=(',', ': '))#,indent=4, separators=(',', ': ')
+                    self.result_json[orga.name+"_innerRecipe"][ingr.o_name]=self.dropOneIngrJson(ingr,self.result_json[orga.name+"_innerRecipe"])        
+        with open(resultfilename, 'w') as fp :#doesnt work with symbol link ?
+            if indent : 
+                json.dump(self.result_json,fp,indent=1, separators=(',', ':'))#,indent=4, separators=(',', ': ')
+            else :
+                json.dump(self.result_json,fp,separators=(',', ':'))#,indent=4, separators=(',', ': ')
+        print ("ok dump",resultfilename)
         
     def store_asTxt(self,resultfilename=None):
         if resultfilename == None:
@@ -4071,6 +3741,7 @@ h1 = Environment()
         #OR 
         result=[]
         line=""
+        line+="<recipe include = "+self.setupfile+">\n"
         for pos, rot, ingr, ptInd in self.molecules:
             line+=self.dropOneIngr(pos,rot,ingr.name,ingr.compNum,ptInd,rad=ingr.encapsulatingRadius)
             #result.append([pos,rot,ingr.name,ingr.compNum,ptInd])
@@ -4258,7 +3929,7 @@ h1 = Environment()
         if self.world is None :
             if panda3d is None :
                 return
-#            loadPrcFileData("", "window-type none" ) 
+            loadPrcFileData("", "window-type none" ) 
             # Make sure we don't need a graphics engine 
             #(Will also prevent X errors / Display errors when starting on linux without X server)
             loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
@@ -4369,6 +4040,7 @@ h1 = Environment()
             pMat = self.pandaMatrice(mat)
 #            d = numpy.array(p1) - numpy.array(p2)
 #            s = numpy.sum(d*d)
+            a= Point3(ingr.principalVector[0],ingr.principalVector[1],ingr.principalVector[2])
             shape = BulletCylinderShape(radc, length,1)#math.sqrt(s), 1)# { XUp = 0, YUp = 1, ZUp = 2 } or LVector3f const half_extents
             inodenp.node().addShape(shape, TransformState.makeMat(pMat))#
         return inodenp
@@ -4410,8 +4082,9 @@ h1 = Environment()
         helper = autopack.helper
         if ingr.mesh is None:
             return
-        faces,vertices,vnormals = helper.DecomposeMesh(ingr.mesh,
-                               edit=False,copy=False,tri=True,transform=True)        
+        ingr.getData()
+        if not len(ingr.vertices) :
+            return inodenp
         from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
         from panda3d.core import GeomVertexReader
         from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
@@ -4419,11 +4092,11 @@ h1 = Environment()
         format=GeomVertexFormat.getV3()
         vdata=GeomVertexData("vertices", format, Geom.UHStatic)        
         vertexWriter=GeomVertexWriter(vdata, "vertex")
-        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in vertices]
+        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in ingr.vertices]
 
         #step 2) make primitives and assign vertices to them
         tris=GeomTriangles(Geom.UHStatic)
-        [self.setGeomFaces(tris,face) for face in faces]
+        [self.setGeomFaces(tris,face) for face in ingr.faces]
 
         #step 3) make a Geom object to hold the primitives
         geom=Geom(vdata)

@@ -106,6 +106,7 @@ KWDS = {
                         "color":{"type":"vector"},
                         "principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"},
+                        "meshName":{"type":"string"},
                         "use_mesh_rb":{"name":"use_mesh_rb","value":False,"default":False,"type":"bool","min":0.,"max":0.,"description":"use mesh for collision"},                             
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
@@ -848,7 +849,7 @@ class Ingredient(Agent):
                  sphereFile=None, packingPriority=0, name=None, pdb='????', 
                  color=None, nbJitter=5, jitterMax=(1,1,1),
                  perturbAxisAmplitude = 0.1, principalVector=(1,0,0),
-                 meshFile=None, packingMode='random',placeType="jitter",
+                 meshFile=None, meshName=None,packingMode='random',placeType="jitter",
                  meshObject=None,nbMol=0,Type="MultiSphere",**kw):
         Agent.__init__(self, name, molarity, packingMode=packingMode, 
                        placeType=placeType, **kw)
@@ -863,6 +864,8 @@ class Ingredient(Agent):
         self.Type = Type
         self.pdb = pdb        #pmv ?
         self.color = color    # color used for sphere display
+        if self.color == "None":
+            self.color = None
         self.modelType='Spheres'
         self.rRot=[]
         self.tTrans=[]
@@ -877,38 +880,44 @@ class Ingredient(Agent):
         self.encapsulatingRadius = 0
         self.maxLevel = 1
         self.is_previous = False
+        self.vertices=[]
+        self.faces=[]
         #self._place = self.place
         children = []
         self.sphereFile = None
-        if sphereFile is not None:
-            self.sphereFile=sphereFile
+        if sphereFile is not None and str(sphereFile) != "None":
+            sphereFileo = autopack.retrieveFile(sphereFile,cache="collisionTrees") 
             fileName, fileExtension = os.path.splitext(sphereFile)
-            if fileExtension == ".mstr" : #BD_BOX format
-                data = numpy.loadtxt(sphereFile,converters = {0: lambda s: 0})
-                positions = data[:,1:4]
-                radii = data[:,4]
-                self.minRadius = min(radii)
-                #np.apply_along_axis(np.linalg.norm, 1, c)
-                self.encapsulatingRadius = max(numpy.sqrt(numpy.einsum('ij,ij->i',positions,positions)))#shoud be max distance
-                positions=[positions]
-                radii=[radii]
-            else :
-                rm, rM, positions, radii, children = self.getSpheres(sphereFile)
-                if not len(radii):
-                    self.minRadius = 1.0
-                    self.encapsulatingRadius = 1.0
+            print ("sphereTree",sphereFileo)
+            if sphereFileo is not None :
+                self.sphereFile=sphereFile
+                sphereFile=sphereFileo
+                if fileExtension == ".mstr" : #BD_BOX format
+                    data = numpy.loadtxt(sphereFileo,converters = {0: lambda s: 0})
+                    positions = data[:,1:4]
+                    radii = data[:,4]
+                    self.minRadius = min(radii)
+                    #np.apply_along_axis(np.linalg.norm, 1, c)
+                    self.encapsulatingRadius = max(numpy.sqrt(numpy.einsum('ij,ij->i',positions,positions)))#shoud be max distance
+                    positions=[positions]
+                    radii=[radii]
                 else :
-                    # minRadius is used to compute grid spacing. It represents the
-                    # smallest radius around the anchor point(i.e. 
-                    # the point where the
-                    # ingredient is dropped that needs to be free
-                    self.minRadius = rm
-                    # encapsulatingRadius is the radius of the sphere 
-                    # centered at 0,0,0
-                    # and encapsulate the ingredient
-                    self.encapsulatingRadius = rM
-            
-        elif positions is None or positions[0] is None or positions[0][0] is None:#[0][0]
+                    rm, rM, positions, radii, children = self.getSpheres(sphereFileo)
+                    if not len(radii):
+                        self.minRadius = 1.0
+                        self.encapsulatingRadius = 1.0
+                    else :
+                        # minRadius is used to compute grid spacing. It represents the
+                        # smallest radius around the anchor point(i.e. 
+                        # the point where the
+                        # ingredient is dropped that needs to be free
+                        self.minRadius = rm
+                        # encapsulatingRadius is the radius of the sphere 
+                        # centered at 0,0,0
+                        # and encapsulate the ingredient
+                        self.encapsulatingRadius = rM
+                
+        if positions is None or positions[0] is None or positions[0][0] is None:#[0][0]
             positions = [[[0,0,0]]]
             if radii is not None :    
                 self.minRadius = [radii[0]]
@@ -926,7 +935,8 @@ class Ingredient(Agent):
         
         if radii is not None :
             self.maxLevel = len(radii)-1
-        
+        if radii is None :
+            radii = [[0]]
         self.radii = radii
         self.positions = positions
         self.positions2 = positions2
@@ -965,7 +975,7 @@ class Ingredient(Agent):
         self.rad=None
         self.rapid_model = None
         if self.encapsulatingRadius <= 0.0 or self.encapsulatingRadius < max(self.radii[0]):
-            self.encapsulatingRadius = max(self.radii[0])
+            self.encapsulatingRadius = max(self.radii[0])#
         #TODO : geometry : 3d object or procedural from PDB
         #TODO : usekeyword resolution->options dictionary of res :
         #TODO : {"simple":{"cms":{"parameters":{"gridres":12}},
@@ -974,8 +984,6 @@ class Ingredient(Agent):
         #TODO : "med":{"method":"cms","parameters":{"gridres":30}}
         #TODO : "high":{"method":"msms","parameters":{"gridres":30}}
         #TODO : etc...
-        if "encapsulatingRadius" in kw:
-            self.encapsulatingRadius = kw["encapsulatingRadius"]
         self.coordsystem="left"
         if "coordsystem" in kw:
             self.coordsystem = kw["coordsystem"]
@@ -986,11 +994,15 @@ class Ingredient(Agent):
 
         #get the collision mesh
         self.meshFile = None
+        self.meshName = meshName
         self.mesh = None
         self.meshObject= None
         if meshFile is not None:
             print ("OK, meshFile is not none, it is = ",meshFile,self.name,self.coordsystem)
-            self.mesh = self.getMesh(meshFile, self.name)
+            gname = self.name
+            if self.meshName is not None :
+                gname = self.meshName
+            self.mesh = self.getMesh(meshFile, gname)#self.name)
             print ("OK got",self.mesh)
             if self.mesh is None :
                 #display a message ?
@@ -999,8 +1011,11 @@ class Ingredient(Agent):
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
-        if self.mesh is not None :
-           self.getEncapsulatingRadius()
+#        if self.mesh is not None :
+#           self.getEncapsulatingRadius()
+        if "encapsulatingRadius" in kw:
+            #we force the encapsulatingRadius
+            self.encapsulatingRadius = kw["encapsulatingRadius"]
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -1013,8 +1028,6 @@ class Ingredient(Agent):
         #how to get the geom of different res?
         self.representation = None
         self.representation_file = None
-
-        
 
         self.useRotAxis = False    
         if "useRotAxis" in kw:
@@ -1042,12 +1055,12 @@ class Ingredient(Agent):
 
         #cutoff are used for picking point far from surface and boundary
         self.cutoff_boundary = None#self.encapsulatingRadius
-        self.cutoff_surface = self.encapsulatingRadius
+        self.cutoff_surface = float(self.encapsulatingRadius)
         if "cutoff_boundary" in kw:
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw:
             if kw["cutoff_surface"] != 0.0 :
-                self.cutoff_surface = kw["cutoff_surface"]
+                self.cutoff_surface = float(kw["cutoff_surface"])
         self.properties ={}#four tout
         if "properties" in kw:
             self.properties = kw["properties"]
@@ -1063,10 +1076,8 @@ class Ingredient(Agent):
         self.centT = None #transformed position
 
         self.results =[]
-        self.vertices=[]
-        self.faces=[]
-        if self.mesh is not None :
-            self.getData()
+#        if self.mesh is not None :
+#            self.getData()
 
 
         #add tiling property ? as any ingredient coud tile as hexagon. It is just the packing type
@@ -1083,6 +1094,7 @@ class Ingredient(Agent):
                         "pdb":{"type":"string"}, 
                         "color":{"type":"vector"},"principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"}, 
+                        "meshName":{"type":"string"}, 
                         "coordsystem":{"name":"coordsystem","type":"string","value":"left","default":"left","description":"coordinate system of the files"},
 #                        "meshObject":{"type":"string"},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
@@ -1212,8 +1224,8 @@ class Ingredient(Agent):
         else :
             m = helper.getMesh(helper.getName(poly))
             tr=True
-        print ("Decompose Mesh",helper.getName(poly),m)
-        #what about empty, hyerarchi
+        print ("Decompose Mesh ingredient",helper.getName(poly),m)
+        #what about empty, hyerarchi, should merged all the data?
         faces,vertices,vnormals = helper.DecomposeMesh(m,
                        edit=edit,copy=copy,tri=tri,transform=tr) 
         return faces,vertices,vnormals
@@ -1230,7 +1242,6 @@ class Ingredient(Agent):
                            # of spheres in next level covererd by this sphere
         # ...
         # int: number of spheres in second level
-        sphereFile = autopack.retrieveFile(sphereFile,cache="spheres") 
         f = open(sphereFile)
         datao = f.readlines()
         f.close()
@@ -1308,52 +1319,41 @@ class Ingredient(Agent):
                 self.compMask = kw["compMask"]
 
     def getEncapsulatingRadius(self,mesh=None):
-        helper = autopack.helper
-        if mesh is None :
-            mesh = self.mesh
-        print ("getEncapsulatingRadius ",self.mesh,mesh )
-        faces,vertices,vnormals = self.DecomposeMesh(mesh,
-                           edit=True,copy=False,tri=True) 
+        if self.vertices is None or not len(self.vertices) :
+            if self.mesh :
+                helper = autopack.helper
+                if mesh is None :
+                    mesh = self.mesh
+                print ("getEncapsulatingRadius ",self.mesh,mesh )
+                self.faces,self.vertices,vnormals = self.DecomposeMesh(mesh,
+                                   edit=True,copy=False,tri=True) 
         #print ("create the triangle",len(faces))
         #encapsulating radius ?
-        v=numpy.array(vertices,'f')
+        v=numpy.array(self.vertices,'f')
         l=numpy.sqrt((v*v).sum(axis=1))
-        self.encapsulatingRadius = max(l)   
+        self.encapsulatingRadius = float(max(l))
 
     def getData(self):
         if self.vertices is None or not len(self.vertices) :
             if self.mesh :
+                print ("getData ",self.mesh )
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 
         
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
-        if self.vertices is None or not len(self.vertices) :
-            if self.mesh :
-#                helper = autopack.helper
-#                #should get the mesh
-#                if helper.host == "dejavu" :
-#                    m = helper.getMesh(self.mesh)
-#                    tr=False
-#                else :
-#                    m = helper.getMesh(helper.getName(self.mesh))
-#                    tr=True
-#                print ("Decompose Mesh")
-                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
-                                   edit=True,copy=False,tri=True) 
-#                print ("create the triangle",len(faces))
-        rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        self.getData()
+        if len(self.vertices) :
+            rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
         return rapid_model       
             
     def create_rapid_model(self):
         self.rapid_model = RAPIDlib.RAPID_model()
         #need triangle and vertices
-        if self.vertices is None or not len(self.vertices) :
-            if self.mesh :
-                self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
-                                   edit=True,copy=False,tri=True) 
-        self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+        self.getData()
+        if len(self.vertices) :
+            self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
                    
     def get_rapid_model(self):
         if (self.rapid_model is None ):
@@ -1401,11 +1401,11 @@ class Ingredient(Agent):
         fileName, fileExtension = os.path.splitext(name)
         print ("retrieve ",filename,fileExtension)
         if fileExtension is '' :  
-            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geoms")
-            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geoms")
+            tmpFileName1 =autopack.retrieveFile(filename+".indpolface",cache="geometries")
+            tmpFileName2 =autopack.retrieveFile(filename+".indpolvert",cache="geometries")
             filename = os.path.splitext(tmpFileName1)[0]
         else :
-            filename =autopack.retrieveFile(filename,cache="geoms") 
+            filename =autopack.retrieveFile(filename,cache="geometries") 
         if filename is None :
             print ("problem")
             return None
@@ -1457,7 +1457,8 @@ class Ingredient(Agent):
                 #get the dejavu heper but without the View, and in nogui mode
                 h =  dejavuHelper(vi="nogui")
                 dgeoms = h.read(filename)
-                v,vn,f = dgeoms.values()[0]["mesh"]
+                #v,vn,f = dgeoms.values()[0]["mesh"]
+                self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
                 geom = h.createsNmesh(geomname,v,None,f)[0]
                 return geom
             else : #if helper is not None:#neeed the helper
@@ -1465,19 +1466,44 @@ class Ingredient(Agent):
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
 #                    vn = self.getVertexNormals(v,f)     
-                    geom = helper.createsNmesh(geomname,v,None,f)[0]
+                    self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
+                    
+                    geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
+                else :
+                    if helper.host != "dejavu":
+                        coll=True
+                        try :
+                            import collada
+                        except :
+                            print ("no collada")
+                            coll = False
+                        if coll :
+                            from upy.dejavuTk.dejavuHelper import dejavuHelper
+                            #need to get the mesh directly. Only possible if dae or dejavu format
+                            #get the dejavu heper but without the View, and in nogui mode
+                            h =  dejavuHelper(vi="nogui")
+                            dgeoms = h.read(filename)
+                            #should combine both
+                            self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"]                    
                 helper.read(filename)
 #                helper.update()
                 geom = helper.getObject(geomname)
                 print ("should have read...",geomname,geom)
                 #rotate ?
-                if helper.host == "3dsmax" or helper.host.find("blender") != -1:
+                if helper.host == "3dsmax" :#or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)#remove rotation and scale from importing??maybe not?
-                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage":#and helper.host.find("blender") == -1:
+                if helper.host.find("blender") != -1 :
+                    helper.resetTransformation(geom)
+#                    if self.coordsystem == "left" :
+#                        mA = helper.rotation_matrix(-math.pi/2.0,[1.0,0.0,0.0])
+#                        mB = helper.rotation_matrix(math.pi/2.0,[0.0,0.0,1.0])
+#                        m=matrix(mA)*matrix(mB)
+#                        helper.setObjectMatrix(geom,matrice=m)
+#                if helper.host != "c4d"  and helper.host != "dejavu" and self.coordsystem == "left" and helper.host != "softimage" and helper.host.find("blender") == -1:
                     #what about softimage
                     #need to rotate the transform that carry the shape, maya ? or not ?
-                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
+#                    helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])#wayfront as well euler angle
                     #swicth the axe?
 #                    oldv = self.principalVector[:]
 #                    self.principalVector = [oldv[2],oldv[1],oldv[0]]
@@ -1915,7 +1941,9 @@ class Ingredient(Agent):
             y = rot[1][0]*xs + rot[1][1]*ys + rot[1][2]*zs + ty
             z = rot[2][0]*xs + rot[2][1]*ys + rot[2][2]*zs + tz
             pos.append( [x,y,z] )
-        return pos
+#        print ("transform to",points,rot,trans, pos)
+#        print (autopack.helper.ApplyMatrix(points,rot)+numpy.array(trans))
+        return numpy.array(pos)
 
     def alignRotation(self,jtrans):
         # for surface points we compute the rotation which
@@ -2716,9 +2744,10 @@ class Ingredient(Agent):
                         else:
                             newDistPoints[pt] = d
         elif self.modelType=='Cylinders':
+#            print ("cent transformed \n",rotMatj,self.positions[-1],self.positions2[-1])            
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-            #print "cent transformed \n",cent1T,cent2T
+#            print ("cent transformed \n",cent1T,cent2T,rotMatj,self.positions[-1],self.positions2[-1])
             for radc, p1, p2 in zip(self.radii[-1], cent1T, cent2T):
                 x1, y1, z1 = p1
                 x2, y2, z2 = p2
@@ -2728,8 +2757,11 @@ class Ingredient(Agent):
                 cx, cy, cz = posc = x1+vx*.5, y1+vy*.5, z1+vz*.5
                 radt = l + radc + dpad
                 #bb = ( [cx-radt, cy-radt, cz-radt], [cx+radt, cy+radt, cz+radt] )
+#                print (p1,p2,posc,radc)
                 bb = self.correctBB(posc,posc,radt)#p1,p2,radc
+#                print (bb,rotMatj)
                 pointsInCube = grid.getPointsInCube(bb, posc, radt)
+#                print ("correct BB ",bb," posc ",posc, " radt ",radt," poInCube",max(pointsInCube))
                 if hasattr(self,"histoVol") and self.histoVol.runTimeDisplay > 1:
                     box = self.vi.getObject("insidePtBox")
                     if box is None:
@@ -2775,6 +2807,7 @@ class Ingredient(Agent):
                                     insidePoints[pt] = d
                             else:
                                 insidePoints[pt] = d
+#                print ("ok",len(pointsInCube))
         elif self.modelType=='Cube': 
             insidePoints,newDistPoints = self.getDistancesCube(jtrans, rotMatj,gridPointsCoords, distance, grid)
         return insidePoints,newDistPoints
@@ -2996,14 +3029,15 @@ class Ingredient(Agent):
         for nid,n in enumerate(close_indice["indices"]):
             if n == -1 :
                 continue
-            if n == len(close_indice["indices"]):
-                continue
+#            if n == len(close_indice["indices"]):
+#                continue
             if n >= len(self.histoVol.rIngr):
                 continue
-            if distances[nid] == 0.0 : continue
             ingr= self.histoVol.rIngr[n]
-            if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
-                continue
+            if len(distances):
+                if distances[nid] == 0.0 : continue
+                if distances[nid] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
+                    continue
 #            print ("distance",nid,n,distances[nid],(ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER)
 #            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
 #            print self.name+" is close to "+ingr.name
@@ -3040,129 +3074,63 @@ class Ingredient(Agent):
         #append organelle rb nodes
         for o in self.histoVol.compartments:
             if self.compNum > 0 and o.name == organelle.name:
-                continue
-            if o.rbnode is not None : 
+                #this i notworking for growing ingredient like hair.
+                #should had after second segments
+                if self.Type != "Grow":
+                    continue
+                else :
+                    #whats the current length 
+                    if len(self.results) <= 1 :
+                        continue
+            orbnode = o.get_rb_model()        
+            if orbnode is not None : 
                 #test distance to surface ? 
                 res = o.OGsrfPtsBht.query(tuple(numpy.array([currentpt,])))
                 if len(res) == 2 :
                     d = res[0][0]
                     if d < self.encapsulatingRadius :
                         if not getInfo :
-                            nodes.append(o.rbnode)
+                            nodes.append(orbnode)
                         else :
-                            nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
+                            nodes.append([orbnode, [0,0,0], numpy.identity(4),o])
 #        if self.compNum < 0 or self.compNum == 0 :     
 #            for o in self.histoVol.compartments:
 #                if o.rbnode is not None : 
 #                    if not getInfo :
 #                        nodes.append(o.rbnode)
-#        print len(nodes),nodes
+#        print ("GetNode ",len(nodes),nodes)
         self.histoVol.nodes = nodes
         return nodes
 
-    def get_rbNodesOld(self,close_indice,currentpt,removelast=False,prevpoint=None,
-                     getInfo=False):
-        #move around the rbnode and return it
-        #self.histoVol.loopThroughIngr( self.histoVol.reset_rbnode )   
-        if self.compNum == 0 :
-            organelle = self.histoVol
-        else :
-            organelle = self.histoVol.compartments[abs(self.compNum)-1]
-        nodes = self.histoVol.rb_panda[:-1]
-        for n in nodes:
-            #reset everything 
-            #print ("delete node ",n)
-            self.histoVol.delRB(n)
-        nodes = []
-        ingrCounter={}
-        a=numpy.asarray(self.histoVol.rTrans)[close_indice["indices"]]
-        b=numpy.array([currentpt,])
-        distances=spatial.distance.cdist(a,b)
-        print ("retrieve ",len(close_indice["indices"]))
-        for nid,n in enumerate(close_indice["indices"]):
-            if n >= len(self.histoVol.rIngr):
-                continue
-#            print ("get_rbNodes",nid,n,len(self.histoVol.rTrans)-1,distances[nid][0]) 
-            ingr= self.histoVol.rIngr[n]
-#            print self.name+" is close to "+ingr.name
-            jtrans=self.histoVol.rTrans[n]
-            rotMat=self.histoVol.rRot[n]
-            if prevpoint != None :
-                #if prevpoint == jtrans : continue
-                d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(prevpoint))
-                if d == 0 : #same point
-                    continue
-            if ingr.name not in ingrCounter:
-                ingrCounter[ingr.name]=0
-#            print n,distances[nid][0],(ingr.encapsulatingRadius+self.encapsulatingRadius)
-#            d=self.vi.measure_distance(numpy.array(jtrans),numpy.array(currentpt))
-            if distances[nid][0] > (ingr.encapsulatingRadius+self.encapsulatingRadius)*self.histoVol.scaleER:
-                continue
-            if self.Type == "Grow":
-                if self.name == ingr.name :
-                    c = len(self.histoVol.rIngr)
-                    if (n==c) or n==(c-1) :#or  (n==(c-2)):
-                        continue
-            if ingr.name in self.partners and self.Type == "Grow":
-                c = len(self.histoVol.rIngr)
-                if (n==c) or n==(c-1) or (n==c-2):
-                    continue   
-            if ingrCounter[ingr.name] >= len(ingr.rb_nodes):
-                if ingr.Type == "Grow": 
-                    #shouldnt we use sphere instead
-                    tr=self.histoVol.result[n][0]
-                    if ingr.use_rbsphere :
-                        rbnode = ingr.addRBsegment(tr[0],tr[1],nodeid=str(nid))
-                    else :  
-                        oldpos1=ingr.positions
-                        oldpos2=ingr.positions2
-                        ingr.positions=[[tr[0]],]
-                        ingr.positions2=[[tr[1]],]
-                        rbnode = self.histoVol.addRB(ingr,numpy.array([0,0,0]), numpy.identity(4),rtype=ingr.Type)#cylinder
-                        #histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
-                        ingr.positions=oldpos1
-                        ingr.positions2=oldpos2
-                else :    
-                    rbnode = self.histoVol.addRB(ingr,jtrans, rotMat,rtype=ingr.Type)
-                    ingr.rb_nodes.append(rbnode)
-#                rTrans,rRot=self.histoVol.getRotTransRB(rbnode)
-#                print ("set ",jtrans," get ", rTrans)
-#                print ("create",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
-            else :
-                rbnode = ingr.rb_nodes[ingrCounter[ingr.name]]
-                self.histoVol.moveRBnode(rbnode, jtrans, rotMat)  #Pb here ?
-#                rTrans,rRot=self.histoVol.getRotTransRB(rbnode)
-#                print ("set ",jtrans," get ", rTrans)
-#                print ("move",rbnode, jtrans,ingrCounter[ingr.name],len(ingr.rb_nodes))
-            ingrCounter[ingr.name]+=1
-            if getInfo :
-                nodes.append([rbnode, jtrans, rotMat,ingr])
-            else :
-                nodes.append(rbnode)
-        #append organelle rb nodes
-        for o in self.histoVol.compartments:
-            if self.compNum > 0 and o.name == organelle.name:
-                continue
-            if o.rbnode is not None : 
-                if not getInfo :
-                    nodes.append(o.rbnode)
-                else :
-                    nodes.append([o.rbnode, [0,0,0], numpy.identity(4),o])
-#        if self.compNum < 0 or self.compNum == 0 :     
-#            for o in self.histoVol.compartments:
-#                if o.rbnode is not None : 
-#                    if not getInfo :
-#                        nodes.append(o.rbnode)
-#        print len(nodes),nodes
-        self.histoVol.nodes = nodes
-        return nodes
-        
+    def getClosePairIngredient(self,point,histoVol,cutoff=10.0): 
+        R={"indices":[],"distances":[]}
+        radius = [ingr.encapsulatingRadius for ingr in self.histoVol.rIngr]
+        radius.append(self.encapsulatingRadius)
+        pos = self.histoVol.rTrans[:]#).tolist()
+        pos.append([point[0],point[1],point[2]])
+        ind = len(pos)-1
+        bht=bhtreelib.BHtree( pos, radius, 10)
+        # find all pairs for which the distance is less than 1.1
+        # times the sum of the radii
+        pairs = bht.closePointsPairsInTree(1.) 
+        for p in pairs :
+            if p[0] == ind :
+                R["indices"].append(p[1])
+            elif p[1] == ind :
+                R["indices"].append(p[0])
+        bhtreelib.freeBHtree(bht)
+        print ("getClosePairIngredient ",R)
+        print ("all pairs ",pairs)
+        print ("query was ind ",ind)
+        return R
+       
     def getClosestIngredient(self,point,histoVol,cutoff=10.0):
         #may have to rebuild the whale tree every time we add a point
         #grab the current result
         #set the bhtree
         #get closest ClosePoints() 
 #        raw_input()
+#        return self.getClosePairIngredient(point,histoVol,cutoff=cutoff) 
         R={"indices":[],"distances":[]}
         result = numpy.zeros(histoVol.totalNbIngr ).astype('i')        
         nb=0
@@ -3182,7 +3150,7 @@ class Ingredient(Agent):
                         distance=[distance]
                         nb=[nb]
                     R["indices"] = nb
-                    R["distances"] = distance
+                    R["distances"] = distance#sorted by distance short -> long
                 return R
         else :
             return R
@@ -5855,7 +5823,7 @@ class SingleSphereIngr(Ingredient):
                  placeType="jitter",Type="SingleSphere",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=[[radius],], positions=[[position]], positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=[[radius],], positions=[[position]], #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,
@@ -5885,7 +5853,7 @@ class SingleSphereIngr(Ingredient):
             else :
                 self.mesh = autopack.helper.unitSphere(self.name+"_basic",5,
                                 radius=self.radii[0][0])[0]
-            self.getData()
+                self.getData()
         #should do that for all ingredient type
         if self.representation is None and not hasattr(self.mesh,"getFaces"):#this is not working with dejavu
             #and should go in the graphics.
@@ -5915,7 +5883,7 @@ class SingleCubeIngr(Ingredient):
                  placeType="jitter",Type="SingleCube",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,
@@ -5962,7 +5930,7 @@ class MultiSphereIngr(Ingredient):
                  placeType="jitter",
                  meshObject=None,nbMol=0,**kw):
 
-        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, positions2=None,
+        Ingredient.__init__(self, molarity=molarity, radii=radii, positions=positions, #positions2=None,
                  sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb, 
                  color=color, nbJitter=nbJitter, jitterMax=jitterMax,
                  perturbAxisAmplitude = perturbAxisAmplitude, principalVector=principalVector,
@@ -6048,7 +6016,7 @@ class MultiCylindersIngr(Ingredient):
 #                                self.positions[0][0],self.positions2[0][0],
 #                                radius=self.radii[0][0]*1.24,
 #                                parent = p,color=self.color)
-            self.getData()
+#            self.getData()
 
         self.KWDS["useLength"]={}
 
@@ -6120,7 +6088,7 @@ class GrowIngrediant(MultiCylindersIngr):
         else :
             v,u = self.vi.measure_distance(self.positions,self.positions2,vec=True)
             self.uLength = abs(u)
-        self.encapsulatingRadius = self.uLength
+        self.encapsulatingRadius = self.uLength/2.0
         self.unitNumberF = 0 #number of unit pose so far forward
         self.unitNumberR = 0 #number of unit pose so far reverse
         self.orientation = orientation
@@ -6158,6 +6126,8 @@ class GrowIngrediant(MultiCylindersIngr):
             self.cutoff_surface = kw["cutoff_surface"]
         if "use_rbsphere" in kw :
             self.use_rbsphere = kw["use_rbsphere"]
+        if "encapsulatingRadius" in kw :
+            self.use_rbsphere = kw["encapsulatingRadius"]
         #mesh object representing one uLength? or a certain length
         self.unitParent = None
         self.unitParentLength = 0.
@@ -6189,12 +6159,8 @@ class GrowIngrediant(MultiCylindersIngr):
             #is axis working ?
             self.mesh = autopack.helper.Cylinder(self.name+"_basic",
                                 radius=self.radii[0][0]*1.24, length=self.uLength,
-                                res= 12, parent="autopackHider",axis=self.orientation)[0]                
-#            self.mesh = autopack.helper.oneCylinder(self.name+"_basic",
-#                                self.positions[0][0],self.positions2[0][0],
-#                                radius=self.radii[0][0]*1.24,
-#                                parent = p,color=self.color)
-            self.getData()
+                                res= 32, parent="autopackHider",axis=self.orientation)[0]                
+            if autopack.helper.nogui : self.getData()
         self.sphere_points_nb = 50000    
         self.sphere_points = numpy.array(SphereHalton(self.sphere_points_nb,5))
         self.sphere_points_mask = numpy.ones(self.sphere_points_nb,'i')
@@ -6219,7 +6185,8 @@ class GrowIngrediant(MultiCylindersIngr):
         self.alternate_interval = 0
         #keep record of point Id that are bound to alternate and change the 
         #representation according.
-
+        self.safetycutoff = 10
+        
         self.KWDS["length"]={}
         self.KWDS["closed"]={}
         self.KWDS["uLength"]={}        
@@ -6377,30 +6344,42 @@ class GrowIngrediant(MultiCylindersIngr):
             length = self.uLength
         #print "input is ",pt1,pt2,self.orientation
         v = numpy.array(pt2) - numpy.array(pt1)
-        pmx = rotVectToVect(v,numpy.array(self.orientation) * length, i=None)
+        pmx = rotVectToVect(numpy.array(self.orientation) * length,v, i=None)
         return numpy.array(pmx),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans      
 
     def getJtransRot(self,pt1,pt2):
 #        print "input is ",pt1,pt2
+#        v = numpy.array(pt1) - numpy.array(pt2)
+#        pmx = rotVectToVect(v,numpy.array(self.orientation) * self.uLength, i=None)
+#        return  numpy.array(pmx),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans      
         v,d = self.vi.measure_distance(pt1,pt2,vec=True)
-
+        length, mat = autopack.helper.getTubePropertiesMatrix(pt1,pt2)
+        return  numpy.array(mat),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans    
+        
+        
         #Start jtrans section that is new since Sept 8, 2011 version
         n = numpy.array(pt1) - numpy.array(pt2)
         #normalize the vector n
         nn=self.vi.unit_vector(n) #why normalize ?
+#        print ("getJtranseRot for")
+#        print (nn)
+#        print (numpy.array(self.orientation))
         
         #get axis of rotation between the plane normal and Z
         v1 = nn
-        v2 = [0.,0.,1.0]
+        v2 = numpy.array([0.,0.,1.0])#self.orientation) #[0.,0.,1.0]
         cr = numpy.cross(v1,v2)
         axis = self.vi.unit_vector(cr)
+        
         #get the angle between the plane normal and Z
         angle = self.vi.angle_between_vectors(v2,v1)
         #get the rotation matrix between plane normal and Z
-        mx = self.vi.rotation_matrix(-angle, axis)#.transpose()
+        print (axis,angle)
+
+        mx = self.vi.rotation_matrix(-angle, axis)#.transpose()-angle ?
         jtrans = n
         #End jtrans section that is new since Sept 8, 2011 version       
-        matrix = self.vi.ToMat(mx).transpose()#
+        matrix = mx.transpose()# self.vi.ToMat(mx).transpose()#Why ToMat here ?
         rotMatj = matrix.reshape((4,4))
         return rotMatj.transpose(),numpy.array(pt1)+numpy.array(v)/2.#.transpose()jtrans
 
@@ -7776,9 +7755,9 @@ class GrowIngrediant(MultiCylindersIngr):
             parent = histoVol.afviewer.orgaToMasterGeom[self]
         k=0
         success = False
-        safetycutoff = 50
-        if self.constraintMarge:
-            safetycutoff = 50
+        safetycutoff = self.safetycutoff
+#        if self.constraintMarge:
+#            safetycutoff = 50
         counter = 0
         mask=None
         if self.walkingMode == "lattice" and self.compNum > 0:
@@ -7863,6 +7842,7 @@ class GrowIngrediant(MultiCylindersIngr):
             cent1T = self.transformPoints(jtrans, rotMatj, self.positions[-1])
             cent2T = self.transformPoints(jtrans, rotMatj, self.positions2[-1])
             print ("here is output of walk",secondPoint,startingPoint,success,alternate,len(secondPoint))             
+            print  (cent1T,cent2T,jtrans, rotMatj)           
             if success:
                 print ("success grow")
                 #do not append if alternate was used
@@ -7879,12 +7859,12 @@ class GrowIngrediant(MultiCylindersIngr):
                 self.currentLength +=d
 #                self.completion = float(self.currentLength)/self.length
 #                print "compl",self.completion
-                cent1T = startingPoint#self.transformPoints(jtrans, rotMatj, self.positions[-1])
-                cent2T = secondPoint#self.transformPoints(jtrans, rotMatj, self.positions2[-1])
-                if len(cent1T) == 1 :
-                    cent1T=cent1T[0]
-                if len(cent2T) == 1 :
-                    cent2T=cent2T[0]
+#                cent1T = startingPoint#self.transformPoints(jtrans, rotMatj, self.positions[-1])
+#                cent2T = secondPoint#self.transformPoints(jtrans, rotMatj, self.positions2[-1])
+#                if len(cent1T) == 1 :
+#                    cent1T=cent1T[0]
+#                if len(cent2T) == 1 :
+#                    cent2T=cent2T[0]
 #                print cent1T,cent2T
                 if runTimeDisplay:
                     print ("cylinder with",cent1T,cent2T) 
@@ -7910,36 +7890,38 @@ class GrowIngrediant(MultiCylindersIngr):
                     #cent1T=self.transformPoints(jtrans, rotMatj, self.positions[-1])
                     insidePoints = {}
                     newDistPoints = {}
-                    rotMatj=[[ 1.,  0.,  0.,  0.],
-                       [ 0.,  1.,  0.,  0.],
-                       [ 0.,  0.,  1.,  0.],
-                       [ 0.,  0.,  0.,  1.]]
-                    jtrans = [0.,0.,0.]
-                    #move it or generate it inplace
-                    oldpos1=self.positions
-                    oldpos2=self.positions2
-                    if len(cent1T) == 1 :
-                        cent1T=cent1T[0]
-                    if len(cent2T) == 1 :
-                        cent2T=cent2T[0]                    
-                    self.positions=[[cent1T],]
-                    self.positions2=[[cent2T],]
+#                    rotMatj=[[ 1.,  0.,  0.,  0.],
+#                       [ 0.,  1.,  0.,  0.],
+#                       [ 0.,  0.,  1.,  0.],
+#                       [ 0.,  0.,  0.,  1.]]
+#                    jtrans = [0.,0.,0.]
+#                    #move it or generate it inplace
+#                    oldpos1=self.positions
+#                    oldpos2=self.positions2
+#                    if len(cent1T) == 1 :
+#                        cent1T=cent1T[0]
+#                    if len(cent2T) == 1 :
+#                        cent2T=cent2T[0]                    
+#                    self.positions=[[cent1T],]
+#                    self.positions2=[[cent2T],]
                     #rbnode = histoVol.callFunction(histoVol.addRB,(self, numpy.array(jtrans), numpy.array(rotMatj),),{"rtype":self.Type},)#cylinder
                     #histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
-                    
+#                    print ("before getInsidePoints ok")
                     insidePoints,newDistPoints = self.getInsidePoints(histoVol.grid,
                                         gridPointsCoords,dpad,distance,
                                         centT=cent1T,
                                         jtrans=jtrans, 
                                         rotMatj=rotMatj)
-                    
-                    self.positions=oldpos1
-                    self.positions2=oldpos2
+#                    print ("getInsidePoints ok",len(insidePoints))
+#                    
+#                    self.positions=oldpos1
+#                    self.positions2=oldpos2
                     # update free points
                     #print "update free points",len(insidePoints)
                     nbFreePoints = self.updateDistances(histoVol,insidePoints, newDistPoints, 
                                 freePoints, nbFreePoints, distance, 
                                 gridPointsCoords, verbose)
+#                    print ("updateDistances ok",nbFreePoints)
     #                print "distance",d
 #                    print "free",nbFreePoints
             #Start Graham on 5/16/12 This progress bar doesn't work properly... compare with my version in HistoVol
@@ -7955,6 +7937,7 @@ class GrowIngrediant(MultiCylindersIngr):
                     Done = True
                     self.counter = counter +1
 #                    return success, nbFreePoints
+#                print ("end while loop ok",self.currentLength)
             else :
                 secondPoint = startingPoint
                 break

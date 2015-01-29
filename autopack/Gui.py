@@ -162,7 +162,7 @@ class SubdialogPreferencesPath(uiadaptor):
                          action=self.Save,type="button",icon=None,
                                      variable=self.addVariable("int",0))
         self.BTN["restore"]=self._addElemt(name="RestoreDefault",width=50,height=10,
-                         action=self.Save,type="button",icon=None,
+                         action=self.RestoreDefault,type="button",icon=None,
                                      variable=self.addVariable("int",0))
        #need to add browse button for all of them
         
@@ -211,6 +211,9 @@ class SubdialogPreferencesPath(uiadaptor):
         self.setVal(self.Widget["options"]["recipeslistes"],autopack.recipeslistes)
         self.setVal(self.Widget["options"]["filespath"],autopack.filespath)
         self.parent.UpdateRecipesList()
+        print (autopack.autoPACKserver)
+        print (autopack.recipeslistes)
+        print (autopack.filespath)
         
 #upy dialog type
 #you can look at the upy documentation and exampl for futher informations
@@ -1327,7 +1330,7 @@ class SubdialogFiller(uiadaptor):
                 self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                             action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                 self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                  value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                  value=str(ingr.molarity),type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
 #                print "molarity",ingr.molarity,str(ingr.molarity)
                 self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
                   value=ingr.overwrite_nbMol_value,type="inputInt",
@@ -1369,9 +1372,9 @@ class SubdialogFiller(uiadaptor):
                     self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                                 action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                     self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
                     self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=1000)   
+                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=100000)   
                     self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                     self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                       value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 
@@ -1397,9 +1400,9 @@ class SubdialogFiller(uiadaptor):
                     self.ingr_include[ingr.name] = self._addElemt(name=ingr.name, width=self.wicolumn[0],height=10,
                                 action=None,type="checkbox",icon=None,variable=self.addVariable("int",1),value=1)
                     self.ingr_molarity[ingr.name] = self._addElemt(name=ingr.name+"mol",action=None,width=self.wicolumn[1],
-                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100.0)  
+                      value=ingr.molarity,type="inputStr",variable=self.addVariable("str",str(ingr.molarity)),mini=0.0,maxi=100000.0)  
                     self.ingr_nMol[ingr.name] = self._addElemt(name=ingr.name+"nMol",action=None,width=self.wicolumn[2],
-                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=1000)   
+                      value=ingr.nbMol,type="inputInt",variable=self.addVariable("int",ingr.nbMol),mini=0,maxi=100000)   
                     self.ingr_vol_nbmol[ingr.name] = self._addElemt(name=ingr.name+"NB",label=str(ingr.nbMol),width=self.wicolumn[3])
                     self.ingr_priority[ingr.name] = self._addElemt(name=ingr.name+"P",action=None,width=self.wicolumn[4],
                       value=ingr.packingPriority,type="inputFloat",variable=self.addVariable("float",ingr.packingPriority),mini=-200.,maxi=50.)                 
@@ -2135,6 +2138,9 @@ class SubdialogFiller(uiadaptor):
     def setupResultFile(self,*args):
         self.saveDialog(label="choose a file (result.apr)",callback=self.setupResultFile_cb)
 
+    def saveRecipe(self,filename):
+        self.histoVol.saveRecipe(filename,useXref=True,format_output="json")
+
     def savexml(self,filename):
         self.histoVol.save_asXML(filename)
         self.setupfile=filename
@@ -2142,12 +2148,12 @@ class SubdialogFiller(uiadaptor):
     def save(self,*args):
         filename= autopack.RECIPES[self.recipe]["setupfile"]
         if filename.find(".py") != -1 :
-            self.saveDialog(label="choose a xml file",callback=self.savexml)
+            self.saveDialog(label="choose a json file",callback=self.saveRecipe)
             return
-        self.savexml(filename)
+        self.saveRecipe(filename)
     
     def saveas(self,*args):
-        self.saveDialog(label="choose a xml file",callback=self.savexml)
+        self.saveDialog(label="choose a json file",callback=self.saveRecipe)
         
     def append2recipe(self,name,version="1.0"):
         n,v = name.split(" ")
@@ -2380,6 +2386,7 @@ class SubdialogViewer(uiadaptor):
         self.build = True
         self.build_grid = True
         self.result_filame = None
+        t1=time()
         if "build_grid" in kw :
             self.build_grid=kw["build_grid"]
         if "build" in kw :
@@ -2397,7 +2404,7 @@ class SubdialogViewer(uiadaptor):
             self.loadResult()
         if self._show :
             self.displayResult()
-        
+        print ("time to load and display result",time()-t1)
         #second setup the histoVol that will decribe the recipe from 2 files:
         #thi should actuallu go in the main AFGui as reused in Filler
         #- recipe : compartment and ingredient   : execfile or textfile to parse ?  
@@ -2468,7 +2475,7 @@ class SubdialogViewer(uiadaptor):
             #what about grid
             if self.build_grid :                     
                 self.buildGrid()
-            result,orgaresult,freePoint=self.histoVol.load(resultfilename=fname,restore_grid=self.build_grid)#load text ?#this will restore the grid  
+            result,orgaresult,freePoint=self.histoVol.loadResult(resultfilename=fname,restore_grid=self.build_grid)#load text ?#this will restore the grid  
             self.ingredients = self.histoVol.restore(result,orgaresult,freePoint)
             return True
         else :
@@ -2502,7 +2509,7 @@ class SubdialogViewer(uiadaptor):
         gridFileOut=None
         #the gridfile in ? shoud it be in the histoVol from the xml
         if self.recipe in autopack.RECIPES:
-            gridFileIn=autopack.RECIPES[self.recipe][self.recipe_version]["wrkdir"]+os.sep+"results"+os.sep+"fill_grid"
+            gridFileIn=os.path.abspath(autopack.RECIPES[self.recipe][self.recipe_version]["resultfile"])+os.sep+"results"+os.sep+"fill_grid"
         else :
             gridFileIn = self.grid_filename#or grid_filename?
 #        1 ("gridFileIn check ",gridFileIn)
@@ -2646,20 +2653,20 @@ class SubdialogViewer(uiadaptor):
     def oneIngredientWidget(self,ingr):
         hostWidth = 60
         a="hfit"
-        self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="%s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
+        self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="%s"%ingr.o_name,width=self.wc[6],alignement=a)#,height=50)
         if autopack.helper.host == 'maya':
                 hostWidth = 30
-                self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="   %s"%ingr.name,width=self.wc[6],alignement=a)#,height=50)
+                self.LABELS[ingr.name] = self._addElemt(name=ingr.name+"Label",label="   %s"%ingr.o_name,width=self.wc[6],alignement=a)#,height=50)
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"build")
         self.ingr_build[ingr.name] = self._addElemt(name=ingr.name+'Build',
                     width=hostWidth,height=10,alignement=a,#self.wc[1]
                     action=inr_cb,type="checkbox",icon=None,#self.buildIngredients
-                    variable=self.addVariable("int",1),value=self.build,label="----")
+                    variable=self.addVariable("int",1),value=1,label="----")
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"show")
         self.ingr_display[ingr.name] = self._addElemt(name=ingr.name+'Display',
                     width=hostWidth,height=10,alignement=a,#0
                     action=inr_cb,type="checkbox",icon=None,#self.toggleOrganelDisplay
-                    variable=self.addVariable("int",1),value=self._show,label="----")
+                    variable=self.addVariable("int",0),value=self._show,label="----")
         hostWidth = 75
         if autopack.helper.host == 'maya':
             hostWidth = 30
@@ -2668,6 +2675,7 @@ class SubdialogViewer(uiadaptor):
                 width=hostWidth,height=10,alignement=a,#2
                 action=inr_cb,type="checkbox",icon=None,#self.toggleOrganelDisplayPrimitive
                 variable=self.addVariable("int",0),value=0,label="----  ")
+
 #        self.ingr_resolution[ingr.name] = self._addElemt(name=ingr.name+"Res",
 #                    value=self.listeRes,alignement=a,
 #                    width=self.wc[4],height=10,action=self.toggleQuality,
@@ -2943,6 +2951,9 @@ class SubdialogViewer(uiadaptor):
             self.helper.deleteObject(parent) #is this dleete the child ?
         ingr.ipoly = None
         del ingr.ipoly
+        if ingr.tilling  is not None : 
+            del ingr.tilling 
+            ingr.tilling = None
         #need to do the same for cylinder
 #        if self.afviewer.doSpheres :
 #            self.delIngrPrim(ingr)
@@ -3188,7 +3199,6 @@ class AutoPackGui(uiadaptor):
             vi = kw["vi"]
         self.helper = upy.getHelperClass()(vi=vi)
         autopack.helper = self.helper
-        print (autopack.helper.getCurrentScene())
         self.histoVol={}
         self.recipe_available = autopack.RECIPES
         self.SetTitle(self.title)
@@ -3316,9 +3326,9 @@ class AutoPackGui(uiadaptor):
                                             width=150,height=10,
                                               action=self.toggleCheckLatestRecipe,type="checkbox",icon=None,
                                               variable=self.addVariable("int",int(autopack.checkAtstartup)),value=autopack.checkAtstartup)
-        if self.host.find("blender") != -1 :
+        if self.host.find("blender") != -1 or self.host=="c4d" or self.host=="maya":
             self.use_dupli_vert = self._addElemt(name="useDupli",
-                                            label="use vertex instance vs individual instance (only Blender for now)",
+                                            label="use dupliVert/cloner/particle instance vs individual instance",
                                             width=150,height=10,
                                               action=None,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=True)
@@ -3480,7 +3490,7 @@ class AutoPackGui(uiadaptor):
         elemFrame.append([self.LABELGMODE,self.gmode])
         elemFrame.append([self.forceRecipeAvailable])
         elemFrame.append([self.WidgetViewer["forceFetchRecipe"]])
-        if self.host.find("blender") != -1 :
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
             elemFrame.append([self.use_dupli_vert])
         elemFrame.append([self.LABELSV])
         frame = self._addLayout(id=196,name="Options",elems=elemFrame,collapse=True,type=typeframe)#tab is risky in DejaVu
@@ -3684,14 +3694,14 @@ class AutoPackGui(uiadaptor):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
                       "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
-        up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="dev")
+        up = Updater(host="all",helper=self.helper,gui=self,liste_plugin=liste_plugin,typeUpdate="dev")
         up.checkUpdate()
 
     def stdCheckUpdate(self,*args):
         liste_plugin={"upy":{"version_current":upy.__version__,"path":upy.__path__[0]},
                       "autopack":{"version_current":autopack.__version__,"path":autopack.__path__[0]}}
         from upy.upy_updater import Updater
-        up = Updater(host=self.host,helper=self.helper,gui=self,liste_plugin=liste_plugin)
+        up = Updater(host="all",helper=self.helper,gui=self,liste_plugin=liste_plugin)
         up.checkUpdate()
 
     def checkUpdate(self,*args):
@@ -3799,7 +3809,7 @@ Copyright: Graham Johnson ©2010
         print (self.recipe_available[recipe][version]["setupfile"])        
         setupfile = self.recipe_available[recipe][version]["setupfile"]
         setupfile = autopack.retrieveFile(setupfile,
-                            destination = recipe+os.sep+"recipe"+os.sep,
+                            #destination = recipe+os.sep+"recipe"+os.sep,
                             cache="recipes",force = forceRecipe)        
         
 #        if setupfile.find("http") != -1 or setupfile.find("ftp") != -1:
@@ -3854,7 +3864,7 @@ Copyright: Graham Johnson ©2010
 #            print (self.histoVol) 
             self.histoVol[recipe].setupfile = setupfile
             return True
-        elif  fileExtension == ".xml":
+        elif  fileExtension == ".xml" or fileExtension == ".json" :
             self.loadxml(setupfile,recipe=recipe)
             return True
 
@@ -3866,7 +3876,7 @@ Copyright: Graham Johnson ©2010
             n=os.path.basename(fileName)
         self.histoVol[n] = Environment(name=n)
         recipe=n
-        self.histoVol[n].load_XML(filename)
+        self.histoVol[n].loadRecipe(filename)
         afviewer = AutopackViewer(ViewerType=self.helper.host,helper=self.helper)
         self.histoVol[n].name=n
         afviewer.SetHistoVol(self.histoVol[n],0.0,display=False)#padding !
@@ -3912,8 +3922,8 @@ Copyright: Graham Johnson ©2010
         if version is None :
             version = "1.0"
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"]) 
-        if self.host.find("blender") != -1 :
-            self.helper.dupliVert = self.getVal(self.use_dupli_vert)
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
+            self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
         if recipe == "Load":
             self.fileDialog(label="choose a file",callback=self.loadxml)
             self.Viewer_dialog(self.current_recipe,version=version)
@@ -3955,8 +3965,8 @@ Copyright: Graham Johnson ©2010
         version = self.getVal(self.WidgetFiller["recipeversion"])
         self.setVal(self.WidgetViewer["BuildUponLoad"],False) 
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"])  
-        if self.host.find("blender") != -1 :
-            self.helper.dupliVert = self.getVal(self.use_dupli_vert)
+        if self.host.find("blender") != -1 or self.host == "c4d" or self.host=="maya":
+            self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
 #        print "drawSubsetFiller", recipe,version
 #        self.setVal(self.WidgetViewer["ShowUponLoad"]) 
         if recipe == "Load":
