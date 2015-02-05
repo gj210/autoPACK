@@ -12,7 +12,7 @@ Created on Wed Apr  6 10:21:38 2011
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and autopack.
+# This file "Compartment.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -870,10 +870,10 @@ class SphereTreeUI(uiadaptor):
             self.object_target = self.helper.getCurrentSelection()[0]
         mesh = self.object_target
         #canwe usethe ogranelle mesh system from autopack
-        from autopack.Organelle import Organelle
+        from autopack.Compartment import Compartment
         faces,vertices,vnormals,fn = self.helper.DecomposeMesh(mesh,
                                     edit=False,copy=False,tri=True,transform=True,fn=True)
-        o1 = Organelle(self.helper.getName(mesh),vertices, faces, vnormals,fnormals=fn)
+        o1 = Compartment(self.helper.getName(mesh),vertices, faces, vnormals,fnormals=fn)
         o1.ref_obj = mesh
         o1.number = 1
         b=self.helper.getObject("BBOX")
