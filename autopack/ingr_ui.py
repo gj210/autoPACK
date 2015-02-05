@@ -12,7 +12,7 @@ Created on Wed Apr  6 10:21:38 2011
 #
 # Copyright: Graham Johnson ©2010
 #
-# This file "Organelle.py" is part of autoPACK, cellPACK, and autopack.
+# This file "Compartment.py" is part of autoPACK, cellPACK, and autopack.
 #
 #    autoPACK is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
