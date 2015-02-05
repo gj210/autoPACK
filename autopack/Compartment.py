@@ -2428,37 +2428,43 @@ class  Compartment(CompartmentList):
 
     def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
         """
-        Only compute the inner point. No grid.
-        This is independant from the packing. Help build ingredient sphere tree and representation 
+        Only computes the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation.
+        - Uses BHTree to compute surface points
+        - Uses Jordan raycasting to determine inside/outside (defaults to 1 iteration, can use 3 iterations)
         """                
         from autopack.Environment import Grid        
+        
+        # Initiate a default grid object and set its properties based on inputs and other calculations
         grid = Grid()
         grid.boundingBox = boundingBox
-        grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
+        grid.gridSpacing = spacing # = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         helper.progressBar(label="BuildGRid")        
         grid.gridVolume,grid.nbGridPoints = grid.computeGridNumberOfPoint(boundingBox,spacing)
         grid.create3DPointLookup()
-        nbPoints = grid.gridVolume
-        grid.gridPtId = [0]*nbPoints
-        xl,yl,zl = boundingBox[0]
-        xr,yr,zr = boundingBox[1]
+        nbPoints = grid.gridVolume # grid.gridVolume is equal to the total number of points.
+        grid.gridPtId = [0]*nbPoints # Creates a list of 0's, with length nbPoints
+        xl,yl,zl = boundingBox[0] # lower left bounding box corner
+        xr,yr,zr = boundingBox[1] # upper right bounding box corner
         # distToClosestSurf is set to self.diag initially
         grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
-        grid.distToClosestSurf = [diag]*nbPoints        
+        grid.distToClosestSurf = [diag]*nbPoints # Creates distToClosestSurf, a list where every element is the grid diagonal
         distances = grid.distToClosestSurf
         idarray = grid.gridPtId
         diag = grid.diag
         
+        # Get surface points using bhtree (stored in bht and OGsrfPtsBht)
+        # otherwise, regard vertices as surface points.
         from bhtree import bhtreelib
-        self.ogsurfacePoints = self.vertices[:]
-        self.ogsurfacePointsNormals = self.vnormals[:]#helper.FixNormals(self.vertices,self.faces,self.vnormals,fn=self.fnormals)
+        self.ogsurfacePoints = self.vertices[:] # Makes a copy of the vertices and vnormals lists
+        self.ogsurfacePointsNormals = self.vnormals[:] #helper.FixNormals(self.vertices,self.faces,self.vnormals,fn=self.fnormals)
         mat = helper.getTransformation(self.ref_obj)
         surfacePoints = srfPts = self.ogsurfacePoints
         self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
 
         res = numpy.zeros(len(srfPts),'f')
         dist2 = numpy.zeros(len(srfPts),'f')
-        number = self.number
+        number = self.number # Integer when compartment is added to a Environment. Positivefor surface pts. negative for interior points
         insidePoints = []
         grdPos = grid.masterGridPositions
         returnNullIfFail = 0
@@ -2472,8 +2478,9 @@ class  Compartment(CompartmentList):
                 cyl3 = helper.oneCylinder("ray3",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0) 
                 helper.changeObjColorMat(cyl1,(1.,1.,1.))
                 helper.changeObjColorMat(cyl3,(1.,1.,1.))
+        # Walks through every point, determine inside/outside
         for ptInd in xrange(len(grdPos)):#len(grdPos)):
-            inside = False
+            inside = False # inside defaults to False (meaning outside), unless evidence is found otherwise.
             t2=time()
             gx, gy, gz = grdPos[ptInd]
             if display :
@@ -2508,7 +2515,7 @@ class  Compartment(CompartmentList):
                             helper.changeObjColorMat(cyl1,(1.,0.,0.))
                             helper.changeObjColorMat(cyl3,(1.,0.,0.))    
                     #idarray[ptInd] = -number
-                    insidePoints.append(grdPos[ptInd]) 
+                    insidePoints.append(grdPos[ptInd]) # Append the index to the list of inside indices.
             p=(ptInd/float(len(grdPos)))*100.0
             helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
         print('total time', time()-t1)
