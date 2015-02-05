@@ -2976,7 +2976,7 @@ class  Compartment(CompartmentList):
         return array[idx]
 
 
-    def getSurfaceInnerPoints_kevin(self, env, superFine = False, visualize = False):
+    def getSurfaceInnerPoints_kevin(self, boundingBox, spacing, display = True, useFix = False, superFine = False, visualize = False):
         """
         WARNING: THIS IS COPY AND PASTED FROM THE GRID VERSION. NEEDS CLEANUP.
 
