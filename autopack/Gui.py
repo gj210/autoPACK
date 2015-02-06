@@ -1752,6 +1752,8 @@ class SubdialogFiller(uiadaptor):
             ingr.Set(molarity= float(m),
                          nbMol = int(n),
                         priority = float(p),)
+        else :
+            print ("can't find ingredients named ",name)
             
     def popIngrs(self,*args):
         for wkey in self.ingr_include:
@@ -1765,7 +1767,7 @@ class SubdialogFiller(uiadaptor):
             if c : continue
             include = self.getVal(self.ingr_include[wkey])
             ingr = self.histoVol.getIngrFromName(wkey)            
-#            print ("pop inc Ingr ",wkey,include,ingr," X")
+#            print ("pop inc Ingr ",wkey,include,ingr.name," X")
             if ingr is not None :
                 self.histoVol.includeIngredientRecipe(ingr, include)
                 #change molarity as well 

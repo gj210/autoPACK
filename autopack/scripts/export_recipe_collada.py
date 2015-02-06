@@ -66,6 +66,31 @@ def oneMaterial(name,collada_xml,color=None):
     collada_xml.materials.append(mat)
     return matnode
 
+def colladaMesh(name,v,n,f,collada_xml,matnode=None):
+    vertzyx = numpy.array(v)# * numpy.array([1,1,-1])
+    z,y,x=vertzyx.transpose()
+    vertxyz = numpy.vstack([x,y,z]).transpose()#* numpy.array([1,1,-1])
+    vert_src = source.FloatSource(name+"_verts-array", vertxyz.flatten(), ('X', 'Y', 'Z'))
+    input_list = source.InputList()
+    input_list.addInput(0, 'VERTEX', "#"+name+"_verts-array")
+    if type(n) != type(None) and len(n)  :
+        norzyx=numpy.array(n)
+        nz,ny,nx=norzyx.transpose()
+        norxyz = numpy.vstack([nx,ny,nz]).transpose()#* numpy.array([1,1,-1])
+        normal_src = source.FloatSource(name+"_normals-array", norxyz.flatten(), ('X', 'Y', 'Z'))
+        geom = geometry.Geometry(scene, "geometry"+name, name, [vert_src,normal_src])
+        input_list.addInput(0, 'NORMAL', "#"+name+"_normals-array")
+    else :
+        geom = geometry.Geometry(scene, "geometry"+name, name, [vert_src])        
+    #invert all the face 
+    fi=numpy.array(f,int)#[:,::-1]
+    triset = geom.createTriangleSet(fi.flatten(), input_list, name+"materialref")
+    geom.primitives.append(triset)
+    collada_xml.geometries.append(geom)
+    master_geomnode = scene.GeometryNode(geom, [matnode])
+    master_node = scene.Node("node_"+name, children=[master_geomnode,])#,transforms=[tr,rz,ry,rx,s])
+    return master_node        
+
 def buildIngredientGeom(ingr,collada_xml,matnode):
     iname = ingr.o_name
     vertzyx = numpy.array(ingr.vertices)# * numpy.array([1,1,-1])
@@ -128,7 +153,46 @@ def buildRecipe(recipe,name,collada_xml,root_node):
         n.children.append(node)
     root_node.children.append(n)  
     return collada_xml,root_node
-        
+
+def buildCompartmentsGeom(comp,collada_xml,root_node):
+    if comp.representation_file is None : 
+        return collada_xml,root_node
+    nr=scene.Node(str(comp.name)+str("rep"))
+    filename = autopack.retrieveFile(comp.representation_file,cache="geometries") #geometries    
+    gdic=helper.read(filename)
+    for nid in gdic :
+        matnode=oneMaterial(str(nid),collada_xml,color=gdic[nid]["color"])
+        master_node = colladaMesh(str(nid),gdic[nid]["mesh"][0],gdic[nid]["mesh"][1],gdic[nid]["mesh"][2],collada_xml,matnode=matnode)
+        collada_xml.nodes.append(master_node)
+#        mxmesh.setParent(nr)
+        if len(gdic[nid]['instances']):
+            geomnode = scene.NodeNode(master_node)
+#            !n=scene.Node(str(nid)+str("instances"))
+#            nri.setParent(nr)
+            g=[]
+            c=0
+            for mat in gdic[nid]['instances']:
+                geomnode = scene.NodeNode(master_node)
+#                instance = scene.createInstancement(str(nid)+"_"+str(c),mxmesh)
+                mat = numpy.array(mat,float)#.transpose()
+#                if helper.host == 'dejavu':#need to find the way that will work everywhere
+#                   mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
+#                   mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))                 
+                scale, shear, euler, translate, perspective=decompose_matrix(mat)
+                p=translate#matrix[3,:3]/100.0#unit problem
+                tr=scene.TranslateTransform(p[0],p[1],p[2])
+                rx=scene.RotateTransform(1,0,0,numpy.degrees(euler[0]))
+                ry=scene.RotateTransform(0,1,0,numpy.degrees(euler[1]))
+                rz=scene.RotateTransform(0,0,1,numpy.degrees(euler[2]))
+                s=scene.ScaleTransform(scale[0],scale[1],scale[2])
+                ne = scene.Node(str(nid)+"_"+str(c), children=[geomnode,],transforms=[tr,rz,ry,rx,s]) #scene.MatrixTransform(matrix)                        
+                g.append(ne)
+                c+=1
+            node = scene.Node(str(nid)+str("instances"), children=g)
+            nr.children.append(node)
+    root_node.children.append(nr)  
+    return collada_xml,root_node
+                
 def build_scene(env):
     #architecture is :
     #-env.name
@@ -157,7 +221,7 @@ def build_scene(env):
         if rs : collada_xml,root_env = buildRecipe(rs,str(o.name)+"_surface",collada_xml,root_env)
         ri = o.innerRecipe
         if ri : collada_xml,root_env = buildRecipe(ri,str(o.name)+"_interior",collada_xml,root_env)
-
+        collada_xml,root_env =buildCompartmentsGeom(o,collada_xml,root_env)
     collada_xml.write("test.dae")
     return collada_xml
     
