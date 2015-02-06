@@ -8,6 +8,7 @@ import sys
 import os
 import math
 
+##The program will read and write all the packings in the following file format: It should be a binary file which stores sequentially sphere center x, y, z coordinates and diameter for each particle as floating points in double precision in little-endian byte order. If the machine on which the program is being run is big-endian, the program will detect it and will still read and write in little-endian format. 
 
 import sys
 #sys.path.append("/usr/local/maxwell-3.0//python/pymaxwell/python2.7_UCS4")
@@ -324,7 +325,7 @@ def buildRecipe(recipe,name,scene,root_node,mask=None):
         if master_node is None :
             continue
         #hide it
-        master_node.setHide(True)
+        master_node.setHideToCamera(True)
         master_node.setParent(nr)
 #        master_node,scene=readOne(ingr.meshFile,ingr.meshName,scene)
 #        print "master_node",type(master_node),master_node

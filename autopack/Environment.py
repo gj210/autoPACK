@@ -1632,22 +1632,24 @@ class Environment(CompartmentList):
             #print name,r.name               
 #            if name.find(r.name) == -1 :
 #                name = r.name+"__"+name
-            #legacy code                
+            #legacy code   
+            #Problem when ingredient in different compartments
+            #compartments is in the first three caractet like int_2 or surf_1
             for ingr in r.ingredients:
-                #print ingr.name
                 if name == ingr.name :
                     return ingr
                 elif name == ingr.o_name :
                     return ingr
-                elif name.find(ingr.o_name) != -1 :
-                    return ingr
+#                elif name.find(ingr.o_name) != -1 :
+#                    #check for 
+#                    return ingr
             for ingr in r.exclude:
                 if name == ingr.name :
                     return ingr        
                 elif name == ingr.o_name :
                     return ingr
-                elif name.find(ingr.o_name) != -1 :
-                    return ingr                    
+#                elif name.find(ingr.o_name) != -1 :
+#                    return ingr                    
         return None
         
     def getIngrFromName(self,name,compNum=None):
