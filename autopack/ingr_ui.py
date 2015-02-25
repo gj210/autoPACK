@@ -895,7 +895,7 @@ class SphereTreeUI(uiadaptor):
         elif mode ==  "jordan_3raycast":
             inner, surface = o1.getSurfaceInnerPoints_jordan(bb,step,display=display,useFix=useFix,ray=3)
         elif mode == "kevin": # Added to add Kevin's surface/inside/outside code
-            inner, surface = o1.getSurfaceInnerPoints_jordan(bb,step,display=display,useFix=useFix)
+            inner, surface = o1.getSurfaceInnerPoints_kevin(bb,step,display=display)
 #        inner, surface = o1.getSurfaceInnerPoints(bb,step,display=display,useFix=useFix)
         n1=n=o1.name+"_innerPts"
         n2=o1.name+"_surfacePts"
