@@ -2426,17 +2426,18 @@ class  Compartment(CompartmentList):
         #need to update the surface. need to create a aligned grid
         return pointinside[0],self.vertices
 
-    def getSurfaceInnerPoints_kevin(self, boundingBox, spacing, display = True, superFine = False, visualize = False):
+    def getSurfaceInnerPoints_kevin(self, boundingBox, spacing, display = True, superFine = False):
         """
         Takes a polyhedron, and builds a grid. In this grid:
             - Projects the polyhedron to the grid.
             - Determines which points are inside/outside the polyhedron
             - Determines point's distance to the polyhedron.
-        Usage:
-        Select desired object, run this program with desired grid spacing resolution. By default,
-        radius is 2 * gridSpacing. superFine provides the option doing a super leakproof test when
-        determining which points are inside or outside. This usually not necessary, because the
-        built-in algorithm has no known leakage cases. It is simply there as a safeguard.
+        superFine provides the option doing a super leakproof test when determining
+        which points are inside or outside. Instead of raycasting to nearby faces to 
+        determine inside/outside, setting this setting to true will foce the algorithm
+        to raycast to the entire polyhedron. This usually not necessary, because the
+        built-in algorithm has no known leakage cases, even in extreme edge cases.
+        It is simply there as a safeguard.
         """
         from autopack.Environment import Grid
         def f_ray_intersect_polyhedron(pRayStartPos, pRayEndPos, faces,vertices, pTruncateToSegment):
@@ -2610,11 +2611,9 @@ class  Compartment(CompartmentList):
         gridSpacing = spacing
         radius = gridSpacing
 
-        from math import ceil
-
         # Make a copy of faces, vertices, and vnormals.
         faces = self.faces[:]
-        verticesLH = self.vertices[:]
+        vertices = self.vertices[:]
         vnormals = self.vnormals[:]
         
         # Get the bounding box for our polyhedron
@@ -2647,30 +2646,30 @@ class  Compartment(CompartmentList):
         OX, OY, OZ = boundingBox[0]
         spacing1 = 1./gridSpacing # Inverse of the spacing. We compute this here, so we don't have to recompute it repeatedly
         allCoordinates = [] # Tracker for all the fine coordiantes that we have interpolated for the faces of the polyhedron
-        # pointsToTestInsideOutside = set()
+        
         # Walk through the faces, projecting each to the grid and marking immediate neighbors so we can test said 
         # neighbors for inside/outside later.
         for face in faces:
             # Get the vertex coordinates and convert to numpy arrays
-            triCoords = [numpy.array(verticesLH[i]) for i in face]
+            triCoords = [numpy.array(vertices[i]) for i in face]
             thisFaceFineCoords = list(triCoords)
             allCoordinates.extend(triCoords)
-            # We will use these u/v vectors to interpolate points that reside on the face
+            # Use these u/v vectors to interpolate points that reside on the face
             pos = triCoords[0]
             u = triCoords[1] - pos
             v = triCoords[2] - pos
-            # Smetimes the hypotenuse isn't fully represented. To remedy this, use an additional w vector
+            # Smetimes the hypotenuse isn't fully represented, so use an additional w vector
             # to interpolate points on the hypotenuse
             w = triCoords[2] - triCoords[1]
 
             # If either u or v is greater than the grid spacing, then we need to subdivide it
             # We will use ceil: if we have a u of length 16, and grid spacing of 5, then we want
-            # a u at 0, 5, 10, 15 which is [0, 1, 2, 3] * gridSpacing. We need ceil to make this happen.
+            # a u at 0, 5, 10, 15 which is [0, 1, 2, 3] * gridSpacing.
             
-            # Using the default gridspacing, some faces will produce leakage. One solution is to
-            # temporarily use a somewhat denser gridspacing to interpolate, and then project back onto our original spacing.
-            # We'll decrease the gridspacing by 25% (so that it's 75% of the original). This seems to fix the issue without
-            # any appreciable increase in computation time.
+            # Using the default gridspacing, some faces will produce leakage. Instead, we
+            # use a denser gridspacing to interpolate, and then project these points back our original spacing.
+            # We'll decrease the gridspacing by 67% (so that it's 33% of the original). This seems be the
+            # highest we can push this without leakage on edge cases.
             gridSpacingTempFine = gridSpacing / 3
             # Determine the number of grid spacing-sized points we can fit on each vector.
             # Minimum is one because range(1) gives us [0]
@@ -2754,7 +2753,7 @@ class  Compartment(CompartmentList):
         timeFinishProjection = time()
         print('Projecting polyhedron to grid took ' + str(timeFinishProjection - startTime) + ' seconds.')
         
-        # Let's start filling in inside outside. Here's the general algorithm:
+        # Let's start flood filling in inside outside. Here's the general algorithm:
         # Walk through all the points in our grid. Once we encounter a point that has closest faces, 
         # then we know we need to test it for inside/outside. Once we test that for inside/outside, we
         # fill in all previous points with that same inside outisde property. To account for the possible
@@ -2800,24 +2799,25 @@ class  Compartment(CompartmentList):
                 # This takes just the first face and projects to the center of it.
                 # [uniquePoints.append(x) for x in g.closeFaces[0] if x not in uniquePoints]
                 [uniquePoints.append(x) for x in g.closeFaces[g.closestFaceIndex] if x not in uniquePoints]
-                uniquePointsCoords = verticesLH[uniquePoints]
+                uniquePointsCoords = vertices[uniquePoints]
                 endPoint = findPointsCenter(uniquePointsCoords)
                 g.testedEndpoint = endPoint
 
                 # Draw a ray to that point, and see if we hit a backface or not
-                numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,endPoint,g.closeFaces,verticesLH,False)
+                numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,endPoint,g.closeFaces,vertices,False)
                 
-                # We can check the face as well if we want to be super precise. If they dont' agree, we then check against the entire polyhedron.
+                # We can check the other face as well if we want to be super precise. If they dont' agree, we then check against the entire polyhedron.
+                # We have not found any cases in which this is necessary, but it is included just in case.
                 if superFine == True:
                     if len(g.closeFaces) > 1:
                         uniquePoints2 = []
                         [uniquePoints2.append(x) for x in g.closeFaces[1] if x not in uniquePoints2]
-                        uniquePointsCoords2 = verticesLH[uniquePoints2]
+                        uniquePointsCoords2 = vertices[uniquePoints2]
                         endPoint2 = findPointsCenter(uniquePointsCoords2)
-                        numHits2, thisBackFace2 = f_ray_intersect_polyhedron(g.globalCoord,endPoint2,g.closeFaces,verticesLH,False)
+                        numHits2, thisBackFace2 = f_ray_intersect_polyhedron(g.globalCoord,endPoint2,g.closeFaces,vertices,False)
                     if len(g.closeFaces) == 1 or thisBackFace != thisBackFace2:
                         mismatchCounter += 1
-                        numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,numpy.array([0.0,0.0,0.0]),faces,verticesLH,False)
+                        numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,numpy.array([0.0,0.0,0.0]),faces,vertices,False)
                 
                 # Fill in inside outside attribute for this point, as pRayStartPos, pRayEndPos, faces, vertices, pTruncateToSegmentll as for any points before it
                 g.isOutside = not thisBackFace
