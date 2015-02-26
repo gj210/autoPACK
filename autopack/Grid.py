@@ -42,6 +42,20 @@ from scipy import spatial
 from math import ceil
 from math import floor
 from random import randrange
+
+#Kevin Grid point class
+class gridPoint:
+    def __init__(self,i,globalC,isPolyhedron):
+        self.index = int(i)
+        self.isOutside = None
+        self.minDistance = 99999 # Only store a number here if within certain distance from polyhedron
+        self.representsPolyhedron = isPolyhedron
+        self.closeFaces = []
+        self.closestFaceIndex = 0
+        self.testedEndpoint = None
+        self.allDistances = [] # Stores a tuple list of distances to all points. (point,distance) = (5,2.5)
+        self.globalCoord = numpy.array(globalC) # Stores the global coordinate associated with this point
+
 class Grid:
     """
     The Grid class
@@ -772,8 +786,8 @@ class Grid:
 
 #dont forget to use spatial.distance.cdist
 class HaltonGrid(Grid):
-    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1):
-        Grid.__init__(self, boundingBox=boundingBox,space=space)
+    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=True):
+        Grid.__init__(self, boundingBox=boundingBox,space=space,setup=setup)
         self.haltonseq = cHaltonSequence3()
         self.tree = None
         
@@ -791,7 +805,7 @@ class HaltonGrid(Grid):
             boundingBox = self.boundingBox
         xl,yl,zl = boundingBox[0]#0
         xr,yr,zr = boundingBox[1]#1
-        encapsulatingGrid = self.encapsulatingGrid  #Graham Added on Oct17 to allow for truly 2D grid for test fills... may break everything!
+#        encapsulatingGrid = self.encapsulatingGrid  #Graham Added on Oct17 to allow for truly 2D grid for test fills... may break everything!
         txyz = numpy.array(boundingBox[0])
         scalexyz = numpy.array(boundingBox[1]) - txyz        
         return scalexyz,txyz
@@ -800,9 +814,9 @@ class HaltonGrid(Grid):
         #we overwrite here by using the halton sequence dimension 5 to get
         #the coordinate
         self.haltonseq.reset()
+        nx,ny,nz = self.nbGridPoints
         pointArrayRaw = numpy.zeros( (nx*ny*nz, 3), 'f')
         self.ijkPtIndice = numpy.zeros( (nx*ny*nz, 3), 'i')
-        nx,ny,nz = self.nbGridPoints
         scalexyz,txyz = self.getScale()
         i = 0
         for zi in range(nz):

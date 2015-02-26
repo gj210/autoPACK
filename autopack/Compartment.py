@@ -64,7 +64,7 @@ import pickle
 import weakref
 import pdb
 from time import time,sleep
-from .ray import vlen, vdiff, vcross
+from .ray import *
 import math
 from math import sqrt,ceil
 import os
@@ -1021,6 +1021,8 @@ class  Compartment(CompartmentList):
             a, b = self.BuildGrid_jordan(env,ray=3)
         elif env.innerGridMethod == "pyray" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
             a, b = self.BuildGrid_pyray(env)    
+        elif env.innerGridMethod == "floodfill" and self.isOrthogonalBoudingBox!=1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_kevin(env)                  
         return a,b 
 
     def prepare_buildgrid_box(self,env):
@@ -1528,6 +1530,323 @@ class  Compartment(CompartmentList):
 #        bhtreelib.freeBHtree(bht)
         return self.insidePoints, self.surfacePoints
 
+
+    def BuildGrid_kevin(self, env,superFine = False):
+        """Build the compartment grid ie surface and inside point using flood filling algo from kevin"""
+        # create surface points 
+        if self.ghost : return
+        startTime = t0 = t1 = time()        
+        if self.isBox :
+            self.overwriteSurfacePts = True
+        if self.overwriteSurfacePts:
+            self.ogsurfacePoints = self.vertices[:]
+            self.ogsurfacePointsNormals = self.vnormals[:]
+        else :
+            self.createSurfacePoints(maxl=env.grid.gridSpacing)
+        
+        from autopack.Grid import gridPoint
+        # Graham Sum the SurfaceArea for each polyhedron
+        vertices = self.vertices[:]  #NEED to make these limited to selection box, not whole compartment
+        faces = self.faces[:] #         Should be able to use self.ogsurfacePoints and collect faces too from above
+        vnormals = self.vnormals[:]
+        normalList2,areas = self.getFaceNormals(vertices, faces,fillBB=env.fillBB)
+        vSurfaceArea = sum(areas)
+        
+        # build a BHTree for the vertices
+        if self.isBox :
+            self.BuildGrid_box(env,vSurfaceArea)
+            return self.insidePoints, self.surfacePoints
+        
+        if autopack.verbose :
+            print('time to create surface points', 
+                  time()-t1, len(self.ogsurfacePoints))
+
+        distances = env.grid.distToClosestSurf
+        idarray = env.grid.gridPtId
+        diag = env.grid.diag
+        
+        if autopack.verbose :
+            print ("distance ",len(distances),
+                   "idarray ",len(idarray))
+        t1 = time()
+
+        #build BHTree for off grid surface points
+        #or scipy ckdtree ?
+#        from bhtree import bhtreelib
+        from scipy import spatial
+        srfPts = self.ogsurfacePoints
+#        self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+        self.OGsrfPtsBht = bht = spatial.cKDTree(tuple(srfPts),leafsize=10) 
+        #res = numpy.zeros(len(srfPts),'f')
+        #dist2 = numpy.zeros(len(srfPts),'f')
+
+        number = self.number
+        #ogNormals = self.ogsurfacePointsNormals
+        insidePoints = []
+
+        # find closest off grid surface point for each grid point 
+        #FIXME sould be diag of compartment BB inside fillBB
+        points = env.grid.masterGridPositions
+        gridPtsPerEdge = env.grid.nbGridPoints
+        gridSpacing =  env.grid.gridSpacing
+        radius = gridSpacing
+        boundingBox = env.grid.boundingBox
+        grid = env.grid
+#        returnNullIfFail = 0
+        if autopack.verbose :
+            print ("compartment build grid jordan",
+                   diag," nb points in grid ",len(grdPos))#[],None
+
+        helper = autopack.helper 
+
+        # Pre-allocates a gridPoint object for every single point we have in our grid.
+        gridPoints = []
+        i = 0
+        for point in points:
+            gridPoints.append(gridPoint(i,point,isPolyhedron = False))
+            i += 1
+        assert len(gridPoints) == len(points)
+
+        # Make a precomputed cube of coordinates and corresponding distances
+        distanceCube,distX,distY,distZ = makeMarchingCube(gridSpacing,radius)
+        # Flatten and combine these arrays. This is easier to iterate over.
+        distanceCubeF,distXF,distYF,distZF = distanceCube.flatten(),distX.flatten(),distY.flatten(),distZ.flatten()
+        zippedNumbers = zip(distanceCubeF,distXF,distYF,distZF)
+
+        NX, NY, NZ = gridPtsPerEdge
+        OX, OY, OZ = boundingBox[0]
+        spacing1 = 1./gridSpacing # Inverse of the spacing. We compute this here, so we don't have to recompute it repeatedly
+        allCoordinates = [] # Tracker for all the fine coordiantes that we have interpolated for the faces of the polyhedron
+        # Walk through the faces, projecting each to the grid and marking immediate neighbors so we can test said 
+        # neighbors for inside/outside later.
+        helper.progressBar(label="faces setup")
+        for face in faces:
+            # Get the vertex coordinates and convert to numpy arrays
+            triCoords = [numpy.array(vertices[i]) for i in face]
+            thisFaceFineCoords = list(triCoords)
+            allCoordinates.extend(triCoords)
+            # Use these u/v vectors to interpolate points that reside on the face
+            pos = triCoords[0]
+            u = triCoords[1] - pos
+            v = triCoords[2] - pos
+            # Smetimes the hypotenuse isn't fully represented, so use an additional w vector
+            # to interpolate points on the hypotenuse
+            w = triCoords[2] - triCoords[1]
+
+            # If either u or v is greater than the grid spacing, then we need to subdivide it
+            # We will use ceil: if we have a u of length 16, and grid spacing of 5, then we want
+            # a u at 0, 5, 10, 15 which is [0, 1, 2, 3] * gridSpacing.
+            
+            # Using the default gridspacing, some faces will produce leakage. Instead, we
+            # use a denser gridspacing to interpolate, and then project these points back our original spacing.
+            # We'll decrease the gridspacing by 67% (so that it's 33% of the original). This seems be the
+            # highest we can push this without leakage on edge cases.
+            gridSpacingTempFine = gridSpacing / 3
+            # Determine the number of grid spacing-sized points we can fit on each vector.
+            # Minimum is one because range(1) gives us [0]
+            uSubunits, vSubunits, wSubunits = 1, 1, 1
+            if vlen(u) > gridSpacingTempFine:
+                uSubunits = ceil(vlen(u)/gridSpacingTempFine) + 1
+            if vlen(v) > gridSpacingTempFine:
+                vSubunits = ceil(vlen(v)/gridSpacingTempFine) + 1
+            if vlen(w) > gridSpacingTempFine:
+                wSubunits = ceil(vlen(w)/gridSpacingTempFine) + 1
+            # Because we have observed leakage, maybe we want to try trying a denser interpolation, using numpy's linspace?
+            # Interpolate face of triangle into a fine mesh.
+            for uSub in range(uSubunits):
+                percentU = uSub * gridSpacingTempFine / vlen(u)
+                percentU = min(percentU, 1.0) # Make sure that we have not stepped outside of our original u vector
+                # h represents the height of the hypotenuse at this u. Naturally, we cannot go past the hypotenuse, so this will be
+                # our upper bound.
+                h = percentU * u + (1 - percentU) * v
+                for vSub in range(vSubunits):
+                    percentV = vSub * gridSpacingTempFine / vlen(v)
+                    percentV = min(percentV, 1.0) # Make sure that we have not stepped oustide of our original v vector.
+                    interpolatedPoint = percentU * u + percentV * v
+                    # The original if: statement asks if the distance from the origin to the interpolated point is less than
+                    # the distance from the origin to the hypotenuse point, as such:
+                    # if vlen(interpolatedPoint) < vlen(h):
+                    # Wouldn't it be a better idea to measure distance to the u position instead? This is implemented below.
+                    if (vlen(interpolatedPoint - percentU * u) < vlen(h - percentU * u)):
+                        allCoordinates.append(interpolatedPoint + pos)
+                        thisFaceFineCoords.append(interpolatedPoint + pos)
+                    else:
+                        break
+            # Interpolate the hypotenuse of the triangle into a fine mesh. Prevents leakage.
+            for wSub in range(wSubunits):
+                # Apply the same proceudre we did above for u/v, just for w (for hypotenuse interpolation)
+                percentW = wSub * gridSpacingTempFine / vlen(w)
+                percentW = min(percentW, 1.0)
+                interpolatedPoint = percentW * w
+                allCoordinates.append(interpolatedPoint + triCoords[1])
+                thisFaceFineCoords.append(interpolatedPoint + triCoords[1])
+            # Once we have interpolated the face, let's project each fine interpolated point to the grid.
+            projectedIndices = set()
+            for coord in thisFaceFineCoords:
+                # Not sure if we need to flip the coordinates. Let's not flip them for now.
+                projectedPointIndex = grid.getPointFrom3D(coord)
+                projectedIndices.add(projectedPointIndex)
+
+            # Walk through each grid point that our face spans, gather its closest neighbors, annotate them with
+            # minimum distance and closest faces, & flag them for testing inside/outside later.
+            for P in list(projectedIndices):
+                # Get the point object corresponding to the index, and set its polyhedron attribute to true
+                g = gridPoints[P]
+                g.representsPolyhedron = True
+                # Get the coordinates of the point, and convert them to grid units
+                # Again, not sure if RH or LH coordinate system. Let's try RH for now.
+                xTemp,yTemp,zTemp = g.globalCoord
+                i,j,k = round((xTemp-OX)*spacing1), round((yTemp-OY)*spacing1), round((zTemp-OZ)*spacing1)
+                # Let's step through our distance cube, and assign faces/closest distances to each
+                for d,x,y,z in zippedNumbers:
+                    # Get the grid indices for the point we're considering, and pass if we're stepping oustide the boundaries
+                    newI, newJ, newK = i + x, j + y, k + z
+                    if newI < 0 or newI > (NX-1) or newJ < 0 or newJ > (NY-1) or newK < 0 or newK > (NZ-1):
+                        continue
+                    # Get the point index that this coordinate corresponds to.
+                    desiredPointIndex = int(round(newK*NX*NY + newJ*NX + newI))
+                    # if desiredPointIndex == 54199:
+                    #     print('HIT with face ' + str(face) + ' and polygon point ' + str(P))
+                    desiredPoint = gridPoints[desiredPointIndex]
+                    if desiredPoint.representsPolyhedron == True:
+                        continue
+                    # Add the current face to the its list of closest faces
+                    if face not in desiredPoint.closeFaces:
+                        desiredPoint.closeFaces.append(face)
+                    # Add the distance to the point's list of distances, and overwrite minimum distance if appropriate
+                    desiredPoint.allDistances.append((v,d))
+                    if d < desiredPoint.minDistance:
+                        desiredPoint.minDistance = d
+                    # Later down the road, we want to test as few points as possible for inside/outside. Therefore,
+                    # we will only test points that are 
+                    # if abs(x) <= 1 and abs(y) <= 1 and abs(z) <= 1:
+                    #     pointsToTestInsideOutside.add(desiredPointIndex)
+        timeFinishProjection = time()
+        print('Projecting polyhedron to grid took ' + str(timeFinishProjection - startTime) + ' seconds.')
+        
+        # Let's start flood filling in inside outside. Here's the general algorithm:
+        # Walk through all the points in our grid. Once we encounter a point that has closest faces, 
+        # then we know we need to test it for inside/outside. Once we test that for inside/outside, we
+        # fill in all previous points with that same inside outisde property. To account for the possible
+        # situation that there is a surface that is only partially bound by the bbox, then we need to
+        # reset the insideOutsideTracker every time we have a change in more than 1 of the 3 coordinates
+        # because that indicates we're starting a new row/column of points.
+
+        isOutsideTracker = None
+        # This tracks the points that we've iterated over which we do not know if inside/outside.
+        # Resets every time we find an inside/outside.
+        emptyPointIndicies = []
+        mismatchCounter = 0
+        for g in gridPoints:        
+            # Check if we've started a new line. If so, then we reset everything.
+            # This test should precede all other test, because we don't want old knowldge
+            # to carry over to the new line, since we don't know if the polygon is only partially encapsulated by the bounding box.
+            if g.index > 0: # We can't check the first element, so we can skip it. 
+                coordDiff = g.globalCoord - gridPoints[g.index - 1].globalCoord
+                coordDiffNonzero = [x != 0 for x in coordDiff]
+                if sum(coordDiffNonzero) > 1:
+                    # assert len(emptyPointIndicies) == 0 # When starting a new line, we shouldn't have any unknowns from the previous line
+                    isOutsideTracker = None
+                    emptyPointIndicies = []
+
+            # There's no point testing inside/outside for points that are on the surface.
+            if g.representsPolyhedron == True:
+                g.isOutside = None
+                continue
+
+            if len(g.closeFaces) == 0:
+                # If it's not close to any faces, and we don't know if this row is inside/outside, then
+                # we have to wait till later to figure it out
+                if isOutsideTracker == None:
+                    emptyPointIndicies.append(g.index)
+                # However, if we do know , we can just use the previous one to fill
+                else:
+                    g.isOutside = isOutsideTracker        
+            # If there are close faces attached to it, then we need to test it for inside/outside.
+            else:
+                # Find centroid of all the vertices of all the close faces. This will be our endpoint
+                # when casting a ray for collision testing. 
+                uniquePoints = []
+                # This takes just the first face and projects to the center of it.
+                # [uniquePoints.append(x) for x in g.closeFaces[0] if x not in uniquePoints]
+                [uniquePoints.append(x) for x in g.closeFaces[g.closestFaceIndex] if x not in uniquePoints]
+                uniquePointsCoords = vertices[uniquePoints]
+                endPoint = findPointsCenter(uniquePointsCoords)
+                g.testedEndpoint = endPoint
+
+                # Draw a ray to that point, and see if we hit a backface or not
+                numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,endPoint,g.closeFaces,vertices,False)
+                
+                # We can check the other face as well if we want to be super precise. If they dont' agree, we then check against the entire polyhedron.
+                # We have not found any cases in which this is necessary, but it is included just in case.
+                if superFine == True:
+                    if len(g.closeFaces) > 1:
+                        uniquePoints2 = []
+                        [uniquePoints2.append(x) for x in g.closeFaces[1] if x not in uniquePoints2]
+                        uniquePointsCoords2 = vertices[uniquePoints2]
+                        endPoint2 = findPointsCenter(uniquePointsCoords2)
+                        numHits2, thisBackFace2 = f_ray_intersect_polyhedron(g.globalCoord,endPoint2,g.closeFaces,vertices,False)
+                    if len(g.closeFaces) == 1 or thisBackFace != thisBackFace2:
+                        mismatchCounter += 1
+                        numHits, thisBackFace = f_ray_intersect_polyhedron(g.globalCoord,numpy.array([0.0,0.0,0.0]),faces,vertices,False)
+                
+                # Fill in inside outside attribute for this point, as pRayStartPos, pRayEndPos, faces, vertices, pTruncateToSegmentll as for any points before it
+                g.isOutside = not thisBackFace
+                isOutsideTracker = not thisBackFace
+                for i in emptyPointIndicies:
+                    gridPoints[i].isOutside = isOutsideTracker
+                # Because we have filled in all the unknowns, we can reset that counter.
+                emptyPointIndicies = []
+            p=(g.index/float(len(gridPoints)))*100.0 
+            if (g.index % 100 ) == 0 :
+                helper.progressBar(progress=int(p),label=str(g.index)+"/"+str(len(gridPoints))+" inside "+str(g.isOutside))
+                if autopack.verbose:
+                    print (str(g.index)+"/"+str(len(gridPoints))+" inside "+str(g.isOutside))
+
+        # Final pass through for sanity checks.
+        for g in gridPoints:
+            if g.representsPolyhedron == True:
+                assert g.isOutside == None
+            else:
+                if g.isOutside == None:
+                    g.isOutside = True
+        print('Flood filling grid inside/outside took ' + str(time() - timeFinishProjection) + ' seconds.')
+        insidePoints = [g.globalCoord for g in gridPoints if g.isOutside == False]
+        # outsidePoints = [g.index for g in gridPoints if g.isOutside == True]
+        # surfacePoints = [g.globalCoord for g in gridPoints if g.representsPolyhedron == True]
+        
+        t1 = time()
+        nbGridPoints = len(env.grid.masterGridPositions)
+        
+        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(srfPts,env)
+        srfPts = surfPtsBB
+        if autopack.verbose:
+            print ("compare length id distances",nbGridPoints,len(idarray),len(distances),
+                   (nbGridPoints == len(idarray)),
+                        (nbGridPoints == len(distances)))
+        ex = True#True if nbGridPoints == len(idarray) else False
+        surfacePoints,surfacePointsNormals  = self.extendGridArrays(nbGridPoints,
+                                            srfPts,surfPtsBBNorms,
+                                            env,extended=ex)
+
+        if autopack.verbose:
+            print('time to extend arrays', time()-t1)
+            print('Total time', time()-t0)
+
+        self.insidePoints = insidePoints
+        self.surfacePoints = surfacePoints
+        self.surfacePointsCoords = surfPtsBB
+        self.surfacePointsNormals = surfacePointsNormals
+        if autopack.verbose:
+            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid'%(
+                len(self.surfacePoints), len(self.insidePoints),
+                nbGridPoints, len(env.grid.masterGridPositions)))
+
+        self.computeVolumeAndSetNbMol(env, self.surfacePoints,
+                                      self.insidePoints,areas=vSurfaceArea)
+        print('Total time', time()-t0)
+        return self.insidePoints, self.surfacePoints
+        
     def extendGridArrays(self,nbGridPoints,srfPts,surfPtsBBNorms,histoVol,extended=True):
         """Extend the environment grd using the compartment point"""
         if extended  :      
@@ -2439,170 +2758,9 @@ class  Compartment(CompartmentList):
         built-in algorithm has no known leakage cases, even in extreme edge cases.
         It is simply there as a safeguard.
         """
-        from autopack.Environment import Grid
-        def f_ray_intersect_polyhedron(pRayStartPos, pRayEndPos, faces,vertices, pTruncateToSegment):
-            """This function returns TRUE if a ray intersects a triangle.
-            It also calculates and returns the UV coordinates of said colision as part of the intersection test,
-            Makes sure that we are working with arrays
-
-            * TAKES IN pRayStartPos as LEFT-HANDED COORDINATE (Z,Y,X)
-            * TAKES IN pRayEndPos AS LEFT-HANDED COORDINATE (Z,Y,X)
-            * faces is a list of vertex indices that defines the polyhedron
-            * vertices is the list of global coordinates that faces refers to
-            * pTruncateToSegment decides whether or not the segment terminates at the end position, or keeps on
-              going forever
-            """
-            pRayStartPos = numpy.array(pRayStartPos)
-            pRayEndPos = numpy.array(pRayEndPos)
-
-            vLineSlope = pRayEndPos - pRayStartPos #This line segment defines an infinite line to test for intersection
-            vPolyhedronPos = numpy.array((0,0,0))
-            vTriPoints = vertices
-            vTriPolys = faces
-            vBackface = None
-            vBackfaceFinal = None
-            maxDistance = 99999
-            vHitCount = 0
-
-            vEpsilon = 0.00001
-            vBreakj = False
-            vCollidePos = None
-            
-            # Walk through each polygon in a polyhedron
-            for testingFace in vTriPolys:
-                #  Loop through all the polygons in an input polyhedron
-                #vQuadrangle = 1  #  Default says polygon is a quadrangle.
-                #vLoopLimit = 2  #  Default k will loop through polygon assuming its a quad.
-                #if (vTriPolys[j+3] == vTriPolys[j+2])  #  Test to see if quad is actually just a triangle.
-                #   {
-                vQuadrangle = 0  #  Current polygon is not a quad, it's a triangle.
-                vLoopLimit = 1  #  Set k loop to only cycle one time.
-                
-                for k in range(vLoopLimit):
-                    vTriPt0 = numpy.array(vTriPoints[testingFace[0]])  # Always get the first point of a quad/tri
-                    vTriPt1 = numpy.array(vTriPoints[testingFace[1]])  # Get point 1 for a tri and a quad's first pass, but skip for a quad's second pass
-                    vTriPt2 = numpy.array(vTriPoints[testingFace[2]])  # Get point 2 for a tri and a quad's first pass, but get point 3 only for a quad on its second pass.
-            
-                    vE1 = vTriPt1 - vTriPt0  #  Get the first edge as a vector.
-                    vE2 = vTriPt2 - vTriPt0  #  Get the second edge.
-                    h = vcross(vLineSlope, vE2)
-                    
-                    a = f_dot_product(vE1,h)  #  Get the projection of h onto vE1.
-                    if a > -vEpsilon and a < vEpsilon:
-                        continue# If the ray is parallel to the plane then it does not intersect it, i.e, a = 0 +/- given rounding slope.
-                        #  If the polygon is a quadrangle, test the other triangle that comprises it.
-
-                    F = 1.0/a       
-                    s = pRayStartPos - vTriPt0  #  Get the vector from the origin of the triangle to the ray's origin.
-                    u = F * f_dot_product(s,h)
-                    if u < 0.0 or u > 1.0:
-                        continue
-                        #/* Break if its outside of the triangle, but try the other triangle if in a quad.
-                        #U is described as u = : start of vE1 = 0.0,  to the end of vE1 = 1.0 as a percentage.  
-                        #If the value of the U coordinate is outside the range of values inside the triangle,
-                        #then the ray has intersected the plane outside the triangle.*/
-
-                    q = vcross(s, vE1)
-                    v = F * f_dot_product(vLineSlope,q)
-                    if v <0.0 or u+v > 1.0:
-                        continue  
-                        #/*  Break if outside of the triangles v range.
-                        #If the value of the V coordinate is outside the range of values inside the triangle,
-                        #then the ray has intersected the plane outside the triangle.
-                        #U + V cannot exceed 1.0 or the point is not in the triangle.           
-                        #If you imagine the triangle as half a square this makes sense.  U=1 V=1 would be  in the 
-                        #lower left hand corner which would be in the second triangle making up the square.*/
-
-                    vCollidePos = vTriPt0 + u*vE1 + v*vE2  #  This is the global collision position.
-                    assert len(vCollidePos) == 3
-
-                    #  The ray is hitting a triangle, now test to see if its a triangle hit by the ray.
-                    vBackface = False
-                    if f_dot_product(vLineSlope, vCollidePos - pRayStartPos) > 0:  #  This truncates our infinite line to a ray pointing from start THROUGH end positions.
-                        vHitCount += 1
-                        #print(testingFace)
-                        if pTruncateToSegment and vlen(vLineSlope) < vlen(vCollidePos - pRayStartPos):
-                            print('broken')
-                            break # This truncates our ray to a line segment from start to end positions.
-
-                        d = vlen(pRayStartPos - vCollidePos)
-                        if d >= maxDistance:
-                            continue
-                        if a < vEpsilon:  #  Test to see if the triangle hit is a backface.
-                            #set master grid to organelle->getname inside
-                            vBackface = True
-                            #  This stuff is specific to our Point inside goals.
-                            vBreakj = True  #  To see if a point is inside, I can stop at the first backface hit.
-                            #break
-                        else:
-                            vBreakj = True
-                        vBackfaceFinal = vBackface
-                        maxDistance = d
-            #vBackfaceFinal = vBackfaces[distances.index(min(distances))]
-            return vHitCount,vBackfaceFinal
-        
-        # makeGrid removed because redundant implementation.
-
-        def makeMarchingCube(gridSpacing,r):
-            """
-            Create a numpy array that represents the precomputed distances to each point
-            for the cube of points surrounding our center point.
-            """
-            def _pythagorean(*edgeLengths):
-                from math import sqrt
-                total = 0
-                for length in edgeLengths:
-                    total += length * length
-                distance = sqrt(total)
-                return distance
-            from math import ceil
-            pointsForRadius = ceil(r/gridSpacing) # Number of grid points required to represent our radius, rounded up
-            pointsInEdge = 2 * pointsForRadius + 1 # Number of points in one edge of our cube
-
-            center = pointsForRadius # The index if our center point
-            cube = numpy.zeros(shape=(pointsInEdge,pointsInEdge,pointsInEdge))
-            distX = numpy.zeros(shape=(pointsInEdge,pointsInEdge,pointsInEdge))
-            distY = numpy.zeros(shape=(pointsInEdge,pointsInEdge,pointsInEdge))
-            distZ = numpy.zeros(shape=(pointsInEdge,pointsInEdge,pointsInEdge))
-            for a in range(pointsInEdge):
-                lenX = a - center
-                for b in range(pointsInEdge):
-                    lenY = b - center
-                    for c in range(pointsInEdge):
-                        lenZ = c - center
-                        cube[a][b][c] = _pythagorean(lenX,lenY,lenZ) * gridSpacing
-                        distX[a][b][c] = lenX
-                        distY[a][b][c] = lenY
-                        distZ[a][b][c] = lenZ
-            return cube, distX, distY, distZ
-        
-        # getPointFrom3D needs to be imported from Grid.py
-        # Syntax: getPointFrom3D(self, pt3d)
-        # from Grid import getPointFrom3D
-
-        def findPointsCenter(*args):
-            # Average down the column, such that we're averaging across all measurements in one dimension
-            center = numpy.mean(args[0], axis = 0)
-            return center
-
-        # vcross, vlen removed because already imported.
-
-        def f_dot_product(vector1,vector2):
-            """Return the dot product of two 3D vectors."""
-            dottedVectors = [vector1[i] * vector2[i] for i in range(len(vector1))]
-            return sum(dottedVectors)
-
-        class gridPoint:
-            def __init__(self,i,globalC,isPolyhedron):
-                self.index = int(i)
-                self.isOutside = None
-                self.minDistance = 99999 # Only store a number here if within certain distance from polyhedron
-                self.representsPolyhedron = isPolyhedron
-                self.closeFaces = []
-                self.closestFaceIndex = 0
-                self.testedEndpoint = None
-                self.allDistances = [] # Stores a tuple list of distances to all points. (point,distance) = (5,2.5)
-                self.globalCoord = numpy.array(globalC) # Stores the global coordinate associated with this point
+#        from autopack.Environment import Grid
+        from autopack.Environment import Grid  
+        from autopack.Grid import gridPoint
 
         # Start the timer.
         from time import time
@@ -2845,17 +3003,20 @@ class  Compartment(CompartmentList):
 
         return insidePoints, surfacePoints
 
-    def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
+    def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1,halton=True):
         """
         Only computes the inner point. No grid.
         This is independant from the packing. Help build ingredient sphere tree and representation.
         - Uses BHTree to compute surface points
         - Uses Jordan raycasting to determine inside/outside (defaults to 1 iteration, can use 3 iterations)
         """                
-        from autopack.Environment import Grid        
-        
+#        from autopack.Environment import Grid        
+        if halton :
+            from autopack.Grid import HaltonGrid as Grid
+        else :
+            from autopack.Grid import Grid         
         # Initiate a default grid object and set its properties based on inputs and other calculations
-        grid = Grid()
+        grid = Grid(setup=False)
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing # = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         helper.progressBar(label="BuildGRid")        
