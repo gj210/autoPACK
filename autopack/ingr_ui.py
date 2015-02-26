@@ -864,6 +864,8 @@ class SphereTreeUI(uiadaptor):
         #use a default stepsize for the grid
         #use some usefull tools from histovol.grid ?
         #probably need the normal for that
+        #TODO: add an option ti build an halton grid instead of a regular grid.
+        #check if kevin will work with it, since it will not be regular grid.
         mode = self.getVal(self.mode)
         step = self.getVal(self.grid_step)
         if self.object_target is None :

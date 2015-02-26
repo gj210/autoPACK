@@ -2435,7 +2435,7 @@ class SubdialogViewer(uiadaptor):
         self.displayResult()
     
     def LoadNewResult(self,*args):
-        self.fileDialog(label="choose a .apr file",callback=self.LoadNewResult_cb)
+        self.fileDialog(label="choose an apr file",callback=self.LoadNewResult_cb)
 
     def export_bd_rigid_cb(self,filename):
         self.histoVol.exportToBD_BOX(res_filename=filename,bd_type="rigid")

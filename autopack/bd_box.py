@@ -10,6 +10,8 @@ import math
 from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix
 #some progress report would be nice
 
+executable_dmatrix="/Users/ludo/DEV/bd_box-2.1/tools/dmatrix/dmatrix"
+
 class bd_box:
     def __init__(self,name="box",bounding_box=[[0.0, 0.0, 0.], [190.0, 190.0, 190]]):
         #define whats is need for bd_box simulation
@@ -571,11 +573,12 @@ vx,vy,vz,omx,omy,omz (translation / rotation) for ith molecule
         f.close()
 
     def computeDmatrix(self,filename):
-        executable="/Users/ludo/DEV/bd_box-2.1/tools/dmatrix/dmatrix"#comment line
+        #executable="/Users/ludo/DEV/bd_box-2.1/tools/dmatrix/dmatrix"#comment line
+        #only unix based here
         from subprocess import call
         fileName, fileExtension = os.path.splitext(filename)
         call(['mv',filename,'input.txt'])
-        call([executable, filename])
+        call([executable_dmatrix, filename])
         call(['mv','input.txt',filename])
         call('tail -6 tensor.txt > '+fileName+".dt", shell=True)
         call(['mv','transformations.txt',fileName+".frame"])

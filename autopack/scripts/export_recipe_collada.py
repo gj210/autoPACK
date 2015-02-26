@@ -5,6 +5,7 @@ Created on Wed Dec  3 22:08:01 2014
 @author: ludo
 """
 MAYA=False
+SWAPZ=False
 import sys
 import os
 import math
@@ -50,7 +51,34 @@ from collada import geometry
 from collada import scene
 
 
+def up (r):
+    pos = numpy.array([r/2,r/2,r/2] )
+    size = numpy.array([r,r,r] )      
+    bb=numpy.array([[pos-size/2.0],[pos+size/2.0]])
+    return pos,size,bb
 
+#need half up    : cube pos = [0,r/2,r/2.] size = [r,r,r*2.0]    bb=[[pos-size],[pos+size]]
+def halfup (r):
+    pos = numpy.array([0,r/2,r/2.])
+    size = numpy.array([r,r,r*2.0] )      
+    bb=numpy.array([[pos-size/2.0],[pos+size/2.0]])
+    return pos,size,bb
+
+#need half       : cube pos = [0,0,r/2.] size = [r,r*2.0,r*2.0]  bb=[[pos-size],[pos+size]]
+def half (r):
+    pos = numpy.array([0,0,r/2.])
+    size =  numpy.array([r,r*2.0,r*2.0] )     
+    bb=numpy.array([[pos-size/2.0],[pos+size/2.0]])
+    return pos,size,bb
+
+def testOnePoints(p,bbi):
+     res=numpy.logical_and(numpy.greater(p,bbi[0]),numpy.less(p,bbi[1]))
+     if False in res :
+         return False
+     else :
+         return True
+         
+         
 
 def oneMaterial(name,collada_xml,color=None):
     if color == None :
@@ -69,7 +97,11 @@ def oneMaterial(name,collada_xml,color=None):
 def colladaMesh(name,v,n,f,collada_xml,matnode=None):
     vertzyx = numpy.array(v)# * numpy.array([1,1,-1])
     z,y,x=vertzyx.transpose()
-    vertxyz = numpy.vstack([x,y,z]).transpose()#* numpy.array([1,1,-1])
+#    if SWAPZ :
+#        vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])
+#    else :
+#        vertxyz = numpy.vstack([x,y,z]).transpose()        
+    vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])        
     vert_src = source.FloatSource(name+"_verts-array", vertxyz.flatten(), ('X', 'Y', 'Z'))
     input_list = source.InputList()
     input_list.addInput(0, 'VERTEX', "#"+name+"_verts-array")
@@ -77,13 +109,21 @@ def colladaMesh(name,v,n,f,collada_xml,matnode=None):
         norzyx=numpy.array(n)
         nz,ny,nx=norzyx.transpose()
         norxyz = numpy.vstack([nx,ny,nz]).transpose()#* numpy.array([1,1,-1])
+#        if SWAPZ :
+#            norxyz = numpy.vstack([nx,ny,nz]).transpose()* numpy.array([1,1,-1])
+#        else :
+#            norxyz = numpy.vstack([nx,ny,nz]).transpose()
         normal_src = source.FloatSource(name+"_normals-array", norxyz.flatten(), ('X', 'Y', 'Z'))
         geom = geometry.Geometry(scene, "geometry"+name, name, [vert_src,normal_src])
         input_list.addInput(0, 'NORMAL', "#"+name+"_normals-array")
     else :
         geom = geometry.Geometry(scene, "geometry"+name, name, [vert_src])        
-    #invert all the face 
-    fi=numpy.array(f,int)#[:,::-1]
+    #invert all the face
+    fi=numpy.array(f,int)[:,::-1]
+#    if SWAPZ :
+#        fi=numpy.array(f,int)[:,::-1]
+#    else :
+#        fi=numpy.array(f,int)        
     triset = geom.createTriangleSet(fi.flatten(), input_list, name+"materialref")
     geom.primitives.append(triset)
     collada_xml.geometries.append(geom)
@@ -95,19 +135,29 @@ def buildIngredientGeom(ingr,collada_xml,matnode):
     iname = ingr.o_name
     vertzyx = numpy.array(ingr.vertices)# * numpy.array([1,1,-1])
     z,y,x=vertzyx.transpose()
-    vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])
+    if SWAPZ :
+        vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])
+    else :
+        vertxyz = numpy.vstack([x,y,z]).transpose()    
     vert_src = source.FloatSource(iname+"_verts-array", vertxyz.flatten(), ('X', 'Y', 'Z'))
     if ingr.vnormals :
         norzyx=numpy.array(ingr.vnormals)
         nz,ny,nx=norzyx.transpose()
-        norxyz = numpy.vstack([nx,ny,nz]).transpose()* numpy.array([1,1,-1])
+        if SWAPZ :
+            norxyz = numpy.vstack([nx,ny,nz]).transpose()* numpy.array([1,1,-1])
+        else :
+            norxyz = numpy.vstack([nx,ny,nz]).transpose()
         normal_src = source.FloatSource(iname+"_normals-array", norxyz.flatten(), ('X', 'Y', 'Z'))
     geom = geometry.Geometry(collada_xml, "geometry"+iname, iname, [vert_src])
     input_list = source.InputList()
     input_list.addInput(0, 'VERTEX', "#"+iname+"_verts-array")
 #    input_list.addInput(0, 'NORMAL', "#"+iname+"_normals-array")
     #invert all the face 
-    fi=numpy.array(ingr.faces,int)#[:,::-1]
+    fi=numpy.array(ingr.faces,int)[:,::-1]
+#    if SWAPZ :
+#        fi=numpy.array(ingr.faces,int)[:,::-1]
+#    else :
+#        fi=numpy.array(ingr.faces,int) 
     triset = geom.createTriangleSet(fi.flatten(), input_list, iname+"materialref")
     geom.primitives.append(triset)
     collada_xml.geometries.append(geom)
@@ -116,13 +166,13 @@ def buildIngredientGeom(ingr,collada_xml,matnode):
     return master_node    
     
 
-def buildRecipe(recipe,name,collada_xml,root_node):
+def buildRecipe(recipe,name,collada_xml,root_node,mask=None):
     if recipe is None : return collada_xml,root_node 
     n=scene.Node(str(name))
     for ingr in recipe.ingredients: 
         #for each ingredient
         #build the material
-        matnode=oneMaterial(ingr.o_name,collada_xml)
+        matnode=oneMaterial(ingr.name,collada_xml)
         #build a geomedtry node
         master_node=buildIngredientGeom(ingr,collada_xml,matnode)
         collada_xml.nodes.append(master_node)
@@ -130,10 +180,13 @@ def buildRecipe(recipe,name,collada_xml,root_node):
         c=0
         g=[]
         for pos,rot in ingr.results:#[pos,rot]
+            if mask != None :
+                 if testOnePoints(pos,mask) :
+                     continue
             geomnode = scene.NodeNode(master_node)
             mat = rot.copy()
             mat[:3, 3] = pos
-            if helper.host == 'dejavu':#need to find the way that will work everywhere
+            if helper.host == 'dejavu' :#and SWAPZ:#need to find the way that will work everywhere
                mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
                mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90)) 
                 # mat = numpy.array(mat).transpose()
@@ -154,7 +207,7 @@ def buildRecipe(recipe,name,collada_xml,root_node):
     root_node.children.append(n)  
     return collada_xml,root_node
 
-def buildCompartmentsGeom(comp,collada_xml,root_node):
+def buildCompartmentsGeom(comp,collada_xml,root_node,mask=None):
     if comp.representation_file is None : 
         return collada_xml,root_node
     nr=scene.Node(str(comp.name)+str("rep"))
@@ -163,6 +216,7 @@ def buildCompartmentsGeom(comp,collada_xml,root_node):
     for nid in gdic :
         matnode=oneMaterial(str(nid),collada_xml,color=gdic[nid]["color"])
         master_node = colladaMesh(str(nid),gdic[nid]["mesh"][0],gdic[nid]["mesh"][1],gdic[nid]["mesh"][2],collada_xml,matnode=matnode)
+#        master_node = colladaMesh(str(nid),comp.vertices,comp.vnormals,comp.faces,collada_xml,matnode=matnode)
         collada_xml.nodes.append(master_node)
 #        mxmesh.setParent(nr)
         if len(gdic[nid]['instances']):
@@ -175,9 +229,10 @@ def buildCompartmentsGeom(comp,collada_xml,root_node):
                 geomnode = scene.NodeNode(master_node)
 #                instance = scene.createInstancement(str(nid)+"_"+str(c),mxmesh)
                 mat = numpy.array(mat,float)#.transpose()
-#                if helper.host == 'dejavu':#need to find the way that will work everywhere
-#                   mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
-#                   mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90))                 
+                if helper.host == 'dejavu':#need to find the way that will work everywhere
+                   mry90 = helper.rotation_matrix(-math.pi/2.0, [0.0,1.0,0.0])#?
+                   mat = numpy.array(numpy.matrix(mat)*numpy.matrix(mry90)) 
+                    # mat = numpy.array(mat).transpose()
                 scale, shear, euler, translate, perspective=decompose_matrix(mat)
                 p=translate#matrix[3,:3]/100.0#unit problem
                 tr=scene.TranslateTransform(p[0],p[1],p[2])
@@ -213,15 +268,18 @@ def build_scene(env):
     myscene = scene.Scene(env.name+"_Scene", [root_env])
     collada_xml.scenes.append(myscene)
     collada_xml.scene = myscene                
-
+#
     r =  env.exteriorRecipe
     if r : collada_xml,root_env = buildRecipe(r,r.name,collada_xml,root_env)
     for o in env.compartments:
         rs = o.surfaceRecipe
-        if rs : collada_xml,root_env = buildRecipe(rs,str(o.name)+"_surface",collada_xml,root_env)
+        if rs : 
+            p,s,bb=up (767.0) #used for lipids
+            pp,ss,bbsurface = up (700.0)
+            collada_xml,root_env = buildRecipe(rs,str(o.name)+"_surface",collada_xml,root_env,mask=bbsurface)
         ri = o.innerRecipe
-        if ri : collada_xml,root_env = buildRecipe(ri,str(o.name)+"_interior",collada_xml,root_env)
-        collada_xml,root_env =buildCompartmentsGeom(o,collada_xml,root_env)
+        if ri : collada_xml,root_env = buildRecipe(ri,str(o.name)+"_interior",collada_xml,root_env,mask=bbsurface)
+    collada_xml,root_env =buildCompartmentsGeom(env.compartments[1],collada_xml,root_env)
     collada_xml.write("test.dae")
     return collada_xml
     
