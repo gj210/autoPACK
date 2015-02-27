@@ -1011,11 +1011,11 @@ class Ingredient(Agent):
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
-#        if self.mesh is not None :
-#           self.getEncapsulatingRadius()
-        if "encapsulatingRadius" in kw:
+        if self.mesh is not None :
+           self.getEncapsulatingRadius()
+#        if "encapsulatingRadius" in kw:
             #we force the encapsulatingRadius
-            self.encapsulatingRadius = kw["encapsulatingRadius"]
+#            self.encapsulatingRadius = kw["encapsulatingRadius"]
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -1467,7 +1467,7 @@ class Ingredient(Agent):
                     v,vn,f = dgeoms.values()[0]["mesh"]
 #                    vn = self.getVertexNormals(v,f)     
                     self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
-                    
+                    print (self.name,len(self.vertices))
                     geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
                 else :

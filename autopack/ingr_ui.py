@@ -294,6 +294,14 @@ class SphereTreeUI(uiadaptor):
                                     width=180,height=10,action=None,
                                     variable=self.addVariable("int",0),
                                     type="pullMenu",)
+        
+        self.grid_types=["regular","halton"]
+        self.grid_type=self._addElemt(name="gridType",
+                                    value=self.grid_types,
+                                    width=180,height=10,action=None,
+                                    variable=self.addVariable("int",0),
+                                    type="pullMenu",)
+        
         self.grid_step = self._addElemt(name='step',width=100,height=10,
                                               action=None,type="inputFloat",icon=None,
                                               value = 20.,
@@ -306,7 +314,7 @@ class SphereTreeUI(uiadaptor):
                                               action=None,type="checkbox",icon=None,
                                               variable=self.addVariable("int",1),value=0)                                     
         self.LABELS={}
-        
+        self.LABELS["gridtype"] = self._addElemt(label="GridType :",width=100)
         self.LABELS["algo"] = self._addElemt(label="Using :",width=100)
         self.LABELS["scale"] = self._addElemt(label="Scale :",width=100)
         self.LABELS["nbS"] = self._addElemt(label="#sph :",width=100)  
@@ -357,6 +365,7 @@ class SphereTreeUI(uiadaptor):
         #separtor ?
         self._layout.append([self.grid_step,self.BTN["gridify"],])
         self._layout.append([self.LABELS["algo"],self.mode,])
+        self._layout.append([self.LABELS["gridtype"],self.grid_type,])
         self._layout.append([self.rt_display,])
         self._layout.append([self.useFix,])
         self._layout.append([self.BTN["clearPoint"],])
@@ -871,6 +880,7 @@ class SphereTreeUI(uiadaptor):
         if self.object_target is None :
             self.object_target = self.helper.getCurrentSelection()[0]
         mesh = self.object_target
+        gridtype = self.getVal(self.grid_type)
         #canwe usethe ogranelle mesh system from autopack
         from autopack.Compartment import Compartment
         faces,vertices,vnormals,fn = self.helper.DecomposeMesh(mesh,
@@ -886,6 +896,7 @@ class SphereTreeUI(uiadaptor):
             bb=self.helper.getCornerPointCube(b)
         display = self.getVal(self.rt_display)
         useFix= self.getVal(self.useFix)
+        o1.grid_type=gridtype
         if mode =="bhtree_dot":
             inner, surface = o1.getSurfaceInnerPoints(bb,step,display=display,useFix=useFix)
         elif mode ==  "sdf_fixdimension":
