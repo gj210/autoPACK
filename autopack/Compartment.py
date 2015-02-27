@@ -58,7 +58,7 @@
 ## NOTE changing smallest molecule radius changes grid spacing and invalidates
 ##      arrays saved to file
 import sys
-import numpy.oldnumeric as N
+#import numpy.oldnumeric as N
 import numpy
 import pickle
 import weakref
@@ -217,7 +217,8 @@ class  Compartment(CompartmentList):
         #to compute inside points.
         if "isOrthogonalBoudingBox" in kw :
             self.isOrthogonalBoudingBox = kw["isOrthogonalBoudingBox"]
-
+        self.grid_type = "regular"
+        
     def reset(self):
         """reset the inner compartment data, surface and inner points"""
         # list of grid point indices inside compartment
@@ -1653,13 +1654,13 @@ class  Compartment(CompartmentList):
                 wSubunits = ceil(vlen(w)/gridSpacingTempFine) + 1
             # Because we have observed leakage, maybe we want to try trying a denser interpolation, using numpy's linspace?
             # Interpolate face of triangle into a fine mesh.
-            for uSub in range(uSubunits):
+            for uSub in range(int(uSubunits)):
                 percentU = uSub * gridSpacingTempFine / vlen(u)
                 percentU = min(percentU, 1.0) # Make sure that we have not stepped outside of our original u vector
                 # h represents the height of the hypotenuse at this u. Naturally, we cannot go past the hypotenuse, so this will be
                 # our upper bound.
                 h = percentU * u + (1 - percentU) * v
-                for vSub in range(vSubunits):
+                for vSub in range(int(vSubunits)):
                     percentV = vSub * gridSpacingTempFine / vlen(v)
                     percentV = min(percentV, 1.0) # Make sure that we have not stepped oustide of our original v vector.
                     interpolatedPoint = percentU * u + percentV * v
@@ -1673,7 +1674,7 @@ class  Compartment(CompartmentList):
                     else:
                         break
             # Interpolate the hypotenuse of the triangle into a fine mesh. Prevents leakage.
-            for wSub in range(wSubunits):
+            for wSub in range(int(wSubunits)):
                 # Apply the same proceudre we did above for u/v, just for w (for hypotenuse interpolation)
                 percentW = wSub * gridSpacingTempFine / vlen(w)
                 percentW = min(percentW, 1.0)
@@ -1723,7 +1724,7 @@ class  Compartment(CompartmentList):
                     #     pointsToTestInsideOutside.add(desiredPointIndex)
         timeFinishProjection = time()
         print('Projecting polyhedron to grid took ' + str(timeFinishProjection - startTime) + ' seconds.')
-        
+        helper.progressBar(label="test gridPoints")
         # Let's start flood filling in inside outside. Here's the general algorithm:
         # Walk through all the points in our grid. Once we encounter a point that has closest faces, 
         # then we know we need to test it for inside/outside. Once we test that for inside/outside, we
@@ -1813,12 +1814,12 @@ class  Compartment(CompartmentList):
         print('Flood filling grid inside/outside took ' + str(time() - timeFinishProjection) + ' seconds.')
         insidePoints = [g.globalCoord for g in gridPoints if g.isOutside == False]
         # outsidePoints = [g.index for g in gridPoints if g.isOutside == True]
-        # surfacePoints = [g.globalCoord for g in gridPoints if g.representsPolyhedron == True]
+#        surfacePoints = [g.globalCoord for g in gridPoints if g.representsPolyhedron == True]
         
         t1 = time()
         nbGridPoints = len(env.grid.masterGridPositions)
         
-        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(srfPts,env)
+        surfPtsBB,surfPtsBBNorms = self.getSurfaceBB(self.ogsurfacePoints,env)
         srfPts = surfPtsBB
         if autopack.verbose:
             print ("compare length id distances",nbGridPoints,len(idarray),len(distances),
@@ -1862,7 +1863,7 @@ class  Compartment(CompartmentList):
                 distCS = numpy.ones(length)*histoVol.grid.diag                
                 histoVol.grid.distToClosestSurf = numpy.hstack((histoVol.grid.distToClosestSurf,distCS))
             else :
-                histoVol.grid.distToClosestSurf.extend( [histoVol.grid.diag,]*length )
+                histoVol.grid.distToClosestSurf.extend( (numpy.ones(length)*histoVol.grid.diag).tolist() )
             ptId = numpy.ones(length,'i')*self.number#surface point
             histoVol.grid.gridPtId=numpy.hstack((histoVol.grid.gridPtId,ptId))
             #histoVol.grid.gridPtId=numpy.append(numpy.array(histoVol.grid.gridPtId), [self.number]*length ,axis=0)#surface point ID
@@ -2343,13 +2344,13 @@ class  Compartment(CompartmentList):
         print ("ok2 dim ",dim)
         size = dim1*dim1*dim1
         from UTpackages.UTsdf import utsdf        
-        verts = N.array(self.vertices,dtype='f')
+        verts = numpy.array(self.vertices,dtype='f')
         
-        tris = N.array(self.faces,dtype="int")
+        tris = numpy.array(self.faces,dtype="int")
         utsdf.setParameters(dim,0,1,[0,0,0,0,0,0])#size, bool isNormalFlip, bool insideZero,bufferArr
         surfacePoints = srfPts = self.vertices
         print ("ok grid points")
-        datap = utsdf.computeSDF(N.ascontiguousarray(verts, dtype=N.float32),N.ascontiguousarray(tris, dtype=N.int32))
+        datap = utsdf.computeSDF(numpy.ascontiguousarray(verts, dtype=numpy.float32),N.ascontiguousarray(tris, dtype=numpy.int32))
         print ("ok computeSDF")
         data = utsdf.createNumArr(datap,size)
         volarr = data[:]
@@ -2706,8 +2707,8 @@ class  Compartment(CompartmentList):
         print ("ok2 ",dim1,dim)
         size = dim1*dim1*dim1
          #can be 16,32,64,128,256,512,1024
-        verts = N.array(self.vertices,dtype='f')
-        tris = N.array(self.faces,dtype="int")
+        verts = numpy.array(self.vertices,dtype='f')
+        tris = numpy.array(self.faces,dtype="int")
         utsdf.setParameters(int(dim),0,1,[0,0,0,0,0,0])#size, bool isNormalFlip, bool insideZero,bufferArr
         print ("ok3")
 
@@ -2759,6 +2760,10 @@ class  Compartment(CompartmentList):
         It is simply there as a safeguard.
         """
 #        from autopack.Environment import Grid
+#        if self.grid_type == "halton" :
+#            from autopack.Grid import HaltonGrid as Grid
+#        else :
+#            from autopack.Grid import Grid         
         from autopack.Environment import Grid  
         from autopack.Grid import gridPoint
 
@@ -2778,7 +2783,7 @@ class  Compartment(CompartmentList):
         corners = boundingBox
 
         # Grid initialization referenced from getSurfaceInnerPointsJordan()
-        grid = Grid()
+        grid = Grid()#setup=False)
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing
         grid.gridVolume, grid.nbGridPoints = grid.computeGridNumberOfPoint(boundingBox, spacing)
@@ -2787,13 +2792,14 @@ class  Compartment(CompartmentList):
         gridPtsPerEdge = grid.nbGridPoints # In the form [nx, ny, nz]
 
         # Pre-allocates a gridPoint object for every single point we have in our grid.
+        # is this necessary ?
         gridPoints = []
         i = 0
         for point in points:
             gridPoints.append(gridPoint(i,point,isPolyhedron = False))
             i += 1
         assert len(gridPoints) == len(points)
-
+        
         # Make a precomputed cube of coordinates and corresponding distances
         distanceCube,distX,distY,distZ = makeMarchingCube(gridSpacing,radius)
         # Flatten and combine these arrays. This is easier to iterate over.
@@ -3003,7 +3009,7 @@ class  Compartment(CompartmentList):
 
         return insidePoints, surfacePoints
 
-    def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1,halton=True):
+    def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
         """
         Only computes the inner point. No grid.
         This is independant from the packing. Help build ingredient sphere tree and representation.
@@ -3011,7 +3017,7 @@ class  Compartment(CompartmentList):
         - Uses Jordan raycasting to determine inside/outside (defaults to 1 iteration, can use 3 iterations)
         """                
 #        from autopack.Environment import Grid        
-        if halton :
+        if self.grid_type == "halton" :
             from autopack.Grid import HaltonGrid as Grid
         else :
             from autopack.Grid import Grid         
@@ -3028,76 +3034,54 @@ class  Compartment(CompartmentList):
         xr,yr,zr = boundingBox[1] # upper right bounding box corner
         # distToClosestSurf is set to self.diag initially
         grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
-        grid.distToClosestSurf = [diag]*nbPoints # Creates distToClosestSurf, a list where every element is the grid diagonal
+        grid.distToClosestSurf = numpy.ones(nbPoints)*diag# Creates distToClosestSurf, a list where every element is the grid diagonal
         distances = grid.distToClosestSurf
         idarray = grid.gridPtId
         diag = grid.diag
         
         # Get surface points using bhtree (stored in bht and OGsrfPtsBht)
         # otherwise, regard vertices as surface points.
-        from bhtree import bhtreelib
+#        from bhtree import bhtreelib
+        from scipy import spatial
         self.ogsurfacePoints = self.vertices[:] # Makes a copy of the vertices and vnormals lists
         self.ogsurfacePointsNormals = self.vnormals[:] #helper.FixNormals(self.vertices,self.faces,self.vnormals,fn=self.fnormals)
         mat = helper.getTransformation(self.ref_obj)
         surfacePoints = srfPts = self.ogsurfacePoints
-        self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
 
+        #self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+        self.OGsrfPtsBht = bht = spatial.cKDTree(tuple(srfPts),leafsize=10) 
+       
         res = numpy.zeros(len(srfPts),'f')
         dist2 = numpy.zeros(len(srfPts),'f')
         number = self.number # Integer when compartment is added to a Environment. Positivefor surface pts. negative for interior points
         insidePoints = []
         grdPos = grid.masterGridPositions
-        returnNullIfFail = 0
+        closest = bht.query(tuple(grdPos))
+
+        self.closestId = closest[1]
+        new_distances =  closest[0]
+        mask = distances[:len(grdPos)] > new_distances
+        nindices  = numpy.nonzero(mask)
+        distances[nindices] = new_distances[nindices]
+
+        #returnNullIfFail = 0
         t1=time()
-        center = helper.getTranslation( self.ref_obj )
+        #center = helper.getTranslation( self.ref_obj )
         helper.resetProgressBar()
-        if display :
-            cyl2 = helper.oneCylinder("ray",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0)
-            if ray == 3 :
-                cyl1 = helper.oneCylinder("ray2",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0)
-                cyl3 = helper.oneCylinder("ray3",[0.,0.,0.],[1.0,1.0,1.0],radius=20.0) 
-                helper.changeObjColorMat(cyl1,(1.,1.,1.))
-                helper.changeObjColorMat(cyl3,(1.,1.,1.))
         # Walks through every point, determine inside/outside
         for ptInd in xrange(len(grdPos)):#len(grdPos)):
             inside = False # inside defaults to False (meaning outside), unless evidence is found otherwise.
-            t2=time()
-            gx, gy, gz = grdPos[ptInd]
-            if display :
-                helper.updateOneCylinder("ray",grdPos[ptInd],grdPos[ptInd]+(numpy.array([1.1,0.,0.])*spacing*10.0),radius=10.0)
-                helper.changeObjColorMat(cyl2,(1.,1.,1.))
-                helper.update()
-            intersect, count = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[1.1,0.,0.], diag, count = True )
-            r= ((count % 2) == 1)
-            if ray == 3 :
-                if display :
-                    helper.updateOneCylinder("ray2",grdPos[ptInd],grdPos[ptInd]+(numpy.array([0.,0.0,1.1])*spacing*10.0),radius=10.0)
-                    helper.changeObjColorMat(cyl1,(1.,1.,1.))
-                    helper.update()
-                intersect2, count2 = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[0.,0.,1.1], diag, count = True )
-                center = helper.rotatePoint(helper.ToVec(center),[0.,0.,0.],[1.0,0.0,0.0,math.radians(33.0)])
-                if display :
-                    helper.updateOneCylinder("ray3",grdPos[ptInd],grdPos[ptInd]+(numpy.array([0.,1.1,0.])*spacing*10.0),radius=10.0)
-                    helper.changeObjColorMat(cyl3,(1.,1.,1.))
-                    helper.update()
-                intersect3, count3 = helper.raycast(self.ref_obj, grdPos[ptInd], grdPos[ptInd]+[0.,1.1,0.], diag, count = True )
-                if r :
-                   if (count2 % 2) == 1 and (count3 % 2) == 1 :
-                       r=True
-                   else : 
-                       r=False
-            if r : # odd inside
-                inside = True
-                if inside :
-                    if display :
-                        helper.changeObjColorMat(cyl2,(1.,0.,0.))
-                        if ray == 3 :
-                            helper.changeObjColorMat(cyl1,(1.,0.,0.))
-                            helper.changeObjColorMat(cyl3,(1.,0.,0.))    
+            #t2=time()
+            coord = [grdPos.item((ptInd,0)),grdPos.item((ptInd,1)),grdPos.item((ptInd,2))]#grdPos[ptInd]
+            insideBB  = self.checkPointInsideBB(coord,dist=new_distances.item(ptInd))
+            if insideBB:
+                r=self.checkPointInside_rapid(coord,diag,ray=ray)
+                if r : # odd inside
                     #idarray[ptInd] = -number
                     insidePoints.append(grdPos[ptInd]) # Append the index to the list of inside indices.
             p=(ptInd/float(len(grdPos)))*100.0
-            helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
+            if (ptInd % 100 ) == 0 :
+                helper.progressBar(progress=int(p),label=str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside))
         print('total time', time()-t1)
         return insidePoints, surfacePoints
 
@@ -3129,8 +3113,8 @@ class  Compartment(CompartmentList):
         print ("ok2")
         size = dim1*dim1*dim1
         from UTpackages.UTsdf import utsdf        
-        verts = N.array(self.vertices,dtype='f')
-        tris = N.array(self.faces,dtype="int")
+        verts = numpy.array(self.vertices,dtype='f')
+        tris = numpy.array(self.faces,dtype="int")
         utsdf.setParameters(dim,0,1,[0,0,0,0,0,0])#size, bool isNormalFlip, bool insideZero,bufferArr
         surfacePoints = srfPts = self.vertices
         print ("ok grid points")
