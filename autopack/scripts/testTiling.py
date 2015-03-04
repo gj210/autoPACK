@@ -129,6 +129,9 @@ class Hexa:
         self.threshold = 500.0
         self.pos=center
         self.rejected=False
+        self.mat = numpy.identity(4)
+        if not len(rotation) :
+            rotation = numpy.identity(4)
         if len(rotation):
             self.mat = numpy.array(rotation)#.transpose()
             self.mat[:3, 3] = center            
@@ -163,6 +166,7 @@ class Hexa:
         D=2*radius
         dY=D/4.0
         dX=math.sqrt(3)*dY
+        self.innerR=dX
         pcpalAxis=[0,0,1]
         hexc=coordinates=numpy.array([[0,2.0*dY,0.0],#up
                     [dX,dY,0],#right-up
@@ -349,7 +353,7 @@ class Hexa:
         return numpy.nonzero(self.free_pos)[0][0]
 
 class Tilling:
-    def __init__(self,v,f,vn,inputMesh,hradius,init_seed=12):
+    def __init__(self,v,f,vn,inputMesh,hradius,init_seed=12,inputConstraint=None):
         self.HEXAGON_FREE=[]#[iedge_w,]
         self.HEXAGON=[]
         self.ALL_HEXAGON=[]
@@ -357,24 +361,48 @@ class Tilling:
         self.all_pos_tree=None
         self.area = 0
         self.surface_covered = 0
-        if not len (v):
+        self.v=[]
+        self.f=[]
+        self.vn=[]
+        self.vtree=None
+        self.rc=None
+        self.inputMesh = inputMesh
+        self.constraintMesh = inputConstraint
+        if not len (v) and inputMesh!=None:
             f,v,vn = helper.DecomposeMesh(input_mesh,edit=False,copy=False,tri=True,transform=True)
             vn,fn,area=getFaceNormalsArea(v, f)
             self.area = sum(area)
-        self.v=v
-        self.f=f
-        self.vn=vn
-        self.vtree= spatial.cKDTree(v, leafsize=10)
-        self.rc = utils.GeRayCollider()
-        self.rc.Init(input_mesh)
+            self.v=v
+            self.f=f
+            self.vn=vn
+            self.vtree= spatial.cKDTree(v, leafsize=10)
+            self.rc = utils.GeRayCollider()
+            self.rc.Init(input_mesh)
+        elif inputConstraint != None :
+            f,v,vn = helper.DecomposeMesh(inputConstraint,edit=False,copy=False,tri=True,transform=True)
+            vn,fn,area=getFaceNormalsArea(v, f)
+#            self.area = sum(area)
+            self.v=v
+            self.f=f
+            self.vn=vn
+            self.vtree= spatial.cKDTree(v, leafsize=10)
+            self.rc = utils.GeRayCollider()
+            self.rc.Init(inputConstraint)            
         self.hexamer_radius=hradius#55
         self.alpha = hradius# (hradius/2.)*math.sqrt(3)#or radius 47
         self.sphs=[]
         self.distance_threshold = [self.hexamer_radius*1.5,self.hexamer_radius*1.85]
         self.display = True
         self.hexa_area = ((3.0*math.sqrt(3.0))/2.0)*(self.alpha*self.alpha)
+        D=2*hradius
+        dY=D/4.0
+        dX=math.sqrt(3)*dY
+        self.innerR=dX
         numpy.random.seed(init_seed)#for gradient
         seed(init_seed)
+
+    def getAllPos(self,):
+        return [h.pos for h in self.HEXAGON]
 
     def getFreePos(self,weight=False):
         T=self.all_pos_tree#spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
@@ -468,6 +496,67 @@ class Tilling:
         #only if angle > threshold
         pass
 
+    def constrainPosRot(self,next_pos,h=None,edge=0):
+        maxd=600.0
+        maxangle=25.0#degree
+        mat=numpy.identity(4)
+        #closest surface point. depending the distance rotate a little ?
+        distance,indice = self.vtree.query(next_pos)
+        print ("distance to closest surface point",distance)#,self.distance_threshold,self.alpha)
+        #X goes all the way to the surface and stop
+        #Y should curve
+        #check dx,dy 
+        reject=False
+        f=abs(next_pos[0])/self.innerR
+        print "dX pos factor is",f,math.floor(f),math.ceil(f)
+#        print "dX ",next_pos[0],next_pos[0]-self.v[indice][0]
+#        print "dY ",next_pos[1],next_pos[1]-self.v[indice][1]
+#        if abs(next_pos[0]) > abs(next_pos[1]) :#X direction
+            #do nothing until touch surface then stop growing that direction
+        if distance < 50.0 :
+            reject = True
+        elif abs(next_pos[0]) > 100.0 :#distance < 300.0 : #Y direction
+            #lut depedngin on how may radius we have
+            #
+            #increase the rotation angle accorind the surface ?
+            #calculate angle depedning on the distance
+            #angle = 10.0*(next_pos[0]/abs(next_pos[0]))#((abs(next_pos[0])/maxd)*maxangle)*(next_pos[1]/abs(next_pos[1]))#*-1.0#to get the sign            
+            angle = 5.0*(next_pos[0]/abs(next_pos[0]))#(((distance/maxd))*maxangle)*(next_pos[0]/abs(next_pos[0]))#*-1.0#to get the sign
+            #should use LUT
+            print ("angle next",angle)
+            #rotMat1 = euler_matrix(0.0,0.0,math.radians(30.0)).transpose()
+            rotMat2 = euler_matrix(0.0,math.radians(angle),0.0).transpose()
+            m=numpy.identity(4)
+            m[:3,:3]=h.mat[:3,:3]
+            rotMat = matrix(rotMat2)*matrix(m)
+            mat = numpy.array(rotMat)
+            #Hypothenus = 47.63
+            #opposite = Hypothenus*math.sin(angle)
+            #final vector is up (0,0,1)*R
+#            m=numpy.identity(4)
+#            m[:3,:3]=h.mat[:3,:3]
+#            tr_up=helper.ApplyMatrix([numpy.array([0.0,0.0,1.0]),],m)[0]
+            up=numpy.array([0.0,0.0,1.0])*47.63*math.sin(math.radians(angle))
+            new_pos = helper.ApplyMatrix([up,],mat)[0]*(next_pos[0]/abs(next_pos[0]))
+            next_pos = next_pos+new_pos
+            mat[:3, 3] = next_pos
+#            p = (h.neighboors_pos[edge]-h.pos)/2.0
+##            mat[:3, 3] = next_pos#helper.ApplyMatrix([next_pos,],mat)[0]
+#            #the position should be vector from neighbors rotated.
+#            #transfor the neighboors_pos
+#            ptToRot = (h.neighboors_pos[edge]-h.pos)/2.0#tr_edge[edge]
+#            print "rotate ptToRot",edge,ptToRot,h.neighboors_pos[edge],h.tr_edge[edge]
+#            n_pos = h.tr_edge[edge]+helper.ApplyMatrix([ptToRot,],mat)[0]
+#            print "rotate ptToRot to",n_pos
+#            #trasnform this one to actual position
+#            tr_n=helper.ApplyMatrix([n_pos,],h.mat)[0]
+#            print "rotate ptToRot applied mat ",tr_n
+        else :
+            next_pos[2]=0.0
+            print ("do nothing",next_pos)
+            pass
+        return indice,next_pos,reject,mat
+        
     def computePosRot(self,next_pos):
         distance,indice = self.vtree.query(next_pos)
         if self.rc.Intersect(helper.FromVec(numpy.array(next_pos)*100.0), helper.FromVec(next_pos)*-1, 100000):
@@ -492,6 +581,7 @@ class Tilling:
         mat = numpy.array(rotMat)#matrix(R)*matrix(rotMat))#
         mat[:3, 3] = newposition#+tr
         return indice,newposition,rotMat,mat
+
 
     def clearOccupied(self):
         i=len(self.HEXAGON)-1
@@ -519,6 +609,14 @@ class Tilling:
     #                    print HEXAGON[i].name+"not in big list"
                 
             i=i-1
+
+    def randomStart(self,point):
+        start=Hexa("hexa_"+str(len(self.HEXAGON)),point,self.hexamer_radius)
+        self.HEXAGON.append(start)
+        self.ALL_HEXAGON.append(start)
+        self.ALL_HEXAGON_POS.append(start.pos)
+        self.all_pos_tree = spatial.cKDTree(self.ALL_HEXAGON_POS, leafsize=10)
+        start.updateFreePos(self)
         
     def firstRandomStart(self):
         p = helper.advance_randpoint_onsphere(650,marge=math.radians(90.0),vector=[0,1,0])
@@ -572,7 +670,22 @@ class Tilling:
         i=self.getRndWeighted(w=w)#getSubWeighted()#getRndWeighted()
 #        i=randrange(len(pts))
 #        idh,edgid = ij(i)
-        indice,pos,rotMat,mata=self.computePosRot(pts[i])
+        if self.inputMesh != None :
+            indice,pos,rotMat,mata=self.computePosRot(pts[i])
+        elif self.constraintMesh != None :
+            start=self.HEXAGON[ids[i][0]]
+            indice,pos,reject,mata=self.constrainPosRot(pts[i],h=start,edge=ids[i][1])
+            indicetouse = self.ALL_HEXAGON.index(start)
+            if reject :
+                i=ids[i][1]
+                start.nvisit[i]+=1
+                if start.nvisit[i] >= 2 :
+                    start.free_pos[i]=0
+                return 1
+        else :
+            pos = pts[i]
+            rotMat = numpy.identity(4)
+            mata = numpy.identity(4)
         start=self.HEXAGON[ids[i][0]]
         indicetouse = self.ALL_HEXAGON.index(start)
         print "step ",start.name,indicetouse,ids[i][1],start.free_pos
@@ -630,8 +743,9 @@ class Tilling:
                     self.displayWeights(pts,colors)
                 asa+=1        
         print "elapsed time is ",time()-t1,len(self.ALL_HEXAGON)
-        self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
-        print (self.surface_covered*100.0)/self.area," % is covered"
+        if doarea:
+            self.surface_covered = self.hexa_area*len(self.ALL_HEXAGON)
+            print (self.surface_covered*100.0)/self.area," % is covered"
         helper.resetProgressBar()
         helper.progressBar(label="Tilling Complete in "+str(time()-t1)+" secs")
 
@@ -1217,15 +1331,18 @@ if not len(sel):
 else :
     input_mesh = sel[0]
 
+c_mesh = helper.getObject("envMesh")
 #
+input_mesh = None
 nmodels = 1
 for n in range(nmodels):
-    tiles=Tilling([],[],[],input_mesh,hexamer_radius,init_seed=n)   
-    tiles.firstRandomStart()
-    tiles.firstRandomStart()
-    tiles.firstRandomStart()
+    tiles=Tilling([],[],[],input_mesh,hexamer_radius,init_seed=n,inputConstraint=c_mesh)   
+#    tiles.firstRandomStart()
+#    tiles.firstRandomStart()
+#    tiles.firstRandomStart()
+    tiles.randomStart([0,0,0])
     tiles.display=True
-    tiles.tile(doarea=True,percantage_surface=60.0)
+    tiles.tile(countThreshold=500,doarea=False,percantage_surface=60.0)
 #    tiles.save("/Users/ludo/Downloads/autopack_ouput/hiv_experiment/ma_models/model_"+str(n)+".json")
 #    tiles.clear()
     
@@ -1594,3 +1711,4 @@ for n in range(nmodels):
 ##p=helper.ApplyMatrix([next_p,],MR)[0]
 
 #                execfile("/Users/ludo/Downloads/autopack_ouput/hiv_experiment/testTiling.py")
+#execfile("/opt/data/dev/autoPACK/autopack/scripts/testTiling.py")
