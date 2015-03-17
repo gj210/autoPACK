@@ -6,6 +6,7 @@ Created on Sun Jan 27 09:04:10 2013
 """
 import os
 import numpy
+import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant,KWDS

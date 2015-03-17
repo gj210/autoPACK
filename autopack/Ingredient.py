@@ -1013,9 +1013,10 @@ class Ingredient(Agent):
             self.mesh = meshObject
         if self.mesh is not None :
            self.getEncapsulatingRadius()
-#        if "encapsulatingRadius" in kw:
+        if "encapsulatingRadius" in kw:
             #we force the encapsulatingRadius
-#            self.encapsulatingRadius = kw["encapsulatingRadius"]
+            if autopack.helper.host != "3dsmax":
+                self.encapsulatingRadius = kw["encapsulatingRadius"]
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -1322,6 +1323,8 @@ class Ingredient(Agent):
         if self.vertices is None or not len(self.vertices) :
             if self.mesh :
                 helper = autopack.helper
+                if helper.host == "3dsmax" : 
+                    return
                 if mesh is None :
                     mesh = self.mesh
                 print ("getEncapsulatingRadius ",self.mesh,mesh )
@@ -1336,6 +1339,9 @@ class Ingredient(Agent):
     def getData(self):
         if self.vertices is None or not len(self.vertices) :
             if self.mesh :
+                helper = autopack.helper
+                if helper.host == "3dsmax" : 
+                    return
                 print ("getData ",self.mesh )
                 self.faces,self.vertices,vnormals = self.DecomposeMesh(self.mesh,
                                    edit=True,copy=False,tri=True) 

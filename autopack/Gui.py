@@ -2630,14 +2630,14 @@ class SubdialogViewer(uiadaptor):
         fctString["build"]="def buildIngr"+ingr.name+"(*args):\n"
         fctString["build"]+="\ttoggle = gui.getVal(gui.ingr_build['"+ingr.name+"'])\n"
         fctString["build"]+="\ttogglePrimitive = gui.getVal(gui.ingr_display_primitive['"+ingr.name+"'])\n"
-        fctString["build"]+="\tif toggle :gui.buildIngredient('"+ingr.name+"',togglePrimitive)\n"
+        fctString["build"]+="\tif toggle :gui.buildIngredient("+ingr.name+",togglePrimitive)\n"
         fctString["build"]+="\telse :gui.delIngr('"+ingr.name+"')\n"
         fctString["show"]="def showIngr"+ingr.name+"(*args):\n"
         fctString["show"]+="\ttoggle = gui.getVal(gui.ingr_display['"+ingr.name+"'])\n"
         fctString["show"]+="\ttogglePrimitive = gui.getVal(gui.ingr_display_primitive['"+ingr.name+"'])\n"
         fctString["show"]+="\tif toggle :\n"
         fctString["show"]+="\t\tgui.setVal(gui.ingr_build['"+ingr.name+"'],toggle)\n"        
-        fctString["show"]+="\t\tgui.buildIngredient('"+ingr.name+"',togglePrimitive)\n"
+        fctString["show"]+="\t\tgui.buildIngredient("+ingr.name+",togglePrimitive)\n"
         fctString["show"]+="\tgui.helper.toggleDisplay(gui.afviewer.orgaToMasterGeom["+ingr.name+"],toggle)\n"
         fctString["primitive"]= "def primIngr"+ingr.name+"(*args):\n\tgui.toglleIngrPrimitive("+ingr.name+")\n"
         ldic={"build":"buildIngr"+ingr.name,
@@ -2663,7 +2663,7 @@ class SubdialogViewer(uiadaptor):
         self.ingr_build[ingr.name] = self._addElemt(name=ingr.name+'Build',
                     width=hostWidth,height=10,alignement=a,#self.wc[1]
                     action=inr_cb,type="checkbox",icon=None,#self.buildIngredients
-                    variable=self.addVariable("int",1),value=1,label="----")
+                    variable=self.addVariable("int",0),value=0,label="----")
         inr_cb = self.getFunctionForWidgetCallBackDisplayBuild(ingr,"show")
         self.ingr_display[ingr.name] = self._addElemt(name=ingr.name+'Display',
                     width=hostWidth,height=10,alignement=a,#0
@@ -3056,6 +3056,8 @@ class SubdialogViewer(uiadaptor):
                 self.helper.toggleDisplay('%s_%s'%(o.name,e),toggle)
 
     def toggleOrganelSurfaceDisplay(self,*args):
+        if not self._show :
+            return
         for o in self.histoVol.compartments:
             rs =  o.surfaceRecipe
             if rs :
@@ -3065,10 +3067,12 @@ class SubdialogViewer(uiadaptor):
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                     if (toggle) : 
                         self.setVal(self.ingr_build[ingr.name],toggle)
-                        self.buildIngredient(ingr.name,togglePrimitive)
+                        self.buildIngredient(ingr,togglePrimitive)
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle)
 
     def toggleOrganelMatrixDisplay(self,*args):
+        if not self._show :
+            return
         for o in self.histoVol.compartments:
             ri =  o.innerRecipe
             if ri :
@@ -3078,10 +3082,12 @@ class SubdialogViewer(uiadaptor):
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                     if (toggle) : 
                         self.setVal(self.ingr_build[ingr.name],toggle)
-                        self.buildIngredient(ingr.name,togglePrimitive)
+                        self.buildIngredient(ingr,togglePrimitive)
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
                     
     def toggleCytoplasmeDisplay(self,*args):
+        if not self._show :
+            return
         toggle = self.getVal(self.compartments_display['cytoplasm'])
 #        self.helper.toggleDisplay(self.recipe+"_cytoplasm",toggle)
         r =  self.histoVol.exteriorRecipe
@@ -3092,10 +3098,12 @@ class SubdialogViewer(uiadaptor):
                 togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                 if (toggle) : 
                     self.setVal(self.ingr_build[ingr.name],toggle)
-                    self.buildIngredient(ingr.name,togglePrimitive)
+                    self.buildIngredient(ingr,togglePrimitive)
                 self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
                 
     def toggleOrganelDisplay(self,*args):
+        if not self._show :
+            return
         #too slow for blender...
         #check if they are build prior to toggle the display.
         for o in self.histoVol.compartments:
@@ -3110,7 +3118,7 @@ class SubdialogViewer(uiadaptor):
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                     if (toggle) : 
                         self.setVal(self.ingr_build[ingr.name],toggle)
-                        self.buildIngredient(ingr.name,togglePrimitive)
+                        self.buildIngredient(ingr,togglePrimitive)
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle)
             ri =  o.innerRecipe
             if ri :
@@ -3121,7 +3129,7 @@ class SubdialogViewer(uiadaptor):
                     togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                     if (toggle) : 
                         self.setVal(self.ingr_build[ingr.name],toggle)
-                        self.buildIngredient(ingr.name,togglePrimitive)
+                        self.buildIngredient(ingr,togglePrimitive)
                     self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
         toggle = self.getVal(self.compartments_display['cytoplasm'])
 #        self.helper.toggleDisplay(self.recipe+"_cytoplasm",toggle)
@@ -3133,7 +3141,7 @@ class SubdialogViewer(uiadaptor):
                 togglePrimitive = self.getVal(self.ingr_display_primitive[ingr.name])
                 if (toggle) : 
                     self.setVal(self.ingr_build[ingr.name],toggle)
-                    self.buildIngredient(ingr.name,togglePrimitive)
+                    self.buildIngredient(ingr,togglePrimitive)
                 self.helper.toggleDisplay(self.afviewer.orgaToMasterGeom[ingr],toggle) 
 
     def toglleIngrPrimitive(self,ingr):
@@ -3154,24 +3162,25 @@ class SubdialogViewer(uiadaptor):
         for wkey in self.ingr_build:
             toggle = self.getVal(self.ingr_build[wkey])
             togglePrimitive = self.getVal(self.ingr_display_primitive[wkey])
-            if toggle : #need to build
-                self.buildIngredient(wkey,togglePrimitive)
-            else : 
-                self.delIngr(wkey) #should we delete it ?
+#            if toggle : #need to build
+#                self.buildIngredient(wkey,togglePrimitive)
+#            else : 
+#                self.delIngr(wkey) #should we delete it ?
                 
-    def buildIngredient(self,ingrname,primitive):
+    def buildIngredient(self,ingr,primitive):
+#        return
        #for this we need to change the way result are represented in AF.
        #modify the restore function to build a dictionary ingrname:[pos,rot, ]
 #       print (ingrname)
-        if self.ingredients is None :
-            self.loadResult()
-        if ingrname in self.ingredients :
+#        if self.ingredients is None :
+#            self.loadResult()
+#        if ingrname in self.ingredients :
 #            print ("build",ingrname)
-            ingr,pos,rot,matrices = self.ingredients[ingrname]
+#            ingr,pos,rot,matrices = self.ingredients[ingrname]
 #            print "pos",len(matrices)
             #self.afviewer.displayIngrResults(ingr,doSphere=False,doMesh=True)
 #            self.afviewer.displayInstancesIngredient(ingr, matrices)
-            self.afviewer.displayIngrResults(ingr,doSphere=primitive,doMesh=True)
+        self.afviewer.displayIngrResults(ingr,doSphere=primitive,doMesh=True)
     
     def toggleQuality(self,*args):
         print (args)
