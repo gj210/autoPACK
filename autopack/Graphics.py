@@ -496,17 +496,21 @@ class AutopackViewer:
         """     
         if self.master is None :
             self.displayPreFill()
+#            print ("displayPreFill OK")
         self.vi.resetProgressBar()  
         self.vi.progressBar(label="displayFill")
         if self.doPoints:
             self.vi.progressBar(label="displayPoints")
             self.callFunction(self.displayCompartmentsPoints)#()
             self.callFunction(self.displayFreePoints)#()
+#            print ("displayPoints OK")
         self.vi.progressBar(label="displayCytoplasmIngredients")
         self.callFunction(self.displayCytoplasmIngredients)#
+#        print ("displayCytoplasmIngredients OK")
         self.vi.progressBar(label="displayCompartmentsIngredients")
         self.callFunction(self.displayCompartmentsIngredients)#
-        
+#        print ("displayCompartmentsIngredients OK")
+#        print ("displayFill OK")
         if self.vi.host.find("blender") != -1 :
             p=self.vi.getObject("autopackHider")
             self.vi.setLayers(p,[1])
@@ -824,7 +828,7 @@ class AutopackViewer:
             if type(ingr.mesh) == type(None) :#mes_3d?
                 #try get it
                 ingr.mesh = self.helper.getObject(ingr.name) 
-            if ingr.mesh: # display mesh
+            if type(ingr.mesh) != type(None): # display mesh
                 if self.ViewerType != 'dejavu':
                     self.createIngrMesh(ingr)
                 else :
@@ -833,24 +837,30 @@ class AutopackViewer:
     def createIngrMesh(self,ingr):
         o = ingr.recipe.compartment
         geom = ingr.mesh   
-        print ("createIngrMesh ",ingr.name, ingr.mesh, self.helper.getName(ingr.mesh) )
+#        print ("createIngrMesh ",ingr.name, ingr.mesh, self.helper.getName(ingr.mesh) )
 # START New section added by Graham on July 16, 2012 replaces section below
 # This version allows the user to hide the parent geometry from the center of the scene very easily
 # This version MAY NOT be safe outside of Cinema 4D  Can we test it ???
+#        print ("try getting the parent and hide it",self.name+"ParentHiders")
         vParentHiders = self.vi.getObject(self.name+"ParentHiders") #g
         if vParentHiders is None : #g
             vParentHiders=self.vi.newEmpty(self.name+"ParentHiders",parent=self.master) #g
+#        print ("whats the parenthider")
+#        print (type(vParentHiders),self.name+"ParentHiders")
         if self.vi.host.find("blender") == -1 :
             self.vi.toggleDisplay(vParentHiders,False)
         parent = self.vi.getObject(ingr.name+"MeshsParent") 
-        
-        if parent is None : #g
+#        print ("whats the MeshsParent")
+        print (type(parent))
+        if type(parent) is type(None) : #g
+#            print ("before newEmpty")
             parent=self.vi.newEmpty(ingr.name+"MeshsParent", parent=vParentHiders)#g
-            print ("ok",ingr.name+"MeshsParent",vParentHiders,type(vParentHiders))            
+#            print ("ok")
+#            print (ingr.name+"MeshsParent",type(vParentHiders))            
 #            self.vi.reParent(parent,vParentHiders)
 #        else :
 #            self.vi.reParent(parent,vParentHiders)
-#        print("ingredient Mesh_3d to build",ingr.mesh_3d)#when reset should delete it
+#        print("ingredient Mesh_3d to build")#when reset should delete it
         if not hasattr(ingr,"mesh_3d") or ingr.mesh_3d is None :# or parent is None:  #mod by g
             #        if not hasattr(ingr,"mesh_3d") or ingr.mesh_3d is None or parent is None:  #off by g
             #            parent=self.vi.newEmpty(ingr.name+"MeshsParent", parent=self.orgaToMasterGeom[ingr]) # off by g
@@ -868,17 +878,21 @@ class AutopackViewer:
             material = None
             if ingr.color != None :
                 material=self.vi.retrieveColorMat(ingr.color)
-#            print ("parent is ", ingr.name+"MeshsParent",vParentHiders,parent)
+#            print ("parent is ", ingr.name+"MeshsParent")
+#            print (vParentHiders,parent)
             if hasattr(geom,"getFaces"):
                 polygon = self.vi.createsNmesh(str(name),geom.getVertices(),None,
                                        geom.getFaces(),
                                        material=None,
                                        parent=parent)  
             else :
+#                print ("build instance")
                 polygon = self.vi.newInstance(name,geom,
                                        material=material,
                                        parent=parent)#identity?
             #self.vi.toggleDisplay(parent,False)
+#            print ("ok polygon")
+#            print   (name,polygon,parent,type(polygon))            
             if not self.visibleMesh : 
                 self.vi.toggleDisplay(parent,False)
                 self.vi.toggleDisplay(polygon[0],False)
@@ -887,7 +901,8 @@ class AutopackViewer:
 #                self.orgaToMasterGeom[ingr]= polygon            
         if not hasattr(ingr,"mesh_3d") or ingr.mesh_3d is None:
             ingr.mesh_3d = parent#polygon[0] is this will work in other host
-        print ("after build",ingr.mesh_3d)
+        print ("after build")
+#        print (type(ingr.mesh_3d))
 #        self.vi.reParent(parent,vParentHiders)
         
     def displayIngrMesh(self,matrices,ingr):
@@ -992,24 +1007,25 @@ class AutopackViewer:
             elif ingredient.modelType=='Cylinders':
                 self.displayIngrCylinders(ingredient,{ingredient:verts},
                                           {ingredient:radii},visible=1)
-        if doMesh and matrices:
+        if doMesh and len(matrices):
+            #print ("build ipoly ",ingredient.o_name)
             dejavui = False
             #recipe can be orga name or cyto_
             #o =  ingredient.recipe.compartment
 #            geom = ingredient.mesh     
             if self.ViewerType != 'dejavu':
                 polygon = ingredient.mesh_3d
-                if polygon is None :
+                if type(polygon) is type(None) :
                     self.createIngrMesh(ingredient)
                     polygon = ingredient.mesh_3d
                 name = "Meshs_"+ingredient.name.replace(" ","_")
                 parent = self.vi.getObject(name)
-                if parent is None :
+                if type(parent) is type(None) :
                     parent=self.vi.newEmpty(name, parent=self.orgaToMasterGeom[ingredient])
 #                    self.vi.AddObject(parent)
                 instances = self.vi.getChilds(parent)  
                 dejavui = not len(instances)
-            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or dejavui:
+            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or not len(ingredient.ipoly) or dejavui:
                 color = [ingredient.color] if ingredient.color is not None else None
 #                print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
                 axis = numpy.array(ingredient.principalVector[:])
@@ -1028,7 +1044,7 @@ class AutopackViewer:
 #        geom = ingredient.mesh     
         if self.ViewerType != 'dejavu':
             polygon = ingredient.mesh_3d
-            if polygon is None :
+            if type(polygon) is type(None) :
                 self.createIngrMesh(ingredient)
                 polygon = ingredient.mesh_3d
             name = "Meshs_"+ingredient.name.replace(" ","_")
@@ -1106,8 +1122,9 @@ class AutopackViewer:
                     if ingr not in meshGeoms:
                         inds[ingr] = [ptInd]
                         meshGeoms[ingr] = [mat]
-                        if self.ViewerType != 'dejavu':
-                            self.createIngrMesh(ingr)
+                        if not hasattr(ingr,'mesh_3d') or type(ingr.mesh_3d) is type(None) :
+                            if self.ViewerType != 'dejavu':
+                                self.createIngrMesh(ingr)
                         #else :
                         #    geom.Set(materials=[ingr.color], inheritMaterial=0, visible=0)
                     else:
@@ -1237,7 +1254,7 @@ class AutopackViewer:
 #                    if self.ViewerType == 'dejavu': 
 #                        self.vi.AddObject(geom, parent=self.orgaToMasterGeom[ingr])
 #                    else :
-                    if not hasattr(ingr,'mesh_3d') or ingr.mesh_3d is None :
+                    if not hasattr(ingr,'mesh_3d') or type(ingr.mesh_3d) is type(None) :
                         if self.ViewerType == 'dejavu': 
                             ingr.mesh_3d = ingr.mesh
                         else :

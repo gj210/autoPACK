@@ -993,7 +993,7 @@ class Environment(CompartmentList):
         #
         self.nFill = 0
         self.cFill = 0
-        self.FillName=["null"]
+        self.FillName=["F"+str(self.nFill)]
         
         self.traj_linked = False
         ##do we sort the ingrediant or not see  getSortedActiveIngredients
@@ -3440,7 +3440,7 @@ class Environment(CompartmentList):
                 for elem in orgaresult[i] :
                     pos,rot,name,compNum,ptInd = elem
                     ingr = self.getIngrFromName(name,compNum)
-                    print ("inr,name,compNum",name,compNum,i,o.name,ingr)
+                    #print ("inr,name,compNum",name,compNum,i,o.name,ingr)
                     if ingr is not None:
                         molecules.append([pos, numpy.array(rot), ingr, ptInd])
                         if name not in ingredients :
