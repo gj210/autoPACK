@@ -255,6 +255,9 @@ class SphereTreeUI(uiadaptor):
         self.io = IOingredientTool()
         self.ingr = None
         self.setTarget()
+        self.compartment=None
+        self.inner=None
+        self.surface=None
         
     def CreateLayout(self):
         self._createLayout()
@@ -287,7 +290,16 @@ class SphereTreeUI(uiadaptor):
         self.BTN["clearPoint"]=self._addElemt(name="Clear Points",width=100,height=10,
                          action=self.clearPoints,type="button",icon=None,
                                      variable=self.addVariable("int",0))
-
+        self.BTN["display_distance"]=self._addElemt(name="display_distance",
+                        width=100,height=10,type="button",icon=None,
+                    action=self.displayGridAsSpheres,label="Disply grid distance as scaled spheres",
+                                     variable=self.addVariable("int",0))
+        self.BTN["display_distance_cube"]=self._addElemt(name="display_distance_cube",
+                        width=100,height=10,type="button",icon=None,
+                    action=self.displayGridAsCubes,label="Disply grid distance as colored cubes",
+                                     variable=self.addVariable("int",0))                                     
+                                     
+                                     
         self.available_mode=["bhtree_dot","sdf_fixdimension","sdf_interpolate","jordan_raycast","jordan_3raycast","kevin"]
         self.mode=self._addElemt(name="gridify_mode",
                                     value=self.available_mode,
@@ -354,23 +366,30 @@ class SphereTreeUI(uiadaptor):
         #this where we define the Layout
         #this wil make three button on a row
         self._layout = []
+        self.framesphereTree=[]
+        self.frameGridify=[]
         self._layout.append([self.LABELS["geom"],self.IN["geom"],])
-        self._layout.append([self.LABELS["geomtype"],self.typegeom])
-        self._layout.append([self.BTN["keepS"],])
-        self._layout.append([self.BTN["delkeepS"],])
-        self._layout.append([self.BTN["saveS"],])
-        self._layout.append([self.LABELS["scale"],self.IN["scale"]])
-        self._layout.append([self.LABELS["nbS"],self.IN["nbS"]])
-        self._layout.append([self.LABELS["ei"],self.eigenv])
+        self.framesphereTree.append([self.LABELS["geomtype"],self.typegeom])
+        self.framesphereTree.append([self.BTN["keepS"],])
+        self.framesphereTree.append([self.BTN["delkeepS"],])
+        self.framesphereTree.append([self.BTN["saveS"],])
+        self.framesphereTree.append([self.LABELS["scale"],self.IN["scale"]])
+        self.framesphereTree.append([self.LABELS["nbS"],self.IN["nbS"]])
+        self.framesphereTree.append([self.LABELS["ei"],self.eigenv])
+        frame = self._addLayout(id=196,name="SphereTree Build",elems=self.framesphereTree,collapse=False)#, type="tab")#,type="tab")
+        self._layout.append(frame)
         #separtor ?
-        self._layout.append([self.grid_step,self.BTN["gridify"],])
-        self._layout.append([self.LABELS["algo"],self.mode,])
-        self._layout.append([self.LABELS["gridtype"],self.grid_type,])
-        self._layout.append([self.rt_display,])
-        self._layout.append([self.useFix,])
-        self._layout.append([self.BTN["clearPoint"],])
+        self.frameGridify.append([self.grid_step,self.BTN["gridify"],])
+        self.frameGridify.append([self.LABELS["algo"],self.mode,])
+        self.frameGridify.append([self.LABELS["gridtype"],self.grid_type,])
+        self.frameGridify.append([self.rt_display,])
+        self.frameGridify.append([self.BTN["display_distance"],])
+        self.frameGridify.append([self.BTN["display_distance_cube"],])
+        self.frameGridify.append([self.useFix,])
+        self.frameGridify.append([self.BTN["clearPoint"],])
+        frame = self._addLayout(id=196,name="Grid Build",elems=self.frameGridify,collapse=False)#, type="tab")#,type="tab")
         self._layout.append([self.BTN["close"],])
-
+        self._layout.append(frame)
 #===============================================================================
 # callback
 #===============================================================================
@@ -924,6 +943,7 @@ class SphereTreeUI(uiadaptor):
             else :
                 self.helper.updateParticle(s,inner,None)
 #            self.helper.updateMesh(s2,vertices=surface)
+        self.compartment = o1
             
     def clearPoints(self,*args):
         name = self.helper.getName(self.object_target)
@@ -942,7 +962,82 @@ class SphereTreeUI(uiadaptor):
                 instances = self.helper.getChilds(s2)
                 [self.helper.deleteObject(o) for o in instances]
                 self.helper.deleteObject(s2) #is this dleete the child ?
-            
+ 
+#==============================================================================
+# display grid points values           
+#==============================================================================
+    def displayGridAsSpheres(self,*args,**kw):
+        if not hasattr(self.compartment,"grid_distances"):
+            return
+        ramp_color1=[1,0,0]
+        ramp_color2=[0,0,1]
+        ramp_color3=None
+        cutoff=60.0
+        distances = numpy.array(self.compartment.grid_distances)
+        positions = numpy.array(self.compartment.grid.masterGridPositions[:])
+        #map the color as well ?
+        from upy import colors as col
+        from DejaVu.colorTool import Map
+        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < 0#-cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=0#cutoff   
+        newd=numpy.append(distances,cutoff)
+        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
+#        colors = Map(distances, ramp)
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        base=self.helper.getObject(self.object_target_name+"distances_base")
+        if base is None :
+            base=self.helper.Sphere(self.object_target_name+"distances_base")[0]
+        p=self.helper.getObject(self.object_target_name+"distances")
+        if p is not None :
+            self.helper.deleteObject(p)#recursif?
+        p = self.helper.newEmpty(self.object_target_name+"distances")
+        sphs=self.helper.instancesSphere(self.object_target_name+"distances",positions,distances,base,colors,None,parent=p)
+         
+    def displayGridAsCubes(self,*args,**kw):
+        if not hasattr(self.compartment,"grid_distances"):
+            return
+        ramp_color1=[1,0,0]
+        ramp_color2=[0,0,1]
+        ramp_color3=None
+        cutoff=60.0
+        distances = numpy.array(self.compartment.grid_distances)
+        positions = numpy.array(self.compartment.grid.masterGridPositions[:])
+        #map the color as well ?
+        from upy import colors as col
+        from DejaVu.colorTool import Map
+        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
+        mask = distances > cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=cutoff
+        mask = distances < 0#-cutoff
+        ind=numpy.nonzero(mask)[0]
+        distances[ind]=0#cutoff   
+        newd=numpy.append(distances,cutoff)
+        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
+#        colors = Map(distances, ramp)
+#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
+        base=self.helper.getObject(self.object_target_name+"distances_base_cube")
+        if base is None :
+#            base=self.helper.Sphere(self.env.name+"distances_base")[0]
+            size = self.compartment.grid.gridSpacing
+            base=self.helper.box(self.object_target_name+"distances_base_cube",
+                                 center=[0.,0.,0.],size=[size,size,size])[0]
+        parent_cube=self.helper.getObject(self.object_target_name+"distances_cubes")
+        if parent_cube is not None :
+            self.helper.deleteObject(parent_cube)#recursif?
+        parent_cube = self.helper.newEmpty(self.object_target_name+"distances_cubes")
+        #sphs=self.helper.instancesSphere(self.env.name+"distances_cubes",positions,distances,base,colors,None,parent=p)
+        #can use cube also 
+        for i,p in enumerate(positions):
+            mat = self.helper.addMaterial("matcube"+str(i),colors[i])
+            c = self.helper.newInstance(self.object_target_name+"distances_cubes_"+str(i),base,
+                                      location=p,material=mat,parent=parent_cube)
+        
 #if __name__ == '__main__' or __name__ == 'c4d': 
 #    #create the gui
 #    if uiadaptor.host == "tk":
