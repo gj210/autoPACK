@@ -218,6 +218,8 @@ class  Compartment(CompartmentList):
         if "isOrthogonalBoudingBox" in kw :
             self.isOrthogonalBoudingBox = kw["isOrthogonalBoudingBox"]
         self.grid_type = "regular"
+        self.grid_distances = None#signed closest distance for each point
+        #TODO Add openVDB
         
     def reset(self):
         """reset the inner compartment data, surface and inner points"""
@@ -2690,6 +2692,8 @@ class  Compartment(CompartmentList):
         return array[idx]
 
 
+#TOD add and store the grid_distances  (closest distance for each point). not only inside / outside
+
     def getSurfaceInnerPoints_sdf(self,boundingBox,spacing,display = True,useFix=False):
         """
         Only compute the inner point. No grid.
@@ -2697,6 +2701,24 @@ class  Compartment(CompartmentList):
         """                
         print ("beforea import" )        
         print ("ok1" )
+        from autopack.Environment import Grid        
+        self.grid = grid = Grid()
+        grid.boundingBox = boundingBox
+        grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
+        helper.progressBar(label="BuildGRid")        
+        grid.gridVolume,grid.nbGridPoints = grid.computeGridNumberOfPoint(boundingBox,spacing)
+        grid.create3DPointLookup()
+        nbPoints = grid.gridVolume
+        grid.gridPtId = [0]*nbPoints
+        xl,yl,zl = boundingBox[0]
+        xr,yr,zr = boundingBox[1]
+        # distToClosestSurf is set to self.diag initially
+        grid.diag = diag = vlen( vdiff((xr,yr,zr), (xl,yl,zl) ) )
+        grid.distToClosestSurf = [diag]*nbPoints        
+        distances = grid.distToClosestSurf
+        idarray = grid.gridPtId
+        diag = grid.diag
+
         from UTpackages.UTsdf import utsdf
         #can be 16,32,64,128,256,512,1024
         if spacing not in [16,32,64,128,256,512,1024]:
@@ -2733,7 +2755,7 @@ class  Compartment(CompartmentList):
         #datap = utsdf.computeSDF(verts,tris)
         print ("ok computeSDF")
         data = utsdf.createNumArr(datap,size)
-
+        self.grid_distances = data
         nbGridPoints = [dim1,dim1,dim1]
         ijkPtIndice,pointArrayRaw = self.create3DPointLookup(nbGridPoints,spacing,dim)
         print ("ok grid",len(data),size)
@@ -2783,7 +2805,7 @@ class  Compartment(CompartmentList):
         corners = boundingBox
 
         # Grid initialization referenced from getSurfaceInnerPointsJordan()
-        grid = Grid()#setup=False)
+        self.grid = grid = Grid()#setup=False)
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing
         grid.gridVolume, grid.nbGridPoints = grid.computeGridNumberOfPoint(boundingBox, spacing)
@@ -3002,11 +3024,11 @@ class  Compartment(CompartmentList):
         insidePoints = [g.globalCoord for g in gridPoints if g.isOutside == False]
         # outsidePoints = [g.index for g in gridPoints if g.isOutside == True]
         surfacePoints = [g.globalCoord for g in gridPoints if g.representsPolyhedron == True]
-
+        #distance ?
         if superFine == True:
             print('Superfine was on and it identified ' + str(mismatchCounter) + ' mismatches.')
         print('Grid construction took ' + str(time() - startTime) + ' seconds for ' + str(len(faces)) + ' faces and ' + str(len(gridPoints)) + ' points.')
-
+        #what are the grid distance opinmt ?self.grid_distances
         return insidePoints, surfacePoints
 
     def getSurfaceInnerPoints_jordan(self,boundingBox,spacing,display = True,useFix=False,ray=1):
@@ -3022,7 +3044,7 @@ class  Compartment(CompartmentList):
         else :
             from autopack.Grid import Grid         
         # Initiate a default grid object and set its properties based on inputs and other calculations
-        grid = Grid(setup=False)
+        self.grid = grid = Grid(setup=False)
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing # = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         helper.progressBar(label="BuildGRid")        
@@ -3063,7 +3085,7 @@ class  Compartment(CompartmentList):
         mask = distances[:len(grdPos)] > new_distances
         nindices  = numpy.nonzero(mask)
         distances[nindices] = new_distances[nindices]
-
+        self.grid_distances = distances
         #returnNullIfFail = 0
         t1=time()
         #center = helper.getTranslation( self.ref_obj )
@@ -3092,7 +3114,7 @@ class  Compartment(CompartmentList):
         This is independant from the packing. Help build ingredient sphere tree and representation 
         """                
         from autopack.Environment import Grid        
-        grid = Grid()
+        self.grid = grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         helper.progressBar(label="BuildGRid")        
@@ -3138,7 +3160,7 @@ class  Compartment(CompartmentList):
         for i,d in enumerate(distFromSurf):
             if distance[i] > d:
                 distance[i] = d
-        
+        self.grid_distances = distance
         number = self.number
         insidePoints = []
         surfacePoints = []
@@ -3157,7 +3179,7 @@ class  Compartment(CompartmentList):
         This is independant from the packing. Help build ingredient sphere tree and representation 
         """                
         from autopack.Environment import Grid        
-        grid = Grid()
+        self.grid = grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         helper.progressBar(label="BuildGRid")        
@@ -3332,6 +3354,7 @@ class  Compartment(CompartmentList):
 
 #            print('inside time', time()-t2)
         print('total time', time()-t1)
+        self.grid_distances = distances
         return insidePoints, surfacePoints
 
     def getSurfaceInnerPointsPandaRay(self,boundingBox,spacing,display = True,useFix=False):
@@ -3343,7 +3366,7 @@ class  Compartment(CompartmentList):
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
         from autopack.Environment import Grid        
-        grid = Grid()
+        self.grid = grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         t=time()
@@ -3466,7 +3489,7 @@ class  Compartment(CompartmentList):
         from autopack.pandautil import PandaUtil
         pud = PandaUtil()
         from autopack.Environment import Grid        
-        grid = Grid()
+        self.grid = grid = Grid()
         grid.boundingBox = boundingBox
         grid.gridSpacing = spacing# = self.smallestProteinSize*1.1547  # 2/sqrt(3)????
         t=time()
