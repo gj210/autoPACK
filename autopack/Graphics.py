@@ -1025,7 +1025,7 @@ class AutopackViewer:
 #                    self.vi.AddObject(parent)
                 instances = self.vi.getChilds(parent)  
                 dejavui = not len(instances)
-            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or not len(ingredient.ipoly) or dejavui:
+            if not hasattr(ingredient,'ipoly') or ingredient.ipoly is None or dejavui:
                 color = [ingredient.color] if ingredient.color is not None else None
 #                print o.name+self.histo.FillName[self.histo.cFill]+ingredient.name
                 axis = numpy.array(ingredient.principalVector[:])
