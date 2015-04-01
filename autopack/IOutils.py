@@ -10,7 +10,7 @@ import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant,KWDS
-
+from upy import transformation as tr
 
 from xml.dom.minidom import getDOMImplementation 
 try :
@@ -182,7 +182,7 @@ class IOingredientTool(object):
     def __init__(self,env=None):
         super(IOingredientTool,self)
         self.env=env
-
+        self.use_quaternion = False
     def read(self,filename):
         fileName, fileExtension = os.path.splitext(filename)
         if fileExtension == '.xml':     
@@ -340,17 +340,24 @@ class IOingredientTool(object):
         if result :
             ingdic["results"]=[] 
             for r in ingr.results:  
+                #position
                 if hasattr(r[0],"tolist"):
                     r[0]=r[0].tolist()
+                #rotation
                 if hasattr(r[1],"tolist"):
                     r[1]=r[1].tolist()
-                ingdic["results"].append([r[0],r[1]])
+                R=r[1]
+                if self.use_quaternion:
+                    R=tr.quaternion_from_matrix(r[1]).tolist()
+                ingdic["results"].append([r[0],R])
             if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                 ingdic["nbCurve"]=ingr.nbCurve
                 for i in range(ingr.nbCurve):
                     lp = numpy.array(ingr.listePtLinear[i])
                     ingr.listePtLinear[i]=lp.tolist()                 
                     ingdic["curve"+str(i)] = ingr.listePtLinear[i]
+#            res=numpy.array(ingdic["results"]).transpose()
+#            ingdic["results"]=res.tolist()
         ingdic["name"]=ingr.o_name
         return ingdic
 
@@ -535,12 +542,13 @@ def save_asJson(env,setupfile,useXref=True,indent=True):
         print ("recipe saved to ",setupfile)
 
 def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
-                      grid=False,packing_options=False,indent=True):
+                      grid=False,packing_options=False,indent=True,quaternion=False):
         """
         Save the current environment setup as an json file.
         env is the environment / recipe to be exported.
         """
         io_ingr = IOingredientTool(env=env)
+        io_ingr.use_quaternion = quaternion
         env.setupfile = setupfile#+".json"provide the server?
         #the output path for this recipes files
         if env.setupfile.find("http") != -1 or env.setupfile.find("ftp")!= -1 :
@@ -1198,8 +1206,11 @@ def load_MixedasJson(env,resultfilename=None):
                           env.result_json["cytoplasme"]["ingredients"][name_ingr])
     #                    print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
-                    for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                    for r in iresults:#what if quaternion ?
+                        if len(r[1])==4 :#quaternion
+                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
 #                        ingr.results.append([numpy.array(r[0]),rot])
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     #organelle ingr
@@ -1227,7 +1238,10 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        if len(r[1])==4 :#quaternion
+                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
 #                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle matrix ingr
@@ -1249,7 +1263,10 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                        if len(r[1])==4 :#quaternion
+                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
 #                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     freePoint = []# pickle.load(rfile)

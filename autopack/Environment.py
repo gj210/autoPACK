@@ -1178,16 +1178,17 @@ class Environment(CompartmentList):
     def saveRecipe(self,setupfile,useXref=None,format_output="json",mixed=False,
                    kwds=None,result=False,
                    grid=False,packing_options=False,
-                   indent=False):
-        if result :
-            self.collectResultPerIngredient()
+                   indent=False,quaternion=False):
+#        if result :
+#            self.collectResultPerIngredient()
         if useXref is None :
             useXref = self.useXref
         if format_output == "json":
             if mixed:                
                 IOutils.save_Mixed_asJson(self,setupfile,useXref=useXref,
                                           kwds=kwds,result=result,indent=indent,
-                                          grid=grid,packing_options=packing_options)
+                                          grid=grid,packing_options=packing_options,
+                                          quaternion=quaternion)
             else :
                 IOutils.save_asJson(self,setupfile,useXref=useXref,indent=indent)
         elif format_output == "xml":
@@ -3130,7 +3131,7 @@ class Environment(CompartmentList):
 #            self.store_asJson(resultfilename=self.resultfile+".json") 
             self.saveRecipe(self.resultfile+".json",useXref=False,mixed=True,
                      kwds=["compNum"],result=True,
-                   grid=False,packing_options=False,indent=False)
+                   grid=False,packing_options=False,indent=False)#pdb ?
             #self.saveGridToFile_asTxt(self.resultfile+"grid")freePointsAfterFill
             #should we save to text as well
             print('time to save in fil5', time.time()-t2)
