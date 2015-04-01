@@ -863,6 +863,18 @@ class Ingredient(Agent):
         self.o_name = str(name)
         self.Type = Type
         self.pdb = pdb        #pmv ?
+        self.transform_sources = None
+        self.source=None
+        #should deal with source of the object
+        if "source" in kw :
+            sources = kw["source"].keys()
+            self.source= kw["source"]
+            if "pdb" in sources :
+                self.pdb =  kw["source"]["pdb"]
+                self.transform_sources= kw["source"]["transform"]
+        else :
+           self.source={"pdb":self.pdb,"transform":{"center":True}} 
+           self.transform_sources= {"transform":{"center":True}}
         self.color = color    # color used for sphere display
         if self.color == "None":
             self.color = None
@@ -1093,6 +1105,7 @@ class Ingredient(Agent):
                         "packingPriority":{"type":"float"}, 
                         "name":{"type":"string"}, 
                         "pdb":{"type":"string"}, 
+                        "source":{},
                         "color":{"type":"vector"},"principalVector":{"type":"vector"},
                         "meshFile":{"type":"string"}, 
                         "meshName":{"type":"string"}, 
@@ -1147,6 +1160,7 @@ class Ingredient(Agent):
                         "packingPriority":{}, 
                         "name":{}, 
                         "pdb":{}, 
+                        "source":{},
                         "color":{},
                         "principalVector":{"name":"principalVector","value":[0.,0.,0.],"default":[0.,0.,0.],"min":-1,"max":1,"type":"vector","description":"principalVector"},
                         "meshFile":{}, 

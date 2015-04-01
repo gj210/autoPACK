@@ -140,7 +140,7 @@ preferences = appdata+os.sep+"preferences"
 if not os.path.exists(preferences):
     os.makedirs(preferences)
 #we can now use some json/xml file for storing preferences and options.
-    
+#need others ?
 cache_dir={
 "geometries":cache_geoms,
 "results":cache_results,
