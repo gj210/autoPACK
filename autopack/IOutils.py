@@ -1207,11 +1207,11 @@ def load_MixedasJson(env,resultfilename=None):
     #                    print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:#what if quaternion ?
+                        rot = numpy.array(r[1]).reshape(4,4)
                         if len(r[1])==4 :#quaternion
-                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
-                        else :
-                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
-#                        ingr.results.append([numpy.array(r[0]),rot])
+                            if type(r[1][0]) == float :
+                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                #                        ingr.results.append([numpy.array(r[0]),rot])
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     #organelle ingr
     for i, orga in enumerate(env.compartments):
@@ -1238,10 +1238,10 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)
                         if len(r[1])==4 :#quaternion
-                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
-                        else :
-                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            if type(r[1][0]) == float :
+                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
 #                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle matrix ingr
@@ -1263,10 +1263,10 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
+                        rot = numpy.array(r[1]).reshape(4,4)
                         if len(r[1])==4 :#quaternion
-                            rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
-                        else :
-                            rot = numpy.array(r[1]).reshape(4,4)#numpy.matrix(mry90)*numpy.matrix(numpy.array(rot).reshape(4,4))
+                            if type(r[1][0]) == float :
+                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
 #                        ingr.results.append([numpy.array(r[0]),rot])
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     freePoint = []# pickle.load(rfile)
