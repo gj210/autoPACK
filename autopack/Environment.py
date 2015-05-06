@@ -106,7 +106,7 @@ try :
     from panda3d.ode import OdeBody, OdeMass
     from panda3d.ode import OdeSphereGeom
     from panda3d.core import NodePath
-    print ("Got Panda3D Except")
+    print ("Got Panda3D")
 except :
     panda3d = None
     print ("Failed to get Panda, because panda3d = ", panda3d)
@@ -1716,7 +1716,7 @@ class Environment(CompartmentList):
         """        
         aInteriorGrids = []
         aSurfaceGrids = []
-
+        #thread ?
         for compartment in self.compartments:
             if autopack.verbose :
                 print("in Environment, compartment.isOrthogonalBoudingBox =",
@@ -3306,7 +3306,7 @@ class Environment(CompartmentList):
 #                matCount = 0
 #                # Add safety check for C4D until we can get uPy working for this matrix to hbp rotation function?
 #                #            from c4d import utils   # Removed by Graham on July 10, 2012 because replaced with more recent Thesis code on July 5, 2012 below
-#                #what do you save everthing inleft hand ? and you actually dont use it ??
+#                #what do you save everthing in left hand ? and you actually dont use it ??
 #                # Note July 4, 2012: the results are saved as right handed (see 2, 1, 0 for h, p, b) and used for analysis tools
 #                # Note July 5, 2012: I found the better version we made and added it below to override the C4D version!
 #                for pos, rot, ingr, ptInd in o.molecules:
@@ -3548,7 +3548,7 @@ class Environment(CompartmentList):
             for i in range(ingr.nbCurve):
                 ingr.listePtLinear.append( ingrdic["curve"+str(i)] )
 #            print ("nbCurve?",ingr.nbCurve,ingrdic["nbCurve"])
-        return ingrdic["results"], ingr.o_name,ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
+        return ingrdic["results"], ingr.o_name,ingr.compNum,1,ingr.encapsulatingRadius#ingrdic["compNum"],1,ingrdic["encapsulatingRadius"]
 
     def load_asTxt(self,resultfilename=None):
 #        from upy.hostHelper import Helper as helper 

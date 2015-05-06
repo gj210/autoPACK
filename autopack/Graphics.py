@@ -478,10 +478,13 @@ class AutopackViewer:
 
     def prepareDynamic(self):
         #create two empty for static and moving object
+        self.movingMesh = self.vi.getObject("movingMesh")
         if self.movingMesh is None :
             self.movingMesh = self.vi.newEmpty("movingMesh")
 #            self.vi.addObjectToScene(None,self.movingMesh)
         self.vi.setRigidBody(self.movingMesh,**self.histo.dynamicOptions["moving"])
+        
+        self.staticMesh = self.vi.getObject("staticMesh")
         if self.staticMesh is None :
             self.staticMesh = self.vi.newEmpty("staticMesh")
 #            self.vi.addObjectToScene(None,self.staticMesh)

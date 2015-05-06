@@ -1158,6 +1158,7 @@ class  Compartment(CompartmentList):
         #now check if point inside 
         
         helper.resetProgressBar()
+        #the main loop
         for ptInd in xrange(len(grdPos)):#len(grdPos)):
             coord = [grdPos.item((ptInd,0)),grdPos.item((ptInd,1)),grdPos.item((ptInd,2))]
             insideBB  = self.checkPointInsideBB(coord,dist=new_distances.item(ptInd))

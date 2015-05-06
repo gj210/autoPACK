@@ -89,7 +89,7 @@ reporthook = None
 if helper is not None:        
     reporthook=helper.reporthook
 
-import numpy.oldnumeric as N
+#import numpy.oldnumeric as N
 degtorad = pi/180.
 KWDS = {   
                         "molarity":{"type":"float","name":"molarity","default":0,"value":0,"min":0,"max":500,"description":"molarity"}, 
@@ -317,7 +317,7 @@ def rotax( a, b, tau, transpose=1 ):
         val = sqrt(1.0/3.0)
         v = (val, val, val)
 
-    rot = N.zeros( (4,4), 'f' )
+    rot = numpy.zeros( (4,4), 'f' )
     # Compute 3x3 rotation matrix
 
     v2 = [v[0]*v[0], v[1]*v[1], v[2]*v[2]]
@@ -345,7 +345,7 @@ def rotax( a, b, tau, transpose=1 ):
     if transpose:
         return rot
     else:
-        return N.transpose(rot)
+        return numpy.transpose(rot)
 
 
 
