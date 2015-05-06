@@ -321,6 +321,7 @@ class IOingredientTool(object):
         return ingre
         
     def ingrJsonNode(self,ingr,result=False,kwds=None):
+        #force position instead of sphereFile
         ingdic={}
         if kwds==None :
             kwds=ingr.KWDS
@@ -1207,11 +1208,14 @@ def load_MixedasJson(env,resultfilename=None):
     #                    print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:#what if quaternion ?
-                        rot = numpy.array(r[1]).reshape(4,4)
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
                                 rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
                                 #                        ingr.results.append([numpy.array(r[0]),rot])
+                            else :
+                                rot = numpy.array(r[1]).reshape(4,4)
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)
                         result.append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     #organelle ingr
     for i, orga in enumerate(env.compartments):
@@ -1238,11 +1242,16 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)
+                        rot = numpy.identity(4)
+                        print r[1],len(r[1]),type(r[1][0])
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
                                 rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                            else :
+                                rot = numpy.array(r[1]).reshape(4,4)
 #                        ingr.results.append([numpy.array(r[0]),rot])
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
         #organelle matrix ingr
         ri =  orga.innerRecipe
@@ -1263,11 +1272,15 @@ def load_MixedasJson(env,resultfilename=None):
 #                        print ("rlen ",len(iresults),name_ingr)
 #                    ingr.results=[]
                     for r in iresults:
-                        rot = numpy.array(r[1]).reshape(4,4)
+                        rot = numpy.identity(4)
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
                                 rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                            else :
+                                rot = numpy.array(r[1]).reshape(4,4)
 #                        ingr.results.append([numpy.array(r[0]),rot])
+                        else :
+                            rot = numpy.array(r[1]).reshape(4,4)
                         orgaresult[abs(ingrcompNum)-1].append([numpy.array(r[0]),rot,ingrname,ingrcompNum,1])
     freePoint = []# pickle.load(rfile)
     try :
