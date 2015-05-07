@@ -412,12 +412,15 @@ class  Compartment(CompartmentList):
                 h =  dejavuHelper(vi="nogui")
                 dgeoms = h.read(filename)
                 v,vn,f = dgeoms.values()[0]["mesh"]
-                vn = self.getVertexNormals(v,f)                
+                vn=helper.normal_array(v,numpy.array(f))
+                #vn = self.getVertexNormals(v,f)                
                 return f,v,vn
             else : #if helper is not None:#neeed the helper
                 if helper.host == "dejavu" and helper.nogui:
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
+                    #fix the normal
+                    vn=helper.normal_array(v,numpy.array(f))
                     # print v[0],vn[0]
                     # vn = self.getVertexNormals(numpy.array(v),f[:])     
                     self.mesh = helper.createsNmesh(gname,v,None,f)[0]
@@ -1087,7 +1090,12 @@ class  Compartment(CompartmentList):
             self.overwriteSurfacePts = True
         if self.overwriteSurfacePts:
             self.ogsurfacePoints = self.vertices[:]
-            self.ogsurfacePointsNormals = self.vnormals[:]
+            self.ogsurfacePointsNormals = self.vnormals[:]#*numpy.array([0,0,0])+numpy.array([0,1,0])
+#            mat = helper.getTransformation(self.ref_obj)
+                #c4dmat = poly.GetMg()
+                #mat,imat = self.c4dMat2numpy(c4dmat)
+#            self.ogsurfacePointsNormals = autopack.helper.FixNormals(self.vertices,self.faces,self.vnormals)#,fn=self.fnormals)
+#            self.ogsurfacePointsNormals = helper.ApplyMatrix(numpy.array(self.normals),helper.ToMat(mat))            
         else :
             self.createSurfacePoints(maxl=env.grid.gridSpacing)
         

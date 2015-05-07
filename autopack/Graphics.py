@@ -1335,7 +1335,7 @@ class AutopackViewer:
 #                            self.vi.AddObject(parent)
                         if self.helper.host == 'dejavu':
                             parent = None                           
-                        print("rs instanciation of polygon",polygon)
+                        print("rs instanciation of polygon",polygon,parent)
                         axis = numpy.array(ingr.principalVector[:])
 #                        if self.vi.host.find("blender") != -1 and self.vi.instance_dupliFace and ingr.coordsystem == "left": 
 #                            if self.helper.getType(self.helper.getChilds(polygon)[0]) != self.helper.EMPTY:

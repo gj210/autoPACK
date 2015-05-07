@@ -1479,7 +1479,8 @@ class Ingredient(Agent):
                 dgeoms = h.read(filename)
                 #v,vn,f = dgeoms.values()[0]["mesh"]
                 self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
-                geom = h.createsNmesh(geomname,v,None,f)[0]
+                self.vnormals=helper.normal_array(self.vertices,numpy.array(self.faces))
+                geom = h.createsNmesh(geomname,self.vertices,None,self.faces)[0]
                 return geom
             else : #if helper is not None:#neeed the helper
                 if helper.host == "dejavu" and helper.nogui:
@@ -1487,7 +1488,8 @@ class Ingredient(Agent):
                     v,vn,f = dgeoms.values()[0]["mesh"]
 #                    vn = self.getVertexNormals(v,f)     
                     self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
-                    print (self.name,len(self.vertices))
+#                    print (self.name,len(self.vertices))
+                    self.vnormals=helper.normal_array(self.vertices,numpy.array(self.faces))
                     geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
                 else :
@@ -1505,7 +1507,8 @@ class Ingredient(Agent):
                             h =  dejavuHelper(vi="nogui")
                             dgeoms = h.read(filename)
                             #should combine both
-                            self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"]                    
+                            self.vertices,vnormals,self.faces = h.combineDaeMeshData(dgeoms.values())#dgeoms.values()[0]["mesh"] 
+                            self.vnormals=helper.normal_array(self.vertices,numpy.array(self.faces))
                 helper.read(filename)
 #                helper.update()
                 geom = helper.getObject(geomname)
