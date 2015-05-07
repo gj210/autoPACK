@@ -1265,7 +1265,7 @@ class Environment(CompartmentList):
                     return True
 
     def includeIngredientRecipe(self,ingr, include):
-        """
+        """lue
         Include or Exclude the given ingredient from the recipe. 
         (similar to an active state toggle)
         """
