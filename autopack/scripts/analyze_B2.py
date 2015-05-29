@@ -1,0 +1,295 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jun 26 10:59:01 2013
+
+@author: ludo
+Hoe to run autopack from xml file
+"""
+import os
+import sys
+import json
+import numpy as np
+import math
+#we need the modules from MGLToolsPckgs available from the command Lines
+#change accordingly your system, on Mac we can use the one distributed with C4D-ePMV
+#sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14_95696CEA/plugins/ePMV/mgl64/MGLToolsPckgs")
+#on Linux we can use the regular MGLTools
+sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs")
+
+#for plotting results
+from matplotlib import pyplot as plt
+from matplotlib.patches import Circle
+
+import autopack
+#where is autopack
+localdir = wrkDir = autopack.__path__[0]
+
+#autopack setup
+from autopack.Environment import Environment
+from autopack.Ingredient import KWDS as ingredients_parameters
+from autopack.Graphics import AutopackViewer as AFViewer
+from autopack.Analysis import AnalyseAP
+
+#get the helper
+#deal with geometry and such
+helper = autopack.helper
+if helper is None :
+    import upy
+    helperClass = upy.getHelperClass()
+    helper = helperClass(vi="nogui")   
+autopack.helper = helper
+#==============================================================================
+# some usefule function
+#==============================================================================
+
+   
+def clear(h,n=0,torestore=None):
+    h.reset()
+    gfile = None
+    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=gfile,rebuild=True ,
+                gridFileOut=None,previousFill=False)
+
+def activenmolecules(h,n):
+    for i,ingr in enumerate(h.exteriorRecipe.ingredients):
+        if i > n-1 :
+            ingr.completion=1.0
+            ingr.nbMol = 0
+        else :
+            ingr.completion=0.0
+
+def pack(h,seed,filename,eid):
+    h.fill5(seedNum=seed,verbose = 0,usePP=False)
+    h.collectResultPerIngredient()
+    todump=[[],[]]
+    #we can save only the object positions
+    todump[0] = [np.array(m[0]).tolist() for m in h.molecules]# [[ingr.nbMol,len(res)],[]]  POS     
+    with open(filename, 'w') as fp :
+        json.dump(todump,fp)      
+#    h.store_asJson(resultfilename=filename+"_results.json")
+    #we can specify the information we want in the result file    
+    h.saveRecipe(filename+"_results_mixed.json",useXref=False,mixed=True,result=True,
+                   kwds=["radii"],grid=False,packing_options=False,indent=False,quaternion=True)
+                   
+
+def one_exp(h,seed,eid=0,setn=1,periodicity=True,output=None):
+    clear(h)
+    if periodicity:
+        if output is None :
+            output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_3B_P_"
+        h.use_periodicity = True	
+        autopack.testPeriodicity = True
+        if threed :
+            autopack.biasedPeriodicity = [1,1,1]
+        else :                
+            autopack.biasedPeriodicity = [1,1,0]
+    else :
+        if output is None :
+            output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_3B_nP_"
+        h.use_periodicity = False	
+        autopack.testPeriodicity = False
+        autopack.biasedPeriodicity = [1,1,0]
+    if not os.path.exists(output):
+        os.makedirs(output)
+    pack(h,seed,output+os.sep+"run_"+str(setn)+"_"+str(eid),eid)
+
+def applyGeneralOptions(env,parameter_set,nset):
+    for k in parameter_set :
+        setattr(env,k,parameter_set[k][nset])
+        
+def applyGeneralIngredientsOptions(env,paremeter_set,nset):
+    #apply the key options to all ingredients
+    r = env.exteriorRecipe
+    if r :
+        for ingr in r.ingredients:
+            for k in paremeter_set :
+                setattr(ingr,k,paremeter_set[k][nset])
+            
+def applyIndividualIngredientsOptions(env,paremeter_liste,nset):
+    #apply the key options to specified ingredients
+    r = env.exteriorRecipe
+    if r :
+        for i,params in enumerate(paremeter_liste) :
+            for k in params :
+                setattr(r.ingredients[i],k,params[k][nset])
+                
+ 
+                
+#==============================================================================
+# autoPACK setup, and recipe loading
+#==============================================================================
+#define wher is out recipe setup file
+#setupfile = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureB1.1.xml"
+
+#Or we can also use the server for gathering the file
+recipe = "NM_Analysis_FigureB"
+version = "1.0"
+filename = autopack.RECIPES[recipe][version]["setupfile"]
+resultfile= autopack.RECIPES[recipe][version]["resultfile"]
+setupfile = autopack.retrieveFile(filename,cache="recipes")
+
+fileName, fileExtension = os.path.splitext(setupfile)
+n=os.path.basename(fileName)
+h = Environment(name=n)
+h.loadRecipe(setupfile)
+afviewer=None
+h.placeMethod="pandaBullet"
+h.encapsulatingGrid=0
+h.use_periodicity = True	
+autopack.testPeriodicity = True
+autopack.biasedPeriodicity = [1,1,1]
+analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
+h.analyse = analyse
+analyse.g.Resolution = 1.0
+#h.smallestProteinSize=30.0#get it faster? same result ?
+h.boundingBox=np.array(h.boundingBox)
+
+
+#==============================================================================
+# the parameter for a run
+#==============================================================================
+#all option can be access through a Dictionary that hold :
+#options name
+#options default value
+#options value range
+#options type e.g. Vector,Float, Int,String
+#to get the value for the current value we can use the python function getattr
+#to change the value of the option we can use the python function setattr
+#all the packing options (General Parameters) are found in h.OPTIONS
+for k in h.OPTIONS.keys():
+    print h.OPTIONS[k]
+#the main options to explore are probably:
+#smallestProteinSize float
+#pickWeightedIngr    boolean
+#pickRandPt          boolean
+#use_periodicity     boolean
+
+#all the ingredients/Object options (Individual Parameters) are found in Ingredients.KWDS
+for k in ingredients_parameters.keys():
+    print ingredients_parameters[k]
+#for instance packingPriority:
+# - an optional packing priority. If omited the priority will be based
+#    on the radius with larger radii first
+#    ham here: (-)packingPriority object will pack from high to low one at a time
+#    (+)packingPriority will be weighted by assigned priority value
+#    (0)packignPriority will be weighted by complexity and appended to what is left
+#    of the (+) values
+    
+
+
+#You should here prepare your parameter set I guess
+#one set should be a dictionary for the packing
+#one or several dictionary for the ingredients
+packing_parameter_set={
+"smallestProteinSize":[5.0,10.0,15.0],
+}
+#ingredients options you want to change for all objects
+ingredients_paremeter_set={
+'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+}
+#individuals options. This recipe has 5objetcs, thus you need 5 set of values
+#use a dictionary or a list
+individuals_ingredients_paremeter_set={
+"ext__Sphere_radius_100":{
+'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[2,4,6,8],
+},
+"ext__Sphere_radius_200":{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[2,4,6,8],},
+"ext__Sphere_radius_50":{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[10,14,16,18],},
+"ext__Sphere_radius_25p":{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[20,40,60,80],},
+"ext__Sphere_radius_25r":{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[20,40,60,80],},
+}
+individuals_ingredients_paremeter_liste=[
+{
+'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[2,4,6,8],
+},
+{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[2,4,6,8],},
+{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[5,10,15],},
+{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[20,40,60,80],},
+{'rejectionThreshold':[10,20,30],
+'packingPriority':[-10,0,10],
+'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'nbJitter':[5,10,15],
+'nbMol':[20,40,60,80],},
+]
+
+#a variable that define if you want to use the individual option
+use_individual_options = False 
+
+#there is a lot of different to manipulate the options, I just show you the dictionary way.
+#you can also comment/uncomment the option you don't want
+#
+#==============================================================================
+# experiment running
+#==============================================================================
+#prepapre an array of 200 seed
+seeds_i = analyse.getHaltonUnique(200)
+
+#define an ouput directory
+output="/home/ludo/Dev/testRun/"
+#numberofRun per numberofSet
+numberofSet=3
+numberofRun=2
+
+for pset in range(numberofSet):
+    count=0
+    #apply the options for the given set
+    applyGeneralOptions(h,packing_parameter_set,pset)
+    applyGeneralIngredientsOptions(h,ingredients_paremeter_set,pset)
+    if use_individual_options:
+        applyIndividualIngredientsOptions(h,individuals_ingredients_paremeter_liste,pset)    
+    #do the X run
+    for seed in seeds_i[:numberofRun] :
+        print "seed",seed
+        one_exp(h,seed,eid=count,setn=pset,periodicity=False,output=output)
+        count+=1
+
+#execfile("analyze_B2.py")
