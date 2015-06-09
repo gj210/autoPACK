@@ -81,7 +81,7 @@ def one_exp(h,seed,eid=0,setn=1,periodicity=True,output=None):
             output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_3B_nP_"
     if not os.path.exists(output):
         os.makedirs(output)
-    eid=str(eid).replace("(","").replace(")","").replace(", ","_")
+    setn=str(setn).replace("(","").replace(")","").replace(", ","_")
     pack(h,seed,output+os.sep+"run_"+str(setn)+"_"+str(eid),eid)
 
 def applyGeneralOptions(env,parameter_set,nset):
@@ -184,6 +184,7 @@ for k in ingredients_parameters.keys():
 #You should here prepare your parameter set I guess
 #one set should be a dictionary for the packing
 #one or several dictionary for the ingredients
+#Comment uncomment here
 packing_parameter_set=OrderedDict({
 #"smallestProteinSize":[5.0,10.0,15.0],
 "pickWeightedIngr":[1,0],
@@ -196,8 +197,18 @@ ingredients_paremeter_set=OrderedDict({
 #'packingPriority':[-10,0,10],
 #'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.0],[1.0,1.0,0.0],[1.,1.,0.]],
-'nbJitter':[5,10,20],
+'nbJitter':[10,20,30],
 })
+
+
+
+
+
+
+
+
+
+
 #individuals options. This recipe has 5objetcs, thus you need 5 set of values
 #use a dictionary or a list
 individuals_ingredients_paremeter_set=OrderedDict({
@@ -269,6 +280,9 @@ OrderedDict({'rejectionThreshold':[10,20,30],
 'nbMol':[20,40,60,80],}),
 ]
 
+
+
+
 #a variable that define if you want to use the individual option
 use_individual_options = False 
 
@@ -285,18 +299,22 @@ seeds_i = analyse.getHaltonUnique(200)
 output="/home/ludo/Dev/testRun/"
 #numberofRun per numberofSet containing numberofParameter
 numberofParameter=len(packing_parameter_set)+len(ingredients_paremeter_set)
-numberofSet=2 #because of the binary option
-numberofRun=2 #the number of seeds to use for one set, one set is a combination of options
+numberofSet=2 #because of the binary option, its correspondent to the possible number for the options,  e.g. True/False or 1,5 etc..
+numberofRun=1 #the number of seeds to use for one set, one set is a combination of options
 
 usecombinatorial=True
 
 if usecombinatorial:
+    #TODO:
+    #ideally we will have the combinatorial sort per possible range for option
+    #start with binary
+    #then smaller to bigger range
     from itertools import product
     #we can generate the number of set by  combinatorial
     sets=product(range(numberofSet),repeat=numberofParameter)
     for s in sets :
         count=0
-        print s
+        print s,str(s).replace("(","").replace(")","").replace(", ","_")
         applyGeneralOptions_product(h,packing_parameter_set,s)
         applyGeneralIngredientsOptions_product(h,ingredients_paremeter_set,s,offset=len(packing_parameter_set))
         for seed in seeds_i[:numberofRun] :
