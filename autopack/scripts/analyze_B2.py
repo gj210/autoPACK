@@ -298,7 +298,7 @@ if usecombinatorial:
         count=0
         print s
         applyGeneralOptions_product(h,packing_parameter_set,s)
-        applyGeneralIngredientsOptions_product(h,ingredients_paremeter_set,s)
+        applyGeneralIngredientsOptions_product(h,ingredients_paremeter_set,s,offset=len(packing_parameter_set))
         for seed in seeds_i[:numberofRun] :
             print "seed",seed
             one_exp(h,seed,eid=count,setn=s,periodicity=False,output=output)
