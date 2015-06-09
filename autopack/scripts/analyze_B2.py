@@ -10,6 +10,7 @@ import sys
 import json
 import numpy as np
 import math
+from collections import OrderedDict
 #we need the modules from MGLToolsPckgs available from the command Lines
 #change accordingly your system, on Mac we can use the one distributed with C4D-ePMV
 #sys.path.append("/Users/ludo/Library/Preferences/MAXON/CINEMA 4D R14_95696CEA/plugins/ePMV/mgl64/MGLToolsPckgs")
@@ -67,29 +68,20 @@ def pack(h,seed,filename,eid):
         json.dump(todump,fp)      
 #    h.store_asJson(resultfilename=filename+"_results.json")
     #we can specify the information we want in the result file    
-    h.saveRecipe(filename+"_results_mixed.json",useXref=False,mixed=True,result=True,
+    h.saveRecipe(filename+"_results.json",useXref=False,mixed=True,result=True,
                    kwds=["radii"],grid=False,packing_options=False,indent=False,quaternion=True)
                    
-
 def one_exp(h,seed,eid=0,setn=1,periodicity=True,output=None):
     clear(h)
-    if periodicity:
+    if h.use_periodicity:
         if output is None :
             output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_3B_P_"
-        h.use_periodicity = True	
-        autopack.testPeriodicity = True
-        if threed :
-            autopack.biasedPeriodicity = [1,1,1]
-        else :                
-            autopack.biasedPeriodicity = [1,1,0]
     else :
         if output is None :
             output="/Users/ludo/DEV/autoPACKresults/NM_Analysis_3B_nP_"
-        h.use_periodicity = False	
-        autopack.testPeriodicity = False
-        autopack.biasedPeriodicity = [1,1,0]
     if not os.path.exists(output):
         os.makedirs(output)
+    eid=str(eid).replace("(","").replace(")","").replace(", ","_")
     pack(h,seed,output+os.sep+"run_"+str(setn)+"_"+str(eid),eid)
 
 def applyGeneralOptions(env,parameter_set,nset):
@@ -112,19 +104,31 @@ def applyIndividualIngredientsOptions(env,paremeter_liste,nset):
             for k in params :
                 setattr(r.ingredients[i],k,params[k][nset])
                 
- 
-                
+def applyGeneralOptions_product(env,parameter_set,nset):
+    for i,k in enumerate(parameter_set) :
+        setattr(env,k,parameter_set[k][nset[i]])
+        
+def applyGeneralIngredientsOptions_product(env,paremeter_set,nset,offset=0):
+    #apply the key options to all ingredients
+    r = env.exteriorRecipe
+    if r :
+        for ingr in r.ingredients:
+            for i,k in enumerate(paremeter_set) :
+                setattr(ingr,k,paremeter_set[k][nset[i+offset]])   
+                             
 #==============================================================================
 # autoPACK setup, and recipe loading
 #==============================================================================
 #define wher is out recipe setup file
 #setupfile = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureB1.1.xml"
-
+#force downloading the latest recipe file
+autopack.forceFetch=True
 #Or we can also use the server for gathering the file
 recipe = "NM_Analysis_FigureB"
 version = "1.0"
 filename = autopack.RECIPES[recipe][version]["setupfile"]
 resultfile= autopack.RECIPES[recipe][version]["resultfile"]
+
 setupfile = autopack.retrieveFile(filename,cache="recipes")
 
 fileName, fileExtension = os.path.splitext(setupfile)
@@ -134,9 +138,10 @@ h.loadRecipe(setupfile)
 afviewer=None
 h.placeMethod="pandaBullet"
 h.encapsulatingGrid=0
-h.use_periodicity = True	
+#default for periodicity
+h.use_periodicity = False
 autopack.testPeriodicity = True
-autopack.biasedPeriodicity = [1,1,1]
+autopack.biasedPeriodicity = [1,1,0]
 analyse = AnalyseAP(env=h, viewer=afviewer, result_file=None)
 h.analyse = analyse
 analyse.g.Resolution = 1.0
@@ -165,7 +170,7 @@ for k in h.OPTIONS.keys():
 
 #all the ingredients/Object options (Individual Parameters) are found in Ingredients.KWDS
 for k in ingredients_parameters.keys():
-    print ingredients_parameters[k]
+    print k,ingredients_parameters[k]
 #for instance packingPriority:
 # - an optional packing priority. If omited the priority will be based
 #    on the radius with larger radii first
@@ -179,86 +184,89 @@ for k in ingredients_parameters.keys():
 #You should here prepare your parameter set I guess
 #one set should be a dictionary for the packing
 #one or several dictionary for the ingredients
-packing_parameter_set={
-"smallestProteinSize":[5.0,10.0,15.0],
-}
+packing_parameter_set=OrderedDict({
+#"smallestProteinSize":[5.0,10.0,15.0],
+"pickWeightedIngr":[1,0],
+"pickRandPt":[1,0],
+"use_periodicity":[1,0]
+})
 #ingredients options you want to change for all objects
-ingredients_paremeter_set={
-'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-}
+ingredients_paremeter_set=OrderedDict({
+'rejectionThreshold':[10,20,100],
+#'packingPriority':[-10,0,10],
+#'cutoff_boundary':[0,10,20],
+'jitterMax':[[0.1,0.1,0.0],[1.0,1.0,0.0],[1.,1.,0.]],
+'nbJitter':[5,10,20],
+})
 #individuals options. This recipe has 5objetcs, thus you need 5 set of values
 #use a dictionary or a list
-individuals_ingredients_paremeter_set={
-"ext__Sphere_radius_100":{
+individuals_ingredients_paremeter_set=OrderedDict({
+"ext__Sphere_radius_100":OrderedDict({
 'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
 'nbMol':[2,4,6,8],
-},
-"ext__Sphere_radius_200":{'rejectionThreshold':[10,20,30],
+}),
+"ext__Sphere_radius_200":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],},
-"ext__Sphere_radius_50":{'rejectionThreshold':[10,20,30],
+'nbMol':[2,4,6,8],}),
+"ext__Sphere_radius_50":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[10,14,16,18],},
-"ext__Sphere_radius_25p":{'rejectionThreshold':[10,20,30],
+'nbMol':[10,14,16,18],}),
+"ext__Sphere_radius_25p":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],},
-"ext__Sphere_radius_25r":{'rejectionThreshold':[10,20,30],
+'nbMol':[20,40,60,80],}),
+"ext__Sphere_radius_25r":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],},
-}
+'nbMol':[20,40,60,80],}),
+})
 individuals_ingredients_paremeter_liste=[
-{
+OrderedDict({
 'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
 'nbMol':[2,4,6,8],
-},
-{'rejectionThreshold':[10,20,30],
+}),
+OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],},
-{'rejectionThreshold':[10,20,30],
+'nbMol':[2,4,6,8],}),
+OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[5,10,15],},
-{'rejectionThreshold':[10,20,30],
+'nbMol':[5,10,15],}),
+OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],},
-{'rejectionThreshold':[10,20,30],
+'nbMol':[20,40,60,80],}),
+OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],},
+'nbMol':[20,40,60,80],}),
 ]
 
 #a variable that define if you want to use the individual option
@@ -275,21 +283,38 @@ seeds_i = analyse.getHaltonUnique(200)
 
 #define an ouput directory
 output="/home/ludo/Dev/testRun/"
-#numberofRun per numberofSet
-numberofSet=3
-numberofRun=2
+#numberofRun per numberofSet containing numberofParameter
+numberofParameter=len(packing_parameter_set)+len(ingredients_paremeter_set)
+numberofSet=2 #because of the binary option
+numberofRun=2 #the number of seeds to use for one set, one set is a combination of options
 
-for pset in range(numberofSet):
-    count=0
-    #apply the options for the given set
-    applyGeneralOptions(h,packing_parameter_set,pset)
-    applyGeneralIngredientsOptions(h,ingredients_paremeter_set,pset)
-    if use_individual_options:
-        applyIndividualIngredientsOptions(h,individuals_ingredients_paremeter_liste,pset)    
-    #do the X run
-    for seed in seeds_i[:numberofRun] :
-        print "seed",seed
-        one_exp(h,seed,eid=count,setn=pset,periodicity=False,output=output)
-        count+=1
+usecombinatorial=True
+
+if usecombinatorial:
+    from itertools import product
+    #we can generate the number of set by  combinatorial
+    sets=product(range(numberofSet),repeat=numberofParameter)
+    for s in sets :
+        count=0
+        print s
+        applyGeneralOptions_product(h,packing_parameter_set,s)
+        applyGeneralIngredientsOptions_product(h,ingredients_paremeter_set,s)
+        for seed in seeds_i[:numberofRun] :
+            print "seed",seed
+            one_exp(h,seed,eid=count,setn=s,periodicity=False,output=output)
+            count+=1  
+else :
+    for pset in range(numberofSet):
+        count=0
+        #apply the options for the given set
+        applyGeneralOptions(h,packing_parameter_set,pset)
+        applyGeneralIngredientsOptions(h,ingredients_paremeter_set,pset)
+        if use_individual_options:
+            applyIndividualIngredientsOptions(h,individuals_ingredients_paremeter_liste,pset)    
+        #do the X run
+        for seed in seeds_i[:numberofRun] :
+            print "seed",seed
+            one_exp(h,seed,eid=count,setn=pset,periodicity=False,output=output)
+            count+=1
 
 #execfile("analyze_B2.py")
