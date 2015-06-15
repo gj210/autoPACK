@@ -26,8 +26,7 @@ helper = helperClass(vi="nogui")
 print helper
 autopack.helper = helper
 #autopack.fixpath = True
-
-
+autopack.forceFetch = True
 
 #example callback to run on all ingredient
 def setJitter(ingr):
@@ -47,7 +46,10 @@ def excludeIngr(ingr):
     if ingr.o_name != "HIV1_ENV_4nco_0_1_1":
         ingr.recipe.delIngredient(ingr)
         print ingr.o_name,"removed"
-        
+ 
+doit=True    
+import datetime
+i = datetime.datetime.now()   
 #update the json dic if wrong center info
 if len(sys.argv) > 1 :
     filename = sys.argv[1]
@@ -57,11 +59,14 @@ if len(sys.argv) > 1 :
         v=sys.argv[2]
         filename = autopack.RECIPES[n][v]["setupfile"]
         resultfile= autopack.RECIPES[n][v]["resultfile"]
-    setupfile = autopack.retrieveFile(filename,cache="recipes")
+        setupfile = autopack.retrieveFile(filename,cache="recipes")
+    else :
+        setupfile =filename
     #overwrite result file
     resultfile="output_autopack_test"
     print ("ok use ",setupfile,filename)
     fileName, fileExtension = os.path.splitext(setupfile)
+    print fileName
     n=os.path.basename(fileName)
     recipe=n   
     h = Environment(name=n)     
@@ -73,22 +78,37 @@ if len(sys.argv) > 1 :
 #    h.overwriteSurfacePts = False
 #    h.compartments[0].overwriteSurfacePts = False
     #build the grid
-    h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
+    #change the grid size ?
+    h.smallestProteinSize = 35.0
+    h.freePtsUpdateThrehod=0.0
+    if doit :
+        h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
                               gridFileOut=None,previousFill=False)
 #    h.loopThroughIngr(excludeIngr)
 #    h.loopThroughIngr(excludeIngr)
 #    h.loopThroughIngr(excludeIngr)
 #    h.loopThroughIngr(excludeIngr)    
-    h.loopThroughIngr(setJitter)
-    h.loopThroughIngr(setJitter)
-    h.loopThroughIngr(setJitter)
-    h.loopThroughIngr(setJitter)
-            
-    h.fill5(verbose = 0,usePP=False)
-    h.collectResultPerIngredient()
-    h.saveRecipe("result_HIV_mixed_pdb.json",useXref=True,mixed=True,
-                     kwds=["source"],result=True,
+#    h.loopThroughIngr(setJitter)
+#    h.loopThroughIngr(setJitter)
+#    h.loopThroughIngr(setJitter)
+#    h.loopThroughIngr(setJitter)
+    
+        h.fill5(verbose = 0,usePP=False)
+        h.collectResultPerIngredient()
+        h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,
+                             kwds=["source"],result=True,
+                           grid=False,packing_options=False,indent=False,quaternion=True)  
+        h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,
+                     kwds=["source","positions","radii"],result=True,
                    grid=False,packing_options=False,indent=False,quaternion=True)
+    else :       
+        h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,result=False,
+                       grid=True,packing_options=True,indent=True,quaternion=True)
+                   
+                   
+#h.saveRecipe(fileName+"_mixed_pdb.json",useXref=useXref,mixed=True,
+#                     kwds=["source"],result=True,
+#                   grid=False,packing_options=False,indent=False,quaternion=True)                   
     #add nucleocapside...
     #add lipids ?
     #RNA?

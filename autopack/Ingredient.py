@@ -1023,12 +1023,12 @@ class Ingredient(Agent):
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
-        if self.mesh is not None :
-           self.getEncapsulatingRadius()
         if "encapsulatingRadius" in kw:
             #we force the encapsulatingRadius
             if autopack.helper.host != "3dsmax":
                 self.encapsulatingRadius = kw["encapsulatingRadius"]
+        if self.mesh is not None :
+           self.getEncapsulatingRadius()
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -1348,7 +1348,11 @@ class Ingredient(Agent):
         #encapsulating radius ?
         v=numpy.array(self.vertices,'f')
         l=numpy.sqrt((v*v).sum(axis=1))
-        self.encapsulatingRadius = float(max(l))
+        r = float(max(l))+15.0
+        print "self.encapsulatingRadius ",self.encapsulatingRadius,r
+        self.encapsulatingRadius = r
+#        if r != self.encapsulatingRadius:
+#            self.encapsulatingRadius = r
 
     def getData(self):
         if self.vertices is None or not len(self.vertices) :
@@ -4479,7 +4483,7 @@ class Ingredient(Agent):
 #                (self, jitterList, collD1, collD2) )#<??
 
 #            distance[ptInd] = max(0, distance[ptInd]*0.9)# ???
-            distance[ptInd] = distance[ptInd]-1.0
+            distance[ptInd] = distance[ptInd]-1.0#?
             self.rejectionCounter += 1
             if verbose :
                 print('Failed ingr:%s rejections:%d'%(
@@ -8177,9 +8181,9 @@ class GrowIngrediant(MultiCylindersIngr):
         
     def prepare_alternates(self,):
         if len(self.partners) :
-            self.alternates_names = self.partners_name#[p.name for p in self.partners.values()]
-            self.alternates_weight = [self.partners[name].weight for name in self.partners_name]
-            self.alternates_proba = [self.partners[name].ingr.proba_binding for name in self.partners_name]
+            self.alternates_names = self.partners.keys()#self.partners_name#[p.name for p in self.partners.values()]
+            self.alternates_weight = [self.partners[name].weight for name in self.partners]
+            self.alternates_proba = [self.partners[name].ingr.proba_binding for name in self.partners]
 
     def prepare_alternates_proba(self,):
         thw=[]
