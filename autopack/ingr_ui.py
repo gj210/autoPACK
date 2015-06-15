@@ -87,7 +87,7 @@ class Point:
     # Initialize new Points
 
     def __init__(self, coords, reference=None):
-        self.coords = coords
+        self.coords = coords#xyz
         self.n = len(coords)
         self.reference = reference
     # Return a string representation of this Point
@@ -343,7 +343,7 @@ class SphereTreeUI(uiadaptor):
                                               action=self.clusterN,type="inputInt",icon=None,
                                               value = self.factor,
                                               variable=self.addVariable("int",2),
-                                              mini=1,maxi=200,step=1)  
+                                              mini=1,maxi=200000,step=1)  
         self.IN["geom"]= self._addElemt(name='geometry',width=100,height=10,
                                               action=self.setTarget,type="inputStr",icon=None,
                                               value = self.object_target_name,
@@ -828,6 +828,7 @@ class SphereTreeUI(uiadaptor):
         clusters = []
         for p in initial: clusters.append(Cluster([p]))
         # Enter the program loop
+        count=0
         while True:
             # Make a list for each Cluster
             lists = []
@@ -858,6 +859,7 @@ class SphereTreeUI(uiadaptor):
                     biggest_shift = max(biggest_shift, shift)
             # If the biggest centroid shift is less than the cutoff, stop
             if biggest_shift < cutoff: break
+            count+=1
         # Return the list of Clusters
         return clusters
 

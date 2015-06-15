@@ -1058,7 +1058,7 @@ def load_XML(env,setupfile):
 
 def load_Json(env,setupfile):
     """
-    Setup the environment according the given xml file. 
+    Setup the environment according the given json file. 
     """
     if setupfile == None:
         setupfile = env.setupfile
