@@ -10,6 +10,7 @@ import sys
 import json
 import numpy as np
 import math
+import time
 from collections import OrderedDict
 #we need the modules from MGLToolsPckgs available from the command Lines
 #change accordingly your system, on Mac we can use the one distributed with C4D-ePMV
@@ -43,7 +44,41 @@ autopack.helper = helper
 # some usefule function
 #==============================================================================
 
-   
+def plotOneResult2D(h,filename):
+    width = h.boundingBox[1][0]#should be the boundary here ?
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    bbox = h.boundingBox
+    radius={}
+    ingrrot={}
+    ingrpos={}
+    pos_rad = [[np.array(m[0]).tolist(),m[2].encapsulatingRadius,m[2].color] for m in h.molecules]#jtrans, rotMatj, self, ptInd
+    for ingr in pos_rad: 
+        p=ingr[0]
+        r=ingr[1]
+#            for i,p in enumerate(ingrpos[ingr]): 
+#                print (p,radius[ingr])
+        ax.add_patch(Circle((p[0], p[1]),r,
+                        edgecolor="black", facecolor=ingr[2])) 
+        if autopack.testPeriodicity :
+            if p[0] < r:
+                ax.add_patch(Circle((p[0] + width,p[1]), r, facecolor=ingr[2]))
+            elif p[0] > (width-r):
+                ax.add_patch(Circle((p[0] - width,p[1]), r, facecolor=ingr[2]))
+            if p[1] < r:
+                ax.add_patch(Circle((p[0],p[1]+ width), r, facecolor=ingr[2]))
+            elif p[1] > (width-r):
+                ax.add_patch(Circle((p[0],p[1] - width), r, facecolor=ingr[2]))
+        ax.set_aspect(1.0)
+    plt.axhline(y=bbox[0][1], color='k')
+    plt.axhline(y=bbox[1][1], color='k')
+    plt.axvline(x=bbox[0][0], color='k')
+    plt.axvline(x=bbox[1][0], color='k')
+    plt.axis([bbox[0][0], bbox[1][0],
+                 bbox[0][1], bbox[1][1]])
+    plt.savefig(filename)
+    plt.close('all')     # closes the cu
+    
 def clear(h,n=0,torestore=None):
     h.reset()
     gfile = None
@@ -83,6 +118,7 @@ def one_exp(h,seed,eid=0,setn=1,periodicity=True,output=None):
         os.makedirs(output)
     setn=str(setn).replace("(","").replace(")","").replace(", ","_")
     pack(h,seed,output+os.sep+"run_"+str(setn)+"_"+str(eid),eid)
+    plotOneResult2D(h,output+os.sep+"run_"+str(setn)+"_"+str(eid)+"figure.png")
 
 def applyGeneralOptions(env,parameter_set,nset):
     for k in parameter_set :
@@ -304,6 +340,10 @@ numberofRun=1 #the number of seeds to use for one set, one set is a combination 
 
 usecombinatorial=True
 
+time_benchmark_file=output+"time_check.txt"
+timer=0.0
+time_data=""
+
 if usecombinatorial:
     #TODO:
     #ideally we will have the combinatorial sort per possible range for option
@@ -319,8 +359,11 @@ if usecombinatorial:
         applyGeneralIngredientsOptions_product(h,ingredients_paremeter_set,s,offset=len(packing_parameter_set))
         for seed in seeds_i[:numberofRun] :
             print "seed",seed
+            timer=time.time()
             one_exp(h,seed,eid=count,setn=s,periodicity=False,output=output)
             count+=1  
+            dT=time.time()-timer
+            time_data+=str(count)+"\t"+str(seed)+"\t"+str(dT)+"\n"
 else :
     for pset in range(numberofSet):
         count=0
@@ -332,7 +375,12 @@ else :
         #do the X run
         for seed in seeds_i[:numberofRun] :
             print "seed",seed
+            timer=time.time()
             one_exp(h,seed,eid=count,setn=pset,periodicity=False,output=output)
             count+=1
-
+            dT=time.time()-timer
+            time_data+=str(count)+"\t"+str(seed)+"\t"+str(dT)+"\n"
+f=open(time_benchmark_file,"w")
+f.write(time_data)
+f.close()
 #execfile("analyze_B2.py")
