@@ -1276,6 +1276,7 @@ class AutopackViewer:
                         polygon = ingr.mesh_3d
                         name = "Meshs_"+ingr.name.replace(" ","_")
                         parent = self.vi.getObject(name)
+                        #check if alive ?
                         if ingr not in matrices:
                             continue
                         else :
@@ -2330,6 +2331,21 @@ class AutopackViewer:
             ingr.bsph=self.vi.instancesSphere(names,ingr.positions[0],ingr.radii[0],
                             self.pesph,[ingr.color],self.sc,parent=parent)
 
+    def checkIngrPartnerProperties(self,ingr):
+        partners = ingr.getPartnersName()
+        allSph=[]        
+        for alternate in partners :
+            pta=ingr.partners[alternate].getProperties("pt1")        
+            ptb=ingr.partners[alternate].getProperties("pt2")
+            ptc=ingr.partners[alternate].getProperties("pt3")
+            ptd=ingr.partners[alternate].getProperties("pt4")
+            pte=ingr.partners[alternate].getProperties("st_pt1")
+            ptf=ingr.partners[alternate].getProperties("st_pt2")
+            allSph.extend([pta,ptb,ptc,ptd,pte,ptf])
+        for i,sph in enumerate(allSph) :
+            if sph is not None :
+                self.vi.Sphere("sph"+str(i),pos=sph,radius=8.0)
+        
 #from collada import *
 
 class ColladaExporter:

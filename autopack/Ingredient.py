@@ -60,7 +60,7 @@ import math
 from .ray import vlen, vdiff, vcross
 from RAPID import RAPIDlib
 from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix,superimposition_matrix,rotation_matrix,affine_matrix_from_points
-
+from autopack.transformation import quaternion_from_matrix
 #RAPID require a uniq mesh. not an empty or an instance
 #need to combine the vertices and the build the rapid model
 
@@ -501,6 +501,10 @@ class Partner:
 
     def getProperties(self,name):
         if name in self.properties:
+            #if name == "pt1":
+            #    return [0,0,0]
+            #if name == "pt2":
+            #    return [0,0,0]
             return self.properties[name]
         else :
             return None        
@@ -552,7 +556,7 @@ class Agent:
             self.partners_name=kw["partners_name"]
             if not self.partners_position:
                 for i in self.partners_name:
-                   self.partners_position.append([])
+                   self.partners_position.append([numpy.identity(4)])
         self.excluded_partners_name=[]
         if "excluded_partners_name" in kw :
             self.excluded_partners_name=kw["excluded_partners_name"]  
@@ -6792,7 +6796,7 @@ class GrowIngrediant(MultiCylindersIngr):
                     print ("no sphere points available with prev_alt",dihedral,nextPoint)
                     self.prev_alt = None
                     return None,False
-                    attempted+=1
+                    attempted+=1#?
                     continue
             elif alternate :
                 if marge_in is not None :
@@ -6805,6 +6809,8 @@ class GrowIngrediant(MultiCylindersIngr):
                     newPts,jtrans,rotMatj = self.place_alternate(alternate,ia,v,pt1,pt2)    
                     #found = self.check_alternate_collision(pt2,newPts,jtrans,rotMatj)
                     newPt = newPts[0]
+                    #attempted should be to safetycutoff
+                    attempted=safetycutoff
                     if newPt is None :
                         print ("no  points available place_alternate")
                         return None,False
@@ -6839,7 +6845,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         #print ("no second point not constraintMarge 1 ", marge)
                         #self.prev_alt = None
                         #return None,False
-                    if attempted % (self.rejectionThreshold/3) == 0 :
+                    if attempted % (self.rejectionThreshold/3) == 0 and not alternate:
                         marge+=1
                         attempted = 0
                         #need to recompute the mask
@@ -6971,7 +6977,7 @@ class GrowIngrediant(MultiCylindersIngr):
                             start_ingr = self.histoVol.getIngrFromName(start_ingr_name)
                             matrice = numpy.array(rotMatj)#.transpose()
                             matrice[3,:3] = jtrans
-                            newPts = self.get_alternate_starting_point(matrice.transpose(),alternate)
+                            newPts = self.get_alternate_starting_point(numpy.array(pt2).flatten(),newPt,alternate)
                             start_ingr.start_positions.append([newPts[0],newPts[1]])
                             start_ingr.nbMol+=1
                             #add a mol
@@ -6988,7 +6994,7 @@ class GrowIngrediant(MultiCylindersIngr):
                             #print ("no second point not constraintMarge 2 ", marge)
                             #return None,False
 #                            print ("upate marge because collision ", marge)
-                        if attempted %  (self.rejectionThreshold/3) == 0 :
+                        if attempted %  (self.rejectionThreshold/3) == 0 and not alternate:
                             marge+=1
                             attempted = 0 
                             #need to recompute the mask
@@ -7413,7 +7419,7 @@ class GrowIngrediant(MultiCylindersIngr):
                                 start_ingr = self.histoVol.getIngrFromName(start_ingr_name)
                                 matrice = numpy.array(rotMatj)#.transpose()
                                 matrice[3,:3] = jtrans
-                                newPts = self.get_alternate_starting_point(matrice.transpose(),alternate)
+                                newPts = self.get_alternate_starting_point(matrice,alternate)
                                 start_ingr.start_positions.append([newPts[0],newPts[1]])
                             return newPt,True
                         else : 
@@ -7704,8 +7710,8 @@ class GrowIngrediant(MultiCylindersIngr):
                             start_ingr = self.histoVol.getIngrFromName(start_ingr_name)
                             matrice = numpy.array(rotMatj)#.transpose()
                             matrice[3,:3] = jtrans
-                            newPts = self.get_alternate_starting_point(matrice.transpose(),alternate)
-                            start_ingr.start_positions.append([newPts[0],newPts[1]])
+                            snewPts = self.get_alternate_starting_point(matrice,alternate)
+                            start_ingr.start_positions.append([snewPts[0],snewPts[1]])
                             start_ingr.nbMol+=1
                             #add a mol
                         #we need to store 
@@ -8062,7 +8068,7 @@ class GrowIngrediant(MultiCylindersIngr):
 #        print("JitterPlace ingr Grow....................................................................")
         if type(self.compMask) is str :
             self.compMask = eval(self.compMask) 
-
+            self.prepare_alternates()
         success = True
         self.vi = autopack.helper
 #        if histoVol.afviewer != None :
@@ -8182,7 +8188,8 @@ class GrowIngrediant(MultiCylindersIngr):
     def prepare_alternates(self,):
         if len(self.partners) :
             self.alternates_names = self.partners.keys()#self.partners_name#[p.name for p in self.partners.values()]
-            self.alternates_weight = [self.partners[name].weight for name in self.partners]
+            #self.alternates_weight = [self.partners[name].weight for name in self.partners]
+            self.alternates_weight = [self.partners[name].ingr.weight for name in self.partners]
             self.alternates_proba = [self.partners[name].ingr.proba_binding for name in self.partners]
 
     def prepare_alternates_proba(self,):
@@ -8235,7 +8242,66 @@ class GrowIngrediant(MultiCylindersIngr):
         #alternates_names point to an ingredients id?
         return alt_name,i
 
+
+
     def get_alternate_position(self,alternate,alti,v,pt1,pt2):
+        length = self.partners[alternate].getProperties("length")
+        #rotation that align snake orientation to current segment        
+        rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
+                                           numpy.array(pt2).flatten(),
+                                           length = length)
+        #jtrans is the position between pt1 and pt2
+        prevMat = numpy.array(rotMatj)
+        #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
+        prevMat[3,:3] = numpy.array(pt1)#jtrans   
+        rotMatj = numpy.identity(4)
+        #oldv is v we can ether align to v or newv
+        newv = numpy.array(pt2) - numpy.array(pt1)
+        #use v ? for additional point ?
+        pta=self.partners[alternate].getProperties("pt1")        
+        ptb=self.partners[alternate].getProperties("pt2")
+        ptc=self.partners[alternate].getProperties("pt3")
+        toalign = numpy.array(ptc) -numpy.array(ptb)
+        m = numpy.array(rotVectToVect(toalign,newv)).transpose()
+        m[3,:3] = numpy.array(pt1)#jtrans
+        pts=autopack.helper.ApplyMatrix([ptb],m.transpose())#transpose ?
+        v = numpy.array(pt1)-pts[0]
+        m[3,:3] = numpy.array(pt1)+v# - (newpt1-pts[0])
+        
+        #rotMatj,jt=self.getJtransRot_r(numpy.array(ptb).flatten(),
+        #                                   numpy.array(ptc).flatten(),
+        #                                   length = length)
+        #rotMatj[3,:3] = -numpy.array(ptb)
+        #globalM1 = numpy.array(matrix(rotMatj)*matrix(prevMat))
+        #
+        #offset = numpy.array(ptb)+toalign/2.0
+        #npts=numpy.array([pta,ptb,offset,ptc])-numpy.array([ptb])
+        #pts=autopack.helper.ApplyMatrix(npts,globalM1.transpose())#transpose ?        
+        #trans = numpy.array(jtrans)-1.5*pts[1]-pts[2]
+        #now apply matrix and get the offset
+        #prevMat = numpy.array(globalM1)
+        #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
+        #prevMat[3,:3] = jtrans   
+        #npt2=autopack.helper.ApplyMatrix([ptb],prevMat.transpose())[0]
+        #offset = numpy.array(npt2) -numpy.array(pt1)
+        #jtrans=numpy.array(jtrans)-offset
+        #toalign = numpy.array(ptb) -numpy.array(pta)
+        #globalM2 = numpy.array(rotVectToVect(toalign,v))
+        #compare to superimposition_matrix
+        #print globalM1,quaternion_from_matrix(globalM1).tolist()
+        #print globalM2,quaternion_from_matrix(globalM2).tolist()
+        #center them
+        #c1=autopack.helper.getCenter([ptb,ptc])
+        #c2=autopack.helper.getCenter([pt1,pt2])
+        #globalM = superimposition_matrix(numpy.array([ptb,ptc])-c1,numpy.array([pt1,pt2])-c2)
+        #print globalM,quaternion_from_matrix(globalM).tolist()
+        rotMatj = numpy.identity(4)
+        rotMatj[:3,:3] = m[:3,:3].transpose()
+        jtrans = m[3,:3]
+        #print ("will try to place alterate at ",jtrans) 
+        return jtrans,rotMatj
+        
+    def get_alternate_position_p(self,alternate,alti,v,pt1,pt2):
         length = self.partners[alternate].getProperties("length")
         rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
                                            numpy.array(pt2).flatten(),
@@ -8244,26 +8310,65 @@ class GrowIngrediant(MultiCylindersIngr):
         #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
         prevMat[3,:3] = jtrans   
         rotMatj = numpy.identity(4)
+        
         localMR = self.partners_position[alti]
+        #instead use rotVectToVect from current -> to local ->
+        #align  p2->p3 vector to pt1->pt2
         globalM = numpy.array(matrix(localMR)*matrix(prevMat))
         jtrans = globalM[3,:3]
         rotMatj[:3,:3] = globalM[:3,:3]
         #print ("will try to place alterate at ",jtrans) 
         return jtrans,rotMatj
 
-    def get_alternate_starting_point(self,pMat,alternate):
-        pt1 = self.partners[alternate].getProperties("st_pt1")
-        pt2 = self.partners[alternate].getProperties("st_pt2") 
-        #trasform according current transformation
-#        rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
-#                                           numpy.array(pt2).flatten())
-#        prevMat = numpy.array(rotMatj)
-#        jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
-#        prevMat[3,:3] = jtrans   
-        newPts = autopack.helper.ApplyMatrix([pt1,pt2],pMat) #partner positions ?
+    def get_alternate_starting_point(self,pt1,pt2,alternate):
+        spt1 = self.partners[alternate].getProperties("st_pt1")
+        spt2 = self.partners[alternate].getProperties("st_pt2") 
+
+        length = self.partners[alternate].getProperties("length")
+        rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
+                                           numpy.array(pt2).flatten(),
+                                           length = length)
+        #jtrans is the position between pt1 and pt2
+        prevMat = numpy.array(rotMatj)
+        prevMat[3,:3] = numpy.array(pt1)#jtrans   
+        newv = numpy.array(pt2) - numpy.array(pt1)
+        ptb=self.partners[alternate].getProperties("pt2")
+        ptc=self.partners[alternate].getProperties("pt3")
+        toalign = numpy.array(ptc) -numpy.array(ptb)
+        m = numpy.array(rotVectToVect(toalign,newv)).transpose()
+        m[3,:3] = numpy.array(pt1)#jtrans
+        pts=autopack.helper.ApplyMatrix([ptb],m.transpose())#transpose ?
+        v = numpy.array(pt1)-pts[0]
+        m[3,:3] = numpy.array(pt1)+v
+        newPts=autopack.helper.ApplyMatrix([spt1,spt2],m.transpose())#transpose ?
         return newPts
-        
+
     def place_alternate(self,alternate,alti,v,pt1,pt2):
+        pta=self.partners[alternate].getProperties("pt1")        
+        ptb=self.partners[alternate].getProperties("pt2")
+        ptc=self.partners[alternate].getProperties("pt3")
+        ptd=self.partners[alternate].getProperties("pt4")
+        prevMat = numpy.identity(4)        
+        if ptb is not None :
+            rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
+                                               numpy.array(pt2).flatten())
+            toalign = numpy.array(ptb) -numpy.array(pta)
+            newv = numpy.array(pt2) - numpy.array(pt1)        
+            prevMat = numpy.array(rotVectToVect(toalign,newv))
+            newPts = autopack.helper.ApplyMatrix([ptc,ptd],prevMat.transpose()) #partner positions ?
+            prevMat[3,:3] = jtrans   
+        else :
+            newPt = self.pickHalton(pt1,pt2)
+            newPts=[newPt]
+            rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt2).flatten(),
+                                               numpy.array(newPt).flatten())
+            prevMat = numpy.array(rotMatj)
+            #jtrans=autopack.helper.ApplyMatrix([jtrans],prevMat.transpose())[0]
+            prevMat[3,:3] = jtrans   
+        rotMatj= numpy.identity(4)
+        return newPts,jtrans,rotMatj
+        
+    def place_alternate_p(self,alternate,alti,v,pt1,pt2):
         #previou transformation
 #        distance,mat = autopack.helper.getTubePropertiesMatrix(pt1,pt2)
 #        prevMat = numpy.array(mat)
