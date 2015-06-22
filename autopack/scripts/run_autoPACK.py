@@ -9,11 +9,21 @@ Created on Wed May  6 10:39:08 2015
 import sys
 import os
 import json
-from collections import OrderedDict
 
 #panda3d is there :
 #sys.path.append("/usr/lib/python2.7/dist-packages/")
-sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs")
+#LINUX
+#sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs")
+#Windows
+sys.path.append("C:\Program Files\MAXON\CINEMA 4D R16 Demo\plugins\ePMV\mgl64\MGLToolsPckgs")
+sys.path.append("C:\Program Files\MAXON\CINEMA 4D R16 Demo\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
+sys.path.append("C:\Program Files\MAXON\CINEMA 4D R16 Demo\plugins\ePMV\mgl64\MGLToolsPckgs\lib-tk")
+#run with C:\>C:\Python26\python.exe "C:\Program Files\MAXON\CINEMA 4D R16 Demo\plugins\ePMV\mgl64\MGLToolsPckgs\autopack\scripts\run_autoPACK.py"  "C:\Users\ludovic\Downloads\Mycoplasma1.5_1.json"
+
+try :
+    from collections import OrderedDict
+except :
+    from ordereddict import OrderedDict
 
 from autopack.Environment import Environment
 from json import encoder
@@ -26,7 +36,7 @@ helper = helperClass(vi="nogui")
 print helper
 autopack.helper = helper
 #autopack.fixpath = True
-autopack.forceFetch = True
+autopack.forceFetch = False
 
 #example callback to run on all ingredient
 def setJitter(ingr):
@@ -74,14 +84,15 @@ if len(sys.argv) > 1 :
     h.setupfile=filename
     if resultfile is not None :
         h.resultfile=resultfile
-    h.saveResult = True
+    h.saveResult = False
 #    h.overwriteSurfacePts = False
 #    h.compartments[0].overwriteSurfacePts = False
     #build the grid
     #change the grid size ?
-    h.smallestProteinSize = 35.0
+    h.smallestProteinSize = 100.0
     h.freePtsUpdateThrehod=0.0
     if doit :
+        h.boundingBox=[[ -2482, -2389, -300.26],[ 2495, 2466, 300.02]]
         h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
                               gridFileOut=None,previousFill=False)
 #    h.loopThroughIngr(excludeIngr)
@@ -95,12 +106,14 @@ if len(sys.argv) > 1 :
     
         h.fill5(verbose = 0,usePP=False)
         h.collectResultPerIngredient()
-        h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,
-                             kwds=["source"],result=True,
+        rname=fileName+"_"+i.isoformat()+".json"
+        rname="C:\Users\ludovic\Documents\CellPackViewer_Cluster\Data\HIV\cellPACK\mycoDNA1.json"
+        h.saveRecipe(rname,useXref=True,mixed=True,
+                             kwds=["source","name"],result=True,
                            grid=False,packing_options=False,indent=False,quaternion=True)  
-        h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,
-                     kwds=["source","positions","radii"],result=True,
-                   grid=False,packing_options=False,indent=False,quaternion=True)
+        #h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,
+        #             kwds=["source","name","positions","radii"],result=True,
+         #          grid=False,packing_options=False,indent=False,quaternion=True)
     else :       
         h.saveRecipe(fileName+"_"+i.isoformat()+".json",useXref=True,mixed=True,result=False,
                        grid=True,packing_options=True,indent=True,quaternion=True)
