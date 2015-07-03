@@ -9,7 +9,8 @@ Created on Wed May  6 10:39:08 2015
 import sys
 import os
 import json
-
+import numpy as np
+np.seterr(all='raise')
 #panda3d is there :
 #sys.path.append("/usr/lib/python2.7/dist-packages/")
 #LINUX
@@ -89,10 +90,10 @@ if len(sys.argv) > 1 :
 #    h.compartments[0].overwriteSurfacePts = False
     #build the grid
     #change the grid size ?
-    h.smallestProteinSize = 100.0
+    h.smallestProteinSize = 80.0
     h.freePtsUpdateThrehod=0.0
     if doit :
-        h.boundingBox=[[ -2482, -2389, -300.26],[ 2495, 2466, 300.02]]
+        #h.boundingBox=[[ -2482, -2389, -500.26],[ 2495, 2466, 500.02]]
         h.buildGrid(boundingBox=h.boundingBox,gridFileIn=None,rebuild=True ,
                               gridFileOut=None,previousFill=False)
 #    h.loopThroughIngr(excludeIngr)
