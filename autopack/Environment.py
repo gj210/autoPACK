@@ -1133,6 +1133,7 @@ class Environment(CompartmentList):
                                 properties={"position":ingr.partners_position[i]})
                 for p in ingr_partner.properties:
                     partner.addProperties(p,ingr_partner.properties[p])
+                partner.setup()
             if ingr.Type == "Grow" : ingr.prepare_alternates()
         if ingr.excluded_partners_name :
             for iname in ingr.excluded_partners_name :

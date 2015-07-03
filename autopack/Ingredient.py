@@ -198,7 +198,10 @@ def angle_between_vectors(v0, v1, directed=True, axis=0):
     v0 = numpy.array(v0, dtype=numpy.float64, copy=False)
     v1 = numpy.array(v1, dtype=numpy.float64, copy=False)
     dot = numpy.sum(v0 * v1, axis=axis)
+    #check nothing is > 1.0
     dot /= vector_norm(v0, axis=axis) * vector_norm(v1, axis=axis)
+    indice = numpy.nonzero(numpy.greater(dot,1.0))
+    dot[indice] = 1.0
     return numpy.arccos(dot if directed else numpy.fabs(dot))
     
 def vector_norm(data, axis=None, out=None):
@@ -495,6 +498,24 @@ class Partner:
         self.distExpression = None
         if properties is not None:
             self.properties = properties
+
+    def setup(self,):
+        #setup the marge accordin the pt properties
+        pt1 = numpy.array(self.getProperties("pt1"))
+        pt2 = numpy.array(self.getProperties("pt2"))
+        pt3 = numpy.array(self.getProperties("pt3"))
+        pt4 = numpy.array(self.getProperties("pt4"))
+        
+#        #print the angles
+#        #length = autopack.helper.measure_distance(pt2,pt3)#length
+#        margein = math.degrees(autopack.helper.angle_between_vectors(pt2-pt1,pt3-pt2)) # 4
+#        margeout = math.degrees(autopack.helper.angle_between_vectors(pt3-pt2,pt4-pt3)) #113
+#        dihedral = math.degrees(autopack.helper.angle_between_vectors(pt2-pt1,pt4-pt2)) #79
+#        dihedral = autopack.helper.dihedral(pt1,pt2,pt3,pt4)
+#        self.properties["marge_in"]=[margein-1,margein+1]
+#        self.properties["marge_out"]=[margeout-1,margeout+1]
+#        self.properties["diehdral"]=[dihedral-1,dihedral+1]
+        
             
     def addProperties(self,name, value):
         self.properties[name] = value
@@ -1487,17 +1508,18 @@ class Ingredient(Agent):
                 dgeoms = h.read(filename)
                 #v,vn,f = dgeoms.values()[0]["mesh"]
                 self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
-                self.vnormals=helper.normal_array(self.vertices,numpy.array(self.faces))
+                self.vnormals=[]#helper.normal_array(self.vertices,numpy.array(self.faces))
                 geom = h.createsNmesh(geomname,self.vertices,None,self.faces)[0]
                 return geom
             else : #if helper is not None:#neeed the helper
                 if helper.host == "dejavu" and helper.nogui:
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
+                    print "vertices nb is ",len(v)
 #                    vn = self.getVertexNormals(v,f)     
-                    self.vertices,self.vnormals,self.faces = helper.combineDaeMeshData(dgeoms.values())
-#                    print (self.name,len(self.vertices))
-                    self.vnormals=helper.normal_array(self.vertices,numpy.array(self.faces))
+                    self.vertices,self.vnormals,self.faces = v,vn,f#helper.combineDaeMeshData(dgeoms.values())
+                    print "after coombine vertices nb is ",len(v)
+                    self.vnormals=[]#helper.normal_array(self.vertices,numpy.array(self.faces))
                     geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom
                 else :
@@ -6165,6 +6187,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.walkingMode = walkingMode #["sphere","lattice"]
         self.walkingType = "stepbystep" #or atonce
         self.compMask = []
+        self.prev_v3=[]
         #default should be compId
         if "compMask" in kw :
             if type(kw["compMask"]) is str :
@@ -6297,18 +6320,34 @@ class GrowIngrediant(MultiCylindersIngr):
             #i = self.sphere_points_mask[indices]
             #self.sphere_points_mask = i  
                                 
-    def mask_sphere_points_dihedral(self,v1,v2,marge_out,marge_diedral):
+    def mask_sphere_points_dihedral(self,v1,v2,marge_out,marge_diedral,v3=[]):
+        print ("mask_sphere_points_dihedral")
         points_mask = numpy.nonzero(self.sphere_points_mask)[0]
-        a=angle_between_vectors(self.vi.unit_vector(v2),self.sphere_points[points_mask], axis=1)
-        b=angle_between_vectors(self.vi.unit_vector(v1),self.sphere_points[points_mask], axis=1)
-        if type(marge_out) is float :
-            marge_out = [0.0,marge_out]
-        if type(marge_diedral) is float :
-            marge_diedral = [0.0,marge_diedral]
-        mask1 = numpy.logical_and(a<math.radians(marge_out[1]), a > math.radians(marge_out[0]))
-        mask2 = numpy.logical_and(b<math.radians(marge_diedral[1]), b > math.radians(marge_diedral[0]))
-        mask3 = numpy.logical_and(mask1,mask2)
-        self.sphere_points_mask[points_mask]=numpy.logical_and(mask3,
+        if len(v3) :
+#            a=angle_between_vectors(self.vi.unit_vector(v2),self.sphere_points[points_mask], axis=1)
+            d=angle_between_vectors(self.vi.unit_vector(v3),self.sphere_points[points_mask], axis=1)
+#            print ("angle with ",v3)
+#            print (d)
+            if type(marge_out) is float :
+                marge_out = [0.0,marge_out]
+#            mask1 = numpy.logical_and(a<math.radians(marge_out[1]), a > math.radians(marge_out[0]))#794
+            mask4 = numpy.less(d,math.radians(5))#18
+#            mask3 = numpy.logical_and(mask4,mask1)#0?
+            
+#            print (len(self.sphere_points[mask1]),len(self.sphere_points[mask4]),len(self.sphere_points[mask3]))
+            self.sphere_points_mask[points_mask]=numpy.logical_and(mask4,
+                                self.sphere_points_mask[points_mask])
+        else :
+            a=angle_between_vectors(self.vi.unit_vector(v2),self.sphere_points[points_mask], axis=1)
+            b=angle_between_vectors(self.vi.unit_vector(v1),self.sphere_points[points_mask], axis=1)
+            if type(marge_out) is float :
+                marge_out = [0.0,marge_out]
+            if type(marge_diedral) is float :
+                marge_diedral = [0.0,marge_diedral]
+            mask1 = numpy.logical_and(a<math.radians(marge_out[1]), a > math.radians(marge_out[0]))
+            mask2 = numpy.logical_and(b<math.radians(marge_diedral[1]), b > math.radians(marge_diedral[0]))
+            mask3 = numpy.logical_and(mask1,mask2)
+            self.sphere_points_mask[points_mask]=numpy.logical_and(mask3,
                                 self.sphere_points_mask[points_mask])
                                 
     def mask_sphere_points_angle(self,v,marge_in):
@@ -6325,19 +6364,44 @@ class GrowIngrediant(MultiCylindersIngr):
         self.sphere_points_mask[points_mask]=numpy.logical_and(mask,
                                 self.sphere_points_mask[points_mask])
 
-    def mask_sphere_points(self,v,pt,marge,listeclosest,cutoff,pv=None,marge_diedral=None):
+    def mask_sphere_points_vector(self,v,pt,alternate):
+        points_mask = numpy.nonzero(self.sphere_points_mask)[0]
+        #pick the point that are close to pt2-pt3
+        #align v to pt1-pt2, apply to pt2-pt3
+        #mesure angle 
+        pta=self.partners[alternate].getProperties("pt1")
+        ptb=self.partners[alternate].getProperties("pt2")
+        ptc=self.partners[alternate].getProperties("pt3")
+        toalign = numpy.array(ptb) -numpy.array(pta)
+        m = numpy.array(rotVectToVect(toalign,v)).transpose()
+        m[3,:3] = numpy.array(pt)#jtrans
+        pts=autopack.helper.ApplyMatrix([pta],m.transpose())#transpose ?
+        v = numpy.array(pt)-pts[0]
+        m[3,:3] = numpy.array(pt)+v
+        newPts=autopack.helper.ApplyMatrix([ptb,ptc],m.transpose())#transpose ?
+        a=angle_between_vectors(self.vi.unit_vector(newPts[1]-newPts[0]),self.sphere_points[points_mask], axis=1)
+        mask = numpy.less (a,math.radians(5.0))
+        self.sphere_points_mask[points_mask]=numpy.logical_and(mask,
+                                self.sphere_points_mask[points_mask])
+
+    def mask_sphere_points(self,v,pt,marge,listeclosest,cutoff,alternate=None,pv=None,marge_diedral=None,v3=[]):
         #self.sphere_points_mask=numpy.ones(10000,'i') 
         print ("mask_sphere_points ",marge_diedral,marge,len(listeclosest))
         if marge_diedral is not None :
-            self.mask_sphere_points_dihedral(pv,v,marge,marge_diedral)        
-        else :            
-            self.mask_sphere_points_angle(v,marge)
+            self.mask_sphere_points_dihedral(pv,v,marge,marge_diedral,v3)        
+        else :   
+            if alternate is not None :
+                self.mask_sphere_points_vector(v,pt,alternate)
+            else :
+                self.mask_sphere_points_angle(v,marge)
         #storethe mask point
+#        print ("after mask1 ",len( numpy.nonzero(self.sphere_points_mask)[0])) 
         sphere_points_mask_copy = numpy.copy(self.sphere_points_mask)
         self.mask_sphere_points_ingredients(pt,listeclosest)
         if not len( numpy.nonzero(self.sphere_points_mask)[0] ):
             self.sphere_points_mask=numpy.copy(sphere_points_mask_copy)
-        #self.mask_sphere_points_boundary(pt)              
+        #self.mask_sphere_points_boundary(pt)  
+#        print ("after mask2 ",len( numpy.nonzero(self.sphere_points_mask)[0]))        
                 
     def reset(self):
         self.nbCurve=0
@@ -6744,10 +6808,11 @@ class GrowIngrediant(MultiCylindersIngr):
             p_alternate = self.partners[self.prev_alt]
             dihedral= p_alternate.getProperties("diehdral")
             nextPoint= p_alternate.getProperties("pt2")
-            marge_in= p_alternate.getProperties("marge_out")  #marge out ? 
+            #v3=numpy.array(p_alternate.getProperties("pt4"))-numpy.array(p_alternate.getProperties("pt3"))
+            marge_out= p_alternate.getProperties("marge_out")  #marge out ? 
             if dihedral is not None :
-                self.mask_sphere_points(v,pt1,marge_in,liste_nodes,0,
-                                        pv=self.prev_vec,marge_diedral=dihedral)
+                self.mask_sphere_points(v,pt1,marge_out,liste_nodes,0,
+                                        pv=self.prev_vec,marge_diedral=dihedral,v3=self.prev_v3)
             alternate = None
         t1 = time()
         if self.prev_alt is not None :
@@ -6756,11 +6821,14 @@ class GrowIngrediant(MultiCylindersIngr):
             #next point shouldnt be an alternate
             p_alternate = self.partners[alternate]#self.histoVol.getIngrFromNameInRecipe(alternate,self.recipe )
             #if p_alternate.getProperties("bend"):
+            entrypoint=p_alternate.getProperties("pt1")
             nextPoint=p_alternate.getProperties("pt2")
             marge_in=p_alternate.getProperties("marge_in")            
             dihedral=p_alternate.getProperties("diehdral")#for next point
             length=p_alternate.getProperties("length")#for next point
-            if marge_in is not None :
+            if entrypoint is not None :
+                self.mask_sphere_points(v,pt2,marge_in,liste_nodes,0,pv=None,marge_diedral=None,alternate=alternate)                
+            elif marge_in is not None :
                 self.mask_sphere_points(v,pt2,marge_in,liste_nodes,0,pv=None,marge_diedral=None)
             else :
                 self.mask_sphere_points(v,pt2,marge+2.0,liste_nodes,0) 
@@ -6961,12 +7029,13 @@ class GrowIngrediant(MultiCylindersIngr):
                         #self.update_data_tree(jtrans1,rotMatj1,pt1=pt2,pt2=newPt)
                         #self.update_data_tree(jtrans1,rotMatj1,pt1=newPt,pt2=newPts[1])
                         self.partners[alternate].ingr.update_data_tree(jtrans,rotMatj)
-                        self.compartment.molecules.append([ jtrans, rotMatj.transpose(), self.partners[alternate].ingr, 0 ])     
+                        self.compartment.molecules.append([ jtrans, rotMatj,self.partners[alternate].ingr, 0 ])     #transpose ?
                         newv,d1 = self.vi.measure_distance(pt2,newPt,vec=True)
                         #v,d2 = self.vi.measure_distance(newPt,newPts[1],vec=True)
                         #self.currentLength += d1
                         if dihedral is not None :
                             self.prev_alt=alternate
+                            self.prev_v3 = self.getV3( numpy.array(pt2).flatten(),newPt,alternate)
                         self.prev_vec = v
                         if nextPoint is not None and dihedral is None:                                              
                             self.prev_alt_pt = newPts[1]
@@ -6987,7 +7056,9 @@ class GrowIngrediant(MultiCylindersIngr):
                     else : 
                         self.prev_alt_pt = None                    #print (" collide ?",collision)
                 if collision : #increment the range
-                    if not self.constraintMarge :
+                    if alternate :
+                        attempted = safetycutoff
+                    elif not self.constraintMarge :
                         if marge >=180 : #pi
                             attempted +=1
                             continue
@@ -7700,6 +7771,7 @@ class GrowIngrediant(MultiCylindersIngr):
                         #self.currentLength += d1
                         if dihedral is not None :
                             self.prev_alt=alternate
+                            #self.prev_v3 = self.getV3
                         self.prev_vec = v
                         if nextPoint is not None and dihedral is None:                                              
                             self.prev_alt_pt = newPts[1]
@@ -8320,6 +8392,28 @@ class GrowIngrediant(MultiCylindersIngr):
         #print ("will try to place alterate at ",jtrans) 
         return jtrans,rotMatj
 
+    def getV3(self,pt1,pt2,alternate):
+        length = self.partners[alternate].getProperties("length")
+        rotMatj,jtrans=self.getJtransRot_r(numpy.array(pt1).flatten(),
+                                           numpy.array(pt2).flatten(),
+                                           length = length)
+        #jtrans is the position between pt1 and pt2
+        prevMat = numpy.array(rotMatj)
+        prevMat[3,:3] = numpy.array(pt1)#jtrans   
+        newv = numpy.array(pt2) - numpy.array(pt1)
+        ptb=self.partners[alternate].getProperties("pt2")
+        ptc=self.partners[alternate].getProperties("pt3")
+        ptd=self.partners[alternate].getProperties("pt4")
+        toalign = numpy.array(ptc) -numpy.array(ptb)
+        m = numpy.array(rotVectToVect(toalign,newv)).transpose()
+        m[3,:3] = numpy.array(pt1)#jtrans
+        pts=autopack.helper.ApplyMatrix([ptb],m.transpose())#transpose ?
+        v = numpy.array(pt1)-pts[0]
+        m[3,:3] = numpy.array(pt1)+v
+        newPts=autopack.helper.ApplyMatrix([ptc,ptd],m.transpose())#transpose ?
+        print ("we got pt3,pt4 ",newPts)
+        return numpy.array(newPts[1]) - numpy.array(newPts[0])
+        
     def get_alternate_starting_point(self,pt1,pt2,alternate):
         spt1 = self.partners[alternate].getProperties("st_pt1")
         spt2 = self.partners[alternate].getProperties("st_pt2") 
