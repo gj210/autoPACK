@@ -20,7 +20,8 @@ if Maya :#on mac
     #load plugin
     import maya
     maya.cmds.loadPlugin("fbxmaya")
-    
+else :
+    sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs")
 import autopack
 #wrkDir = AutoFill.__path__[0]
 localdir = wrkDir = autopack.__path__[0]
@@ -46,7 +47,7 @@ check_result = True
 export_json = True
 useXref = True
 mixedJson = True
-
+HIV=False
 #def convertOneRecipe()
 
 if len(sys.argv) > 1 :
@@ -80,7 +81,7 @@ if len(sys.argv) > 1 :
             sys.exit()
         print ("get the result file from ",resultfilename)
         result,orgaresult,freePoint=h.loadResult(resultfilename=resultfilename,
-                                                 restore_grid=False,backward=False)#load text ?#this will restore the grid  
+                                                 restore_grid=False,backward=True)#load text ?#this will restore the grid  
         ingredients = h.restore(result,orgaresult,freePoint)
 #        print ("json ?",h.result_json)
 #        if export_json :
@@ -91,32 +92,34 @@ if len(sys.argv) > 1 :
         #special case for HIV
         import json
         import numpy
-        with open("/home/ludo/biomthiv.json", 'r') as fp :#doesnt work with symbol link ?
-            jsondic=json.load(fp)#,indent=4, separators=(',', ': ')
-        matrices = jsondic.values()#3*4
-        newm=[]
-        res=[]
-        from numpy import  matrix
-        mt=matrix([
-[  9.39692621e-01,   3.42020143e-01,  -0.00000000e+00,-6.27013000e+02],
-[ -3.42020143e-01,   9.39692621e-01,  -0.00000000e+00,-3.73321000e+02],
-[ -0.00000000e+00,  -0.00000000e+00,   1.00000000e+00,-5.00044000e+02],
-[0,0,0,1]])
-#        everything need to be moved : [-627.013,-373.321,-500.044] Rotation Z : 20
-        for m in matrices:
-            if len(m) ==3 : 
-                m.append([0.,0.,0.,1.])#?
-            m=numpy.array(m)
-            mn=matrix(m)
-            newm=numpy.array((mt*mn).tolist())
-            p=newm[:3,3]
-#            rot=m[:3,:3].transpose()
-            rot=numpy.identity(4)
-            rot[:3,:3]=newm[:3,:3]
-            res.append([p,rot])
+        if HIV :
+            with open("/home/ludo/biomthiv.json", 'r') as fp :#doesnt work with symbol link ?
+                jsondic=json.load(fp)#,indent=4, separators=(',', ': ')
+            matrices = jsondic.values()#3*4
+            newm=[]
+            res=[]
+            from numpy import  matrix
+            mt=matrix([
+    [  9.39692621e-01,   3.42020143e-01,  -0.00000000e+00,-6.27013000e+02],
+    [ -3.42020143e-01,   9.39692621e-01,  -0.00000000e+00,-3.73321000e+02],
+    [ -0.00000000e+00,  -0.00000000e+00,   1.00000000e+00,-5.00044000e+02],
+    [0,0,0,1]])
+    #        everything need to be moved : [-627.013,-373.321,-500.044] Rotation Z : 20
+            for m in matrices:
+                if len(m) ==3 : 
+                    m.append([0.,0.,0.,1.])#?
+                m=numpy.array(m)
+                mn=matrix(m)
+                newm=numpy.array((mt*mn).tolist())
+                p=newm[:3,3]
+    #            rot=m[:3,:3].transpose()
+                rot=numpy.identity(4)
+                rot[:3,:3]=newm[:3,:3]
+                res.append([p,rot])
         h.collectResultPerIngredient()
-        ingr = h.compartments[1].surfaceRecipe.ingredients[0]#should be our ingredient
-        ingr.results = res
+        if HIV :
+            ingr = h.compartments[1].surfaceRecipe.ingredients[0]#should be our ingredient
+            ingr.results = res
         h.setupfile=filename
         h.saveRecipe(fileName+"_mixed_pdb.json",useXref=useXref,mixed=True,
                      kwds=["source"],result=True,

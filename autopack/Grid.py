@@ -42,6 +42,7 @@ from scipy import spatial
 from math import ceil
 from math import floor
 from random import randrange
+from RAPID import RAPIDlib
 
 #Kevin Grid point class
 class gridPoint:
@@ -832,6 +833,130 @@ class Grid:
             V,nbG = self.computeGridNumberOfPoint(fbox_bb,space)
             totalVolume = V*unitVol
         return totalVolume
+
+    def create_rapid_model(self):
+        self.rapid_model = RAPIDlib.RAPID_model()
+        #need triangle and vertices
+        #faces,vertices,vnormals = helper.DecomposeMesh(self.mesh,
+        #                   edit=False,copy=False,tri=True,transform=True) 
+        self.rapid_model.addTriangles(numpy.array(self.vertices,'f'), numpy.array(self.faces,'i'))
+                   
+    def get_rapid_model(self):
+        if (self.rapid_model is None ):
+            self.create_rapid_model()
+        return self.rapid_model 
+
+    def one_rapid_ray(self,pt1,pt2,diag):
+        #return number of triangle /triangle contact
+        helper = autopack.helper
+        rm = self.get_rapid_model()
+        v1=numpy.array(pt1)
+        direction = helper.unit_vector(pt2-pt1)*diag
+        v2=v1+direction
+        if sum(v1) == 0.0 :
+            v3 = v2+numpy.array([0.,1.,0.])
+        else :
+            v3=v2+helper.unit_vector(numpy.cross(v1,v2))
+        f=[0,1,2]
+        ray_model = RAPIDlib.RAPID_model()
+        ray_model.addTriangles(numpy.array([v1,v2,v3],'f'), numpy.array([f,],'i'))
+        RAPIDlib.RAPID_Collide_scaled(numpy.identity(3), numpy.array([0.0,0.0,0.0],'f'), 
+                                      1.0,rm, numpy.identity(3), 
+                                    numpy.array([0.0,0.0,0.0],'f'), 1.0,ray_model,
+                                      RAPIDlib.cvar.RAPID_ALL_CONTACTS);
+        #could display it ?
+        #print numpy.array([v1,v2,v3],'f')
+        return RAPIDlib.cvar.RAPID_num_contacts
+        
+    def getCenter(self,):
+        """get the center of the mesh (vertices barycenter)"""
+        if self.center is None :
+            coords = numpy.array(self.vertices)#self.allAtoms.coords
+            center = sum(coords)/(len(coords)*1.0)
+            center = list(center)
+            for i in range(3):
+                center[i] = round(center[i], 4)
+    #        print "center =", center
+            self.center = center
+
+    def checkPointInside_rapid(self,point,diag,ray=1):
+        #we want to be sure to cover the organelle
+        if diag < self.diag :
+            diag = self.diag
+        inside = False
+        v1=numpy.array(point)
+        self.getCenter()
+        count1 = self.one_rapid_ray(v1,v1+numpy.array([0.,0.0,1.1]),diag)
+        r= ((count1 % 2) == 1) #inside ?
+        #we need 2 out of 3 ?
+        if ray == 3 :    
+            count2 = self.one_rapid_ray(v1, numpy.array(self.center) ,diag )
+            if (count2 % 2) == 1 and r :
+                return True
+            count3 = self.one_rapid_ray(v1, v1+numpy.array([0.0,1.1,0.]),diag )
+            if (count3 % 2) == 1 and r :
+                return True
+            return False
+        if r : # odd inside
+            inside = True
+        return inside
+    
+    def getSurfaceInnerPoints_jordan(self,vertices,faces,ray=1):
+        """
+        Only computes the inner point. No grid.
+        This is independant from the packing. Help build ingredient sphere tree and representation.
+        - Uses BHTree to compute surface points
+        - Uses Jordan raycasting to determine inside/outside (defaults to 1 iteration, can use 3 iterations)
+        """          
+        self.vertices=vertices
+        self.faces = faces
+        self.rapid_model = None
+        self.center = None
+        xl,yl,zl = self.boundingBox[0] # lower left bounding box corner
+        xr,yr,zr = self.boundingBox[1] # upper right bounding box corner
+        # distToClosestSurf is set to self.diag initially
+        distances =self.distToClosestSurf
+        idarray = self.gridPtId
+        diag = self.diag
+        
+        # Get surface points using bhtree (stored in bht and OGsrfPtsBht)
+        # otherwise, regard vertices as surface points.
+#        from bhtree import bhtreelib
+        from scipy import spatial
+        self.ogsurfacePoints = vertices[:] # Makes a copy of the vertices and vnormals lists
+        surfacePoints = srfPts = self.ogsurfacePoints
+
+        #self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+        self.OGsrfPtsBht = bht = spatial.cKDTree(tuple(srfPts),leafsize=10) 
+       
+        res = numpy.zeros(len(srfPts),'f')
+        dist2 = numpy.zeros(len(srfPts),'f')
+        number = 1 # Integer when compartment is added to a Environment. Positivefor surface pts. negative for interior points
+        insidePoints = []
+        grdPos = self.masterGridPositions
+        closest = bht.query(tuple(grdPos))
+
+        self.closestId = closest[1]
+        new_distances =  closest[0]
+        mask = distances[:len(grdPos)] > new_distances
+        nindices  = numpy.nonzero(mask)
+        distances[nindices] = new_distances[nindices]
+        self.grid_distances = distances
+        #returnNullIfFail = 0
+        for ptInd in xrange(len(grdPos)):#len(grdPos)):
+            inside = False # inside defaults to False (meaning outside), unless evidence is found otherwise.
+            #t2=time()
+            coord = [grdPos.item((ptInd,0)),grdPos.item((ptInd,1)),grdPos.item((ptInd,2))]#grdPos[ptInd]
+            insideBB  = self.checkPointInside(coord,dist=new_distances.item(ptInd))#inside the BB of the surface ?
+            if insideBB:
+                r=self.checkPointInside_rapid(coord,diag,ray=ray)
+                if r : # odd inside
+                    #idarray[ptInd] = -number
+                    insidePoints.append(grdPos[ptInd]) # Append the index to the list of inside indices.
+            p=(ptInd/float(len(grdPos)))*100.0
+            if (ptInd % 100 ) == 0 :
+                print(int(p),str(ptInd)+"/"+str(len(grdPos))+" inside "+str(inside)+" "+str(insideBB))
+        return insidePoints, surfacePoints
         
 #==============================================================================
 # TO DO File IO 
@@ -843,10 +968,13 @@ class Grid:
 
 #dont forget to use spatial.distance.cdist
 class HaltonGrid(Grid):
-    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=True):
+    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=False):
         Grid.__init__(self, boundingBox=boundingBox,space=space,setup=setup)
         self.haltonseq = cHaltonSequence3()
-        self.tree = None
+        self.tree = None        
+        self.lookup=1
+        if setup :
+            self.setup(boundingBox,space)
         
     def getPointFrom3D(self, pt3d):
         """
@@ -867,10 +995,19 @@ class HaltonGrid(Grid):
         scalexyz = numpy.array(boundingBox[1]) - txyz        
         return scalexyz,txyz
         
+    def getNBgridPoints(self,):
+        a = numpy.array(self.boundingBox[0])
+        b = numpy.array(self.boundingBox[1])
+        lx = abs(int((a[0]-b[0])/self.gridSpacing))
+        ly = abs(int((a[0]-b[0])/self.gridSpacing))
+        lz = abs(int((a[0]-b[0])/self.gridSpacing))
+        return [lx,ly,lz]
+        
     def create3DPointLookup(self, boundingBox=None):
         #we overwrite here by using the halton sequence dimension 5 to get
         #the coordinate
         self.haltonseq.reset()
+        self.nbGridPoints = self.getNBgridPoints()
         nx,ny,nz = self.nbGridPoints
         pointArrayRaw = numpy.zeros( (nx*ny*nz, 3), 'f')
         self.ijkPtIndice = numpy.zeros( (nx*ny*nz, 3), 'i')

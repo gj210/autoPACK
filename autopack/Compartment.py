@@ -3076,7 +3076,7 @@ class  Compartment(CompartmentList):
         from scipy import spatial
         self.ogsurfacePoints = self.vertices[:] # Makes a copy of the vertices and vnormals lists
         self.ogsurfacePointsNormals = self.vnormals[:] #helper.FixNormals(self.vertices,self.faces,self.vnormals,fn=self.fnormals)
-        mat = helper.getTransformation(self.ref_obj)
+#        mat = helper.getTransformation(self.ref_obj)
         surfacePoints = srfPts = self.ogsurfacePoints
 
         #self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
