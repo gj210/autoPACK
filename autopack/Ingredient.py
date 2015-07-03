@@ -2909,7 +2909,7 @@ class Ingredient(Agent):
         #should we got all ingre from all recipes?
         #can use the kdtree for it...
         #maybe just add the surface if its not already the surface
-        mingrs = [m for m in organelle.molecules if m[3] in pointsInCube]
+        mingrs = [m for m in compartment.molecules if m[3] in pointsInCube]
         return mingrs
 
     def getIngredientsInTree(self,close_indice):

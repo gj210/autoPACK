@@ -159,14 +159,36 @@ def applyGeneralIngredientsOptions_product(env,paremeter_set,nset,offset=0):
 #setupfile = "/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/recipes/NM_Analysis_FigureB1.1.xml"
 #force downloading the latest recipe file
 autopack.forceFetch=True
-#Or we can also use the server for gathering the file
-recipe = "NM_Analysis_FigureB"
-version = "1.0"
-filename = autopack.RECIPES[recipe][version]["setupfile"]
-resultfile= autopack.RECIPES[recipe][version]["resultfile"]
 
-setupfile = autopack.retrieveFile(filename,cache="recipes")
 
+#you can pass directly the recipe as an argument 
+#for isntance python -i analyze_B2.py /opt/data/dev/cellPACK/cellPACK_data/cellPACK_database_1.1.0/recipes/NM_Analysis_FigureB1.1.json
+#you can also pass directly the recipe name as well as the version of the recipe
+#for instance python -i analyze_B2.py NM_Analysis_FigureB 1.0 or for instance python -i analyze_B2.py NM_Analysis_FigureB 1.1
+#you can also ahrd code the recipe file name or name + version if no argument are passed
+
+if len(sys.argv) > 1 :
+    filename = sys.argv[1]
+    resultfile=None
+    if filename in autopack.RECIPES :
+        n=filename
+        v=sys.argv[2]
+        filename = autopack.RECIPES[n][v]["setupfile"]
+        resultfile= autopack.RECIPES[n][v]["resultfile"]
+        setupfile = autopack.retrieveFile(filename,cache="recipes")
+    else :
+        setupfile =filename
+else :       
+    #Or we can also use the server for gathering the file
+    recipe = "NM_Analysis_FigureB"
+    version = "1.1"    
+    filename = autopack.RECIPES[recipe][version]["setupfile"]
+    resultfile= autopack.RECIPES[recipe][version]["resultfile"]   
+    setupfile = autopack.retrieveFile(filename,cache="recipes")
+    #you could overwrite here the filename
+    #filename = "something.json"
+    
+    
 fileName, fileExtension = os.path.splitext(setupfile)
 n=os.path.basename(fileName)
 h = Environment(name=n)
@@ -335,10 +357,10 @@ seeds_i = analyse.getHaltonUnique(200)
 output="/home/ludo/Dev/testRun/"
 #numberofRun per numberofSet containing numberofParameter
 numberofParameter=len(packing_parameter_set)+len(ingredients_paremeter_set)
-numberofSet=2 #because of the binary option, its correspondent to the possible number for the options,  e.g. True/False or 1,5 etc..
+numberofSet=1 #because of the binary option, its correspondent to the possible number for the options,  e.g. True/False or 1,5 etc..
 numberofRun=1 #the number of seeds to use for one set, one set is a combination of options
 
-usecombinatorial=True
+usecombinatorial=False
 
 time_benchmark_file=output+"time_check.txt"
 timer=0.0
