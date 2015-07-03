@@ -10,6 +10,9 @@ import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant,KWDS
+from autopack.Compartment import Compartment
+from autopack.Recipe import Recipe
+
 from upy import transformation as tr
 
 from xml.dom.minidom import getDOMImplementation 
@@ -424,7 +427,81 @@ class IOingredientTool(object):
             else : print ("PROBLEM creating ingredient from ",ingrnode)
             #look for overwritten attribute
         
-    
+
+def addCompartments(env,compdic,i,io_ingr):
+    #compdic on the form : {u'positions': [[]], u'from': u'HIV-1_0.1.6-7.json', u'rotations': [[]]}
+    fname = compdic["from"]
+    #retrievet the file
+    filename=autopack.retrieveFile(fname,cache="recipes")
+    ninstance = len(compdic["positions"])
+    with open(filename, 'r') as fp :#doesnt work with symbol link ?
+        if autopack.use_json_hook:
+            jsondic=json.load(fp,object_pairs_hook=OrderedDict)#,indent=4, separators=(',', ': ')
+        else :
+            jsondic=json.load(fp)
+    for n in range(ninstance):       
+        pos = numpy.array(compdic["positions"][n])#Vec3
+        rot = numpy.array(compdic["rotations"][n])#quaternion
+        #we only extract the compartments ferom the file
+        for cname in jsondic["compartments"]:
+            comp_dic = jsondic["compartments"][cname]
+            name = str(comp_dic["name"])+"_"+str(i)+"_"+str(n)
+            geom = str(comp_dic["geom"])
+            rep=""
+            if "rep" in comp_dic :
+                rep =  str(comp_dic["rep"])
+            rep_file=""
+            if "rep_file" in comp_dic:
+                rep_file=str(comp_dic["rep_file"])
+            print ("rep ?",name,geom,rep,rep_file,(rep != "None" and len(rep) != 0 and rep != '' and rep == ""))
+#                print (len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0)
+            if rep != "None" and len(rep) != 0 and rep != '' and rep != "":
+                rname =  rep_file.split("/")[-1]
+                fileName, fileExtension = os.path.splitext(rname)
+                if fileExtension == "" :
+                    fileExtension = autopack.helper.hext
+                    if fileExtension == "" :
+                        rep_file = rep_file+fileExtension
+                    else :
+                        rep_file = rep_file+"."+fileExtension   
+            else :
+                rep=None
+                rep_file=None
+                print ("NONENE")
+            print ("add compartment ",name,geom,rep,rep_file)
+            o = Compartment(name,None, None, None,filename=geom,gname=str(comp_dic["name"]),
+                            object_name=rep,object_filename=rep_file)
+            print ("added compartment ",name)
+            #need to transform the v,f,n to the new rotation and position
+            o.transformMesh(pos,rot)
+            env.addCompartment(o)
+            if "surface" in comp_dic:
+                snode=comp_dic["surface"]
+                ingrs_dic = snode["ingredients"]
+                if len(ingrs_dic) :
+                    rSurf = Recipe(name="surf_"+str(len(env.compartments)-1))
+#                        rSurf = Recipe(name=o.name+"_surf")
+                    for ing_name in ingrs_dic:
+                        #either xref or defined
+                        ing_dic = ingrs_dic[ing_name]
+                        ingr=io_ingr.makeIngredientFromJson(inode=ing_dic,recipe=env.name)
+                        rSurf.addIngredient(ingr) 
+                    #setup recipe
+                    o.setSurfaceRecipe(rSurf)                
+            if "interior" in comp_dic:
+                snode=comp_dic["interior"]
+                ingrs_dic = snode["ingredients"]
+                if len(ingrs_dic) :
+#                        rMatrix = Recipe(name=o.name+"_int")
+                    rMatrix = Recipe(name="int_"+str(len(env.compartments)-1))
+                    for ing_name in ingrs_dic:
+                        #either xref or defined
+                        ing_dic = ingrs_dic[ing_name]
+                        ingr=io_ingr.makeIngredientFromJson(inode=ing_dic,recipe=env.name)
+                        rMatrix.addIngredient(ingr) 
+                    #setup recipe
+                    o.setInnerRecipe(rMatrix)                 
+
 #put here the export/import ?
 def save_asJson(env,setupfile,useXref=True,indent=True):
         """
@@ -1100,7 +1177,6 @@ def load_Json(env,setupfile):
         if len(gridnode) :
             env.grid_filename = str(gridnode["grid_storage"])
             env.grid_result_filename = str(gridnode["grid_result"])
-    from autopack.Recipe import Recipe
     if "cytoplasme" in env.jsondic:
         rnode=env.jsondic["cytoplasme"]
         ingrs_dic = env.jsondic["cytoplasme"]["ingredients"]
@@ -1115,9 +1191,16 @@ def load_Json(env,setupfile):
             env.setExteriorRecipe(rCyto)
     
     if  "compartments" in env.jsondic:    
+        #use some include ?
         if len(env.jsondic["compartments"]):
-            from autopack.Compartment import Compartment
+            #if "include" in env.jsondic["compartments"]:
+                #include all compartments from given filename.
+                #transform the geometry of the compartment packing rep
             for cname in env.jsondic["compartments"]:
+                if cname == "include" :
+                    for i,ncompart in enumerate(env.jsondic["compartments"]["include"]):
+                        addCompartments(env,ncompart,i,io_ingr)                    
+                    continue
                 comp_dic = env.jsondic["compartments"][cname]
                 name = str(comp_dic["name"])
                 geom = str(comp_dic["geom"])

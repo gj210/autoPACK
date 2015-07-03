@@ -78,6 +78,8 @@ from .Recipe import Recipe
 #print "import AutoFill"
 import autopack
 from autopack import checkURL
+from autopack import transformation as tr
+
 from RAPID import RAPIDlib
 
 AFDIR = autopack.__path__[0]
@@ -165,7 +167,10 @@ class  Compartment(CompartmentList):
             self.ref_obj = kw["ref_obj"]
         if vertices == None :
             if "filename" in kw :
-                self.faces,self.vertices,self.vnormals = self.getMesh(filename=kw["filename"])
+                gname = self.name
+                if "gname" in kw :
+                    gname = kw["gname"]
+                self.faces,self.vertices,self.vnormals = self.getMesh(filename=kw["filename"],gname=gname)
                 print (self.vertices[0])
                 self.filename=kw["filename"]
                 self.ref_obj = name
@@ -229,8 +234,17 @@ class  Compartment(CompartmentList):
         self.surfacePoints = None
         self.surfacePointsNormals = {} # will be point index:normal
         #self.molecules = [] 
-        
 
+    def transformMesh(self,pos,rotation):
+        rot=tr.quaternion_matrix(rotation).transpose()        
+        m = numpy.identity(4)
+        m[:3,:3]=rot[:3,:3]
+        m[3,:3] = pos
+        print self.vertices[0]
+        self.vertices = autopack.helper.ApplyMatrix(self.vertices,m.transpose())
+        self.vnormals = autopack.helper.ApplyMatrix(self.vnormals,m.transpose())
+        print self.vertices[0]
+        
     def getDejaVuMesh(self, filename, geomname):
         """
         Create a DejaVu polygon mesh object from a filename 
@@ -343,7 +357,7 @@ class  Compartment(CompartmentList):
             self.rbnode=self.create_rbnode()
         return self.rbnode
        
-    def getMesh(self,filename=None,rep=None,**kw):
+    def getMesh(self,filename=None,rep=None,gname=None,**kw):
         """
         Retrieve the compartment 3d representaton from the given filename
         
@@ -353,7 +367,8 @@ class  Compartment(CompartmentList):
         @param rep: the name of the input file for the representation
         """
         geom = None
-        gname = self.name
+        if gname is None :
+            gname = self.name
         helper = autopack.helper
         if helper is not None :
             parent=helper.getObject("autopackHider")
@@ -419,15 +434,18 @@ class  Compartment(CompartmentList):
                 if helper.host == "dejavu" and helper.nogui:
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
-                    #fix the normal
+                    #fix the normal Should transform first ?
                     vn=helper.normal_array(v,numpy.array(f))
                     # print v[0],vn[0]
                     # vn = self.getVertexNormals(numpy.array(v),f[:])     
                     self.mesh = helper.createsNmesh(gname,v,None,f)[0]
                     # print v[0],vn[0]
                     return f,v,vn
-                helper.read(filename)
                 geom = helper.getObject(gname)
+                if geom is None :
+                    helper.read(filename)
+                    geom = helper.getObject(gname)
+                    helper.reParent(geom,parent) 
                 print ("should have read...",gname,geom,parent)
                 # helper.update()
                 if helper.host == "3dsmax" or helper.host.find("blender") != -1:
@@ -444,16 +462,16 @@ class  Compartment(CompartmentList):
 #                if p is None:
 #                    p = helper.newEmpty("autopackHider")
 #                    helper.toggleDisplay(p,False)
-                print ("reparent ",geom,parent)
-                helper.reParent(geom,parent)            
 #                return geom
 #            return None
         elif fileExtension is '' :
             geom =  self.getDejaVuMesh(filename, gname)
         else :#speficif host file
             if helper is not None:#neeed the helper
-                helper.read(filename)
                 geom = helper.getObject(gname)
+                if geom is None :
+                    helper.read(filename)
+                    geom = helper.getObject(gname)
 #                p=helper.getObject("autopackHider")
 #                if p is None:
 #                    p = helper.newEmpty("autopackHider")
