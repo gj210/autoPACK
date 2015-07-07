@@ -10,8 +10,6 @@ import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant,ActinIngrediant,KWDS
-from autopack.Compartment import Compartment
-from autopack.Recipe import Recipe
 
 from upy import transformation as tr
 
@@ -430,6 +428,8 @@ class IOingredientTool(object):
 
 def addCompartments(env,compdic,i,io_ingr):
     #compdic on the form : {u'positions': [[]], u'from': u'HIV-1_0.1.6-7.json', u'rotations': [[]]}
+    from autopack.Compartment import Compartment
+    from autopack.Recipe import Recipe
     fname = compdic["from"]
     #retrievet the file
     filename=autopack.retrieveFile(fname,cache="recipes")
@@ -1137,6 +1137,9 @@ def load_Json(env,setupfile):
     """
     Setup the environment according the given json file. 
     """
+    from autopack.Compartment import Compartment
+    from autopack.Recipe import Recipe
+    
     if setupfile == None:
         setupfile = env.setupfile
     with open(setupfile, 'r') as fp :#doesnt work with symbol link ?
