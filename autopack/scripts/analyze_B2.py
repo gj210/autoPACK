@@ -132,7 +132,7 @@ def applyGeneralIngredientsOptions(env,paremeter_set,nset):
             for k in paremeter_set :
                 setattr(ingr,k,paremeter_set[k][nset])
             
-def applyIndividualIngredientsOptions(env,paremeter_liste,nset):
+def applyIndividualIngredientsOptionsList(env,paremeter_liste,nset):
     #apply the key options to specified ingredients
     r = env.exteriorRecipe
     if r :
@@ -140,6 +140,17 @@ def applyIndividualIngredientsOptions(env,paremeter_liste,nset):
             for k in params :
                 setattr(r.ingredients[i],k,params[k][nset])
                 
+def applyIndividualIngredientsOptionsDict(env,paremeter_dict,nset):
+    #apply the key options to specified ingredients
+    r = env.exteriorRecipe
+    if r :
+        for iname in paremeter_dict :
+            ingr = env.getIngrFromName(iname)
+            if ingr is None :
+                continue
+            for k in paremeter_dict[iname] :
+                setattr(ingr,k,paremeter_dict[iname][k][nset])
+
 def applyGeneralOptions_product(env,parameter_set,nset):
     for i,k in enumerate(parameter_set) :
         setattr(env,k,parameter_set[k][nset[i]])
@@ -246,7 +257,7 @@ for k in ingredients_parameters.keys():
 packing_parameter_set=OrderedDict({
 #"smallestProteinSize":[5.0,10.0,15.0],
 "pickWeightedIngr":[1,0],
-"pickRandPt":[1,0],
+"pickRandPt":[1,1],
 "use_periodicity":[1,0]
 })
 #ingredients options you want to change for all objects
@@ -259,18 +270,11 @@ ingredients_paremeter_set=OrderedDict({
 })
 
 
-
-
-
-
-
-
-
-
 #individuals options. This recipe has 5objetcs, thus you need 5 set of values
 #use a dictionary or a list
+#example of dictionary
 individuals_ingredients_paremeter_set=OrderedDict({
-"ext__Sphere_radius_100":OrderedDict({
+"Sphere_radius_100":OrderedDict({
 'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
@@ -278,71 +282,44 @@ individuals_ingredients_paremeter_set=OrderedDict({
 'nbJitter':[5,10,15],
 'nbMol':[2,4,6,8],
 }),
-"ext__Sphere_radius_200":OrderedDict({'rejectionThreshold':[10,20,30],
+"Sphere_radius_200":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
 'nbMol':[2,4,6,8],}),
-"ext__Sphere_radius_50":OrderedDict({'rejectionThreshold':[10,20,30],
+"Sphere_radius_50":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
 'nbMol':[10,14,16,18],}),
-"ext__Sphere_radius_25p":OrderedDict({'rejectionThreshold':[10,20,30],
+"Sphere_radius_25p":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
 'nbMol':[20,40,60,80],}),
-"ext__Sphere_radius_25r":OrderedDict({'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],}),
-})
-individuals_ingredients_paremeter_liste=[
-OrderedDict({
+"Sphere_radius_25r":OrderedDict({
 'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
+'packingPriority':[0,0,10],
+'cutoff_boundary':[0,0,20],
+'jitterMax':[[1,1,1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],
+'nbMol':[20,40,60,80],
 }),
-OrderedDict({'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],}),
-OrderedDict({'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-'nbMol':[5,10,15],}),
-OrderedDict({'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],}),
-OrderedDict({'rejectionThreshold':[10,20,30],
-'packingPriority':[-10,0,10],
-'cutoff_boundary':[0,10,20],
-'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
-'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],}),
-]
+})
 
-
-
+#we are going to overwrite the dictionary for the new recipe 1.1
+individuals_ingredients_paremeter_set["Sphere_radius_25r"]={
+    "proba_binding":[0.5,1.0],
+    "proba_not_binding":[0.5,0.0],
+    "weight":[0.5,1.0]
+}
+individuals_ingredients_paremeter_set["Sphere_radius_25p"]={}
 
 #a variable that define if you want to use the individual option
-use_individual_options = False 
+use_individual_options = True 
 
 #there is a lot of different to manipulate the options, I just show you the dictionary way.
 #you can also comment/uncomment the option you don't want
@@ -357,7 +334,7 @@ seeds_i = analyse.getHaltonUnique(200)
 output="/home/ludo/Dev/testRun/"
 #numberofRun per numberofSet containing numberofParameter
 numberofParameter=len(packing_parameter_set)+len(ingredients_paremeter_set)
-numberofSet=1 #because of the binary option, its correspondent to the possible number for the options,  e.g. True/False or 1,5 etc..
+numberofSet=2 #because of the binary option, its correspondent to the possible number for the options,  e.g. True/False or 1,5 etc..
 numberofRun=1 #the number of seeds to use for one set, one set is a combination of options
 
 usecombinatorial=False
@@ -393,7 +370,7 @@ else :
         applyGeneralOptions(h,packing_parameter_set,pset)
         applyGeneralIngredientsOptions(h,ingredients_paremeter_set,pset)
         if use_individual_options:
-            applyIndividualIngredientsOptions(h,individuals_ingredients_paremeter_liste,pset)    
+            applyIndividualIngredientsOptionsDict(h,individuals_ingredients_paremeter_set,pset)    
         #do the X run
         for seed in seeds_i[:numberofRun] :
             print "seed",seed
