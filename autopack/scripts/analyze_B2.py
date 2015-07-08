@@ -60,7 +60,7 @@ def plotOneResult2D(h,filename):
 #                print (p,radius[ingr])
         ax.add_patch(Circle((p[0], p[1]),r,
                         edgecolor="black", facecolor=ingr[2])) 
-        if autopack.testPeriodicity :
+        if h.use_periodicity:# autopack.testPeriodicity :
             if p[0] < r:
                 ax.add_patch(Circle((p[0] + width,p[1]), r, facecolor=ingr[2]))
             elif p[0] > (width-r):
@@ -258,7 +258,7 @@ packing_parameter_set=OrderedDict({
 #"smallestProteinSize":[5.0,10.0,15.0],
 "pickWeightedIngr":[1,0],
 "pickRandPt":[1,1],
-"use_periodicity":[1,0]
+"use_periodicity":[0,1]
 })
 #ingredients options you want to change for all objects
 ingredients_paremeter_set=OrderedDict({
@@ -319,7 +319,7 @@ individuals_ingredients_paremeter_set["Sphere_radius_25r"]={
 individuals_ingredients_paremeter_set["Sphere_radius_25p"]={}
 
 #a variable that define if you want to use the individual option
-use_individual_options = True 
+use_individual_options = False 
 
 #there is a lot of different to manipulate the options, I just show you the dictionary way.
 #you can also comment/uncomment the option you don't want
