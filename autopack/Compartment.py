@@ -3064,7 +3064,8 @@ class  Compartment(CompartmentList):
         This is independant from the packing. Help build ingredient sphere tree and representation.
         - Uses BHTree to compute surface points
         - Uses Jordan raycasting to determine inside/outside (defaults to 1 iteration, can use 3 iterations)
-        """                
+        """         
+        helper = autopack.helper
 #        from autopack.Environment import Grid        
         if self.grid_type == "halton" :
             from autopack.Grid import HaltonGrid as Grid
