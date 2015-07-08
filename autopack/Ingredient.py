@@ -650,8 +650,12 @@ class Agent:
             return None
         
     def addPartner(self, ingr, weight=0.0, properties=None):
-        self.partners[ingr.name] = Partner(ingr, weight=weight, 
+        if ingr.name not in self.partners:
+            self.partners[ingr.name] = Partner(ingr, weight=weight, 
                                 properties=properties)
+        else :
+            self.partners[ingr.name].weight = weight
+            self.partners[ingr.name].properties = properties
         return self.partners[ingr.name]
         
     def getExcludedPartnersName(self):
@@ -757,7 +761,8 @@ class Agent:
 #            return None,b
         ing_indice = listePartner[i][0]#i,part,dist
         ing = mingrs[2][ing_indice]#[2]
-        print ("binding to "+ing.name)
+        if autopack.verbose > 1 :
+            print ("binding to "+ing.name)
         targetPoint= mingrs[0][ing_indice]#[0]     
         if self.compNum > 0 :
 #            organelle = self.histoVol.compartments[abs(self.compNum)-1]
@@ -765,19 +770,22 @@ class Agent:
             targetPoint=self.histoVol.grid.getClosestFreeGridPoint(targetPoint,
                                         compId=self.compNum,ball=(ing.encapsulatingRadius+self.encapsulatingRadius)*2.0,
                                         distance=self.encapsulatingRadius*1.5)
-            print ("target point free tree is ",targetPoint,self.encapsulatingRadius,ing.encapsulatingRadius)
+            if autopack.verbose > 1 :
+                 print ("target point free tree is ",targetPoint,self.encapsulatingRadius,ing.encapsulatingRadius)
         else :                
             #get closestFreePoint using freePoint and masterGridPosition
             #if self.placeType == "rigid-body" or self.placeType == "jitter":
                 #the new point is actually tPt -normalise(tPt-current)*radius
-            print("tP",ing_indice,ing.name,targetPoint,ing.radii[0][0])
-            print("cP",currentPos)
+            if autopack.verbose > 1 :
+                print("tP",ing_indice,ing.name,targetPoint,ing.radii[0][0])
+                print("cP",currentPos)
             #what I need it the closest free point from the target ingredient
             v=numpy.array(targetPoint) - numpy.array(currentPos)
             s = numpy.sum(v*v)
             factor = ((v/math.sqrt(s)) * (ing.encapsulatingRadius+self.encapsulatingRadius))#encapsulating radus ?
             targetPoint =  numpy.array(targetPoint) - factor    
-        print("tPa",targetPoint)
+        if autopack.verbose > 1 :
+            print("tPa",targetPoint)
         return targetPoint,b
         
     def pickPartner_old(self, mingrs,listePartner, currentPos=[0,0,0]):
@@ -1334,6 +1342,12 @@ class Ingredient(Agent):
         #ovewrite by grow ingredient
         pass
                         
+    def SetKw(self,**kw):
+        for k in kw :
+            setattr(self,k,kw[k])
+            if k == "nbMol" :
+                self.overwrite_nbMol_value=kw[k]
+                
     def Set(self,**kw):
         self.nbMol = 0   
         if "nbMol" in kw :
@@ -1372,10 +1386,13 @@ class Ingredient(Agent):
         #print ("create the triangle",len(faces))
         #encapsulating radius ?
         v=numpy.array(self.vertices,'f')
-        l=numpy.sqrt((v*v).sum(axis=1))
-        r = float(max(l))+15.0
-        print "self.encapsulatingRadius ",self.encapsulatingRadius,r
-        self.encapsulatingRadius = r
+        try :
+            l=numpy.sqrt((v*v).sum(axis=1)) #FloatingPointError: underflow encountered in multiply
+            r = float(max(l))+15.0
+            print "self.encapsulatingRadius ",self.encapsulatingRadius,r
+            self.encapsulatingRadius = r
+        except :
+            pass
 #        if r != self.encapsulatingRadius:
 #            self.encapsulatingRadius = r
 
@@ -2935,10 +2952,12 @@ class Ingredient(Agent):
         listePartner = []
         weight=0.
         if not len(mingrs) or not len(mingrs[2]) :
-            print ("no close ingredient found")
+            if autopack.verbose > 1 :
+                print ("no close ingredient found")
             return [],[]       
         else :
-            print ("nb close ingredient",self.name,len(mingrs), len(mingrs[2]),
+            if autopack.verbose > 1 :
+                print ("nb close ingredient",self.name,len(mingrs), len(mingrs[2]),
                    len(close_indice),nb_ingredients)   
         listePartner =[]
         for i in range(len(mingrs[2])):
@@ -2946,14 +2965,15 @@ class Ingredient(Agent):
             t = mingrs[0][i]
 #            print ("test "+ing.name,ing.o_name,ing.isAttractor,self.partners_name)
             if self.packingMode=="closePartner":
-                if ing.o_name in self.partners_name :
+                if ing.o_name in self.partners_name or ing.name in self.partners_name:
 #                    print ("is a partner of"+self.name)
                     listePartner.append([i,self.partners[ing.name],mingrs[3][i]])
 #                                         autopack.helper.measure_distance(jtrans,mingrs[0][i])])
             if ing.isAttractor :#and self.compNum <= 0: #always attract! or rol a dice ?sself.excluded_partners.has_key(name)               
                 if ing.name not in self.partners_name and self.name not in ing.excluded_partners_name \
                 and ing.name not in self.excluded_partners_name :
-                    print ("shoul attract "+self.name)
+                    if autopack.verbose > 1 :
+                        print ("shoul attract "+self.name)
                     part = self.getPartner(ing.name)
                     if part is None :
                         part = self.addPartner(ing,weight=ing.weight)
@@ -2963,10 +2983,12 @@ class Ingredient(Agent):
                     d=afvi.vi.measure_distance(jtrans,t)
                     listePartner.append([i,part,d])
         if not listePartner:
-            print ("no partner found in close ingredient",self.packingMode)
+            if autopack.verbose > 1 :
+                print ("no partner found in close ingredient",self.packingMode)
             return [],[] 
         else : 
-            print (len(listePartner)," partner found in close ingredient")
+            if autopack.verbose > 1 :
+                print (len(listePartner)," partner found in close ingredient")
             return mingrs,listePartner
 
     def getTransform(self):      
@@ -3257,32 +3279,32 @@ class Ingredient(Agent):
         #grow doesnt use panda.......but could use all the geom produce by the grow as rb
         if self.placeType == "jitter" or self.Type == "Grow" or self.Type == "Actine":
             success, nbFreePoints = self.jitter_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "spring" or self.placeType == "rigid-body":
             success, nbFreePoints = self.rigid_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaDev":
             success, nbFreePoints = self.pandaBullet_place_dev(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaBullet":
             success, nbFreePoints = self.pandaBullet_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         elif self.placeType == "pandaBulletRelax" or self.placeType == "pandaBulletSpring":
             success, nbFreePoints = self.pandaBullet_relax(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None)
         elif self.placeType == "RAPID":
             success, nbFreePoints = self.rapid_place(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
-              stepByStep=False, verbose=False,
+              stepByStep=False, verbose=verbose,
               sphGeom=None, labDistGeom=None, debugFunc=None,
               sphCenters=None,  sphRadii=None, sphColors=None,usePP=usePP)
         #freePoints and distance are changed .. return them and see if they aredifferent
@@ -3997,7 +4019,8 @@ class Ingredient(Agent):
         targetPoint = trans
         found = False
         if listePartner : #self.packingMode=="closePartner":
-            print ("partner found")
+            if autopack.verbose > 1 :
+                print ("partner found")
             if not self.force_random:
                 targetPoint,weight = self.pickPartner(mingrs,listePartner,currentPos=trans)
                 if targetPoint is None :
@@ -4012,7 +4035,8 @@ class Ingredient(Agent):
                         try :
                             rotMat = numpy.array( rotVectToVect(v1, v2 ), 'f')
                         except :
-                            print('PROBLEM ', self.name)
+                            if autopack.verbose > 1 :
+                                print('PROBLEM ', self.name)
                             rotMat = numpy.identity(4)
                     #find a newpoint here?
                     return targetPoint,rotMat,found
@@ -4032,7 +4056,8 @@ class Ingredient(Agent):
             else :
                 targetPoint = trans 
         else :
-            print ("no partner found")
+            if autopack.verbose > 1 :
+                print ("no partner found")
         return targetPoint,rotMat,found
 
     def pandaBullet_collision(self,pos,rot,rbnode,getnodes=False):
@@ -4043,15 +4068,19 @@ class Ingredient(Agent):
             closesbody_indice = self.getClosestIngredient(pos,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
             if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
             else : 
-                print ("get RB ",len(closesbody_indice["indices"]))
+                if autopack.verbose > 1 :
+                    print ("get RB ",len(closesbody_indice["indices"]))
                 if rbnode is None :
                     rbnode = self.get_rb_model()
                     self.histoVol.moveRBnode(rbnode,pos, rot )
-                    print ("get RB for ",self.name,pos,rot)
+                    if autopack.verbose > 1 :
+                        print ("get RB for ",self.name,pos,rot)
                 liste_nodes = self.get_rbNodes(closesbody_indice,pos,getInfo=True)
-                print ("test collision against  ",len(liste_nodes))
+                if autopack.verbose > 1 :
+                    print ("test collision against  ",len(liste_nodes))
                 for node in liste_nodes:
-                    print ("collision test with ",node)
+                    if autopack.verbose > 1 :
+                        print ("collision test with ",node)
                     self.histoVol.moveRBnode(node[0], node[1], node[2])  #Pb here ? 
                     col = (self.histoVol.world.contactTestPair(rbnode, node[0]).getNumContacts() > 0 )
                     r=[col]
@@ -4185,7 +4214,8 @@ class Ingredient(Agent):
                 self.tilling.init_seed(histoVol.seed_used)
         elif histoVol.ingrLookForNeighbours and self.packingMode == "closePartner":
             bind = True
-            print ("look for ingredient",trans)
+            if verbose > 1:
+                print ("look for ingredient",trans)
             #roll a dice about proba_not_binding
             if self.proba_not_binding != 0 :#between 0 and 1
                 b=random()
@@ -4310,7 +4340,8 @@ class Ingredient(Agent):
             histoVol.callFunction(histoVol.moveRBnode,(rbnode, jtrans, rotMatj,))
             perdiodic_collision = False
             if periodic_pos is not None and self.packingMode !="gradient" :
-                print ("OK Periodicity ",len(periodic_pos),periodic_pos)
+                if verbose > 1:
+                    print ("OK Periodicity ",len(periodic_pos),periodic_pos)
                 for p in periodic_pos :
                     histoVol.callFunction(histoVol.moveRBnode,(rbnode, p, rotMatj,))
                     perdiodic_collision = self.pandaBullet_collision(p,rotMatj,rbnode)                
@@ -4354,10 +4385,12 @@ class Ingredient(Agent):
                             ## Divide the task or just submit job
                             n=0
                             self.histoVol.grab_cb.reset()#can't pickle bullet world 
-                            print ("usePP ",autopack.ncpus)
+                            if verbose > 1:
+                                print ("usePP ",autopack.ncpus)
                             for i in range(len(liste_nodes)/autopack.ncpus):
                                 for c in range(autopack.ncpus):
-                                    print ("submit job",i,c,n)
+                                    if verbose > 1:
+                                        print ("submit job",i,c,n)
                                     self.histoVol.pp_server.submit(checkCollision_mp,
                                                 (self.histoVol.world,rbnode, liste_nodes[n]),
                                             callback=self.histoVol.grab_cb.grab)
@@ -4394,7 +4427,8 @@ class Ingredient(Agent):
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
             if not collision2 and not test :# and not collision2:
-                print ("no collision")
+                if verbose > 1:
+                    print ("no collision")
                 if self.compareCompartment:
                     collisionComp = self.compareCompartmentPrimitive(level,
                      jtrans, rotMatj,gridPointsCoords, distance)
@@ -4445,7 +4479,7 @@ class Ingredient(Agent):
             insidePoints,newDistPoints=self.getDistances(jtrans, rotMatj,
                                              gridPointsCoords, distance,dpad)
             # save dropped ingredient
-            if verbose:
+            if verbose >1 :
                 print("compute distance loop ",time()-t3)
             nbFreePoints = histoVol.callFunction(self.updateDistances,(histoVol,insidePoints,
                                                             newDistPoints,
@@ -4468,7 +4502,8 @@ class Ingredient(Agent):
                 if self.packingMode[-4:] == 'tile' :
                     nexthexa = self.tilling.dropTile(self.tilling.idc,
                                             self.tilling.edge_id,jtrans,rotMatj)
-                    print ("drop next hexa",nexthexa.name,self.tilling.idc,self.tilling.edge_id)
+                    if verbose > 1:
+                        print ("drop next hexa",nexthexa.name,self.tilling.idc,self.tilling.edge_id)
                     #('drop next hexa', 'hexa_0_', 0, '')
 #                if periodic_pos is not None and self.packingMode !="gradient" :
 #                    for p in periodic_pos :
@@ -4486,7 +4521,7 @@ class Ingredient(Agent):
                 histoVol.successfullJitter.append(
                     (self, jitterList, collD1, collD2) )
                
-            if verbose :
+            if verbose >1 :
                 print('Success nbfp:%d %d/%d dpad %.2f'%(
                 nbFreePoints, self.counter, self.nbMol, dpad))
             if self.name=='in  inside':#<<??<<
@@ -4511,12 +4546,13 @@ class Ingredient(Agent):
 #            distance[ptInd] = max(0, distance[ptInd]*0.9)# ???
             distance[ptInd] = distance[ptInd]-1.0#?
             self.rejectionCounter += 1
-            if verbose :
+            if verbose >1 :
                 print('Failed ingr:%s rejections:%d'%(
                 self.name, self.rejectionCounter))
             if self.rejectionCounter >= self.rejectionThreshold: #Graham set this to 6000 for figure 13b (Results Fig 3 Test1) otehrwise it fails to fill small guys
                 #if verbose :
-                print('PREMATURE ENDING of ingredient', self.name)
+                if verbose > 1:
+                    print('PREMATURE ENDING of ingredient', self.name)
                 self.completion = 1.0
         if drop :
             return success, nbFreePoints

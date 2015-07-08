@@ -1128,7 +1128,6 @@ class Environment(CompartmentList):
                 ingr_partner = self.getIngrFromName(iname)
                 if ingr_partner is None :
                     continue
-                print (ingr_partner) 
                 partner = ingr.addPartner(ingr_partner,weight=ingr_partner.weight,
                                 properties={"position":ingr.partners_position[i]})
                 for p in ingr_partner.properties:
@@ -2562,7 +2561,7 @@ class Environment(CompartmentList):
         random, based on closest distance, based on gradients, ordered.
         This function also update the available free point except when hack is on.
         """
-        verbose = True
+        #verbose = True
         if ingr.packingMode=='close':
             t1 = time()
             allIngrPts = []
@@ -2581,7 +2580,7 @@ class Environment(CompartmentList):
                 if compId[pt]==compNum and d>=cut:
                     allIngrPts.append(pt)
                     allIngrDist.append(d)
-            if verbose:
+            if verbose > 1:
                 print("time to filter using for loop ", time()-t1)
         else:
             t1 = time()
@@ -2595,18 +2594,21 @@ class Environment(CompartmentList):
             else :
                 cut  = radius-jitter
             #for pt in freePoints[:nbFreePoints]:
-            print ("find grid point with distance >= ",cut)
+            if verbose > 1:
+                print ("find grid point with distance >= ",cut)
             if hasattr(ingr,"allIngrPts") and self._hackFreepts:
                 allIngrPts = ingr.allIngrPts
 #                print("hasattr(ingr,allIngrPts)")
-                print ("Running nofreepoint HACK")
+                if verbose > 1:
+                    print ("Running nofreepoint HACK")
             else :
                 #use periodic update according size ration grid
                 update = self.checkIfUpdate(ingr,nbFreePoints)
 #                print("in update ",update)
 #                print "update ", update,nbFreePoints,hasattr(ingr,"allIngrPts"),cut
                 if update :
-                    print("in update loop")
+                    if verbose > 1:
+                        print("in update loop")
                     for i in range(nbFreePoints):
 #                        print("in i range of update loop",i,freePoints[i],distance[i])
                         pt = freePoints[i]
@@ -2634,7 +2636,8 @@ class Environment(CompartmentList):
 #        print(("time to filter ",nbFreePoints," using lambda ", time()-t1))
         # no point left capable of accomodating this ingredient
 #        print("allIngrPts = ", allIngrPts)
-        print("len (allIngrPts) = ", len(allIngrPts))
+        if verbose > 1:
+            print("len (allIngrPts) = ", len(allIngrPts))
         if len(allIngrPts)==0:
             t=time()
             ingr.completion = 1.0
@@ -2649,7 +2652,7 @@ class Environment(CompartmentList):
 # Start of massive overruling section from corrected thesis file of Sept. 25, 2012
             #this function also depend on the ingr.completiion that can be restored ?
             self.activeIngr0, self.activeIngr12 = self.callFunction(self.getSortedActiveIngredients, (self.activeIngr,False))
-            if verbose:
+            if verbose > 1:
                 print('No point left for ingredient %s %f minRad %.2f jitter %.3f in component %d'%(
                 ingr.name, ingr.molarity, radius, jitter, compNum))
                 print ('len(allIngredients', len(self.activeIngr))
@@ -2661,7 +2664,7 @@ class Environment(CompartmentList):
             for priors in self.activeIngr12:
                 pp = priors.packingPriority
                 self.totalPriorities = self.totalPriorities + pp
-                if verbose :
+                if verbose > 1:
                     print ('totalPriorities = ', self.totalPriorities)
             previousThresh = 0
             self.normalizedPriorities = []
@@ -2681,7 +2684,7 @@ class Environment(CompartmentList):
                 else:
                     np=0.
                 self.normalizedPriorities.append(np)
-                if verbose :
+                if verbose > 1:
                     print ('np is ', np, ' pp is ', pp, ' tp is ', np + previousThresh)
                 self.thresholdPriorities.append(np + previousThresh)
                 previousThresh = np + float(previousThresh)
@@ -2705,7 +2708,7 @@ class Environment(CompartmentList):
 
             #self.thresholdPriorities.pop(ind)
             #self.normalizedPriorities.pop(ind)
-            if verbose:
+            if verbose >1:
                 print ("time to reject the picking", time()-t)
 # End of massive overruling section from corrected thesis file of Sept. 25, 2011
 # this chunk overwrites the next three lines from July version. July 5, 2012
@@ -2727,7 +2730,8 @@ class Environment(CompartmentList):
             elif ingr.packingMode=='gradient' and self.use_gradient:  
                 #get the most probable point using the gradient                
                 #use the gradient weighted map and get mot probabl point
-                print ("pick point from gradients",(len(allIngrPts)))
+                if verbose > 1:
+                    print ("pick point from gradients",(len(allIngrPts)))
                 ptInd = self.gradients[ingr.gradient].pickPoint(allIngrPts) 
             else:
                 # pick a point randomly among free points
@@ -2736,7 +2740,7 @@ class Environment(CompartmentList):
                 ptInd = allIngrPts[ptIndr]            
             if ptInd is None :
                 t=time()
-                if verbose:
+                if verbose > 1:
                     print('No point left for ingredient %s %f minRad %.2f jitter %.3f in component %d'%(
                     ingr.name, ingr.molarity, radius, jitter, compNum))
                 ingr.completion = 1.0
@@ -2748,13 +2752,13 @@ class Environment(CompartmentList):
                     for j in range(ind):                
                         self.thresholdPriorities[j] = self.thresholdPriorities[j] + self.normalizedPriorities[ind]
                 self.activeIngr.pop(ind)
-                if verbose:
+                if verbose > 1:
                     print('popping this gradient ingredient array must be redone using Sept 25, 2011 thesis version as above for nongraient ingredients, TODO: July 5, 2012')
                 self.thresholdPriorities.pop(ind)
                 self.normalizedPriorities.pop(ind)
-                if verbose:
-                        print(("time to reject the picking", time()-t))
-                print(("vRangeStart",vRangeStart))
+                if verbose > 1:
+                    print(("time to reject the picking", time()-t))
+                    print(("vRangeStart",vRangeStart))
                 return False,vRangeStart                    
 
 #            print(("time to random pick a point", time()-t2))
@@ -2779,13 +2783,15 @@ class Environment(CompartmentList):
                 pass
         return nbFreePoints
 
-    def getTotalNbObject(self,allIngredients):
+    def getTotalNbObject(self,allIngredients,update_partner=False):
         totalNbIngr = 0
         for ingr in allIngredients:
             if ingr.Type == "Grow" :
                 totalNbIngr += int (ingr.nbMol*(ingr.length/ingr.uLength))
             else :    
                 totalNbIngr += ingr.nbMol
+            if update_partner :
+                self.set_partners_ingredient(ingr)
         return totalNbIngr
     
     def fill5(self, seedNum=14, stepByStep=False, verbose=False, sphGeom=None,
@@ -2797,6 +2803,7 @@ class Environment(CompartmentList):
         ## find a suitable point using the ingredient's placer object
         """
         #set periodicity
+        autopack.verbose = verbose
         autopack.testPeriodicity=self.use_periodicity
         self.grid.testPeriodicity=self.use_periodicity
         import time
@@ -2804,11 +2811,14 @@ class Environment(CompartmentList):
         self.timeUpDistLoopTotal = 0 #Graham added to try to make universal "global variable Verbose" on Aug 28
         self.static=[]
         if self.grid is None:
-            print("no grid setup")
+            if verbose > 1:
+                print("no grid setup")
             return
         # create a list of active ingredients indices in all recipes to allow
         # removing inactive ingredients when molarity is reached
         allIngredients = self.callFunction(self.getActiveIng)
+        #verify partner
+        
         usePP = False
         if "usePP" in kw :
             usePP = kw["usePP"]
@@ -2851,16 +2861,18 @@ class Environment(CompartmentList):
         #this function also depend on the ingr.completiion that can be restored ?
         self.activeIngr0, self.activeIngr12 = self.callFunction(self.getSortedActiveIngredients, (allIngredients,verbose))
 
-        print('len(allIngredients', len(allIngredients))
-        print('len(self.activeIngr0)', len(self.activeIngr0))
-        print('len(self.activeIngr12)', len(self.activeIngr12))
+        if verbose > 1:
+            print('len(allIngredients', len(allIngredients))
+            print('len(self.activeIngr0)', len(self.activeIngr0))
+            print('len(self.activeIngr12)', len(self.activeIngr12))
         self.activeIngre_saved = self.activeIngr[:]
 
         self.totalPriorities = 0 # 0.00001
         for priors in self.activeIngr12:
             pp = priors.packingPriority
             self.totalPriorities = self.totalPriorities + pp
-            print('totalPriorities = ', self.totalPriorities)
+            if verbose > 1:
+                print('totalPriorities = ', self.totalPriorities)
         previousThresh = 0
         self.normalizedPriorities = []
         self.thresholdPriorities = [] 
@@ -2879,7 +2891,8 @@ class Environment(CompartmentList):
             else:
                 np=0.
             self.normalizedPriorities.append(np)
-            print('np is ', np, ' pp is ', pp, ' tp is ', np + previousThresh)
+            if verbose > 1:
+                print('np is ', np, ' pp is ', pp, ' tp is ', np + previousThresh)
             self.thresholdPriorities.append(np + previousThresh)
             previousThresh = np + float(previousThresh)
         self.activeIngr = self.activeIngr0 + self.activeIngr12
@@ -2890,13 +2903,15 @@ class Environment(CompartmentList):
         if len(self.thresholdPriorities ) == 0:
             for ingr in allIngredients:
                 totalNumMols += ingr.nbMol
-            print('totalNumMols Fill5if = ', totalNumMols)
+            if verbose > 1:
+                print('totalNumMols Fill5if = ', totalNumMols)
         else :                
             for threshProb in self.thresholdPriorities:
                 nameMe = self.activeIngr[nls]
-                print('threshprop Fill5else is %f for ingredient: %s %s %d'%(threshProb, nameMe,nameMe.name,nameMe.nbMol))
                 totalNumMols += nameMe.nbMol
-                print('totalNumMols Fill5else = ', totalNumMols)
+                if verbose > 1:
+                    print('threshprop Fill5else is %f for ingredient: %s %s %d'%(threshProb, nameMe,nameMe.name,nameMe.nbMol))
+                    print('totalNumMols Fill5else = ', totalNumMols)
                 nls+=1
             
         vRangeStart = 0.0
@@ -2920,11 +2935,8 @@ class Environment(CompartmentList):
 #         #the big loop
 #==============================================================================
         while nbFreePoints:
-            print (".........At start of while loop, with vRangeStart = ", vRangeStart)
-#            for o in self.compartments:
-#                print ("compartments = ", o.name)
-#            print("freePoints = ", freePoints, "nbFreePoints = ", nbFreePoints)
             if verbose > 1:
+                print (".........At start of while loop, with vRangeStart = ", vRangeStart)
                 print('Points Remaining', nbFreePoints, len(freePoints))
                 print('len(self.activeIngr)', len(self.activeIngr))                
             
@@ -2951,7 +2963,8 @@ class Environment(CompartmentList):
             ## pick an ingredient
             
             ingr =  self.callFunction(self.pickIngredient,(vThreshStart,))
-            print("picked Ingr ",ingr.name)
+            if verbose > 1:
+                print("picked Ingr ",ingr.name)
             #if ingr.completion >= 1.0 or ingr.is_previous:
             #    continue
 #            ingr =  self.callFunction(self.pickIngredient,(vRangeStart,))   # Replaced this with previous line from Sept 25, 2011 thesis version on July 5, 2012
@@ -2997,7 +3010,7 @@ class Environment(CompartmentList):
                                         freePoints,nbFreePoints,
                                         distance,compId,compNum,vRangeStart,vThreshStart))
 #                                        distance,compId,compNum,vRangeStart))   # Replaced this with Sept 25, 2011 thesis version on July 5, 2012
-            if autopack.verbose : 
+            if verbose >1: 
                 print ("get drop point res",res)
             if res[0] :
                 ptInd = res[1]
@@ -3005,10 +3018,11 @@ class Environment(CompartmentList):
                     print ("problem ",ptInd)
                     continue
             else :
-                print ("vRangeStart coninue ",res)
+                if verbose > 1:
+                    print ("vRangeStart coninue ",res)
                 vRangeStart = res[1]
                 continue
-            print ("picked ",ptInd,distance[ptInd])
+                print ("picked ",ptInd,distance[ptInd])
             #place the ingrediant
             if self.overwritePlaceMethod :
                 ingr.placeType = self.placeMethod
@@ -3026,7 +3040,8 @@ class Environment(CompartmentList):
                 self.grid.distToClosestSurf = numpy.array(distance[:])
                 self.grid.freePoints = numpy.array(freePoints[:])
                 self.grid.nbFreePoints = len(freePoints)#-1
-                print ("success",ingr.completion)
+                if verbose > 1:
+                    print ("success",ingr.completion)
                 #update largest protein size
                 #problem when the encapsulatingRadius is actually wrong
                 if ingr.encapsulatingRadius > self.largestProteinSize : 
@@ -3034,16 +3049,18 @@ class Environment(CompartmentList):
                 PlacedMols+=1
 #                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
             else :
-                print ("rejected",ingr.rejectionCounter)
-                print ("picked reduced ?",ptInd, distance[ptInd] )
+                if verbose > 1:
+                    print ("rejected",ingr.rejectionCounter)
+                    print ("picked reduced ?",ptInd, distance[ptInd] )
 
             if ingr.completion >= 1.0 :
-                print('completed***************', ingr.name)
-                print('PlacedMols = ', PlacedMols)
                 ind = self.activeIngr.index(ingr)
-                print('activeIngr index of ',ingr.name,ind)
-                print('threshold p len ',len(self.thresholdPriorities),
-                                  len(self.normalizedPriorities)) 
+                if verbose > 1:
+                    print('completed***************', ingr.name)
+                    print('PlacedMols = ', PlacedMols)
+                    print('activeIngr index of ',ingr.name,ind)
+                    print('threshold p len ',len(self.thresholdPriorities),
+                                      len(self.normalizedPriorities)) 
 #                vRangeStart = vRangeStart + self.normalizedPriorities[0]
                 if ind > 0:
                     #j = 0
@@ -3090,28 +3107,7 @@ class Environment(CompartmentList):
                     self.thresholdPriorities.append(np + previousThresh)
                     previousThresh = np + float(previousThresh)
                 self.activeIngr = self.activeIngr0 + self.activeIngr12
-                
-#                nls=0
-#                totalNumMols = 0
-#                for threshProb in self.thresholdPriorities:
-#                    nameMe = self.activeIngr[nls]
-#                    print ('threshprop Success is %f for ingredient: %s %s %d'%(threshProb, nameMe,nameMe.name,nameMe.nbMol))
-#                    totalNumMols += nameMe.nbMol
-#                    print ('totalNumMols Success= ', totalNumMols)
-#                    nls+=1
-            
-                #print 'vThreshStart before = ', vThreshStart
-                #vThreshStart = self.thresholdPriorities[0]
-                #print 'vThreshStart after = ', vThreshStart
-                #print 'because vself.thresholdPriorities[0] = ', self.thresholdPriorities[0]
-                #self.thresholdPriorities.pop(ind)
-                #self.normalizedPriorities.pop(ind)
-# END large chunk of code from proper thesis Sept 25, 2011 version to correctly replace simple pop above on July 5, 2012
-#            if nbFreePoints == 0 :
-#                break
-        #0.8938
-        # for debugging purposes
-        #whats the difference with distancetosurface which is stored
+
         self.distancesAfterFill = distance
         self.freePointsAfterFill = freePoints
         self.nbFreePointsAfterFill = nbFreePoints
@@ -4212,7 +4208,8 @@ class Environment(CompartmentList):
         # Sphere
         if panda3d is None :
             return None
-        print ("add RB bullet ",ingr.name)
+        if autopack.verbose > 1 :
+            print ("add RB bullet ",ingr.name)
         mat = rotMat.copy()
 #        mat[:3, 3] = trans
 #        mat = mat.transpose()

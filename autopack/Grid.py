@@ -39,6 +39,7 @@ import numpy
 import autopack
 from autopack.ldSequence import cHaltonSequence3
 from scipy import spatial
+import math
 from math import ceil
 from math import floor
 from random import randrange
@@ -528,7 +529,8 @@ class Grid:
                 tr.append(pt3d+corner[i])
         if len(tr) :
             translation=tr
-            print ("periodicity ",len(translation), tr) 
+            if autopack.verbose > 1 : 
+                print ("periodicity ",len(translation), tr) 
         return translation        
         
     def getPositionPeridocityBroke(self,pt3d,jitter,cutoff):
@@ -614,7 +616,8 @@ class Grid:
         test2 =  P > E
         if True in test1 or True in test2:
             #outside
-            print ("outside",P,self.boundingBox)
+            if autopack.verbose > 1 :
+                print ("outside",P,self.boundingBox)
             return False
         else :
             if dist is not None:

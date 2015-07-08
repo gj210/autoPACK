@@ -150,6 +150,8 @@ def applyIndividualIngredientsOptionsDict(env,paremeter_dict,nset):
                 continue
             for k in paremeter_dict[iname] :
                 setattr(ingr,k,paremeter_dict[iname][k][nset])
+                if k=="nbMol" :
+                    ingr.overwrite_nbMol_value = ingr.nbMol
 
 def applyGeneralOptions_product(env,parameter_set,nset):
     for i,k in enumerate(parameter_set) :
@@ -229,8 +231,8 @@ h.boundingBox=np.array(h.boundingBox)
 #to get the value for the current value we can use the python function getattr
 #to change the value of the option we can use the python function setattr
 #all the packing options (General Parameters) are found in h.OPTIONS
-for k in h.OPTIONS.keys():
-    print h.OPTIONS[k]
+#for k in h.OPTIONS.keys():
+#    print h.OPTIONS[k]
 #the main options to explore are probably:
 #smallestProteinSize float
 #pickWeightedIngr    boolean
@@ -238,8 +240,8 @@ for k in h.OPTIONS.keys():
 #use_periodicity     boolean
 
 #all the ingredients/Object options (Individual Parameters) are found in Ingredients.KWDS
-for k in ingredients_parameters.keys():
-    print k,ingredients_parameters[k]
+#for k in ingredients_parameters.keys():
+#    print k,ingredients_parameters[k]
 #for instance packingPriority:
 # - an optional packing priority. If omited the priority will be based
 #    on the radius with larger radii first
@@ -280,46 +282,49 @@ individuals_ingredients_paremeter_set=OrderedDict({
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],
+'nbMol':[0,0,6,8],
 }),
 "Sphere_radius_200":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[2,4,6,8],}),
+'nbMol':[0,0,6,8],}),
 "Sphere_radius_50":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[10,14,16,18],}),
+'nbMol':[0,0,16,18],}),
 "Sphere_radius_25p":OrderedDict({'rejectionThreshold':[10,20,30],
 'packingPriority':[-10,0,10],
 'cutoff_boundary':[0,10,20],
 'jitterMax':[[0.1,0.1,0.1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],}),
+'nbMol':[0,0,60,80],}),
 "Sphere_radius_25r":OrderedDict({
 'rejectionThreshold':[10,20,30],
 'packingPriority':[0,0,10],
 'cutoff_boundary':[0,0,20],
 'jitterMax':[[1,1,1],[0.5,0.5,0.5],[1.,1.,1.]],
 'nbJitter':[5,10,15],
-'nbMol':[20,40,60,80],
+'nbMol':[0,0,60,80],
 }),
 })
 
 #we are going to overwrite the dictionary for the new recipe 1.1
-individuals_ingredients_paremeter_set["Sphere_radius_25r"]={
-    "proba_binding":[0.5,1.0],
-    "proba_not_binding":[0.5,0.0],
-    "weight":[0.5,1.0]
+individuals_ingredients_paremeter_set["Sphere_radius_25r"]={#ext__Sphere_radius_25r
+    "proba_not_binding":[1.0,0.5],
+    "partners_name":["Sphere_radius_25p","Sphere_radius_25p"],
+    "nbMol":[5,5]
 }
-individuals_ingredients_paremeter_set["Sphere_radius_25p"]={}
+individuals_ingredients_paremeter_set["Sphere_radius_25p"]={
+    "weight":[0.0,0.0],
+    "nbMol":[5,20]
+}
 
 #a variable that define if you want to use the individual option
-use_individual_options = False 
+use_individual_options = True 
 
 #there is a lot of different to manipulate the options, I just show you the dictionary way.
 #you can also comment/uncomment the option you don't want
