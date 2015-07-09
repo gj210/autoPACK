@@ -1080,12 +1080,12 @@ class Environment(CompartmentList):
         pass
 
     def setSeed(self,seedNum):
-        SEED=seedNum
+        SEED=int(seedNum)
         numpy.random.seed(SEED)#for gradient
-        seed(seedNum)
-        self.randomRot.setSeed(seed=seedNum)
+        seed(SEED)
+        self.randomRot.setSeed(seed=SEED)
         self.seed_set = True
-        self.seed_used = seedNum
+        self.seed_used = SEED
         
     def reportprogress(self,label=None,progress=None):
         if self.afviewer is not None and hasattr(self.afviewer,"vi"):
@@ -1128,8 +1128,11 @@ class Environment(CompartmentList):
                 ingr_partner = self.getIngrFromName(iname)
                 if ingr_partner is None :
                     continue
-                partner = ingr.addPartner(ingr_partner,weight=ingr_partner.weight,
+                if len(ingr.partners_position):
+                    partner = ingr.addPartner(ingr_partner,weight=ingr_partner.weight,
                                 properties={"position":ingr.partners_position[i]})
+                else :
+                    partner = ingr.addPartner(ingr_partner,weight=ingr_partner.weight,properties={})                    
                 for p in ingr_partner.properties:
                     partner.addProperties(p,ingr_partner.properties[p])
                 partner.setup()
@@ -2899,7 +2902,7 @@ class Environment(CompartmentList):
 
         nls=0
         totalNumMols = 0
-        self.totalNbIngr = self.getTotalNbObject(allIngredients)
+        self.totalNbIngr = self.getTotalNbObject(allIngredients,update_partner=True)
         if len(self.thresholdPriorities ) == 0:
             for ingr in allIngredients:
                 totalNumMols += ingr.nbMol
