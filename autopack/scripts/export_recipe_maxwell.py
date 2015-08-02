@@ -11,10 +11,16 @@ import math
 ##The program will read and write all the packings in the following file format: It should be a binary file which stores sequentially sphere center x, y, z coordinates and diameter for each particle as floating points in double precision in little-endian byte order. If the machine on which the program is being run is big-endian, the program will detect it and will still read and write in little-endian format. 
 
 import sys
-#sys.path.append("/usr/local/maxwell-3.0//python/pymaxwell/python2.7_UCS4")
-sys.path.append("/usr/local/maxwell-3.0//python/pymaxwell/python2.7_UCS2")
+#MGLTools import
+sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs")
+#Maxwell import
+sys.path.append("/usr/local/maxwell-3.0//python/pymaxwell/python2.7_UCS4")
+#sys.path.append("/usr/local/maxwell-3.0//python/pymaxwell/python2.7_UCS2")#
 sys.path.append("/usr/local/maxwell-3.0/")
 from pymaxwell import *
+
+import prody
+prody.confProDy(verbosity='none')
 
 
 import numpy
@@ -39,6 +45,54 @@ else :
     print helper
 autopack.helper = helper
 autopack.fixpath = True
+
+
+try :
+    import simplejson as json
+    from simplejson import encoder    
+except :
+    import json
+    from json import encoder
+encoder.FLOAT_REPR = lambda o: format(o, '.8g')
+cellPackserver="https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"
+try :
+    from collections import OrderedDict
+except :
+    from ordereddict import OrderedDict
+
+import urllib
+import struct
+
+
+
+CACHE_FOLDER = "/home/ludo/.autoPACK/cache_others/"
+PATH="/opt/data/dev/cellPACK/cellPACK_data/cellPACK_database_1.1.0/recipes/"
+vdwRadii = { 'N':1.55, 'C':1.70, 'O':1.52,
+                  'H':1.20, 
+                  'S':1.80}
+
+def getCenter(coords):
+    center = sum(coords)/(len(coords)*1.0)
+    center = list(center)
+    for i in range(3):
+        center[i] = round(center[i], 4)
+#        print "center =", center
+    return numpy.array(center)
+
+def getRadius(coords,center):
+    dist = numpy.linalg.norm(coords-center,axis=1)
+    return max(dist)
+
+
+def fetch_pdb(pdbid):
+  url = 'http://www.rcsb.org/pdb/files/%s.pdb' % pdbid.upper()
+  return urllib.urlopen(url).read()
+
+def fetch_cellPACK(pdbid):
+  url = 'https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0/other/%s' % pdbid
+  return urllib.urlopen(url).read()
+
+
 
 from upy.transformation import decompose_matrix
 def up (r):
@@ -152,6 +206,38 @@ def readOne(fname,gname,scene):
 #    iscene.freeScene();
     return obj,scene
 
+def create_mxs_from_particle_bins(binfile,scene=None):
+    # Create scene.
+    if scene is None :
+        scene = Cmaxwell(mwcallback);
+        camera = scene.addCamera('camera',1,1.0/800.0,0.04,0.035,400,"CIRCULAR",0,0,25,400,300,1);
+        camera.setStep(0,Cvector(0.0,0.0,6.0),Cvector(0.0,0.0,0.0),Cvector(0.0,1.0,0.0),0.035,8.0,0);
+        camera.setActive();
+        # Add physical sky and sun
+        scene.getEnvironment().setActiveSky('PHYSICAL')
+        sunColor = Crgb()
+        sunColor.assign(1,1,1)
+        scene.getEnvironment().setSunProperties(SUN_PHYSICAL,5777,1,1,sunColor)
+        
+    # Create RFRK object.
+    mgr = CextensionManager.instance();
+    #mgr.setExtensionsDirectory('C:/Program Files/Next Limit/Maxwell 3/extensions/')
+    mgr.loadAllExtensions()
+    print mgr
+    ext = mgr.createDefaultGeometryProceduralExtension('MaxwellParticles')
+    print ext
+    params = ext.getExtensionData()
+    params.setString('FileName',binfile)
+    #set the radius
+#    params.getFloat("Radius Factor")
+    params.setFloat('Radius Factor',120.000)
+#    params.setDouble('RadiusMultiplier',120.000)
+    pobject = scene.createGeometryProceduralObject(binfile[-3:],params)
+    if pobject.isNull():
+        print("Error creating particles object")
+        return 0;
+    return pobject
+    
 def maxwellMesh(name,v,n,f,scene,matnode=None):
     vertzyx = numpy.array(v,float)# * numpy.array([1,1,-1])
     fi=numpy.array(f,int)
@@ -248,6 +334,100 @@ def buildCompartmentsGeom(comp,scene,parent=None):
 #                    print ("X",mat,base.xAxis.x(),base.xAxis.y(),base.xAxis.z())
                     break
                 c+=1
+
+def toBinary(filename,datai):
+    f=open(filename,"wb")#"/home/ludo/Tools/lipidwrapper/bins/test_np3.pxy","wb")
+    f.write(struct.pack('=f',3.0))                 #version
+    f.write(struct.pack('=i',len(datai)))   #nb particle 
+    for i in range(len(datai)):#len(a['arr_0'])):#len(a['arr_0'])):
+        f.write(struct.pack('=Qffffff',int(i),datai[i][0],datai[i][1],datai[i][2],0.,0.,0.))
+    f.close()
+    return filename
+
+def loadPDB(fname,scene=None,center=True,transform=None):
+    mols=None
+    try :
+        mols = prody.parsePDB(fname)#display lines 
+        print "load "+fname
+    except :
+        print "problem reading ",fname
+        return None
+    translate=numpy.array([0,0,0])
+    if center :
+        center=numpy.array([0,0,0])    
+        coords = mols.getCoords()
+#    if transform is not None :
+#        if transform["center"] :
+#            center = getCenter(coords)
+#        if "translate" in transform:
+#            translate = numpy.array(transform["translate"])
+#        coords-=center
+#        coords+=translate
+#        print "OK,Transform to center",center
+#        print "OK,translate",translate
+#        #rotate?
+#        #translate and rotate ?
+#    else :
+#        center = getCenter(coords)
+#        coords-=center
+    center = getCenter(coords)
+    coords-=center
+    name = mols.getElements()
+    sizes = numpy.zeros(len(name))
+    for k, v in vdwRadii.iteritems(): sizes[name==k] = v#*self.scale_sphere
+    color = numpy.random.random(4)
+
+    #build the bin file iof doesnt exist
+    binfile = CACHE_FOLDER+mols.getTitle()+".pxy"
+    if not os.path.isfile(binfile):
+        binfile =toBinary(binfile,coords)
+    node = create_mxs_from_particle_bins(binfile,scene=scene)
+    return mols,node
+
+def fetchLoadPDB(pdbid,scene=None,transform=None):
+    if pdbid.find("SwissModel") != -1 :
+        return None
+    if len(pdbid) > 4 :
+        #actual file name?
+        fname=CACHE_FOLDER+str(pdbid)
+        if not os.path.isfile(CACHE_FOLDER+str(pdbid)):
+            aStr=fetch_cellPACK(pdbid)
+            if not os.path.isfile(fname) :
+                f=open(fname,"w")
+                f.write(aStr)
+                f.close()
+    else :
+        pdbid=pdbid[:4].upper()
+        print pdbid
+        fname=CACHE_FOLDER+str(pdbid)+".pdb"
+        if not os.path.isfile(CACHE_FOLDER+str(pdbid)+".pdb"):
+            aStr=fetch_pdb(pdbid)
+            if aStr.find("Not Found") != -1 or aStr.find("<html>") != -1 :
+                return None,None      
+            if not os.path.isfile(fname) :
+                f=open(fname,"w")
+                f.write(aStr)
+                f.close()
+    #read it in Pmv?
+    print "load ",fname
+    mols,node=loadPDB(fname,scene=scene,transform=transform)
+#        mols = prody.parsePDB(fname)
+    return mols,node
+
+
+def buildIngredientParticles(ingr,scene,matnode,sphere=False,transform=None):
+    #get the source    
+    pdbid=ingr.source["pdb"]
+    if pdbid is None or pdbid.find("EMDB")!= -1:
+        return liste_pdb
+#    if pdbid not in liste_pdb:
+#         if not sphere :
+    mols,mxobject=fetchLoadPDB(pdbid,scene=scene,transform=transform)
+    if mols is None :
+        return None
+    if matnode is not None :
+        mxobject.setMaterial(matnode);        
+    return mxobject
                 
 def buildIngredientGeom(ingr,scene,matnode):
 #    sc = Cmaxwell(mwcallback);
@@ -321,7 +501,8 @@ def buildRecipe(recipe,name,scene,root_node,mask=None):
         matnode=oneMaterial(ingr.o_name,scene,color=ingr.color)
 #        print "material",matnode
         #build a geomedtry node
-        master_node=buildIngredientGeom(ingr,scene,matnode)
+#        master_node=buildIngredientGeom(ingr,scene,matnode)
+        master_node=buildIngredientParticles(ingr,scene,matnode)
         if master_node is None :
             continue
         #hide it
@@ -344,6 +525,7 @@ def buildRecipe(recipe,name,scene,root_node,mask=None):
             if mask != None :
                  if testOnePoints(pos,mask) :
                      continue
+            #can we do it using a particle cloud
             instance = scene.createInstancement(str(ingr.o_name)+"_"+str(c),master_node);
             mat = rot.copy()
             mat[:3, 3] = pos
@@ -379,8 +561,31 @@ def buildRecipe(recipe,name,scene,root_node,mask=None):
 #            print instance
 #            break
     return scene,root_node
+
+def create_scene():
+    #architecture is :
+    #-env.name
+    #--exterior
+    #----ingredients
+    #--compartments
+    #----surface
+    #------ingredients
+    #----interior
+    #------ingredients
+    #create the document and a node for rootenv
+    scene = Cmaxwell(mwcallback);
+    # Create camera
+    camera = scene.addCamera('camera',1,1.0/800.0,0.04,0.035,400,"CIRCULAR",0,0,25,10000,10000,1);
+    camera.setStep(0,Cvector(0.0,0.0,6.0),Cvector(0.0,0.0,0.0),Cvector(0.0,1.0,0.0),0.035,8.0,0);
+    camera.setActive();
+    # Add physical sky and sun
+    scene.getEnvironment().setActiveSky('physical');
+    sunColor = Crgb()
+    sunColor.assign(1,1,1)
+    scene.getEnvironment().setSunProperties(SUN_PHYSICAL,5777,1,1,sunColor);
+    return scene
         
-def build_scene(env):
+def build_scene(env,mb=None):
     #architecture is :
     #-env.name
     #--exterior
@@ -411,6 +616,7 @@ def build_scene(env):
             p,s,bb=up (767.0) #used for lipids
             pp,ss,bbsurface = up (700.0)
             bbsurface = numpy.array([[p-ss/2.0],[p+ss/2.0]])
+#            bbsurface=None
             scene,root_env = buildRecipe(rs,str(o.name)+"_surface",scene,root_env,mask=bbsurface)
         ri = o.innerRecipe
         if ri : 
@@ -420,7 +626,9 @@ def build_scene(env):
         #build the compartments geometry
 #        buildCompartmentsGeom(o,scene,parent=root_env)
         #['ID']['node', 'color', 'id', 'instances', 'mesh', 'parentmesh']
-        
+    if mb is not None :
+        #add the membrane pxy object
+        create_mxs_from_particle_bins(mb,scene=scene)
     fname = "/home/ludo/"+env.name+str(env.version)+".mxs"
     ok = scene.writeMXS(str(fname));
     print "write",ok
@@ -448,8 +656,18 @@ def build_scene(env):
 #    #collada_xml.scene.nodes
 #    collada_xml.write("/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/geometries/HIV1_capside_3j3q_Rep_Med_0_2_1.dae") 
 #    
-
-
+def getColor(filename):
+    c= [126,155,154,255]   
+    if filename[:2]=="M2":
+        c= [126,155,154,255]
+    elif filename[:2]=="NA":
+        c = [158,93,171,255]
+    elif filename[:2]=="HA":
+        c= [149,189,86,255]
+    else :
+        c= [163,85,64,255]
+    return numpy.array(c)/255.0
+    
 mgr = CextensionManager.instance();
 #mgr.setExtensionsDirectory('C:/Program Files/Next Limit/Maxwell 3/extensions/')
 mgr.loadAllExtensions()
@@ -459,37 +677,58 @@ print mgr
 #params = ext.getExtensionData()
   
 doit=True
-if len(sys.argv) > 1 :#and doit :
-    filename = sys.argv[1]
-    resultfile=None
-    if filename in autopack.RECIPES :
-        n=filename
-        v=sys.argv[2]
-        filename = autopack.RECIPES[n][v]["setupfile"]
-        resultfile= autopack.RECIPES[n][v]["resultfile"]
-    setupfile = autopack.retrieveFile(filename,cache="recipes")
-    print ("ok use ",setupfile,filename)
-    fileName, fileExtension = os.path.splitext(setupfile)
-    n=os.path.basename(fileName)
-    h = Environment(name=n)     
-    h.loadRecipe(setupfile)
-    h.setupfile=filename
-    if resultfile is not None :
-        h.resultfile=resultfile
-    fileName, fileExtension = os.path.splitext(setupfile)
-    rfile = h.resultfile
-    resultfilename = autopack.retrieveFile(rfile,cache="results")
-    if resultfilename is None :
-        print ("no result for "+n+" "+h.version+" "+rfile)
-        sys.exit()
-    print ("get the result file from ",resultfilename)
-    result,orgaresult,freePoint=h.loadResult(resultfilename=resultfilename)
-#                                             restore_grid=False,backward=True)#load text ?#this will restore the grid  
-    ingredients = h.restore(result,orgaresult,freePoint)
-    #export the complete recipe as collada. each ingredient -> meshnode. Each instance->node instance
-    env=h
-    if doit :
-        cxml=build_scene(env)
+pdb=True
+if pdb :
+    #the argument is the folder with all the pdb file to load and make into bin file
+    import glob
+    liste_pdb = glob.glob(sys.argv[1]+"/*.pdb")
+    #create the scen
+    scene = create_scene()
+    for filename in liste_pdb :
+        name = filename
+        color = getColor(filename)
+        matnode=oneMaterial(name,scene,color=color)
+        #read the pdb and create the bin
+        mol,node = loadPDB(filename,center=False,scene=scene)
+    fname = "/home/ludo/all_pdb_test.mxs"
+    ok = scene.writeMXS(str(fname));
+    print "write",ok   
+    #save the scene
+else :
+    if len(sys.argv) > 1 :#and doit :
+        #f=PATH+"HIV-1_0.1.6-7_mixed_pdb.json"?
+        filename = sys.argv[1]
+        resultfile=None
+        if filename in autopack.RECIPES :
+            n=filename
+            v=sys.argv[2]
+            filename = autopack.RECIPES[n][v]["setupfile"]
+            resultfile= autopack.RECIPES[n][v]["resultfile"]
+        setupfile = autopack.retrieveFile(filename,cache="recipes")
+        print ("ok use ",setupfile,filename)
+        fileName, fileExtension = os.path.splitext(setupfile)
+        n=os.path.basename(fileName)
+        h = Environment(name=n)     
+        h.loadRecipe(setupfile)
+        h.setupfile=filename
+        resultfile = PATH+"HIV-1_0.1.6-8_mixed_pdb.json"
+        if resultfile is not None :
+            h.resultfile=resultfile
+        fileName, fileExtension = os.path.splitext(setupfile)
+        rfile = h.resultfile
+        resultfilename = autopack.retrieveFile(rfile,cache="results")
+        if resultfilename is None :
+            print ("no result for "+n+" "+h.version+" "+rfile)
+            sys.exit()
+        print ("get the result file from ",resultfilename)
+        result,orgaresult,freePoint=h.loadResult(resultfilename=resultfilename)
+    #                                             restore_grid=False,backward=True)#load text ?#this will restore the grid  
+        ingredients = h.restore(result,orgaresult,freePoint)
+        #export the complete recipe as collada. each ingredient -> meshnode. Each instance->node instance
+        env=h
+        if doit :
+            cxml=build_scene(env)
+
 #    cxml.freeScene();
 #execfile("pathto/export_recipe_collada.py") 
 #I usually run this on with pmv,anaconda or mayapy
