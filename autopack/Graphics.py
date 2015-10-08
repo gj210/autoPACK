@@ -1657,7 +1657,7 @@ class AutopackViewer:
             if ingtype == self.helper.INSTANCE :
                 child0 = self.helper.getMasterInstance(child0)
                 ingtype = self.helper.getType(child0)
-            if ingtype == self.helper.SPHERE :
+            if ingtype == self.helper.SPHERE :#should be able to detect this using distance vertex->center
                 from autopack.Ingredient import MultiSphereIngr
                 positions=[]
                 radius = []

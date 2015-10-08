@@ -316,7 +316,7 @@ def buildRecipe(recipe,name):
 #            print c,ingr.o_name+"_"+str(c),master_node
             #test if in bb ?
             #can we do it using a particle cloud
-            mat = rot.copy().transpose()
+            mat = rot.copy()#.transpose()
             mat[:3, 3] = pos
             biomt+="REMARK 350   BIOMT1   %d  %.8f %.8f %.8f %.8f\n" % (c,rot[0][0],rot[0][1],rot[0][2],pos[0])
             biomt+="REMARK 350   BIOMT2   %d  %.8f %.8f %.8f %.8f\n" % (c,rot[1][0],rot[1][1],rot[1][2],pos[1])

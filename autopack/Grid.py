@@ -976,6 +976,7 @@ class HaltonGrid(Grid):
         self.haltonseq = cHaltonSequence3()
         self.tree = None        
         self.lookup=1
+        self.gridSpacing=space
         if setup :
             self.setup(boundingBox,space)
         

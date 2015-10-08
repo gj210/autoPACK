@@ -1389,7 +1389,7 @@ class Ingredient(Agent):
         try :
             l=numpy.sqrt((v*v).sum(axis=1)) #FloatingPointError: underflow encountered in multiply
             r = float(max(l))+15.0
-            print "self.encapsulatingRadius ",self.encapsulatingRadius,r
+            print ("self.encapsulatingRadius ",self.encapsulatingRadius,r)
             self.encapsulatingRadius = r
         except :
             pass
@@ -1532,10 +1532,10 @@ class Ingredient(Agent):
                 if helper.host == "dejavu" and helper.nogui:
                     dgeoms = helper.read(filename)
                     v,vn,f = dgeoms.values()[0]["mesh"]
-                    print "vertices nb is ",len(v)
+                    print ("vertices nb is ",len(v))
 #                    vn = self.getVertexNormals(v,f)     
                     self.vertices,self.vnormals,self.faces = v,vn,f#helper.combineDaeMeshData(dgeoms.values())
-                    print "after coombine vertices nb is ",len(v)
+                    print ("after coombine vertices nb is ",len(v))
                     self.vnormals=[]#helper.normal_array(self.vertices,numpy.array(self.faces))
                     geom = helper.createsNmesh(geomname,self.vertices,self.vnormals,self.faces)[0]
                     return geom

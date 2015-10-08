@@ -1329,7 +1329,7 @@ def load_MixedasJson(env,resultfilename=None):
 #                    ingr.results=[]
                     for r in iresults:
                         rot = numpy.identity(4)
-                        print r[1],len(r[1]),type(r[1][0])
+                        #print r[1],len(r[1]),type(r[1][0])
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
                                 rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
