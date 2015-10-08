@@ -3987,7 +3987,7 @@ class Environment(CompartmentList):
             self.rb_panda = []
         for o in self.compartments:
             if o.rbnode is None :
-                o.rbnode = self.addMeshRBOrganelle(o)
+                o.rbnode = o.addShapeRB()#addMeshRBOrganelle(o)
 
     def delRB(self, node):
         if panda3d is None :
@@ -4015,6 +4015,7 @@ class Environment(CompartmentList):
         geom = OdeSphereGeom(self.ode_space, ingr.encapsulatingRadius)
         geom.setBody(body)
         return geom
+
 
     def addSingleSphereRB(self,ingr,pMat,jtrans,rotMat):
         shape = BulletSphereShape(ingr.encapsulatingRadius)

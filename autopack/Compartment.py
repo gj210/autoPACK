@@ -97,7 +97,7 @@ try :
     from panda3d.core import Mat3,Mat4,Vec3,Point3
     from panda3d.core import TransformState
     from panda3d.core import BitMask32
-    from panda3d.bullet import BulletSphereShape,BulletBoxShape,BulletCylinderShape
+    from panda3d.bullet import BulletSphereShape,BulletBoxShape,BulletCylinderShape,BulletCapsuleShape
     #        from panda3d.bullet import BulletUpAxis
     from panda3d.bullet import BulletRigidBodyNode
     from panda3d.ode import OdeBody, OdeMass
@@ -222,6 +222,16 @@ class  Compartment(CompartmentList):
         #to compute inside points.
         if "isOrthogonalBoudingBox" in kw :
             self.isOrthogonalBoudingBox = kw["isOrthogonalBoudingBox"]
+        self.stype="mesh"
+        self.radius=0.0
+        self.height=0.0
+        self.axis=[0,1,0]
+        if "stype" in kw : 
+            self.stype=kw["type"]
+            #depending on the type the folowing is defined
+            self.radius=kw["radius"]
+            self.height=kw["height"]
+            self.axis=kw["axis"]
         self.grid_type = "regular"
         self.grid_distances = None#signed closest distance for each point
         #TODO Add openVDB
@@ -240,10 +250,13 @@ class  Compartment(CompartmentList):
         m = numpy.identity(4)
         m[:3,:3]=rot[:3,:3]
         m[3,:3] = pos
-        print self.vertices[0]
+        #print self.vertices[0]
         self.vertices = autopack.helper.ApplyMatrix(self.vertices,m.transpose())
-        self.vnormals = autopack.helper.ApplyMatrix(self.vnormals,m.transpose())
-        print self.vertices[0]
+        #Recompute the normal ?        
+        #self.vnormals = autopack.helper.ApplyMatrix(self.vnormals,m.transpose())
+        self.vnormals = self.getVertexNormals( self.vertices, self.faces)
+        #self.vnormals = autopack.helper.normal_array(self.vertices,numpy.array(self.faces))
+        self.center = pos
         
     def getDejaVuMesh(self, filename, geomname):
         """
@@ -283,23 +296,81 @@ class  Compartment(CompartmentList):
             self.create_rapid_model()
         return self.rapid_model 
 
-    def addMeshRB(self,):
-        from panda3d.bullet import BulletRigidBodyNode
+    def addShapeRB(self,):
+        #in case our shape is a regular primitive
+        if self.stype=="capsule":
+            shape = BulletCapsuleShape(self.radius, self.height, self.axis)
+        else :
+            shape = self.addMeshRB()
         inodenp = self.parent.worldNP.attachNewNode(BulletRigidBodyNode(self.name))
         inodenp.node().setMass(1.0)
+        inodenp.node().addShape(shape,TransformState.makePos(Point3(0, 0, 0)))#rotation ?
+
+        inodenp.setCollideMask(BitMask32.allOn())
+        inodenp.node().setAngularDamping(1.0)
+        inodenp.node().setLinearDamping(1.0)
+        self.parent.world.attachRigidBody(inodenp.node())
+        inodenp = inodenp.node()
+        return inodenp
+
+    def setGeomFaces(self,tris,face):                
+        #have to add vertices one by one since they are not in order
+        if len(face) == 2 :
+            face = numpy.array([face[0],face[1],face[1],face[1]],dtype='int')
+        for i in face :        
+            tris.addVertex(i)
+        tris.closePrimitive()
+
+
+
+#        #form = GeomVertexFormat.getV3()
+##        form = GeomVertexArrayFormat.getV3()
+#        vdata = GeomVertexData("vertices", form, Geom.UHDynamic)#UHStatic)
+#        
+#        vdatastring = npdata.tostring()
+##        vdata = GeomVertexArrayData ("vertices", form, Geom.UHStatic)
+#        vdata.modifyArray(0).modifyHandle().setData(vdatastring)
+#       
+#        pts = GeomPoints(Geom.UHStatic)
+#        geomFaceNumpyData = numpy.array(range(count),dtype=numpy.uint32)
+##        #add some data to face-array
+#        pts.setIndexType(GeomEnums.NTUint32)
+#        faceDataString = geomFaceNumpyData.tostring()
+#        geomFacesDataArray = pts.modifyVertices()
+#        geomFacesDataArray.modifyHandle().setData(faceDataString)
+#        pts.setVertices(geomFacesDataArray)
+#
+        
+    def addMeshRB(self,):
+#        inodenp = self.parent.worldNP.attachNewNode(BulletRigidBodyNode(self.name))
+#        inodenp.node().setMass(1.0)
         helper = autopack.helper
+        from panda3d.core import GeomEnums
         from panda3d.core import GeomVertexFormat,GeomVertexWriter,GeomVertexData,Geom,GeomTriangles
         from panda3d.core import GeomVertexReader
         from panda3d.bullet import BulletTriangleMesh,BulletTriangleMeshShape,BulletConvexHullShape
         #step 1) create GeomVertexData and add vertex information
+        
+        #can do it from numpy array directly...should be faster
         format=GeomVertexFormat.getV3()
-        vdata=GeomVertexData("vertices", format, Geom.UHStatic)        
-        vertexWriter=GeomVertexWriter(vdata, "vertex")
-        [vertexWriter.addData3f(v[0],v[1],v[2]) for v in self.vertices]
+        vdata=GeomVertexData("vertices", format, Geom.UHStatic)
+        vdatastring = self.vertices.tostring()
+        vdata.modifyArray(0).modifyHandle().setData(vdatastring)
+        
+        #vertexWriter=GeomVertexWriter(vdata, "vertex")
+        #[vertexWriter.addData3f(v[0],v[1],v[2]) for v in self.vertices]
 
         #step 2) make primitives and assign vertices to them
         tris=GeomTriangles(Geom.UHStatic)
-        [self.setGeomFaces(tris,face) for face in self.faces]
+        geomFaceNumpyData = numpy.array(self.faces,dtype=numpy.uint32)
+        #add some data to face-array
+        tris.setIndexType(GeomEnums.NTUint32)
+        faceDataString = geomFaceNumpyData.tostring()
+        geomFacesDataArray = tris.modifyVertices()
+        geomFacesDataArray.modifyHandle().setData(faceDataString)
+        tris.setVertices(geomFacesDataArray)
+                
+        #[self.setGeomFaces(tris,face) for face in self.faces]
 
         #step 3) make a Geom object to hold the primitives
         geom=Geom(vdata)
@@ -315,8 +386,8 @@ class  Compartment(CompartmentList):
         print ("shape ok",shape)
         #inodenp = self.worldNP.attachNewNode(BulletRigidBodyNode(ingr.name))
         #inodenp.node().setMass(1.0)
-        inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
-        return inodenp
+#        inodenp.node().addShape(shape)#,TransformState.makePos(Point3(0, 0, 0)))#, pMat)#TransformState.makePos(Point3(jtrans[0],jtrans[1],jtrans[2])))#rotation ?
+        return shape
 
     def create_rbnode(self, ):
         # Sphere
@@ -952,7 +1023,11 @@ class  Compartment(CompartmentList):
         if sum(v1) == 0.0 :
             v3 = v2+numpy.array([0.,1.,0.])
         else :
-            v3=v2+helper.unit_vector(numpy.cross(v1,v2))
+            vcross=numpy.cross(v1,v2)#v1 and v2 are parrallele
+            if sum(vcross) == 0 :
+                v3 = v2+numpy.array([0.,1.,0.])                   
+            else :
+                v3=v2+helper.unit_vector(numpy.cross(v1,v2))
         f=[0,1,2]
         ray_model = RAPIDlib.RAPID_model()
         ray_model.addTriangles(numpy.array([v1,v2,v3],'f'), numpy.array([f,],'i'))
