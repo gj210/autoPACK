@@ -1031,7 +1031,9 @@ class Environment(CompartmentList):
         self.gridbiasedPeriodicity = None#unsused here
         #need options for the save/server data etc....
         #should it be in __init__ like other general options ?
-                
+        self.dump = True
+        self.dump_freq = 120.0
+        
         self.OPTIONS = {
                     "smallestProteinSize":{"name":"smallestProteinSize","value":15,"default":15,
                                            "type":"int","description":"Smallest ingredient packing radius override (low=accurate | high=fast)",
@@ -2072,7 +2074,7 @@ class Environment(CompartmentList):
             for organelle in self.compartments:
                 for i,mingrs in enumerate(organelle.molecules) :#( jtrans, rotMatj, self, ptInd )
                     nbFreePoints=self.onePrevIngredient(i,mingrs,distance,nbFreePoints,organelle.molecules)
-
+            #what about curve ?
 #                jtrans, rotMatj, ingr, ptInd = mingrs
 ##                print ("OK",jtrans, rotMatj, ingr, ptInd)
 #                centT = ingr.transformPoints(jtrans, rotMatj, ingr.positions[-1])
@@ -2937,6 +2939,9 @@ class Environment(CompartmentList):
 #==============================================================================
 #         #the big loop
 #==============================================================================
+        dump_freq = self.dump_freq#120.0#every minute
+        dump = self.dump
+        stime = time.time()
         while nbFreePoints:
             if verbose > 1:
                 print (".........At start of while loop, with vRangeStart = ", vRangeStart)
@@ -3110,7 +3115,13 @@ class Environment(CompartmentList):
                     self.thresholdPriorities.append(np + previousThresh)
                     previousThresh = np + float(previousThresh)
                 self.activeIngr = self.activeIngr0 + self.activeIngr12
-
+            if dump and ((time.time()-stime) > dump_freq) :
+                self.collectResultPerIngredient()
+                self.saveRecipe(self.resultfile+"_temporaray.json",useXref=True,mixed=True,
+                     kwds=["source","name","positions","radii"],result=True,
+                  grid=False,packing_options=False,indent=False,quaternion=True)                  
+                stime = time.time()
+                
         self.distancesAfterFill = distance
         self.freePointsAfterFill = freePoints
         self.nbFreePointsAfterFill = nbFreePoints
