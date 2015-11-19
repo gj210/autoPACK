@@ -3233,26 +3233,27 @@ class Ingredient(Agent):
 #        print ("getClosestIngredient",closest,cutoff )       
 #        return closest
 
-    def update_data_tree(self,jtrans,rotMatj,ptInd=0,pt1=None,pt2=None):
+    def update_data_tree(self,jtrans,rotMatj,ptInd=0,pt1=None,pt2=None,updateTree=True):
         #self.histoVol.static.append(rbnode)
         #self.histoVol.moving = None
         self.histoVol.nb_ingredient+=1
-        self.histoVol.rTrans.append(numpy.array(jtrans).flatten())
+        self.histoVol.rTrans.append(numpy.array(jtrans).flatten().tolist())
         self.histoVol.rRot.append(numpy.array(rotMatj))#rotMatj 
         self.histoVol.rIngr.append(self)
         if pt1 is not None :
-            self.histoVol.result.append([ [numpy.array(pt1).flatten(),
-                                numpy.array(pt2).flatten()], rotMatj, 
+            self.histoVol.result.append([ [numpy.array(pt1).flatten().tolist(),
+                                numpy.array(pt2).flatten().tolist()], rotMatj.tolist(), 
                             self, ptInd ])
         else :
-            self.histoVol.result.append([ jtrans, rotMatj, 
+            self.histoVol.result.append([ numpy.array(jtrans).flatten().tolist(), numpy.array(rotMatj), 
                             self, ptInd ])
-        if self.histoVol.treemode == "bhtree":# "cKDTree"
-            if len(self.histoVol.rTrans) >= 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
-            self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
-        else :
-            if len(self.histoVol.rTrans) >= 1 :
-                self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
+        if updateTree:
+            if self.histoVol.treemode == "bhtree":# "cKDTree"
+                if len(self.histoVol.rTrans) >= 1 : bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
+                self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
+            else :
+                if len(self.histoVol.rTrans) >= 1 :
+                    self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
 
     def reject(self,):
         # got rejected
@@ -5940,6 +5941,7 @@ class SingleSphereIngr(Ingredient):
                                 radius=self.radii[0][0],color=self.color,
                                 parent=p,res=24)[0]
             else :
+                print "OK TEST OLKKKKK"
                 self.mesh = autopack.helper.unitSphere(self.name+"_basic",5,
                                 radius=self.radii[0][0])[0]
                 self.getData()
@@ -6167,6 +6169,7 @@ class GrowIngrediant(MultiCylindersIngr):
         self.listePtLinear=[]
         self.listePtCurve=[] #snake
         self.Ptis=[]    #snakePts
+        self.startGridPoint=[]
         self.currentLength=0.#snakelength
         self.direction=None#direction of growing
         #can be place either using grid point/jittering or dynamics
@@ -8250,6 +8253,10 @@ class GrowIngrediant(MultiCylindersIngr):
 #        self.Ptis=[ptInd,histoVol.grid.getPointFrom3D(secondPoint)]
         dist,pid = histoVol.grid.getClosestGridPoint(secondPoint)
         self.Ptis=[ptInd,pid]
+        #get compartments obj, bhtree and get ID of startingPoint        
+        res=self.compartment.OGsrfPtsBht.query(startingPoint)
+        print ("the starting point on the grid was ",startingPoint,pid,ptInd)
+        self.startGridPoint.append(res[1])
         listePtCurve=[jtrans]
         listePtLinear=[startingPoint,secondPoint]
         Done = False
