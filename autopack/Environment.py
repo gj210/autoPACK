@@ -3966,16 +3966,31 @@ class Environment(CompartmentList):
         if self.world is None :
             if panda3d is None :
                 return
-            loadPrcFileData("", "window-type none" ) 
+            loadPrcFileData("",
+"""
+   load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
+   window-type offscreen # Spawn an offscreen buffer (use window-type none if you don't need any rendering)
+   audio-library-name null # Prevent ALSA errors
+   show-frame-rate-meter 0
+   sync-video 0
+   bullet-max-objects 10240
+   bullet-broadphase-algorithm sap
+   bullet-sap-extents 10000.0
+""")
+#            loadPrcFileData("", "window-type none" ) 
             # Make sure we don't need a graphics engine 
             #(Will also prevent X errors / Display errors when starting on linux without X server)
-            loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
+#            loadPrcFileData("", "audio-library-name null" ) # Prevent ALSA errors 
 #            loadPrcFileData('', 'bullet-enable-contact-events true')
-            loadPrcFileData('', 'bullet-max-objects 10240')#10240
-            loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
-            loadPrcFileData('', 'bullet-sap-extents 10000.0')#
+#            loadPrcFileData('', 'bullet-max-objects 10240')#10240
+#            loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
+#            loadPrcFileData('', 'bullet-sap-extents 10000.0')#
             
             import direct.directbase.DirectStart 
+#            from direct.showbase.ShowBase import ShowBase 
+#            base = ShowBase() 
+            base.disableMouse()
+            self.base= base
             from panda3d.core import Vec3
 #            bullet.bullet-max-objects = 1024 * 10#sum of all predicted n Ingredient ?
             if self.panda_solver == "bullet":
