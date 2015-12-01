@@ -3968,7 +3968,7 @@ class Environment(CompartmentList):
                 return
             loadPrcFileData("",
 """
-   load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
+   #load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
    window-type offscreen # Spawn an offscreen buffer (use window-type none if you don't need any rendering)
    audio-library-name null # Prevent ALSA errors
    show-frame-rate-meter 0
@@ -3976,6 +3976,8 @@ class Environment(CompartmentList):
    bullet-max-objects 10240
    bullet-broadphase-algorithm sap
    bullet-sap-extents 10000.0
+   textures-power-2 up
+   textures-auto-power-2 #t
 """)
 #            loadPrcFileData("", "window-type none" ) 
             # Make sure we don't need a graphics engine 
