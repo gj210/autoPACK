@@ -5150,11 +5150,32 @@ class Ingredient(Agent):
         #do we get the list of neighbours first > and give a different trans...closer to the partner
         #we should look up for an available ptID around the picked partner if any
         #getListPartner
-        if histoVol.ingrLookForNeighbours:
-            closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
-                cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
-            targetPoint,rotMat = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
-                                                 closest_indice=closesbody_indice)
+        if histoVol.ingrLookForNeighbours and self.packingMode == "closePartner":
+            bind = True
+            if verbose > 1:
+                print ("look for ingredient",trans)
+            #roll a dice about proba_not_binding
+            if self.proba_not_binding != 0 :#between 0 and 1
+                b=random()
+                if b <= self.proba_not_binding :
+                    bind = False
+            if bind :
+                closesbody_indice = self.getClosestIngredient(trans,self.histoVol,
+                    cutoff=self.histoVol.grid.diag)#vself.radii[0][0]*2.0
+                #return R[indice] and distance R["distances"] 
+                targetPoint,rotMat,found = self.lookForNeighbours(trans,rotMat,organelle,afvi,distance,
+                                                     closest_indice=closesbody_indice)
+                if not found and self.counter!=0:
+                    self.reject()                
+                    return False, nbFreePoints#,targetPoint, rotMat       
+    
+                #if partner:pickNewPoit like in fill3
+                if runTimeDisplay and self.mesh:
+                    mat = rotMat.copy()
+                    mat[:3, 3] = targetPoint
+                    afvi.vi.setObjectMatrix(moving,mat,transpose=True)
+                    afvi.vi.update()                                                   
+
         tx, ty, tz = jtrans = targetPoint
         gridDropPoint = targetPoint        
         #we may increase the jitter, or pick from xyz->Id free for its radius
