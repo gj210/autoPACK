@@ -1740,7 +1740,7 @@ class Environment(CompartmentList):
 
     def buildGrid(self, boundingBox=None, gridFileIn=None, rebuild=True,
                   gridFileOut=None, previousFill=False,previousfreePoint=None,
-                  lookup=0):
+                  lookup=2):
         """
         The main build grid function. Setup the main grid and merge the 
         compartment grid. The setup is de novo or using previously builded grid 
