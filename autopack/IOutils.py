@@ -1264,7 +1264,7 @@ def load_Json(env,setupfile):
 #        if env.placeMethod.find("panda") != -1 :
 #            env.setupPanda()
         
-def load_MixedasJson(env,resultfilename=None):
+def load_MixedasJson(env,resultfilename=None,transpose=True):
 #        from upy.hostHelper import Helper as helper 
     if resultfilename == None:
         resultfilename = env.resultfile
@@ -1296,7 +1296,10 @@ def load_MixedasJson(env,resultfilename=None):
                     for r in iresults:#what if quaternion ?
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
-                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                if transpose :
+                                    rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                else :
+                                    rot=tr.quaternion_matrix(r[1])#transpose ?                                    
                                 #                        ingr.results.append([numpy.array(r[0]),rot])
                             else :
                                 rot = numpy.array(r[1]).reshape(4,4)
@@ -1332,7 +1335,10 @@ def load_MixedasJson(env,resultfilename=None):
                         #print r[1],len(r[1]),type(r[1][0])
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
-                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                if transpose :
+                                    rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                else :
+                                    rot=tr.quaternion_matrix(r[1])#transpose ?                                    
                             else :
                                 rot = numpy.array(r[1]).reshape(4,4)
 #                        ingr.results.append([numpy.array(r[0]),rot])
@@ -1361,7 +1367,10 @@ def load_MixedasJson(env,resultfilename=None):
                         rot = numpy.identity(4)
                         if len(r[1])==4 :#quaternion
                             if type(r[1][0]) == float :
-                                rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                if transpose :
+                                    rot=tr.quaternion_matrix(r[1]).transpose()#transpose ?
+                                else :
+                                    rot=tr.quaternion_matrix(r[1])#transpose ?                                    
                             else :
                                 rot = numpy.array(r[1]).reshape(4,4)
 #                        ingr.results.append([numpy.array(r[0]),rot])
