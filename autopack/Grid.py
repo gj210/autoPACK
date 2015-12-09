@@ -66,7 +66,8 @@ class Grid:
     3d positions, distances, freePoints and inside/surface points from organelles.
     NOTE : thi class could be completly replace if openvdb is wrapped to python.
     """
-    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=True):
+    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=True,
+                 lookup=0):
         #a grid is attached to an environement
         self.boundingBox=boundingBox
         # this list provides the id of the component this grid points belongs
@@ -111,7 +112,7 @@ class Grid:
         self.encapsulatingGrid = 1
         self.testPeriodicity = autopack.testPeriodicity
         self.biasedPeriodicity = autopack.biasedPeriodicity
-        self.lookup=0
+        self.lookup=lookup
         if setup :
             self.setup(boundingBox,space)
         #use np.roll to have periodic condition

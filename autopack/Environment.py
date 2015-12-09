@@ -1203,7 +1203,7 @@ class Environment(CompartmentList):
         else :
             print("format output "+format_output+" not recognized (json,xml,python)")
 
-    def loadResult(self,resultfilename=None,restore_grid=True,backward=False):
+    def loadResult(self,resultfilename=None,restore_grid=True,backward=False,transpose=True):
         result=[],[],[]        
         if resultfilename == None:
             resultfilename = self.resultfile
@@ -1227,7 +1227,7 @@ class Environment(CompartmentList):
             if backward :
                 return self.load_asJson(resultfilename=resultfilename)
             else :                
-                return IOutils.load_MixedasJson(self,resultfilename=resultfilename)  
+                return IOutils.load_MixedasJson(self,resultfilename=resultfilename,transpose=transpose)  
         else :
             print  ("can't read or recognize "+resultfilename)
             return [],[],[]
@@ -1739,7 +1739,8 @@ class Environment(CompartmentList):
  
 
     def buildGrid(self, boundingBox=None, gridFileIn=None, rebuild=True,
-                  gridFileOut=None, previousFill=False,previousfreePoint=None):
+                  gridFileOut=None, previousFill=False,previousfreePoint=None,
+                  lookup=0):
         """
         The main build grid function. Setup the main grid and merge the 
         compartment grid. The setup is de novo or using previously builded grid 
@@ -1775,7 +1776,7 @@ class Environment(CompartmentList):
             print ("####BUILD GRID - step ",self.smallestProteinSize) 
             self.fillBB = boundingBox
             self.grid = Grid(boundingBox=boundingBox,
-                               space=self.smallestProteinSize)
+                               space=self.smallestProteinSize,lookup=lookup)
             nbPoints = self.grid.gridVolume
             if autopack.verbose : 
                 print ("new Grid with  ",boundingBox,self.grid.gridVolume)       
@@ -3969,7 +3970,6 @@ class Environment(CompartmentList):
             loadPrcFileData("",
 """
    #load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
-   window-type offscreen # Spawn an offscreen buffer (use window-type none if you don't need any rendering)
    audio-library-name null # Prevent ALSA errors
    show-frame-rate-meter 0
    sync-video 0
@@ -3987,7 +3987,10 @@ class Environment(CompartmentList):
 #            loadPrcFileData('', 'bullet-max-objects 10240')#10240
 #            loadPrcFileData('', 'bullet-broadphase-algorithm sap')#aabb
 #            loadPrcFileData('', 'bullet-sap-extents 10000.0')#
-            
+            if autopack.helper is not None and autopack.helper.nogui :
+                loadPrcFileData('', 'window-type offscreen')
+            else :
+                loadPrcFileData('', 'window-type None')
             import direct.directbase.DirectStart 
 #            from direct.showbase.ShowBase import ShowBase 
 #            base = ShowBase() 
