@@ -584,3 +584,5 @@ print ("currently nb recipes is "+str(len(RECIPES)))
 #need a distinction between autopackdir and cachdir
 wkr = afdir
 #in the preefined working directory
+
+BD_BOX_PATH="/home/ludo/Tools/bd_box-2.2"#or /Users/ludo/DEV/bd_box-2.1/

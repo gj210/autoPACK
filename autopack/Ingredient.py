@@ -908,6 +908,10 @@ class Ingredient(Agent):
         else :
            self.source={"pdb":self.pdb,"transform":{"center":True}} 
            self.transform_sources= {"transform":{"center":True}}
+
+        self.offset = [0,0,0] #offset to apply for membrane binding
+        if "offset" in kw :
+            self.offset = kw["offset"]
         self.color = color    # color used for sphere display
         if self.color == "None":
             self.color = None
@@ -1295,7 +1299,7 @@ class Ingredient(Agent):
         f.close()
         
         # strip comments
-        data = [x for x in datao if x[0]!='#' and len(x)>1]
+        data = [x for x in datao if x[0]!='#' and len(x)>1 and x[0]!='\r']
     
         rmin, rmax = list(map(float, data[0].split()))
         nblevels = int(data[1])

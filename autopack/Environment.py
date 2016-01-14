@@ -1183,7 +1183,7 @@ class Environment(CompartmentList):
     def saveRecipe(self,setupfile,useXref=None,format_output="json",mixed=False,
                    kwds=None,result=False,
                    grid=False,packing_options=False,
-                   indent=False,quaternion=False):
+                   indent=False,quaternion=False,transpose=False):
 #        if result :
 #            self.collectResultPerIngredient()
         if useXref is None :
@@ -1193,7 +1193,7 @@ class Environment(CompartmentList):
                 IOutils.save_Mixed_asJson(self,setupfile,useXref=useXref,
                                           kwds=kwds,result=result,indent=indent,
                                           grid=grid,packing_options=packing_options,
-                                          quaternion=quaternion)
+                                          quaternion=quaternion,transpose=transpose)
             else :
                 IOutils.save_asJson(self,setupfile,useXref=useXref,indent=indent)
         elif format_output == "xml":
@@ -3120,7 +3120,12 @@ class Environment(CompartmentList):
                 self.collectResultPerIngredient()
                 self.saveRecipe(self.resultfile+"_temporaray.json",useXref=True,mixed=True,
                      kwds=["source","name","positions","radii"],result=True,
-                  grid=False,packing_options=False,indent=False,quaternion=True)                  
+                  grid=False,packing_options=False,indent=False,quaternion=True,
+                  transpose=False)                  
+                self.saveRecipe(self.resultfile+"_temporaray_tr.json",useXref=True,mixed=True,
+                     kwds=["source","name","positions","radii"],result=True,
+                  grid=False,packing_options=False,indent=False,quaternion=True,
+                  transpose=True) 
                 stime = time.time()
                 
         self.distancesAfterFill = distance
@@ -3969,7 +3974,7 @@ class Environment(CompartmentList):
                 return
             loadPrcFileData("",
 """
-   #load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
+   load-display p3tinydisplay # to force CPU only rendering (to make it available as an option if everything else fail, use aux-display p3tinydisplay)
    audio-library-name null # Prevent ALSA errors
    show-frame-rate-meter 0
    sync-video 0
@@ -4350,7 +4355,6 @@ class Environment(CompartmentList):
         #, call the BD_BOX exporter, plugin ? better if result store somewhere.
         #only sphere + boudary ?
         #sub ATM 216 225.0000 150.0000 525.0000 25.0000 -5.0000 50.0000 0.5922 1
-        #    #sub name id x y z  Q 2R LJ m
         if bd_type == "flex" :
             from bd_box import flex_box as bd_box
         else :
@@ -4358,6 +4362,7 @@ class Environment(CompartmentList):
         if res_filename is None :
             res_filename = self.resultfile
         self.bd=bd_box(res_filename,bounding_box=self.boundingBox)
+        self.bd.makePrmFile()
         self.collectResultPerIngredient()
         r =  self.exteriorRecipe
         if r :
