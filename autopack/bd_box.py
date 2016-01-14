@@ -4,13 +4,41 @@ Created on Tue Mar 18 22:07:48 2014
 
 @author: ludo
 """
+import autopack
 import os
 import numpy as np
 import math
 from autopack.transformation import euler_from_matrix,matrixToEuler,euler_matrix
 #some progress report would be nice
 
-executable_dmatrix="/Users/ludo/DEV/bd_box-2.1/tools/dmatrix/dmatrix"
+executable_dmatrix=autopack.BD_BOX_PATH+"/tools/dmatrix/dmatrix"
+#need special case for membrane ? integrate in cellpack or the simulation engine
+
+#BD_BOX matrix are defined as in http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1303575/pdf/2973.pdf
+# using angle x,y,z
+def angleToBDmat(a,b,c,angle=0,axe=False):
+    m=np.identity(4)
+    a2=a*a
+    b2=b*b
+    c2=c*c
+    abc=math.sqrt(a2+b2+c2)
+    abc2=abc*abc
+    if axe :
+        abc = angle
+        abc2 = 1.0
+    #if abc2 = 1 and abc represent the angle
+    #if abc is the unit vector around which we rotate the equation can be changed ?
+    m[0,0] = ((b2+c2)*math.cos(abc)+a2)/abc2 #this become math.cos(abc)+a2*(1-math.cos(abc))
+    m[0,1] = ((a*b)/abc2)*(1-math.cos(abc))-(c/abc)*math.sin(abc)
+    m[0,2] = ((a*c)/abc2)*(1-math.cos(abc))+(b/abc)*math.sin(abc)
+    m[1,0] = ((a*b)/abc2)*(1-math.cos(abc))+(c/abc)*math.sin(abc)
+    m[1,1] = ((a2+c2)*math.cos(abc)+a2)/abc2
+    m[1,2] = ((b*c)/abc2)*(1-math.cos(abc))-(a/abc)*math.sin(abc)
+    m[2,0] = ((a*c)/abc2)*(1-math.cos(abc))-(b/abc)*math.sin(abc)
+    m[2,1] = ((b*c)/abc2)*(1-math.cos(abc))+(a/abc)*math.sin(abc)
+    m[2,2] = ((a2+b2)*math.cos(abc)+c2)/abc2
+    
+    return m  
 
 class bd_box:
     def __init__(self,name="box",bounding_box=[[0.0, 0.0, 0.], [190.0, 190.0, 190]]):
@@ -27,9 +55,11 @@ class bd_box:
         self.bd_binary=""
         self.bond_dictionary={}
         self.bond_length_dictionary={}#should be distance between sphere
-        self.setup()     
-        self.makePrmFile()
-
+        self.setup()  
+        d = (np.array(bounding_box[1])*2.0-np.array(bounding_box[1]))/2.0
+        self.offset=np.array(self.bounding_box[0])+250.0
+        print ("use the following offset : ",self.offset)
+        
     def makePrmFile(self,):
         self.params_string=""
         for k in self.order :
@@ -56,7 +86,29 @@ class bd_box:
         return
 #        import os
 #        os.exec(self.bd_binary+" "+self.params_file)
-    
+        
+    def setupFromEnv(self,env):
+        #, call the BD_BOX exporter, plugin ? better if result store somewhere.
+        #only sphere + boudary ?
+        #sub ATM 216 225.0000 150.0000 525.0000 25.0000 -5.0000 50.0000 0.5922 1
+        r =  env.exteriorRecipe
+        if r :
+            for ingr in r.ingredients:
+                self.addAutoPackIngredient(ingr)
+
+        #compartment ingr
+        for orga in env.compartments:
+            #compartment surface ingr
+            rs =  orga.surfaceRecipe
+            if rs :
+                for ingr in rs.ingredients:
+                    self.addAutoPackIngredient(ingr)
+            #compartment matrix ingr
+            ri =  orga.innerRecipe
+            if ri :
+                for ingr in ri.ingredients:
+                    self.addAutoPackIngredient(ingr)
+                
         
 class flex_box(bd_box):
     def setup(self,):
@@ -119,7 +171,7 @@ class flex_box(bd_box):
         self.params["e_collision"] =  1#1 (perfectly elastic collisions) 0 (perfectly inelastic collisions)
         self.params["nb_list"] =  "spatial"
 #        self.bd_binary="/Users/ludo/DEV/BDBOX/bin/bd_flex"  #v1.0
-        self.bd_binary="/Users/ludo/DEV/BD_BOX2/bin/bd_flex" #v2.0
+        self.bd_binary=autopack.BD_BOX_PATH+"/bin/bd_flex" #v2.0
         
     def addSubBead(self,name,x,y,z,t,Q,R,LJ,m,bid=None,bond=False,bond_id=0,):
         #name, x, y, z, Q, LJ, m, bid=None
@@ -229,7 +281,7 @@ class rigid_box(bd_box):
                                            "type":"float","description":"cutoff for electrostatic interactions",
                                            "mini":1,"maxi":1000,
                                            "width":30}
-        self.params["bdsteps"]={"name":"bdsteps","value":45000000,"default":45000000,
+        self.params["bdsteps"]={"name":"bdsteps","value":1000,"default":1000,
                                            "type":"int","description":"number of simulation's steps",
                                            "mini":1,"maxi":1000,
                                            "width":30} 
@@ -257,7 +309,7 @@ class rigid_box(bd_box):
                                            "type":"int","description":"power, repulsive term in the L-J potential",
                                            "mini":1,"maxi":1000,
                                            "width":30}
-        self.params["save_dcd_freq"]={"name":"save_dcd_freq","value":50,"default":1,
+        self.params["save_dcd_freq"]={"name":"save_dcd_freq","value":10,"default":1,
                                            "type":"int","description":"frequency (number of steps) for writing to the dcd trajectory",
                                            "mini":1,"maxi":1000,
                                            "width":30}
@@ -490,7 +542,7 @@ class rigid_box(bd_box):
         # is present in the simulated system.
         self.dt_files={}
         self.initial_coordinates_str=""
-        self.bd_binary="/Users/ludo/DEV/BD_BOX2/bin/bd_rigid"
+        self.bd_binary=autopack.BD_BOX_PATH+"/bin/bd_rigid"
 
 #    def addObjToPrmFile(self,):
 #       #add the object parameters
@@ -522,13 +574,13 @@ charge denotes its central charge and radius denotes its radius. """
         
     def addBead(self,pos,radius,e=0.5922, d11=0, d21=0, c01=0, c11=0, c21=0,
                 c31=0,mu1=0,SASAO1=0):
-        """LJ x1 y1 z1 radius1 e1 d11 d21 c01 c11 c21 c31 mu1 SASAo1
+        """LJ x1 y1 z1 radius1 e1 d11 d21 c01 c11 c21 c31 mu1 SASAo1
 where x, y, z denote Cartesian coordinates of spheres in the molecular frame, 
-radius denotes radius used in evaluations of excluded volume and hydrophobic interactions, 
+radius denotes radius used in evaluations of excluded volume and hydrophobic interactions, 
 e1 is the well depth of excluded volume interactions,
 parameters d and c are for the FACTS model (equations 6, 7), 
 SASAo denotes the solvent accessible surface
-area of a given sphere in the model (Equation 9) and 
+area of a given sphere in the model (Equation 9) and
 mu1 (Equations 5, 13) denotes the surface tension parameter.
 ex: LJ 5.26316 -12.7961 -4.13284 4.24053 0.5922 0 0 0 0 0 0 0 0
 """ 
@@ -538,19 +590,22 @@ ex: LJ 5.26316 -12.7961 -4.13284 4.24053 0.5922 0 0 0 0 0 0 0 0
 
     def addAutoPackIngredient(self, ingredient):
         #name should change to three letter code for the xyz formats
-        #add the object, create the mstr        
+        #add the object, create the mstr       
+        #in order to use matrix need to change bd_box code ~!
         level = ingredient.maxLevel
         if len(ingredient.results):
-            self.addObject(ingredient.name,len(ingredient.results),ingredient.positions[level],ingredient.radii[level])
+            self.addObject(ingredient.name,len(ingredient.results),ingredient.positions[level],np.array(ingredient.radii[level])/1.1)
         #add the coordinate
         for r in ingredient.results:  
             if hasattr(r[0],"tolist"):
                 r[0]=r[0].tolist()#position
             if hasattr(r[1],"tolist"):
                 r[1]=r[1].tolist()#rotation that should be apply to sphereTree
-            self.addCoordinateMatrix(r[0],np.array(r[1]).transpose().reshape(16))
-#            euler = euler_from_matrix(r[1])#Or angle from software ?
+#            r[1]= np.identity(4)
+            self.addCoordinateMatrix(r[0],np.array(r[1]).reshape(16))#transpose rotation ?            
+#            euler = euler_from_matrix(np.array(r[1]))
 #            euler = [math.degrees(euler[0]),math.degrees(euler[1]),math.degrees(euler[2])]
+            #degree or radians?
 #            self.addCoordinate(r[0],euler)
             
     def addCoordinate(self,pos,rot):
@@ -559,7 +614,7 @@ ex: LJ 5.26316 -12.7961 -4.13284 4.24053 0.5922 0 0 0 0 0 0 0 0
     
     def addCoordinateMatrix(self,pos,rot):
         self.initial_coordinates_str+="%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n" %(
-                                pos[0],pos[1],pos[2],rot[0],rot[1],rot[2],rot[4],rot[5],rot[6],rot[8],rot[9],rot[10])
+                                pos[0]+self.offset[0],pos[1]+self.offset[1],pos[2]+self.offset[2],rot[0],rot[1],rot[2],rot[4],rot[5],rot[6],rot[8],rot[9],rot[10])
         
     def writeInitialCoordinates(self,):
         """Initial coordinates of objects in the studied system (in the laboratory frame) can be speci

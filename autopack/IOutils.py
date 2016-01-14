@@ -321,7 +321,7 @@ class IOingredientTool(object):
         ingre = self.makeIngredient(**kw)                    
         return ingre
         
-    def ingrJsonNode(self,ingr,result=False,kwds=None):
+    def ingrJsonNode(self,ingr,result=False,kwds=None,transpose=False):
         #force position instead of sphereFile
         ingdic={}
         if kwds==None :
@@ -348,9 +348,12 @@ class IOingredientTool(object):
                 #rotation
                 if hasattr(r[1],"tolist"):
                     r[1]=r[1].tolist()
-                R=r[1]
+                R=numpy.array(r[1]).tolist()#this will not work with cellvIEW?                
+                if transpose:
+                    R=numpy.array(r[1]).transpose().tolist()#this will not work with cellvIEW?
+                #transpose ?
                 if self.use_quaternion:
-                    R=tr.quaternion_from_matrix(r[1]).tolist()
+                    R=tr.quaternion_from_matrix(R).tolist()
                 ingdic["results"].append([r[0],R])
             if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
                 ingdic["nbCurve"]=ingr.nbCurve
@@ -620,7 +623,8 @@ def save_asJson(env,setupfile,useXref=True,indent=True):
         print ("recipe saved to ",setupfile)
 
 def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
-                      grid=False,packing_options=False,indent=True,quaternion=False):
+                      grid=False,packing_options=False,indent=True,quaternion=False,
+                      transpose=False):
         """
         Save the current environment setup as an json file.
         env is the environment / recipe to be exported.
@@ -676,12 +680,12 @@ def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
             for ingr in r.ingredients:                
                 if useXref and packing_options:
                     #write the json file for this ingredient
-                    io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",kwds=kwds,result=result)
+                    io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",kwds=kwds,result=result,transpose=transpose)
                     #use reference file : str(pathout+os.sep+ingr.o_name+".json")
                     ing_filename = ingr.o_name+".json"#autopack.revertOnePath(pathout+os.sep+ingr.o_name+".json")
                     env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":ing_filename}
                 else :
-                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+                    env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds,transpose=transpose)#{"name":ingr.o_name}
                     #ingrJsonNode?
 #                    for k in ingr.KWDS:
 #                        v = getattr(ingr,k)
@@ -707,11 +711,11 @@ def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
                     if useXref and packing_options :
                         #write the json file for this ingredient
                         io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",
-                                      result=result,kwds=kwds)
+                                      result=result,kwds=kwds,transpose=transpose)
                         #use reference file
                         env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
                     else :
-                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+                        env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds,transpose=transpose)#{"name":ingr.o_name}
 #                        for k in ingr.KWDS:
 #                            v = getattr(ingr,k)
 #        #                    print ingr.name+" keyword ",k,v
@@ -724,11 +728,11 @@ def save_Mixed_asJson(env,setupfile,useXref=True,kwds=None,result=False,
                 for ingr in ri.ingredients: 
                     if useXref and packing_options:
                         #write the json file for this ingredient
-                        io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",result=result,kwds=kwds)
+                        io_ingr.write(ingr,pathout+os.sep+ingr.o_name,ingr_format="json",result=result,kwds=kwds,transpose=transpose)
                         #use reference file
                         env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]={"name":ingr.o_name,"include":str(ingr.o_name+".json")}
                     else :
-                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds)#{"name":ingr.o_name}
+                        env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]=io_ingr.ingrJsonNode(ingr,result=result,kwds=kwds,transpose=transpose)#{"name":ingr.o_name}
 #                        for k in ingr.KWDS:
 #                            v = getattr(ingr,k)
 #        #                    print ingr.name+" keyword ",k,v
