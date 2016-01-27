@@ -634,6 +634,57 @@ class AutopackViewer:
     #            print("in orga is box because isOrthogonalBoudingBox = ", orga.isOrthogonalBoudingBox)
 #                self.displayCompartmentPoints(orga)
 
+    def hideIngrPrimitive(self,ingr):
+        pname=ingr.name.replace(" ","_")+"_SPH"
+        parent = self.vi.getObject(pname)#or ingr.mesh
+        self.vi.toggleDisplay(parent,False)
+        
+    def showIngrPrimitive(self,ingr):
+        if not hasattr(ingr,'isph') or ingr.isph is None:
+            self.buildIngrPrimitive(ingr)
+        else :
+            pname=ingr.name.replace(" ","_")+"_SPH"
+            parent = self.vi.getObject(pname)#or ingr.mesh
+            self.vi.toggleDisplay(parent,True)
+            
+    def buildIngrPrimitive(self,ingr):
+        o = ingr.recipe.compartment
+        name = o.name+"_Spheres_"+ingr.name.replace(" ","_")
+        if self.ViewerType == 'dejavu':
+            sph = self.vi.Spheres(name, inheritMaterial=0,
+                      centers=ingr.positions[0], materials=[ingr.color],
+                      radii=ingr.radii[0], visible=visible)
+            self.vi.AddObject(sph, parent=ingr.mesh)
+        else :
+            oparent = self.vi.getObject(ingr.o_name)#or ingr.mesh
+            pname=ingr.name.replace(" ","_")+"_SPH"
+            print ("found ",oparent,pname)
+            parent = self.vi.getObject(pname)#or ingr.mesh
+            if parent is None:
+                parent=self.vi.newEmpty(pname,parent=oparent)
+            if not hasattr(ingr,'isph') or ingr.isph is None:
+                ingr.isph=[]
+                names=ingr.o_name+"_sph"
+                for level in range(len(ingr.radii)):    
+                    name=pname+str(level)
+                    lparent = self.vi.getObject(name)
+                    if lparent is None:
+                        lparent=self.vi.newEmpty(name,parent=parent)                        
+                    isph=self.vi.instancesSphere(names,ingr.positions[level],ingr.radii[level],
+                            self.pesph,[ingr.color],self.sc,parent=lparent)
+                    ingr.isph.append(isph)
+            else :
+                for level in range(len(ingr.radii)): 
+                    name=pname+str(level)
+                    lparent = self.vi.getObject(name)
+                    if lparent is None:
+                        lparent=self.vi.newEmpty(name,parent=parent)                        
+                    self.vi.updateInstancesSphere(names,ingr.isph[level],ingr.positions[level],
+                            ingr.radii[level],self.pesph,[ingr.color],self.sc,
+                            parent=parent,delete=True)
+#        else : #cylinder or growingredient#if ingr.modelType=='Spheres':
+#            pass
+              
     def displayIngrSpheres(self,ingr,verts,radii,visible=1):
         o = ingr.recipe.compartment
         if len(verts[ingr]):

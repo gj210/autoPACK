@@ -1139,7 +1139,7 @@ class SubdialogFiller(uiadaptor):
                                               variable=self.addVariable("int",0))
                 elif option == "spherePrimitive":
                     self.Widget["options"][option] = self._addElemt(name='dosph',width=100,height=10,
-                                              action=None,type="checkbox",icon=None,label="Show sphereTree primitives",
+                                              action=self.buildPrimitive,type="checkbox",icon=None,label="Show sphereTree primitives",
                                               variable=self.addVariable("int",0))
                 elif option == "forceBuild":                                     
                     self.Widget["options"][option] =self._addElemt(name=self.recipe+"_forceBuildGrid",
@@ -1541,6 +1541,17 @@ class SubdialogFiller(uiadaptor):
             self.ingredients_ui[ingr.name] = dlg
         self.drawSubDialog(self.ingredients_ui[ingr.name],555555553)
         self.ingredients_ui[ingr.name].updateWidget()
+
+    def buildPrimitive(self,*args):
+        #build sphere representation for ingredients.
+        #get the original parent of every ingredient and build once the spheres.
+        print ("buildPrimitive ")
+        doSph=self.getVal(self.Widget["options"]["spherePrimitive"])
+        print ("buildPrimitive ",doSph)
+        if doSph : 
+            self.histoVol.loopThroughIngr( self.afviewer.showIngrPrimitive )
+        else :
+            self.histoVol.loopThroughIngr( self.afviewer.hideIngrPrimitive )
         
     def delIngr(self,ingr):
         ingrname=ingr.name
@@ -1569,28 +1580,28 @@ class SubdialogFiller(uiadaptor):
         else :
             ingr.ipoly = None
         self.afviewer.addMasterIngr(ingr)#this will restore the correct parent
-        if self.afviewer.doSpheres :
-            orga = ingr.recipe.compartment
-            name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
-            parent = self.helper.getObject(name)
-#            print (name,parent)            
-            if parent is not None :
-                if self.helper.host == "dejavu":
-                    self.helper.deleteObject(parent)
-                else :
-                    instances = self.helper.getChilds(parent)
-                    [self.helper.deleteObject(o) for o in instances]
-                    self.helper.deleteObject(parent)
-            name = orga.name+"_Cylinders_"+ingr.name.replace(" ","_")    
-            parent = self.helper.getObject(name)
-#            print (name,parent)            
-            if parent is not None :
-                if self.helper.host == "dejavu":
-                    self.helper.deleteObject(parent)
-                else :
-                    instances = self.helper.getChilds(parent)
-                    [self.helper.deleteObject(o) for o in instances]
-                    self.helper.deleteObject(parent)
+#        if self.afviewer.doSpheres :
+#            orga = ingr.recipe.compartment
+#            name = orga.name+"_Spheres_"+ingr.name.replace(" ","_")    
+#            parent = self.helper.getObject(name)
+##            print (name,parent)            
+#            if parent is not None :
+#                if self.helper.host == "dejavu":
+#                    self.helper.deleteObject(parent)
+#                else :
+#                    instances = self.helper.getChilds(parent)
+#                    [self.helper.deleteObject(o) for o in instances]
+#                    self.helper.deleteObject(parent)
+#            name = orga.name+"_Cylinders_"+ingr.name.replace(" ","_")    
+#            parent = self.helper.getObject(name)
+##            print (name,parent)            
+#            if parent is not None :
+#                if self.helper.host == "dejavu":
+#                    self.helper.deleteObject(parent)
+#                else :
+#                    instances = self.helper.getChilds(parent)
+#                    [self.helper.deleteObject(o) for o in instances]
+#                    self.helper.deleteObject(parent)
         if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
             #need to delete te spline and the data
             o = ingr.recipe.compartment
@@ -2042,7 +2053,7 @@ class SubdialogFiller(uiadaptor):
                 self.afviewer.fbox_bb=fbox_bb
         #overwrite the option for display sphere and point using checkbox ?        
         self.afviewer.doPoints = doPts#self.getVal(self.doPoints) #self.getVal(self.points_display) if maya
-        self.afviewer.doSpheres = doSphere
+        self.afviewer.doSpheres = False#doSphere
         
         if box is None :
             box=self.helper.getCurrentSelection()[0]

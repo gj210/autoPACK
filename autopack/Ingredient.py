@@ -934,6 +934,7 @@ class Ingredient(Agent):
         #self._place = self.place
         children = []
         self.sphereFile = None
+        #level 0 should be encapsulated sphere ?
         if sphereFile is not None and str(sphereFile) != "None":
             sphereFileo = autopack.retrieveFile(sphereFile,cache="collisionTrees") 
             fileName, fileExtension = os.path.splitext(sphereFile)
