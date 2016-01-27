@@ -3157,11 +3157,16 @@ class SubdialogViewer(uiadaptor):
 
     def toglleIngrPrimitive(self,ingr):
         toggle = self.getVal(self.ingr_display_primitive[ingr.name])
-        if toggle: #build and display
-            self.afviewer.displayIngrResults(ingr,doSphere=True,doMesh=False)
+        #switch to hide/show the tree with the master parent
+        if toggle:
+            self.afviewer.showIngrPrimitive (ingr)
         else :
-            #delete it
-            self.delIngrPrim(ingr)
+            self.afviewer.hideIngrPrimitive (ingr) 
+#        if toggle: #build and display
+#            self.afviewer.displayIngrResults(ingr,doSphere=True,doMesh=False)
+#        else :
+#            #delete it
+#            self.delIngrPrim(ingr)
             
     def toggleOrganelDisplayPrimitive(self,*args):
         #display the ingrdients primitive
