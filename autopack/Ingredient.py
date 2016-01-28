@@ -4383,7 +4383,7 @@ class Ingredient(Agent):
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},            
             t=time()   
             test=self.testPoint(jtrans)
-            print ("testPoints",r,test,jtrans)
+            # print ("testPoints",r,test,jtrans)
             #       checkif rb collide
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
             if not test and not ( True in r):
@@ -4395,7 +4395,7 @@ class Ingredient(Agent):
                 else :
 #                    print("getClosestIngredient",jtrans)
                     closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
-                    print ("len(closesbody_indice) ",len(closesbody_indice["indices"]),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )
+                    # print ("len(closesbody_indice) ",len(closesbody_indice["indices"]),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )
                     if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
                     else : 
                         liste_nodes = self.get_rbNodes(closesbody_indice,jtrans,getInfo=True)
