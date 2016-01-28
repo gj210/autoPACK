@@ -2630,15 +2630,17 @@ class Ingredient(Agent):
     def checkPointComp(self,point):
         #if grid too sparse this will not work.
         #ptID = self.histoVol.grid.getPointFrom3D(point)
-        cID = self.histoVol.getPointCompartmentId(point)
+        cID = self.histoVol.getPointCompartmentId(point)#offset ?
+        #print ("check comp ", cID, self.compNum)
         #dist,ptID = self.histoVol.grid.getClosestGridPoint(point)
         #cID = self.histoVol.grid.gridPtId[ptID]              
-        if self.compNum == 0 :
+        if self.compNum == 0:
             organelle = self.histoVol
         else :
             organelle = self.histoVol.compartments[abs(self.compNum)-1]
-
+        #print ("comp is ", organelle.name)
         if self.compNum > 0 : #surface ingredient
+            #print ("surface ingr of type ",self.Type)
             #r=compartment.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
             if self.Type == "Grow":
                 #need a list of accepted compNum
@@ -2656,14 +2658,16 @@ class Ingredient(Agent):
 #                    else :
 #                        check = True #grid probably too sparse, need to check where we are 
                 return check
+            return True
 #        for i,o in self.histoVol.compartments:
 #        if self.compNum != cID:
 #            return False
 #        else :
 #            return True
-        if self.compNum < 0 :#     
+        if self.compNum < 0:
+            #print ("inside ingredients ?")
             inside = organelle.checkPointInside_rapid(point,self.histoVol.grid.diag,ray=3)
-            if inside :#and cID < 0:
+            if inside :# and cID < 0:
                 return True
             else :
                 return False
@@ -2683,7 +2687,7 @@ class Ingredient(Agent):
 
 
     def checkPointSurface(self,point,cutoff):
-        if not hasattr(self,"histoVol") :
+        if not hasattr(self, "histoVol"):
             return False
         if self.compNum == 0 :
             organelle = self.histoVol
@@ -4379,7 +4383,7 @@ class Ingredient(Agent):
 #            rbnode = histoVol.callFunction(self.histoVol.addRB,(self, jtrans, rotMatj,),{"rtype":self.Type},            
             t=time()   
             test=self.testPoint(jtrans)
-#            print ("testPoints",r,test,jtrans)
+            print ("testPoints",r,test,jtrans)
             #       checkif rb collide
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
             if not test and not ( True in r):
@@ -4391,7 +4395,7 @@ class Ingredient(Agent):
                 else :
 #                    print("getClosestIngredient",jtrans)
                     closesbody_indice = self.getClosestIngredient(jtrans,self.histoVol,cutoff=self.histoVol.largestProteinSize+self.encapsulatingRadius*2.0)#vself.radii[0][0]*2.0
-#                    print ("len(closesbody_indice) ",len(closesbody_indice["indices"]),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )                    
+                    print ("len(closesbody_indice) ",len(closesbody_indice["indices"]),str(self.histoVol.largestProteinSize+self.encapsulatingRadius) )
                     if len(closesbody_indice["indices"]) == 0: r =[False]         #closesbody_indice[0] == -1            
                     else : 
                         liste_nodes = self.get_rbNodes(closesbody_indice,jtrans,getInfo=True)
@@ -4438,7 +4442,7 @@ class Ingredient(Agent):
 #            t=time()     
             collision2=( True in r)
             collisionComp = False
-#            print("collide??",collision2,r,test)
+            print("collide??", collision2, r, test)
 #            print ("contactTestPair",collision2,time()-t)
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
