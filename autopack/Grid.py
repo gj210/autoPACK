@@ -66,9 +66,9 @@ class Grid:
     3d positions, distances, freePoints and inside/surface points from organelles.
     NOTE : thi class could be completly replace if openvdb is wrapped to python.
     """
-    def __init__(self,boundingBox=([0,0,0], [.1,.1,.1]),space=1,setup=True,
+    def __init__(self, boundingBox=([0, 0, 0], [.1, .1, .1]), space=1, setup=True,
                  lookup=0):
-        #a grid is attached to an environement
+        # a grid is attached to an environement
         self.boundingBox=boundingBox
         # this list provides the id of the component this grid points belongs
         # to. The id is an integer where 0 is the Histological Volume, and +i is
@@ -92,21 +92,21 @@ class Grid:
         self.gridSpacing = space*1.1547
         self.nbGridPoints = None
         self.nbSurfacePoints = 0
-        self.gridVolume = 0 # will be the toatl number of grid points
+        self.gridVolume = 0  # will be the toatl number of grid points
         # list of (x,y,z) for each grid point (x index moving fastest)
         self.masterGridPositions = []
         self._x = None
         self._y = None
         self._z = None
         
-        #this are specific for each compartment
+        # this are specific for each compartment
         self.aInteriorGrids = []
         self.aSurfaceGrids = []
-        #bhtree
+        # bhtree
         self.surfPtsBht=None
         self.ijkPtIndice = []
-        self.filename=None          #used for storing before fill so no need rebuild
-        self.result_filename=None   #used after fill to store result
+        self.filename=None          # used for storing before fill so no need rebuild
+        self.result_filename=None   # used after fill to store result
         self.tree = None        
         self.tree_free = None
         self.encapsulatingGrid = 1
@@ -115,52 +115,55 @@ class Grid:
         self.lookup=lookup
         if setup :
             self.setup(boundingBox,space)
-        #use np.roll to have periodic condition
-        #what about collision ?
+        # use np.roll to have periodic condition
+        # what about collision ?
             
-    def setup(self,boundingBox,space):
+    def setup(self, boundingBox, space):
         self.gridSpacing = space*1.1547
         self.boundingBox = boundingBox
-        #self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
+        # self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
 #        self.create3DPointLookup()
         
-        if self.lookup==0 : self.create3DPointLookupCover()
-        elif self.lookup==1 : self.create3DPointLookup()
-        elif self.lookup==2 : self.create3DPointLookup_loop()
+        if self.lookup == 0:
+            self.create3DPointLookupCover()
+        elif self.lookup == 1:
+            self.create3DPointLookup()
+        elif self.lookup == 2:
+            self.create3DPointLookup_loop()
             
-        nx,ny,nz = self.nbGridPoints
-        self.ijkPtIndice = self.cartesian([range(nx),range(ny),range(nz)])
+        nx, ny, nz = self.nbGridPoints
+        self.ijkPtIndice = self.cartesian([range(nx), range(ny), range(nz)])
         
         self.getDiagonal()
         self.nbSurfacePoints = 0
         print ("$$$$$$", self.gridVolume,self.gridSpacing)
-        self.gridPtId = numpy.zeros(self.gridVolume,'i')#[0]*nbPoints
-        #self.distToClosestSurf = [self.diag]*self.gridVolume#surface point too?
-        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
+        self.gridPtId = numpy.zeros(self.gridVolume,'i')  # [0]*nbPoints
+        # self.distToClosestSurf = [self.diag]*self.gridVolume#surface point too?
+        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag  # (self.distToClosestSurf)
         self.freePoints = list(range(self.gridVolume))
-        self.nbFreePoints =len(self.freePoints)
-        print ("$$$$$$$$  1 ",boundingBox,space,self.gridSpacing,len(self.gridPtId))
+        self.nbFreePoints = len(self.freePoints)
+        print ("$$$$$$$$  1 ", self.lookup, boundingBox, space, self.gridSpacing, len(self.gridPtId))
 #        self.create3DPointLookup()
 #        self.create3DPointLookup_loop()#whatdoI do it twice ?
         print("$$$$$$$$  gridVolume = nbPoints = ", self.gridVolume, 
-                          " grid.nbGridPoints = ", self.nbGridPoints,
-                          "gridPId = ",len(self.gridPtId),
-                        "self.nbFreePoints =",self.nbFreePoints)
+              " grid.nbGridPoints = ", self.nbGridPoints,
+              "gridPId = ", len(self.gridPtId),
+              "self.nbFreePoints =", self.nbFreePoints)
         self.setupBoundaryPeriodicity()
         return self.gridSpacing
 
     def reset(self,):
-        #reset the  distToClosestSurf and the freePoints
-        #boundingBox shoud be the same otherwise why keeping the grid
-#        self.gridPtId = numpy.zeros(self.gridVolume,'i')
-#        self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
+        # reset the  distToClosestSurf and the freePoints
+        # boundingBox shoud be the same otherwise why keeping the grid
+        # self.gridPtId = numpy.zeros(self.gridVolume,'i')
+        # self.distToClosestSurf = numpy.ones(self.gridVolume)*self.diag#(self.distToClosestSurf)
         self.distToClosestSurf = numpy.array(self.distToClosestSurf[:])        
-        self.distToClosestSurf[:] = self.diag#numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
+        self.distToClosestSurf[:] = self.diag  # numpy.array([self.diag]*len(self.distToClosestSurf))#surface point too?
         self.freePoints = list(range(len(self.freePoints)))
         self.nbFreePoints =len(self.freePoints)
         
     def removeFreePoint(self,pti):
-        tmp = self.freePoints[self.nbFreePoints] #last one
+        tmp = self.freePoints[self.nbFreePoints]  # last one
         self.freePoints[self.nbFreePoints] = pti
         self.freePoints[pti] = tmp
         self.nbFreePoints -= 1        
@@ -204,9 +207,9 @@ class Grid:
         self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
         nx,ny,nz = self.nbGridPoints
         pointArrayRaw = numpy.zeros( (nx*ny*nz, 3), 'f')
-        #self.ijkPtIndice = numpy.zeros( (nx*ny*nz, 3), 'i')#this is unused 
-        #try :
-        self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
+        self.ijkPtIndice = numpy.zeros( (nx*ny*nz, 3), 'i')#this is unused
+        # try :
+        # self.ijkPtIndice = numpy.ndindex(nx,ny,nz)
         space = self.gridSpacing
         # Vector for lower left broken into real of only the z coord.
         i = 0
@@ -214,7 +217,7 @@ class Grid:
             for yi in xrange(ny):
                 for xi in xrange(nx):
                     pointArrayRaw[i] = (xl+xi*space, yl+yi*space, zl+zi*space)
-                    #self.ijkPtIndice[i] = (xi,yi,zi)
+                    self.ijkPtIndice[i] = (xi, yi, zi)
                     #print ("add i",i,xi,yi,zi,nx,ny,nz)
                     i+=1
         self.masterGridPositions = pointArrayRaw

@@ -898,20 +898,23 @@ class Ingredient(Agent):
         self.pdb = pdb        #pmv ?
         self.transform_sources = None
         self.source=None
+        self.offset = [0,0,0] #offset to apply for membrane binding
+        if "offset" in kw :
+            self.offset = kw["offset"]
         #should deal with source of the object
         if "source" in kw :
             sources = kw["source"].keys()
             self.source= kw["source"]
             if "pdb" in sources :
                 self.pdb =  kw["source"]["pdb"]
+            if "transform" in sources:
                 self.transform_sources= kw["source"]["transform"]
+                if "offset" in kw["source"]["transform"]:
+                    self.offset = kw["source"]["transform"]["offset"]
         else :
-           self.source={"pdb":self.pdb,"transform":{"center":True}} 
-           self.transform_sources= {"transform":{"center":True}}
+           self.source={"pdb":self.pdb,"transform":{"center":True,"offset":[0,0,0]}}
+           self.transform_sources= {"transform":{"center":True,"offset":[0,0,0]}}
 
-        self.offset = [0,0,0] #offset to apply for membrane binding
-        if "offset" in kw :
-            self.offset = kw["offset"]
         self.color = color    # color used for sphere display
         if self.color == "None":
             self.color = None
@@ -1048,25 +1051,28 @@ class Ingredient(Agent):
         self.mesh = None
         self.meshObject= None
         if meshFile is not None:
-            print ("OK, meshFile is not none, it is = ",meshFile,self.name,self.coordsystem)
+            print ("OK, meshFile is not none, it is = ", meshFile, self.name, self.coordsystem)
             gname = self.name
-            if self.meshName is not None :
+            if self.meshName is not None:
                 gname = self.meshName
-            self.mesh = self.getMesh(meshFile, gname)#self.name)
+            self.mesh = self.getMesh(meshFile, gname)  # self.name)
             print ("OK got",self.mesh)
-            if self.mesh is None :
-                #display a message ?
+            if self.mesh is None:
+                # display a message ?
                 print ("no geometrie for ingredient " + self.name)
-            #should we reparent it ?
+            # should we reparent it ?
             self.meshFile = meshFile
         elif meshObject is not None:
             self.mesh = meshObject
-        if "encapsulatingRadius" in kw:
-            #we force the encapsulatingRadius
-            if autopack.helper.host != "3dsmax":
-                self.encapsulatingRadius = kw["encapsulatingRadius"]
+
         if self.mesh is not None :
            self.getEncapsulatingRadius()
+
+        if "encapsulatingRadius" in kw:
+            # we force the encapsulatingRadius
+            if autopack.helper.host != "3dsmax":
+                self.encapsulatingRadius = kw["encapsulatingRadius"]
+
         #need to build the basic shape if one provided
         self.use_mesh_rb = False
         self.current_resolution="Low"#should come from data
@@ -1086,7 +1092,7 @@ class Ingredient(Agent):
         self.rotAxis = None
         if "rotAxis" in kw:
             self.rotAxis = kw["rotAxis"]
-            #this could define the biased
+            # this could define the biased
         self.rotRange = 6.2831
         if "rotRange" in kw:
             self.rotRange = kw["rotRange"]
@@ -1104,15 +1110,15 @@ class Ingredient(Agent):
         if "orientBiasRotRangeMax" in kw:
             self.orientBiasRotRangeMax = kw["orientBiasRotRangeMax"]
 
-        #cutoff are used for picking point far from surface and boundary
-        self.cutoff_boundary = None#self.encapsulatingRadius
+        # cutoff are used for picking point far from surface and boundary
+        self.cutoff_boundary = None  # self.encapsulatingRadius
         self.cutoff_surface = float(self.encapsulatingRadius)
         if "cutoff_boundary" in kw:
             self.cutoff_boundary = kw["cutoff_boundary"]
         if "cutoff_surface" in kw:
             if kw["cutoff_surface"] != 0.0 :
                 self.cutoff_surface = float(kw["cutoff_surface"])
-        self.properties ={}#four tout
+        self.properties = {}  # four tout
         if "properties" in kw:
             self.properties = kw["properties"]
         
@@ -1120,13 +1126,13 @@ class Ingredient(Agent):
         self.compareCompartmentTolerance = 0
         self.compareCompartmentThreshold = 0.0
         
-        self.updateOwnFreePts = False #work for rer python not ??
+        self.updateOwnFreePts = False  # work for rer python not ??
         self.haveBeenRejected = False
         
-        self.distances_temp=[]
-        self.centT = None #transformed position
+        self.distances_temp = []
+        self.centT = None  # transformed position
 
-        self.results =[]
+        self.results = []
 #        if self.mesh is not None :
 #            self.getData()
 
@@ -3649,6 +3655,8 @@ class Ingredient(Agent):
         collD2 = []
 
         trans = gridPointsCoords[ptInd] # drop point, surface points.
+        if numpy.sum(self.offset) != 0.0 :
+            trans = numpy.array(trans) + ApplyMatrix([self.offset],rotMat)[0]
         targetPoint = trans
         moving = None
         if runTimeDisplay and self.mesh:
@@ -4168,7 +4176,9 @@ class Ingredient(Agent):
         collD1 = []
         collD2 = []
 
-        trans = gridPointsCoords[ptInd] # drop point, surface points.
+        trans = gridPointsCoords[ptInd]# drop point, surface points.
+        if numpy.sum(self.offset) != 0.0 :
+            trans = numpy.array(trans) + ApplyMatrix([self.offset], rotMat)[0]
         targetPoint = trans
         moving = None
         if runTimeDisplay and self.mesh:
@@ -5127,8 +5137,9 @@ class Ingredient(Agent):
         jitterList = []
         collD1 = []
         collD2 = []
-
         trans = gridPointsCoords[ptInd] # drop point, surface points.
+        if numpy.sum(self.offset) != 0.0 :
+            trans = numpy.array(trans) + ApplyMatrix([self.offset],rotMat)[0]
         targetPoint = trans
         moving = None
         if runTimeDisplay and self.mesh:

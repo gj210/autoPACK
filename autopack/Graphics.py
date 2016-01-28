@@ -656,9 +656,9 @@ class AutopackViewer:
                       radii=ingr.radii[0], visible=visible)
             self.vi.AddObject(sph, parent=ingr.mesh)
         else :
-            oparent = self.vi.getObject(ingr.o_name)#or ingr.mesh
+            oparent = self.vi.getObject(ingr.mesh)#or ingr.mesh or o_name or gname ?
             pname=ingr.name.replace(" ","_")+"_SPH"
-            print ("found ",oparent,pname)
+            print ("found ",oparent,pname,ingr.mesh)
             parent = self.vi.getObject(pname)#or ingr.mesh
             if parent is None:
                 parent=self.vi.newEmpty(pname,parent=oparent)
