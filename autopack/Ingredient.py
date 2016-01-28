@@ -4442,7 +4442,7 @@ class Ingredient(Agent):
 #            t=time()     
             collision2=( True in r)
             collisionComp = False
-            print("collide??", collision2, r, test)
+            #print("collide??", collision2, r, test)
 #            print ("contactTestPair",collision2,time()-t)
 #            print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             #need to check compartment too
