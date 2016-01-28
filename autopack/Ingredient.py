@@ -4380,7 +4380,7 @@ class Ingredient(Agent):
             t=time()   
             test=self.testPoint(jtrans)
 #            print ("testPoints",r,test,jtrans)
-            #       checkif rb collide 
+            #       checkif rb collide
 #            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
             if not test and not ( True in r):
                 #check for close surface ?
