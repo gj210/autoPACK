@@ -326,7 +326,7 @@ image_file_out = output_tem_nonoise.mrc
                                            "width":30}
         
 
-        self.initial_coordinates_str[name]="# File created for TEM-simulator, version 1.3.\n"
+        self.initial_coordinates_str[name]=""
 
     def addAutoPackIngredient(self, ingredient):
         #name should change to three letter code for the xyz formats
@@ -337,13 +337,15 @@ image_file_out = output_tem_nonoise.mrc
             self.addObject(ingredient.name,"pdb",None,len(ingredient.results))
         #add the coordinate
         for r in ingredient.results:  
-            if hasattr(r[0],"tolist"):
-                r[0]=r[0].tolist()#position
+            pos=np.array(r[0])/10.0
+            rot=np.array(r[1]).transpose()
+#            if hasattr(r[0],"tolist"):
+#                r[0]=r[0].tolist()#position
             if hasattr(r[1],"tolist"):
                 r[1]=r[1].tolist()#rotation that should be apply to sphereTree
-            euler = euler_from_matrix(r[1])#Or angle from software ?
+            euler = euler_from_matrix(rot)#Or angle from software ?
             euler = [math.degrees(euler[0]),math.degrees(euler[1]),math.degrees(euler[2])]
-            self.addCoordinate(ingredient.name,r[0],euler)
+            self.addCoordinate(ingredient.name,pos.tolist(),euler)
             
     def addCoordinate(self,name,pos,rot):
         self.initial_coordinates_str[name]+="%.4f %.4f %.4f %.4f %.4f %.4f\n" %(
@@ -358,6 +360,8 @@ image_file_out = output_tem_nonoise.mrc
         for ob in self.objects:
             print ("write TEM-simulator  coord input files for object "+ob)
             f=open(self.base_directory+os.sep+ob+"_coordinates.txt","w")
+            f.write("# File created for TEM-simulator, version 1.3.\n")
+            f.write(" "+str(self.objects[ob]["num_particles"]["value"])+" 6\n")
             f.write(self.initial_coordinates_str[ob])
             f.close()
         

@@ -988,6 +988,104 @@ h1 = Environment()
     f.write(setupStr)
     f.close()
 
+
+from Serializable import sCompartment
+from Serializable import sIngredientGroup
+from Serializable import sIngredient
+
+
+#same order as bd_box ?
+def serializedRecipe(env):
+    root=sCompartment("root")
+    r = env.exteriorRecipe
+    if r :
+        group=sIngredientGroup("cytoplasme")
+        for ingr in r.ingredients:
+            kwds={"nbMol":len(ingr.results),"source":ingr.source}
+            igr=sIngredient(ingr.name,**kwds)
+            group.addIngredient(igr)
+        root.addIngredientGroup(group)
+    for o in env.compartments:
+        co=sCompartment(o.name)
+        rs = o.surfaceRecipe
+        if rs :
+            group=sIngredientGroup("surface")
+            for ingr in rs.ingredients:
+                kwds={"nbMol":len(ingr.results),"source":ingr.source}
+                igr=sIngredient(ingr.name,**kwds)
+                group.addIngredient(igr)
+            co.addIngredientGroup(group) 
+        ri = o.innerRecipe
+        if ri :
+            group=sIngredientGroup("interior")
+            for ingr in ri.ingredients:
+                kwds={"nbMol":len(ingr.results),"source":ingr.source}
+                igr=sIngredient(ingr.name,**kwds)
+                group.addIngredient(igr)
+            co.addIngredientGroup(group) 
+        root.addCompartment(co)
+    data_json = root.to_JSON()
+    return data_json
+
+import struct
+
+def gatherResult(ingr,transpose,use_quaternion,lefthand=False):
+    all_pos=[]
+    all_rot=[]
+    for r in ingr.results:  
+        #position
+        if hasattr(r[0],"tolist"):
+            r[0]=r[0].tolist()
+        #rotation
+        if hasattr(r[1],"tolist"):
+            r[1]=r[1].tolist()
+        R=numpy.array(r[1]).tolist()#this will not work with cellvIEW?                
+        if transpose:
+            R=numpy.array(r[1]).transpose().tolist()#this will not work with cellvIEW?
+
+
+        #transpose ?
+        if lefthand :
+            all_pos.append([-r[0][0],r[0][1],r[0][2],0.0])
+            e=tr.euler_from_matrix(R)
+            q =tr.quaternion_from_euler(e[0],-e[1],-e[2],axes='szxy')
+            all_rot.append(q)
+        else :
+            all_pos.append([r[0][0],r[0][1],r[0][2],1.0])
+            if use_quaternion:
+                R=tr.quaternion_from_matrix(R).tolist()
+            all_rot.append(R)
+    return all_pos,all_rot
+                
+def saveResultBinary(env,filename,transpose,use_quaternion,lefthand=False):
+    #should follow the order of the serialized class order?
+    all_pos=[]
+    all_rot=[]
+    fptr=open(filename,"wb")               
+    r = env.exteriorRecipe
+    if r :
+        for ingr in r.ingredients:
+            ap,ar=gatherResult(ingr,transpose,use_quaternion,lefthand=lefthand)
+            all_pos.extend(ap)
+            all_rot.extend(ar)
+    for o in env.compartments:
+        rs = o.surfaceRecipe
+        if rs :
+            for ingr in rs.ingredients:
+                ap,ar=gatherResult(ingr,transpose,use_quaternion,lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+        ri = o.innerRecipe
+        if ri :
+            for ingr in ri.ingredients:
+                ap,ar=gatherResult(ingr,transpose,use_quaternion,lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+    #write allpos
+    numpy.array(all_pos,'f').flatten().tofile(fptr)#4float position
+    numpy.array(all_rot,'f').flatten().tofile(fptr)#4flaot quaternion
+    fptr.close()
+   
 def load_XML(env,setupfile):
     """
     Setup the environment according the given xml file. 

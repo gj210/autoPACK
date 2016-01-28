@@ -201,7 +201,7 @@ recipeslistes = autoPACKserver+"/autopack_recipe.json"
 
 autopackdir=str(afdir)#copy
 def checkPath(autopack_path_pref_file):
-    fname = filespath#autoPACKserver+"/autoPACK_filePaths.json"
+    fname = autopack_path_pref_file#autoPACKserver+"/autoPACK_filePaths.json"
     if fname.find("http") != -1 or fname.find("ftp")!= -1 :
         try :
             import urllib.request as urllib# , urllib.parse, urllib.error
@@ -217,7 +217,7 @@ def checkPath(autopack_path_pref_file):
 #get user / default value 
 if not os.path.isfile(autopack_path_pref_file):
     print (autopack_path_pref_file+" file is not found")
-    checkPath(autopack_path_pref_file)
+    checkPath(filespath)
 
 doit=False
 if os.path.isfile(autopack_user_path_pref_file):
@@ -227,6 +227,7 @@ elif os.path.isfile(autopack_path_pref_file):
     f=open(autopack_path_pref_file,"r")
     doit=True
 if doit :
+    print ("autopack_path_pref_file ",autopack_path_pref_file)
     pref_path = json.load(f)
     f.close()
     if "autoPACKserver" not in pref_path :
@@ -427,9 +428,9 @@ def updatePathJSON():
         print (autopack_path_pref_file+" file is not found")
         return
     if os.path.isfile(autopack_user_path_pref_file):
-        f=open(autopack_user_path_pref_file,"r")    
+        f=open(autopack_user_path_pref_file, "r")
     else :
-        f=open(autopack_path_pref_file,"r")
+        f=open(autopack_path_pref_file, "r")
     pref_path = json.load(f)
     f.close()
     autoPACKserver=pref_path["autoPACKserver"]
@@ -567,16 +568,16 @@ def clearCaches(*args):
 
 if checkAtstartup :
     checkPath(autopack_path_pref_file)
-updatePathJSON()
-print ("path are updated ")
+    updatePathJSON()
+    print ("path are updated ")
 
 if checkAtstartup :
     #get from server the list of recipe
     #recipe_web_pref_file
     checkRecipeAvailable()
-updateRecipAvailable(recipe_web_pref_file)
-updateRecipAvailable(recipe_user_pref_file)
-updateRecipAvailable(recipe_dev_pref_file)
+    updateRecipAvailable(recipe_web_pref_file)
+    updateRecipAvailable(recipe_user_pref_file)
+    updateRecipAvailable(recipe_dev_pref_file)
 
 print ("currently nb recipes is "+str(len(RECIPES)))
 #check cach directory create if doesnt exit.abs//should be in user pref?

@@ -560,7 +560,7 @@ class rigid_box(bd_box):
             aStr+=self.addBead(pos[i],radius[i])
             input_str+="%f %f %f %f\n" % (pos[i][0],pos[i][1],pos[i][2],radius[i])
         input_str+="0.01 298.15\n"#viscosity temperature - viscosity of the solvent (Poisse) and temperature (K)
-        input_str+="0.0\n"       #solvent radius - radius of solvent molecules (typically set to 0.0A in case of coarse-grained models)
+        input_str+="0.0\n"       #solvent radius - radius of solvent molecules (typically set to 0.0A in case of coarse-grained models)
         self.objects_dt_string.append(input_str)
         self.objects_str_string.append(aStr)
         self.params_string+="object "+name+" "+str(number)+"\n"

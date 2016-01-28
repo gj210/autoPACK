@@ -2071,12 +2071,12 @@ class SubdialogFiller(uiadaptor):
             gridFileOut=self.gridresultfile
         else :
             gridFileIn=self.gridresultfile
-        print ("##############",fbuild,gridFileIn,gridFileOut)
+        print ("##############", fbuild, gridFileIn, gridFileOut)
         #check the innermethod  
         if type(self.histoVol.innerGridMethod) != str :
             self.histoVol.innerGridMethod = "bhtree"
-        self.histoVol.buildGrid(boundingBox=bb,gridFileIn=gridFileIn,rebuild=fbuild ,
-                      gridFileOut=gridFileOut,previousFill=pFill)
+        self.histoVol.buildGrid(boundingBox=bb, gridFileIn=gridFileIn, rebuild=fbuild,
+                      gridFileOut=gridFileOut, previousFill=pFill, lookup=2)
         #should use some cache for the box here,maybe compreto current one
 #        self.afviewer.displayCompartmentsPoints() # this is optional and should not be called here
 #        print "fill"

@@ -2999,7 +2999,8 @@ class Environment(CompartmentList):
                             self.afviewer.vi.progressBar(progress=int(p),label=ingr.name+" "+str(ingr.completion))
                             if self.afviewer.renderDistance:
                                 self.afviewer.vi.displayParticleVolumeDistance(distance,self)
-                        #pass
+                        else :
+                            print '\r{} {} {} {}'.format(p,ingr.name,ingr.completion,nbFreePoints),
                 # End C4D safety check for Status bar added July 10, 2012
             compNum = ingr.compNum
             radius = ingr.minRadius
@@ -3048,19 +3049,20 @@ class Environment(CompartmentList):
             if success:
                 self.grid.distToClosestSurf = numpy.array(distance[:])
                 self.grid.freePoints = numpy.array(freePoints[:])
-                self.grid.nbFreePoints = len(freePoints)#-1
+                self.grid.nbFreePoints = len(freePoints)  # -1
                 if verbose > 1:
-                    print ("success",ingr.completion)
+                    print ("success", ingr.completion)
                 #update largest protein size
                 #problem when the encapsulatingRadius is actually wrong
                 if ingr.encapsulatingRadius > self.largestProteinSize : 
                     self.largestProteinSize = ingr.encapsulatingRadius
                 PlacedMols+=1
-#                nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
+            # nbFreePoints=self.removeOnePoint(ptInd,freePoints,nbFreePoints)  #Hidden by Graham on March 1, 2013 until we can test.
             else :
                 if verbose > 1:
-                    print ("rejected",ingr.rejectionCounter)
-                    print ("picked reduced ?",ptInd, distance[ptInd] )
+                    #print '\rrjected {} {} {}'.format(ingr.rejectionCounter,ptInd,distance[ptInd]),
+                    print ("rejected", ingr.rejectionCounter)
+                    print ("picked reduced ?", ptInd, distance[ptInd])
 
             if ingr.completion >= 1.0 :
                 ind = self.activeIngr.index(ingr)
