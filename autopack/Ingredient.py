@@ -3019,6 +3019,30 @@ class Ingredient(Agent):
         else :
             return False
 
+    def get_new_pos(self, ingr, pos, rot):
+        m = numpy.array(rot)
+        m[:3,:3] = pos
+        return ApplyMatrix(ingr.positions[0],m)
+
+    def bht_check_collision(self, position, rotation):
+        #use self.histoVol.ingr_bhtree
+        nb = self.histoVol.ingr_bhtree.closePointsPairs(tuple([position,]),tuple([self.encapsulatingRadius]), 1.0)
+        overlap = False
+        if len(nb):
+            #build bhtree of self.radii
+            p = self.get_new_pos(self, position, rotation)
+            sphtree = bhtreelib.BHtree(tuple(p.tolist()), tuple(self.radii[0]), 10)
+            #overlapping eR, 0 is tree, 1 is query
+            for i in range(len(nb)):
+                indice = nb[i][1]
+                pos=self.get_new_pos(self.histoVol.rIngr[indice], self.histoVol.rTrans[indice], self.histoVol.rRot[indice])
+                nb = sphtree.closePointsPairs(tuple(pos.tolist()), tuple(self.histoVol.rIngr[indice].radii[0]), 1.0)
+                if len(nb):
+                    overlap = True
+                    break
+            bhtreelib.freeBHtree(sphtree)
+        return overlap
+
     def checkDistance(self,liste_nodes,point,cutoff):
         for node in liste_nodes:
             rTrans,rRot=self.histoVol.getRotTransRB(node)
@@ -4385,7 +4409,10 @@ class Ingredient(Agent):
             test=self.testPoint(jtrans)
             # print ("testPoints",r,test,jtrans)
             #       checkif rb collide
-#            r=[ (self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]  
+#            r=[ t(self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]
+
+            self.bht_check_collision(jtrans,rotMatj)
+
             if not test and not ( True in r):
                 #check for close surface ?
                 #closeS = self.checkPointSurface(newPt,cutoff=self.cutoff_surface)
@@ -4474,7 +4501,12 @@ class Ingredient(Agent):
                         if len(self.histoVol.rTrans) : self.histoVol.close_ingr_bhtree=bhtreelib.BHtree( self.histoVol.rTrans, None, 10)
                     else :
                         #rebuild kdtree
-                        if len(self.histoVol.rTrans) >= 1 : self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
+                        if len(self.histoVol.rTrans) >= 1:
+                            self.histoVol.close_ingr_bhtree= spatial.cKDTree(self.histoVol.rTrans, leafsize=10)
+                        if len(self.histoVol.rTrans) >= 1:
+                            bhtreelib.freeBHtree(self.histoVol.close_ingr_bhtree)
+                        if len(self.histoVol.rTrans):
+                            self.histoVol.ingr_bhtree = bhtreelib.BHtree(self.histoVol.rTrans, [ing.encalspulatingRadius for ing in self.histoVol.rIngr], 10)
                     #self.histoVol.callFunction(self.histoVol.delRB,(rbnode,))                    
                     break # break out of jitter pos loop
                 else :
