@@ -363,53 +363,48 @@ class AnalyseAP:
             c = self.helper.newInstance(self.env.name+"distances_cubes_"+str(i),base,
                                       location=p,material=mat,parent=parent_cube)
 
-    def displayDistancePlane(self,ramp_color1=[1,0,0],ramp_color2=[0,0,1],
-                        ramp_color3=None,cutoff=60.0):
-        #which axis ?
+    def displayDistancePlane(self, ramp_color1=[1, 0, 0], ramp_color2=[0, 0, 1],
+                        ramp_color3=None, cutoff=60.0):
+        # which axis ?
         distances = numpy.array(self.env.grid.distToClosestSurf[:])
-        max_distance= max(distances)
-        min_distance= min(distances)
+        max_distance = max(distances)
+        min_distance = min(distances)
         
-#        positions = numpy.array(self.env.grid.masterGridPositions[:])
-        #positions = self.env.grid.masterGridPositions[:]
-        #map the color as well ?
         from upy import colors as col
         from DejaVu.colorTool import Map
-        ramp = col.getRamp([ramp_color1,ramp_color2],size=255)   #color
+        ramp = col.getRamp([ramp_color1, ramp_color2], size=255)   # color
         mask = distances > cutoff
-        ind=numpy.nonzero(mask)[0]
-        distances[ind]=cutoff
+        ind = numpy.nonzero(mask)[0]
+        distances[ind] = cutoff
         mask = distances < 0#-cutoff
-        ind=numpy.nonzero(mask)[0]
-        distances[ind]=0#cutoff 
-        newd=numpy.append(distances,cutoff)
-        colors = Map(newd, ramp)[:-1]#1D array of the grid x,y,1
+        ind = numpy.nonzero(mask)[0]
+        distances[ind] = 0#cutoff
+        newd = numpy.append(distances, cutoff)
+        colors = Map(newd, ramp)[:-1]  # 1D array of the grid x,y,1
         autopack._colors = colors
-#        sphs = self.helper.Spheres("distances",vertices=numpy.array(positions),radii=distances,colors=colors)
-        p=self.helper.getObject(self.env.name+"distances")
-        if p is not None :
-            self.helper.deleteObject(p)#recursif?
+        p = self.helper.getObject(self.env.name+"distances")
+        if p is not None:
+            self.helper.deleteObject(p)  # recursif?
         p = self.helper.newEmpty(self.env.name+"distances_p")
-        #sphs=self.helper.instancesSphere(self.env.name+"distances_cubes",positions,distances,base,colors,None,parent=p)
-        #can use cube also 
-        print ("grid is ",self.env.grid.nbGridPoints)
-        print ("colors shape is ",colors.shape)
+
+        print ("grid is ", self.env.grid.nbGridPoints)
+        print ("colors shape is ", colors.shape)
         d = numpy.array(self.env.grid.boundingBox[0]) - numpy.array(self.env.grid.boundingBox[1])
-        p,mpl = self.helper.plane(self.env.name+"distances_plane",
-                                  center = self.env.grid.getCenter(),
-                                size=[math.fabs(d[0]),math.fabs(d[1])],
-                                    parent=p)
-        self.helper.rotateObj(p,[0,0,-math.pi/2.0])
+        p, mpl = self.helper.plane(self.env.name+"distances_plane",
+                                  center=self.env.grid.getCenter(),
+                                  size=[math.fabs(d[0]),math.fabs(d[1])],
+                                  parent=p)
+        self.helper.rotateObj(p, [0, 0, -math.pi/2.0])
         filename = autopack.cache_results+os.sep+self.env.name+"distances_plane_texture.png"
-        c=colors.reshape((self.env.grid.nbGridPoints[0],
+        c = colors.reshape((self.env.grid.nbGridPoints[0],
                           self.env.grid.nbGridPoints[1],
-                          self.env.grid.nbGridPoints[2],3))
+                          self.env.grid.nbGridPoints[2], 3))
         
-        im = Image.fromstring("RGB",(c.shape[0],c.shape[1]),numpy.uint8(c*255.0).tostring())
+        im = Image.fromstring("RGB", (c.shape[0], c.shape[1]), numpy.uint8(c*255.0).tostring())
         im.save(str(filename))
-        mat = self.helper.createTexturedMaterial(self.env.name+"planeMat",str(filename))
+        mat = self.helper.createTexturedMaterial(self.env.name+"planeMat", str(filename))
         #assign the material to the plane
-        self.helper.assignMaterial(p,mat,texture=True)
+        self.helper.assignMaterial(p, mat, texture=True)
 
 
     def writeJSON(self,filename,data):

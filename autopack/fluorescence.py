@@ -108,18 +108,36 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
 class fluoSim:
     def __init__(self,values=None,psf_type="gauss",
                  boundingBox=4195,res=400.0,space=50.0 ):
-        self.setup(values=values,psf_type=psf_type,boundingBox=boundingBox,
-                   res=res,space=space)
+        self.mapping=None
+        self.values = values
+        self.gridxyz=None
+        self.overwrite_spacing = None
+#        self.setup(values=values,psf_type=psf_type,boundingBox=boundingBox,
+#                   res=res,space=space)
         
     def makeGrid(self,values=None,boundingBox=2000,res=400.0,space=200.0 ):
         self.W=float(boundingBox)
         self.boundingBox=np.array([[-self.W, -self.W, -self.W], [self.W, self.W, self.W]])
-        self.x = np.linspace(self.boundingBox[0][0], self.boundingBox[1][0] , int((self.W*2.)/space))#*1.1547) gridspacing is already multiplied by 1.1547
-        self.y = np.linspace(self.boundingBox[0][1], self.boundingBox[1][1] , int((self.W*2.)/space))#*1.1547)
-        self.z = np.linspace(self.boundingBox[0][2], self.boundingBox[1][2] , int((self.W*2.)/space))#*1.1547)
+        sp=int((self.W*2.)/space)
+        if self.overwrite_spacing is not None :
+            sp=self.overwrite_spacing
+        self.x = np.linspace(self.boundingBox[0][0], self.boundingBox[1][0] , sp)#*1.1547) gridspacing is already multiplied by 1.1547
+        self.y = np.linspace(self.boundingBox[0][1], self.boundingBox[1][1] , sp)#*1.1547)
+        self.z = np.linspace(self.boundingBox[0][2], self.boundingBox[1][2] , sp)#*1.1547)
 #        self.x = np.arange(self.boundingBox[0][0], self.boundingBox[1][0] + space, space)#*1.1547) gridspacing is already multiplied by 1.1547
 #        self.y = np.arange(self.boundingBox[0][1], self.boundingBox[1][1] + space, space)#*1.1547)
 #        self.z = np.arange(self.boundingBox[0][2], self.boundingBox[1][2] + space, space)#*1.1547)
+        self.nx = len(self.x) # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
+        self.ny = len(self.y)
+        self.nz = len(self.z)
+        self.space = space
+
+    def makeDiscreteGrid(self,boundingBox,space):
+        self.W=float(boundingBox)
+        self.boundingBox=np.array([[-self.W, -self.W, -self.W], [self.W, self.W, self.W]])
+        self.x = np.arange(self.boundingBox[0][0]- space, self.boundingBox[1][0]+ space, space)#*1.1547) gridspacing is already multiplied by 1.1547
+        self.y = np.arange(self.boundingBox[0][1]- space, self.boundingBox[1][1] + space, space)#*1.1547)
+        self.z = np.arange(self.boundingBox[0][2]- space, self.boundingBox[1][2] + space, space)#*1.1547)
         self.nx = len(self.x) # sizes must be +1 or the right, top, and back edges don't get any points using this numpy.arange method
         self.ny = len(self.y)
         self.nz = len(self.z)
@@ -154,7 +172,8 @@ class fluoSim:
             iy = np.searchsorted(self.y, ay) - 1
             iz = np.searchsorted(self.z, az) - 1
             self.data[ix,iy,iz]=1.0
-
+            self.mapping=[ix,iy,iz]
+            
     def setValuesAccurate(self,values=None):
         if values is None :
             values = self.values
@@ -162,11 +181,13 @@ class fluoSim:
             #filter values not inside the Box boundingBox
             xyz = np.meshgrid(self.x,self.y,self.z,copy=False)
             grid = np.array(xyz).T
-            tr=spatial.cKDTree(grid.reshape((self.nx*self.ny*self.nz,3)), leafsize=10)
+            self.gridxyz= grid.reshape((self.nx*self.ny*self.nz,3))
+            tr=spatial.cKDTree(self.gridxyz, leafsize=10)
             d,i=tr.query(values)
             zvalues=np.zeros(self.nx*self.ny*self.nz)
             zvalues[i]=1.0
             self.data = zvalues.reshape((self.nx,self.ny,self.nz))
+            self.mapping=i
 #            ax,ay,az = values.transpose()
 #            ix = np.searchsorted(self.x, ax) - 1
 #            iy = np.searchsorted(self.y, ay) - 1
