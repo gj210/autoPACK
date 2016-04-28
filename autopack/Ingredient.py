@@ -3510,7 +3510,7 @@ class Ingredient(Agent):
                                                                sphGeom=None, labDistGeom=None, debugFunc=None,
                                                                sphCenters=None, sphRadii=None, sphColors=None,
                                                                usePP=usePP)
-        elif self.placeType == "bht":
+        elif self.placeType == "spheresBHT":
             success, nbFreePoints = self.pandaBullet_placeBHT(histoVol, ptInd, freePoints, nbFreePoints, distance, dpad,
                                                               stepByStep=False, verbose=verbose,
                                                               sphGeom=None, labDistGeom=None, debugFunc=None,
