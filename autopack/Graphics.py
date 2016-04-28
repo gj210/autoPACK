@@ -273,7 +273,7 @@ class AutopackViewer:
         """
         display histo volume bounding box 
         """
-        name = 'histoVolBB'
+        name = 'BoundingBox'
         b = self.helper.getObject(name)
         if b is None:
             self.histoBox = self.vi.Box(name, cornerPoints=self.histo.boundingBox, parent=self.master)[0]

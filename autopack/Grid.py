@@ -682,7 +682,7 @@ class Grid:
         if self.tree is None:
             self.tree = spatial.cKDTree(self.masterGridPositions, leafsize=10)
          # add surface points
-        ptIndices = self.tree.query_ball_point(pt, self.diag)
+        ptIndices = self.tree.query_ball_point(pt, radius)  #, n_jobs=-1)
         # if addSP and self.nbSurfacePoints != 0:
         #     result = numpy.zeros((self.nbSurfacePoints,), 'i')
         #     nb = self.surfPtsBht.closePoints(tuple(pt), radius, result)
