@@ -1359,7 +1359,7 @@ class SubdialogFiller(uiadaptor):
 
     def getLabelIngr2(self, rname, name):  # o.name+"surface"
         self.LABELSINGR[rname] = []
-        self.LABELSINGR[rname].append(self.ingr_include[name])
+        self.LABELSINGR[rname].append(self.LABELS["RecipeColumnsEmptySpace50"])  # self.ingr_include[name])
         self.LABELSINGR[rname].append(self._addElemt(name=rname + "d", label="(M or surfM)", width=self.wicolumn[1]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname + "a", label="ingredients", width=self.wicolumn[2]))
         self.LABELSINGR[rname].append(self._addElemt(name=rname + "t", label="to attempt ", width=self.wicolumn[3]))
@@ -1438,8 +1438,8 @@ class SubdialogFiller(uiadaptor):
                                         value="fillBB", type="inputStr", variable=self.addVariable("str", "fillBB"))
         self.LABELS["bbox"] = self._addElemt(name="bbox", label="Set padded Bounding Box to Object named:", width=120)
         self.bbox_name = self._addElemt(name=self.recipe + "bbox", action=None, width=100,
-                                        value="histoVolBB", type="inputStr",
-                                        variable=self.addVariable("str", "histoVolBB"))
+                                        value="BoundingBox", type="inputStr",
+                                        variable=self.addVariable("str", "BoundingBox"))
 
         # cytoplasm first
         self.LABELS["cytoplasm"] = self._addElemt(name=self.recipe + "cyto",
@@ -1668,20 +1668,29 @@ class SubdialogFiller(uiadaptor):
         # Recipe Options
 
         elemFrame = []
-        elemFrame.append([self.LABELS["bbox"], self.bbox_name])
-        elemFrame.append([self.LABELS["fbox"], self.fbox_name])
+        if self.guimode != "Simple" and self.guimode != "Intermediate":
+            elemFrame.append([self.LABELS["bbox"], self.bbox_name])
+            elemFrame.append([self.LABELS["fbox"], self.fbox_name])
+            for o in self.histoVol.compartments:
+                elemFrame.append([self.LABELS[o.name], self.Widget["compartments_mesh"][o.name]])
+                if self.guimode != "Simple" and self.guimode != "Intermediate":
+                    elemFrame.append([self.Widget["compartments_overw"][o.name]])
 
-        #        elemFrame.append(self.LABELSINGR)
+        elemFrame.append(self.getLabelIngr1("all"))
+        elemFrame.append(self.getLabelIngr2("all", "all"))
+
         for o in self.histoVol.compartments:
             # each compartment
             subelem = []
-            subelem.append([self.LABELS[o.name], self.Widget["compartments_mesh"][o.name]])
-            subelem.append([self.Widget["compartments_overw"][o.name]])
+            # subelem.append([self.LABELS[o.name], self.Widget["compartments_mesh"][o.name]])
+            # if self.guimode != "Simple" and self.guimode != "Intermediate":
+            #     subelem.append([self.Widget["compartments_overw"][o.name]])
             subelem.append([self.LABELS[o.name + "surface" + "_ingr"]])  # ,self.ingr_include[o.name+"surface"]])
             rs = o.surfaceRecipe
             if rs:
-                subelem.append(self.getLabelIngr1(o.name + "surf"))
-                subelem.append(self.getLabelIngr2(o.name + "surf", o.name + "surface"))
+                subelem.append([self.ingr_include[o.name + "surface"]])
+                # subelem.append(self.getLabelIngr1(o.name + "surf"))
+                # subelem.append(self.getLabelIngr2(o.name + "surf", o.name + "surface"))
                 for ingr in rs.ingredients:
                     widget = self.get_ingredient_line(ingr)
                     subelem.append(widget)
@@ -1694,8 +1703,9 @@ class SubdialogFiller(uiadaptor):
             #            elemFrame.append(self.LABELSINGR)
             ri = o.innerRecipe
             if ri:
-                subelem.append(self.getLabelIngr1(o.name + "inner"))
-                subelem.append(self.getLabelIngr2(o.name + "inner", o.name + "matrix"))
+                subelem.append([self.ingr_include[o.name + "matrix"]])
+                # subelem.append(self.getLabelIngr1(o.name + "inner"))
+                # subelem.append(self.getLabelIngr2(o.name + "inner", o.name + "matrix"))
                 for ingr in ri.ingredients:
                     widget = self.get_ingredient_line(ingr)
                     subelem.append(widget)
@@ -1709,9 +1719,9 @@ class SubdialogFiller(uiadaptor):
         # subelem.append([self.LABELS["cytoplasm"]])  # ,self.ingr_include["cytoplasm"]])
         r = self.histoVol.exteriorRecipe
         if r:
-            #            subelem.append(self.ingr_include["cytoplasm"])
-            subelem.append(self.getLabelIngr1("cyto"))
-            subelem.append(self.getLabelIngr2("cyto", "cytoplasm"))
+            subelem.append([self.ingr_include["cytoplasm"]])
+            # subelem.append(self.getLabelIngr1("cyto"))
+            # subelem.append(self.getLabelIngr2("cyto", "cytoplasm"))
             for ingr in r.ingredients:
                 widget = self.get_ingredient_line(ingr)
                 subelem.append(widget)
@@ -2196,7 +2206,7 @@ class SubdialogFiller(uiadaptor):
     def updateNBMOL_cb(self, bname, spacing):
         box = self.helper.getObject(bname)
         if box is None:
-            box = self.helper.getObject("histoVolBB")
+            box = self.helper.getObject("BoundingBox")
             if box is None:
                 box = self.helper.getCurrentSelection()
                 if len(box):
@@ -2215,8 +2225,11 @@ class SubdialogFiller(uiadaptor):
         # need to prepare the fill
         self.applyWidgetValue()
         seed = self.getVal(self.seedId)
-        bname = self.getVal(self.bbox_name)
-        fbox_name = self.getVal(self.fbox_name)
+        bname = "BoundingBox"
+        fbox_name = "fillBB"
+        if self.guimode != "Simple" and self.guimode != "Intermediate":
+            bname = self.getVal(self.bbox_name)
+            fbox_name = self.getVal(self.fbox_name)
         pFill = False
         pIngr = False
         fbuild = True
@@ -2421,10 +2434,10 @@ class SubdialogFiller(uiadaptor):
     def saveResult_cb(self, filename):
         self.histoVol.store_asJson(resultfilename=filename)
         self.histoVol.saveRecipe(filename+".json", useXref=True, mixed=True,
-                                 kwds=["source", "name"], result=True,
+                                 kwds=["source", "name", "radii", "positions"], result=True,
                                  grid=False, packing_options=False, indent=False, quaternion=True)  # transpose ?
         self.histoVol.saveRecipe(filename + "_tr.json", useXref=True, mixed=True,
-                                 kwds=["source", "name"], result=True,
+                                 kwds=["source", "name", "radii", "positions"], result=True,
                                  grid=False, packing_options=False, indent=False, quaternion=True,
                                  transpose=True)  # transpose ?
     def saveResult(self, *args):
@@ -2746,7 +2759,7 @@ class SubdialogViewer(uiadaptor):
         return res
 
     def buildGrid(self, ):
-        bname = 'histoVolBB'
+        bname = 'BoundingBox'
         box = self.helper.getObject(bname)
         if box is None:
             box = self.helper.getCurrentSelection()[0]
@@ -3255,7 +3268,7 @@ class SubdialogViewer(uiadaptor):
 
     def clearRecipe(self, *args):
         """ will clear everything related to self.recipe"""
-        bb = self.helper.getObject("histoVolBB")
+        bb = self.helper.getObject("BoundingBox")
         self.helper.deleteObject(bb)
         parent = self.helper.getObject(self.recipe)
         if parent is not None:
@@ -3327,7 +3340,7 @@ class SubdialogViewer(uiadaptor):
         if self.histoVol is None:
             return
         toggle = self.getVal(self.bbox_display)
-        name = 'histoVolBB'
+        name = 'BoundingBox'
         b = self.helper.getObject(name)  # or self.histoVol.histoBox
         self.helper.toggleDisplay(b, toggle)
 

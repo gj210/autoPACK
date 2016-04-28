@@ -347,6 +347,8 @@ class IOingredientTool(object):
             # remove the position and radii key
             ingdic.pop("positions", None)
             ingdic.pop("radii", None)
+        if numpy.sum(ingr.offset) != 0.0:
+            ingr.source["transform"]["offset"] = ingr.offset
         # reslt ?s
         if result:
             ingdic["results"] = []
