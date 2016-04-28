@@ -1381,6 +1381,8 @@ class Environment(CompartmentList):
     def setDefaultOptions(self):
         """reset all the options to their default values"""
         for options in self.OPTIONS:
+            if options == "gradients":
+                continue
             setattr(self, options, self.OPTIONS[options]["default"])
 
     def callFunction(self, function, args=[], kw={}):

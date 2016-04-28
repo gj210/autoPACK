@@ -97,7 +97,7 @@ global OS
 OS = os
 
 VERBOSE = 0
-GMODE = "Simple"
+autopack.GMODE = "Simple"
 
 '''the autopack import '''
 from autopack.ingr_ui import SphereTreeUI
@@ -500,7 +500,7 @@ class SubdialogIngrdient(uiadaptor):
                "liste": "pullMenu", "filename": "inputStr", "string": "inputStr"}
         dic2 = {"int": "int", "float": "float", "bool": "int", "liste": "int", "filename": "str",
                 "string": "str"}
-        for i in self.mode_order[GMODE]:  # all options
+        for i in self.mode_order[autopack.GMODE]:  # all options
             option = self.listAttrOrdered[i]
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector":
@@ -562,7 +562,7 @@ class SubdialogIngrdient(uiadaptor):
         Arrange the widget in the specified layout
         """
         self._layout = []
-        for i in self.mode_order[GMODE]:  # all options
+        for i in self.mode_order[autopack.GMODE]:  # all options
             wname = self.listAttrOrdered[i]
             widget = [self.Widget["labeloptions"][wname], self.Widget["options"][wname], self.Widget["edit"][wname]]
             if type(self.Widget["options"][wname]) == list:
@@ -577,7 +577,7 @@ class SubdialogIngrdient(uiadaptor):
         """
         update all the gradint data values using the widget values (user input)
         """
-        for i in self.mode_order[GMODE]:  # all options
+        for i in self.mode_order[autopack.GMODE]:  # all options
             option = self.listAttrOrdered[i]
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector":
@@ -604,7 +604,7 @@ class SubdialogIngrdient(uiadaptor):
                 self.setVal(w, v)
 
     def Apply(self, *args, **kw):
-        for i in self.mode_order[GMODE]:  # all options
+        for i in self.mode_order[autopack.GMODE]:  # all options
             option = self.listAttrOrdered[i]
             o = self.ingr.OPTIONS[option]
             if o["type"] == "vector":
@@ -619,7 +619,7 @@ class SubdialogIngrdient(uiadaptor):
     def ApplyToAll(self, *args, **kw):
         r = self.ingr.recipe
         for ingre in r.ingredients:
-            for i in self.mode_order[GMODE]:  # all options
+            for i in self.mode_order[autopack.GMODE]:  # all options
                 option = self.listAttrOrdered[i]
                 o = self.ingr.OPTIONS[option]
                 if o["type"] == "vector":
@@ -859,7 +859,7 @@ class SubdialogCustomFiller(uiadaptor):
         self.histoVol.setMinMaxProteinSize()
         self.afviewer.displayPreFill()
         dlg = SubdialogFiller()
-        dlg.setup(recipe=self.recipe, histoVol=self.histoVol, guimode=GMODE,
+        dlg.setup(recipe=self.recipe, histoVol=self.histoVol, guimode=autopack.GMODE,
                   afviewer=self.histoVol.afviewer, helper=self.helper, version="1.0")
         self.drawSubDialog(dlg, 555555556)
         dlg.updateWidget()
@@ -1685,9 +1685,10 @@ class SubdialogFiller(uiadaptor):
                 for ingr in rs.ingredients:
                     widget = self.get_ingredient_line(ingr)
                     subelem.append(widget)
-            frame = self._addLayout(id=196, name="Setup " + o.name + " SURFACE ingredients", elems=subelem,
-                                    collapse=False)
-            elemFrame.append(frame)
+            #frame = self._addLayout(id=196, name="Setup " + o.name + " SURFACE ingredients", elems=subelem,
+            #                        collapse=False)
+            #elemFrame.append(frame)
+            elemFrame.extend(subelem)
             subelem = []
             subelem.append([self.LABELS[o.name + "matrix" + "_ingr"]])  # ,self.ingr_include[o.name+"matrix"]])
             #            elemFrame.append(self.LABELSINGR)
@@ -1699,10 +1700,11 @@ class SubdialogFiller(uiadaptor):
                     widget = self.get_ingredient_line(ingr)
                     subelem.append(widget)
 
-            frame = self._addLayout(id=196, name="Setup " + o.name + " INTERIOR ingredients", elems=subelem,
-                                    collapse=False)
-            elemFrame.append(frame)
-
+            #frame = self._addLayout(id=196, name="Setup " + o.name + " INTERIOR ingredients", elems=subelem,
+            #                        collapse=False)
+            #elemFrame.append(frame)
+            elemFrame.extend(subelem)
+            
         subelem = []
         # subelem.append([self.LABELS["cytoplasm"]])  # ,self.ingr_include["cytoplasm"]])
         r = self.histoVol.exteriorRecipe
@@ -1713,9 +1715,10 @@ class SubdialogFiller(uiadaptor):
             for ingr in r.ingredients:
                 widget = self.get_ingredient_line(ingr)
                 subelem.append(widget)
-        frame = self._addLayout(id=196, name="Setup EXTERIOR ingredients", elems=subelem, collapse=False)
-        elemFrame.append(frame)
-
+        #frame = self._addLayout(id=196, name="Setup EXTERIOR ingredients", elems=subelem, collapse=False)
+        #elemFrame.append(frame)
+        elemFrame.extend(subelem)
+            
         elemFrame.append([self.LABELS["RecipeColumnsEmptySpace100"], self.LABELS["RecipeColumnsEmptySpace100"],
                           self.LABELS["RecipeColumnsEmptySpace100"], self.LABELS["totalNbMol"],
                           self.BTN["updateNMol"],  # self.BTN["updateNMolingr"],
@@ -1985,7 +1988,8 @@ class SubdialogFiller(uiadaptor):
             for o in self.histoVol.compartments:
                 if wkey == o.name + "surface" or wkey == o.name + "matrix":
                     c = True
-            if c: continue
+            if c: 
+                continue
             include = self.getVal(self.ingr_include[wkey])
             ingr = self.histoVol.getIngrFromName(wkey)
             #            print ("pop inc Ingr ",wkey,include,ingr.name," X")
@@ -1993,6 +1997,7 @@ class SubdialogFiller(uiadaptor):
                 self.histoVol.includeIngredientRecipe(ingr, include)
                 # change molarity as well
                 m = self.getVal(self.ingr_molarity[wkey])
+                print ("pop inc Ingr ",wkey,m,ingr.name," X")
                 n = self.getVal(self.ingr_nMol[wkey])
                 p = self.getVal(self.ingr_priority[wkey])
                 ingr.Set(molarity=float(m),
@@ -3539,7 +3544,7 @@ class AutoPackGui(uiadaptor):
             self.bbox = kw["bbox"]
 
     def setGuiMod(self, *args):
-        GMODE = self.getVal(self.gmode)
+        autopack.GMODE = self.getVal(self.gmode)
 
     def compareMessage(self, messag):
         draw = False

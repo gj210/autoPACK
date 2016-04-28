@@ -614,3 +614,4 @@ wkr = afdir
 # in the preefined working directory
 
 BD_BOX_PATH = "/home/ludo/Tools/bd_box-2.2"  # or /Users/ludo/DEV/bd_box-2.1/
+GMODE = "Simple"
