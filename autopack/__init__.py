@@ -163,13 +163,15 @@ cache_dir = {
 
 usePP = False
 helper = None
-# try :
-#    from panda3d.core import Mat4
-#    LISTPLACEMETHOD =["jitter","spring","rigid-body","pandaBullet","pandaBulletRelax"]
-# except:
-#    LISTPLACEMETHOD =  ["jitter","spring","rigid-body"]
+LISTPLACEMETHOD = ["jitter", "spheresBHT", "RAPID"]
+try :
+   from panda3d.core import Mat4
+   LISTPLACEMETHOD = ["jitter", "spheresBHT", "pandaBullet", "RAPID"]
+except:
+   LISTPLACEMETHOD = ["jitter", "spheresBHT", "RAPID"]
 
-LISTPLACEMETHOD = ["jitter", "spring", "rigid-body", "pandaBullet", "pandaBulletRelax", "pandaDev", "RAPID"]
+# LISTPLACEMETHOD = ["jitter", "spring", "rigid-body", "pandaBullet", "pandaBulletRelax", "pandaDev", "RAPID"]
+
 
 ncpus = 2
 # forceFetch is for any file not only recipe/ingredient etc...
