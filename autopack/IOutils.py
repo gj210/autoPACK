@@ -1437,6 +1437,7 @@ def setupFromJsonDic(env, ):
             setattr(env, k, options[k])
         env.boundingBox = options["boundingBox"]
     if "gradients" in env.jsondic:
+        env.gradients={}
         gradientsnode = env.jsondic["gradients"]
         if len(gradientsnode):  # number of gradients defined
             for g_name in gradientsnode:
