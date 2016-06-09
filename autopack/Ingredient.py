@@ -1476,12 +1476,12 @@ class Ingredient(Agent):
         for k in kw:
             setattr(self, k, kw[k])
             if k == "nbMol":
-                self.overwrite_nbMol_value = kw[k]
+                self.overwrite_nbMol_value = int(kw[k])
 
     def Set(self, **kw):
         self.nbMol = 0
         if "nbMol" in kw:
-            nbMol = kw["nbMol"]
+            nbMol = int(kw["nbMol"])
             #            if nbMol != 0:
             #                self.overwrite_nbMol = True
             #                self.overwrite_nbMol_value = nbMol
@@ -3993,7 +3993,7 @@ class Ingredient(Agent):
             jitter_rot = self.randomize_rotation(rot_mat, histoVol)
             if histoVol.runTimeDisplay and moving is not None:
                 self.update_display_rt(moving, jitter_trans, jitter_rot)
-
+                self.vi.update()
             ## check for collisions
             ##
             level = self.collisionLevel
@@ -4009,10 +4009,13 @@ class Ingredient(Agent):
                     periodic_collision = self.collision_jitter(p, jitter_rot, level,
                                                                histoVol.masterGridPositions, distance, histoVol, dpad)
                     r.extend([periodic_collision])
+                    if histoVol.runTimeDisplay and moving is not None:
+                        box = self.vi.getObject("collBox")
+                        self.vi.changeObjColorMat(box, [0.5, 0, 0] if True in r else [0, 0.5, 0])
+                        self.update_display_rt(moving, p, jitter_rot)
                     if True in r:
                         break
-                    if histoVol.runTimeDisplay and moving is not None:
-                        self.update_display_rt(moving, jitter_trans, jitter_rot)
+
             else:
                 r = [False]
             if verbose:
@@ -4025,6 +4028,9 @@ class Ingredient(Agent):
                                                                                level, histoVol.masterGridPositions,
                                                                                distance, histoVol, dpad)
             print ("ingredient collision ", collision, test, r)
+            if histoVol.runTimeDisplay and moving is not None:
+                box = self.vi.getObject("collBox")
+                self.vi.changeObjColorMat(box, [1, 0, 0] if collision else [0, 1, 0])
             if not collision:
                 break  # break out of jitter pos loop
         if verbose:
@@ -4131,7 +4137,14 @@ class Ingredient(Agent):
                                                                         distance,
                                                                         histoVol.masterGridPositions, verbose))
             histoVol.timeUpDistLoopTotal += time() - timeUpDistLoopStart
-
+            if periodic_pos is not None and self.packingMode != "gradient":
+                for p in periodic_pos:
+                    insidePoints, newDistPoints = self.getDistances(p, jitter_rot,
+                                                                    histoVol.masterGridPositions, distance, dpad)
+                    nbFreePoints = histoVol.callFunction(self.updateDistances, (histoVol, insidePoints,
+                                                                                newDistPoints,
+                                                                                freePoints, nbFreePoints, distance,
+                                                                                histoVol.masterGridPositions, verbose))
             # if sphGeom is not None:
             #     for po1, ra1 in zip(modCent, modRad):
             #         sphCenters.append(po1)
@@ -4179,7 +4192,8 @@ class Ingredient(Agent):
             histoVol.failedJitter.append(
                 (self, jitterList, collD1, collD2))
             # reduce distance at this point, less chance to pick it next
-            distance[ptInd] = max(0, distance[ptInd] * 0.9)
+            # should we really do that ? Commented on 6/1/2016
+            # distance[ptInd] = max(0, distance[ptInd] * 0.9)
             self.rejectionCounter += 1
             if verbose:
                 print('Failed ingr: %s rejections:%d' % (
@@ -5068,7 +5082,7 @@ class Ingredient(Agent):
             #       checkif rb collide
             #            r=[ t(self.histoVol.world.contactTestPair(rbnode, n).getNumContacts() > 0 ) for n in self.histoVol.static]
             overlap = False
-            if not test:  # and not ( True in r):
+            if not test and not (True in r):  # and not ( True in r):
                 overlap = self.bht_check_collision(jtrans, rotMatj)
             collision2 = overlap  # ( True in r)
             collisionComp = False
@@ -5749,6 +5763,8 @@ class Ingredient(Agent):
 
         gridPointsCoords = histoVol.masterGridPositions
 
+        periodic_pos = None
+
         # compute rotation matrix rotMat
         if compNum > 0:
             # for surface points we compute the rotation which
@@ -5925,20 +5941,54 @@ class Ingredient(Agent):
             #            if closeS :
             #                self.rejectOnce(None,moving,afvi)
             #                continue
+
+            perdiodic_collision = False
+            periodic_pos = self.histoVol.grid.getPositionPeridocity(jtrans,
+                                                                    getNormedVectorOnes(self.jitterMax),
+                                                                   self.encapsulatingRadius)
+            r = [False]
+            if periodic_pos is not None and self.packingMode != "gradient":
+                if verbose > 1:
+                    print ("OK Periodicity ", len(periodic_pos), periodic_pos)
+                for p in periodic_pos:
+                    perdiodic_collision, liste_nodes = self.collision_rapid(p, rotMatj, usePP=usePP)
+                    # histoVol.callFunction(histoVol.moveRBnode,(rbnode, p, rotMatj,))
+                    # perdiodic_collision = self.pandaBullet_collision(p,rotMatj,rbnode)
+                    r.extend([perdiodic_collision])
+                    if True in r:
+                        break
+                    col = self.bht_check_pair(self, p, rotMatj, self, jtrans, rotMatj)
+                    rbnode = self.get_rapid_model()
+                    RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3, :3], 'f'),
+                                                  numpy.array(p, 'f'), 1.0,
+                                                  rbnode, numpy.array(rotMatj[:3, :3],'f'), 
+                                                  numpy.array(jtrans, 'f'), 1.0, rbnode,
+                                                  RAPIDlib.cvar.RAPID_FIRST_CONTACT)
+                    col = RAPIDlib.cvar.RAPID_num_contacts != 0
+                    r.extend([col])  # = True in perdiodic_collision
+                    if runTimeDisplay and moving is not None:
+                        mat = rotMatj.copy()
+                        mat[:3, 3] = jtrans
+                        afvi.vi.setObjectMatrix(moving, mat, transpose=True)
+                        afvi.vi.update()
+                    if True in r:
+                        break
+
             closeS = self.checkPointSurface(jtrans, cutoff=self.cutoff_surface)
-            r = closeS  # self.testPoint(jtrans)
-            if not r:
+            test = closeS  # self.testPoint(jtrans)
+            collisionComp = False
+            if not test and not (True in r):
                 collision2, liste_nodes = self.collision_rapid(jtrans, rotMatj, usePP=usePP)
                 collisionComp = False
             if autopack.verbose:
                 print ("collision", collision2, r)
             # print ("contact Pair ",collision, r,self.histoVol.static) #gave nothing ???
             # need to check compartment too
-            if not collision2 and not r:  # and not collision2:
+            if not collision2:  # and not r:  # and not collision2:
                 if self.compareCompartment:
                     if self.modelType == 'Spheres':
-                        #                print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
-                        #                print("jtrans = ", jtrans)
+                        # print("running jitter number ", histoVol.totnbJitter, " on Spheres for pt = ", ptInd)
+                        # print("jtrans = ", jtrans)
                         collisionComp = histoVol.callFunction(self.checkSphCompart, (
                             self.positions[level], self.radii[level], jtrans, rotMatj,
                             level, gridPointsCoords, distance, histoVol))

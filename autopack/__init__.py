@@ -111,6 +111,7 @@ else:
     pass
 sys.path.append(PANDA_PATH + os.sep + "lib")
 
+binvox_exe = "C:\\Users\\ludov\\Downloads\\binvox.exe"
 
 def checkURL(URL):
     try:

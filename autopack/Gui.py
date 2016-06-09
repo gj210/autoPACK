@@ -2008,6 +2008,8 @@ class SubdialogFiller(uiadaptor):
                 # change molarity as well
                 m = self.getVal(self.ingr_molarity[wkey])
                 print ("pop inc Ingr ",wkey,m,ingr.name," X")
+                if m == '' :
+                    m = 0.0
                 n = self.getVal(self.ingr_nMol[wkey])
                 p = self.getVal(self.ingr_priority[wkey])
                 ingr.Set(molarity=float(m),
