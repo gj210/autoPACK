@@ -1212,7 +1212,12 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
     data_json = root.to_JSON()
     return data_json, all_pos, all_rot
 
-
+#use as 
+#from autopack.IOutils import saveResultBinary
+#saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_tr",True,True,False)
+#saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_tr_lh",True,True,True)
+#saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test",False,True,False)
+#saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_lh",False,True,True)
 def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     # should follow the order of the serialized class order?
     all_pos = []
@@ -1242,6 +1247,31 @@ def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
 
+def getAllPosRot(env,transpose, use_quaternion, lefthand=False):
+    # should follow the order of the serialized class order?
+    all_pos = []
+    all_rot = []
+    r = env.exteriorRecipe
+    if r:
+        for ingr in r.ingredients:
+            ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+            all_pos.extend(ap)
+            all_rot.extend(ar)
+    for o in env.compartments:
+        rs = o.surfaceRecipe
+        if rs:
+            for ingr in rs.ingredients:
+                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+        ri = o.innerRecipe
+        if ri:
+            for ingr in ri.ingredients:
+                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+    # write allpos
+    return all_pos, all_rot
 
 def load_XML(env, setupfile):
     """

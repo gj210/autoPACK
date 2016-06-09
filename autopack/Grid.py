@@ -509,7 +509,7 @@ class Grid:
             pass
         else:
             pxyz[1] = 0
-            # distance plane Z
+        # distance plane Z
         doz = pz - oz
         dez = ez - pz
         dz = 0
@@ -994,7 +994,7 @@ class Grid:
 # dont forget to use spatial.distance.cdist
 class HaltonGrid(Grid):
     def __init__(self, boundingBox=([0, 0, 0], [.1, .1, .1]), space=1, setup=False):
-        Grid.__init__(self, boundingBox=boundingBox, space=space, setup=setup)
+        Grid.__init__(self, boundingBox=boundingBox, space=space, setup=setup, lookup=1)
         self.haltonseq = cHaltonSequence3()
         self.tree = None
         self.lookup = 1
@@ -1025,8 +1025,8 @@ class HaltonGrid(Grid):
         a = numpy.array(self.boundingBox[0])
         b = numpy.array(self.boundingBox[1])
         lx = abs(int((a[0] - b[0]) / self.gridSpacing))
-        ly = abs(int((a[0] - b[0]) / self.gridSpacing))
-        lz = abs(int((a[0] - b[0]) / self.gridSpacing))
+        ly = abs(int((a[1] - b[1]) / self.gridSpacing))
+        lz = abs(int((a[2] - b[2]) / self.gridSpacing))
         return [lx, ly, lz]
 
     def create3DPointLookup(self, boundingBox=None):
@@ -1051,3 +1051,4 @@ class HaltonGrid(Grid):
         # scale the value from the halton(0...1) to grid boundin box
         self.masterGridPositions = pointArrayRaw * scalexyz + txyz
         self.tree = spatial.cKDTree(self.masterGridPositions, leafsize=10)
+        

@@ -1091,7 +1091,7 @@ class Environment(CompartmentList):
             "gradients": {"name": "gradients", "value": "", "values": [], "default": "", "type": "liste",
                           "description": "Gradients available", "width": 150},
             "innerGridMethod": {"name": "innerGridMethod", "value": "jordan3",
-                                "values": ["bhtree", "sdf", "jordan", "jordan3", "pyray", "floodfill"],
+                                "values": ["bhtree", "sdf", "jordan", "jordan3", "pyray", "floodfill", "binvox"],
                                 "default": "jordan3", "type": "liste",
                                 "description": "     Method to calculate the inner grid:", "width": 30},
             "overwritePlaceMethod": {"name": "overwritePlaceMethod", "value": True, "default": True, "type": "bool",
@@ -1970,6 +1970,9 @@ class Environment(CompartmentList):
                 a, b = compartment.BuildGrid_pyray(self)
             elif self.innerGridMethod == "floodfill" and compartment.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
                 a, b = compartment.BuildGrid_kevin(self)
+            elif self.innerGridMethod == "binvox" and compartment.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
+                a, b = compartment.BuildGrid_binvox(self)
+
             aInteriorGrids.append(a)
             print("I'm ruther in the loop")
             aSurfaceGrids.append(b)
@@ -2641,26 +2644,36 @@ class Environment(CompartmentList):
         random, based on closest distance, based on gradients, ordered.
         This function also update the available free point except when hack is on.
         """
+        verbose = autopack.verbose
+
         if ingr.packingMode == 'close':
             t1 = time()
             allIngrPts = []
             allIngrDist = []
             if ingr.modelType == 'Cylinders' and ingr.useLength:
-                cut = ingr.length - jitter
+                cut = ingr.length# - jitter
             #            if ingr.modelType=='Cube' : #radius iactually the size
             #                cut = min(self.radii[0]/2.)-jitter
             #            elif ingr.cutoff_boundary is not None :
             #                #this may work if we have the distance from the border
             #                cut  = radius+ingr.cutoff_boundary-jitter
             else:
-                cut = radius - jitter
-            for pt in freePoints:  # [:nbFreePoints]:
-                d = distance[pt]  # look up the distance
-                if compId[pt] == compNum and d >= cut:
-                    allIngrPts.append(pt)
-                    allIngrDist.append(d)
-            if verbose > 1:
-                print("time to filter using for loop ", time() - t1)
+                cut = radius# - jitter
+            alld = numpy.array(distance)[freePoints]
+            mask = numpy.logical_and(numpy.less_equal(alld, cut+jitter*1.5), numpy.greater_equal(alld, cut+jitter))
+            # mask_ind = numpy.nonzero(mask)[0]
+            # mask compartments Id as well
+            mask_comp = numpy.array(compId)[freePoints] == compNum
+            mask_ind = numpy.nonzero(numpy.logical_and(mask, mask_comp))[0]
+            allIngrPts = numpy.array(freePoints)[mask_ind].tolist()
+            allIngrDist = numpy.array(distance)[mask_ind].tolist()
+            #for pt in freePoints:  # [:nbFreePoints]:
+            #    d = distance[pt]  # look up the distance
+            #    if compId[pt] == compNum and d >= cut:
+            #        allIngrPts.append(pt)
+            #        allIngrDist.append(d)
+            #if verbose > 1:
+            #    print("time to filter using for loop ", time() - t1)
         else:
             t1 = time()
             allIngrPts = []
@@ -3092,9 +3105,14 @@ class Environment(CompartmentList):
 
             ## find the points that can be used for this ingredients
             ##
-            res = self.callFunction(self.getPointToDrop, [ingr, radius, jitter,
-                                                          freePoints, nbFreePoints,
-                                                          distance, compId, compNum, vRangeStart, vThreshStart])
+            res = [True, int(random() * len(freePoints))]
+            if PlacedMols != 0:
+                res = self.callFunction(self.getPointToDrop, [ingr, radius, jitter,
+                                                              freePoints, nbFreePoints,
+                                                              distance, compId, compNum, vRangeStart, vThreshStart])
+            elif ingr.compNum > 0:
+                allSrfpts = self.compartments[ingr.compNum-1].surfacePointsNormals.keys()
+                res = [True, allSrfpts[int(random() * len(allSrfpts))]]
             #  Replaced this with Sept 25, 2011 thesis version on July 5, 2012
             if verbose > 1:
                 print ("get drop point res", res)

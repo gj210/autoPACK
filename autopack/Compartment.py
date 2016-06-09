@@ -60,6 +60,7 @@
 import sys
 # import numpy.oldnumeric as N
 import numpy
+import numpy as np
 import pickle
 import weakref
 import pdb
@@ -82,6 +83,8 @@ from autopack import checkURL
 from autopack import transformation as tr
 
 from RAPID import RAPIDlib
+
+from autopack import binvox_rw
 
 AFDIR = autopack.__path__[0]
 
@@ -157,6 +160,9 @@ class Compartment(CompartmentList):
         self.vnormals = vnormals
         self.fnormals = None
         self.area = 0.0
+        self.scale = 1.0
+        if "scale" in kw :
+            self.scale = 10.0
         if "fnormals" in kw:
             self.fnormals = kw["fnormals"]
         self.mesh = None
@@ -297,6 +303,8 @@ class Compartment(CompartmentList):
         # geometry = IndexedPolygons(self.name, vertices=self.vertices,
         #                  faces=self.faces, vnormals=self.vnormals, shading='smooth')
         # geometry.writeToFile(filename)
+        if self.vertices is None :
+            return
         numpy.savetxt(filename+".indpolvert", numpy.hstack([self.vertices, self.vnormals]), delimiter=" ")
         numpy.savetxt(filename+".indpolface", self.faces, delimiter=" ")
         self.filename = filename
@@ -529,6 +537,7 @@ class Compartment(CompartmentList):
                     v, vn, f = dgeoms.values()[0]["mesh"]
                     # fix the normal Should transform first ?
                     vn = helper.normal_array(v, numpy.array(f))
+                    v =  numpy.array(v) * self.scale
                     # print v[0],vn[0]
                     # vn = self.getVertexNormals(numpy.array(v),f[:])
                     self.mesh = helper.createsNmesh(gname, v, None, f)[0]
@@ -1145,6 +1154,8 @@ class Compartment(CompartmentList):
             a, b = self.BuildGrid_pyray(env)
         elif env.innerGridMethod == "floodfill" and self.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
             a, b = self.BuildGrid_kevin(env)
+        elif env.innerGridMethod == "binvox" and self.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
+            a, b = self.BuildGrid_binvox(env)
         return a, b
 
     def prepare_buildgrid_box(self, env):
@@ -1324,6 +1335,157 @@ class Compartment(CompartmentList):
             print('Total time', time() - t0)
 
         self.insidePoints = insidePoints
+        self.surfacePoints = surfacePoints
+        self.surfacePointsCoords = surfPtsBB
+        self.surfacePointsNormals = surfacePointsNormals
+        if autopack.verbose:
+            print('%s surface pts, %d inside pts, %d tot grid pts, %d master grid' % (
+                len(self.surfacePoints), len(self.insidePoints),
+                nbGridPoints, len(env.grid.masterGridPositions)))
+
+        self.computeVolumeAndSetNbMol(env, self.surfacePoints,
+                                      self.insidePoints, areas=vSurfaceArea)
+        return self.insidePoints, self.surfacePoints
+
+    def BuildGrid_binvox(self, env, ray=1):
+        """Build the compartment grid ie surface and inside point using jordan theorem and host raycast"""
+        # create surface points
+        # check if file already exist, otherwise rebuild it
+        fileName = autopack.retrieveFile(self.filename, cache="geometries")
+        filename, file_extension = os.path.splitext(fileName)
+        binvox_filename = filename + ".binvox"
+        bb = env.grid.boundingBox
+        gridN = env.grid.nbGridPoints
+        print ("check if exist ", binvox_filename)
+        if not os.path.exists(binvox_filename):
+            #build the file
+            print ("doesnt exist..build")
+            #binvox.exe -c -d 30 -bb -850 -850 -850 850 850 850 HIV_VLP.dae
+            os.system(autopack.binvox_exe+" -c -dc -d %i -bb %f %f %f %f %f %f %s\n" % (gridN[0],
+                                                                                    bb[0][0], bb[0][1], bb[0][2],
+                                                                                    bb[1][0], bb[1][1], bb[1][2],
+                                                                                    filename+".obj"))
+        self.binvox_filename = binvox_filename
+        print ("read ", binvox_filename)
+        #if use the exact approach, can do some floodfill after...
+        with open(self.binvox_filename, 'rb') as f:
+            m, r = binvox_rw.read(f)
+        with open(self.binvox_filename, 'rb') as f:
+            model = binvox_rw.read_as_coord_array(f)
+        #model.translate=[0,0,0]
+        model.axis_order = "xzy"
+        #model.data = m.ijk.transpose()
+        xyz_Data = model.ijkToxyz()
+        self.binvox_model = m
+        self.binvox_3d = xyz_Data
+        # model.axis_order="xzy"
+        # this gave us the inside points.
+        # xyz_Data = model.ijkToxyz()
+
+        if self.ghost:
+            return
+        t0 = t1 = time()
+        if self.isBox:
+            self.overwriteSurfacePts = True
+        if self.overwriteSurfacePts:
+            self.ogsurfacePoints = self.vertices[:]
+            self.ogsurfacePointsNormals = self.vnormals[:]  # *numpy.array([0,0,0])+numpy.array([0,1,0])
+        else:
+            self.createSurfacePoints(maxl=env.grid.gridSpacing)
+
+        # Graham Sum the SurfaceArea for each polyhedron
+        vertices = self.vertices  # NEED to make these limited to selection box, not whole compartment
+        faces = self.faces  # Should be able to use self.ogsurfacePoints and collect faces too from above
+        normalList2, areas = self.getFaceNormals(vertices, faces, fillBB=env.fillBB)
+        vSurfaceArea = sum(areas)
+
+        # build a BHTree for the vertices
+        if self.isBox:
+            self.BuildGrid_box(env, vSurfaceArea)
+            return self.insidePoints, self.surfacePoints
+
+        if autopack.verbose:
+            print('time to create surface points',
+                  time() - t1, len(self.ogsurfacePoints))
+
+        distances = env.grid.distToClosestSurf
+        idarray = env.grid.gridPtId
+        diag = env.grid.diag
+        if autopack.verbose:
+            print ("distance ", len(distances),
+                   "idarray ", len(idarray))
+        t1 = time()
+
+        # build BHTree for off grid surface points
+        # or scipy ckdtree ?
+        #        from bhtree import bhtreelib
+        from scipy import spatial
+        srfPts = self.ogsurfacePoints
+        #        self.OGsrfPtsBht = bht =  bhtreelib.BHtree(tuple(srfPts), None, 10)
+        self.OGsrfPtsBht = bht = spatial.cKDTree(tuple(srfPts), leafsize=10)
+        # res = numpy.zeros(len(srfPts),'f')
+        # dist2 = numpy.zeros(len(srfPts),'f')
+
+        number = self.number
+        # ogNormals = self.ogsurfacePointsNormals
+        insidePoints = []
+
+        # find closest off grid surface point for each grid point
+        # FIXME sould be diag of compartment BB inside fillBB
+        grdPos = env.grid.masterGridPositions
+        #        returnNullIfFail = 0
+        if autopack.verbose:
+            print ("compartment build grid jordan",
+                   diag, " nb points in grid ", len(grdPos))  # [],None
+        #        closest = bht.closestPointsArray(tuple(grdPos), diag,
+        #                                         returnNullIfFail)
+        closest = bht.query(tuple(grdPos))  # return both indices and distances
+        helper = autopack.helper
+        self.closestId = closest[1]
+        new_distances = closest[0]
+        mask = distances[:len(grdPos)] > new_distances
+        nindices = numpy.nonzero(mask)
+        distances[nindices] = new_distances[nindices]
+        # now check if point inside
+        #
+        # the main loop
+        # need the ptInd that are inside the geom.
+        m1 = (grdPos < bb[0]).any(axis=1)
+        m2 = (grdPos > bb[1]).any(axis=1)
+        m3 = m1 | m2
+        #outside indice
+        # outsidebb = np.nonzero(m3)[0]
+        insidebb = np.nonzero(m3 == False)[0]
+
+        ijk = np.rint(m.xyzToijk(grdPos[insidebb])).astype(int)
+        i = m.ijkToIndex(ijk).astype(int)
+        inbb_inside = np.nonzero(m.data[i] == True)[0]
+        print ("found this many ", len(inbb_inside))
+        inside_points = insidebb[inbb_inside]
+        idarray[inside_points] = -number
+        if autopack.verbose:
+            print('time to update distance field and idarray', time() - t1)
+
+        t1 = time()
+        nbGridPoints = len(env.grid.masterGridPositions)
+
+        surfPtsBB, surfPtsBBNorms = self.getSurfaceBB(srfPts, env)
+        srfPts = surfPtsBB
+        if autopack.verbose:
+            print ("compare length id distances", nbGridPoints, len(idarray), len(distances),
+                   (nbGridPoints == len(idarray)),
+                   (nbGridPoints == len(distances)))
+        ex = True  # True if nbGridPoints == len(idarray) else False
+        surfacePoints, surfacePointsNormals = self.extendGridArrays(nbGridPoints,
+                                                                    srfPts, surfPtsBBNorms,
+                                                                    env, extended=ex)
+
+        # insidePoints = insidePoints
+        if autopack.verbose:
+            print('time to extend arrays', time() - t1)
+            print('Total time', time() - t0)
+
+        self.insidePoints = inside_points
         self.surfacePoints = surfacePoints
         self.surfacePointsCoords = surfPtsBB
         self.surfacePointsNormals = surfacePointsNormals
@@ -1604,8 +1766,8 @@ class Compartment(CompartmentList):
             # update distance field
             # we should not reompute this ...
             # if ptInd < len(distances)-1:  # Oct. 20, 2012 Graham turned this if off because this dist override is necessary in
-            if distances[ptInd] > d: distances[
-                ptInd] = d  # case a diffent surface ends up being closer in the linear walk through the grid
+            if distances[ptInd] > d: distances[ptInd] = d  
+            # case a diffent surface ends up being closer in the linear walk through the grid
 
             # check if ptInd in inside
             nx, ny, nz = numpy.array(ogNormals[sptInd])
