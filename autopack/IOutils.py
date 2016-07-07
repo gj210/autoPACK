@@ -10,6 +10,11 @@ import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant, ActinIngrediant, KWDS
+from autopack.Serializable import sCompartment
+from autopack.Serializable import sIngredientGroup
+from autopack.Serializable import sIngredient
+from autopack.Serializable import sIngredientFiber
+import struct
 
 from upy import transformation as tr
 
@@ -1027,19 +1032,19 @@ h1 = Environment()
     f.write(setupStr)
     f.close()
 
-
-from Serializable import sCompartment
-from Serializable import sIngredientGroup
-from Serializable import sIngredient
-from Serializable import sIngredientFiber
-
-import struct
-
-
-def gatherResult(ingr, transpose, use_quaternion, type=0.0, lefthand=False):
+def checkRotFormat(rotation,transpose):
+    if numpy.array(rotation).shape == (4,):
+        if transpose:
+            return tr.quaternion_matrix(rotation).transpose()  # transpose ?
+        else:
+            return tr.quaternion_matrix(rotation)      
+    else :
+        return rotation
+        
+def gatherResult(ingr_result, transpose, use_quaternion, type=0.0, lefthand=False):
     all_pos = []
     all_rot = []
-    for r in ingr.results:
+    for r in ingr_result:
         # position
         if hasattr(r[0], "tolist"):
             r[0] = r[0].tolist()
@@ -1047,8 +1052,9 @@ def gatherResult(ingr, transpose, use_quaternion, type=0.0, lefthand=False):
         if hasattr(r[1], "tolist"):
             r[1] = r[1].tolist()
         R = numpy.array(r[1]).tolist()  # this will not work with cellvIEW?
+        R=checkRotFormat(R,transpose)
         if transpose:
-            R = numpy.array(r[1]).transpose().tolist()  # this will not work with cellvIEW?
+            R = numpy.array(R).transpose().tolist()  # this will not work with cellvIEW?
         # transpose ?
         if lefthand:
             all_pos.append([-r[0][0], r[0][1], r[0][2], type])  # ing type?
@@ -1061,7 +1067,7 @@ def gatherResult(ingr, transpose, use_quaternion, type=0.0, lefthand=False):
             if use_quaternion:
                 R = tr.quaternion_from_matrix(R).tolist()
             all_rot.append(R)
-        print ingr.o_name, type, all_pos[-1], all_rot[-1]
+        # print ingr.o_name, type, all_pos[-1], all_rot[-1]
     return all_pos, all_rot
 
 
@@ -1087,7 +1093,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                 igr = sIngredient(ingr.o_name, 0, **kwds)
                 proteins.addIngredient(igr)
             if result:
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
         root.addCompartment(exterior)
@@ -1115,7 +1121,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                     igr = sIngredient(ingr.o_name, 0, **kwds)
                     proteins.addIngredient(igr)
                 if result:
-                    ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                    ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
                     all_pos.extend(ap)
                     all_rot.extend(ar)
             co.addCompartment(surface)
@@ -1141,7 +1147,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                     igr = sIngredient(ingr.o_name, 0, **kwds)
                     proteins.addIngredient(igr)
                 if result:
-                    ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                    ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
                     all_pos.extend(ap)
                     all_rot.extend(ar)
             co.addCompartment(interior)
@@ -1153,7 +1159,162 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
     data_json = root.to_JSON()
     return data_json, all_pos, all_rot
 
-
+def serializedFromResult(env, transpose, use_quaternion, result=False, lefthand=False):
+    all_pos = []
+    all_rot = []
+    root = sCompartment("root")
+    r = None
+    if "cytoplasme" in env :
+        r =  env["cytoplasme"]
+    if r:
+        exterior = sCompartment("cytoplasme")
+        proteins = None  # sIngredientGroup("proteins", 0)
+        fibers = None  # sIngredientGroup("fibers", 1)
+        for ingr_name in r["ingredients"]:
+            ingr = r["ingredients"][ingr_name]
+            kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+#            if ingr.Type == "Grow":
+#                if fibers is None:
+#                    fibers = sIngredientGroup("fibers", 1)
+#                igr = sIngredient(ingr.o_name, 1, **kwds)
+#                fibers.addIngredient(igr)
+#            else:
+            if proteins is None:
+                proteins = sIngredientGroup("proteins", 0)
+            igr = sIngredient(ingr["name"], 0, **kwds)
+            proteins.addIngredient(igr)
+            if result:
+                ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+        root.addCompartment(exterior)
+        if proteins is not None:
+            exterior.addIngredientGroup(proteins)
+#        if fibers is not None:
+#            exterior.addIngredientGroup(fibers)
+    for o_name in env["compartments"]:
+        o =  env["compartments"][o_name]
+        co = sCompartment(o_name)
+        rs = o["surface"]
+        if rs:
+            surface = sCompartment("surface")
+            proteins = None  # sIngredientGroup("proteins", 0)
+            fibers = None  # sIngredientGroup("fibers", 1)
+            for ingr_name in rs["ingredients"]:
+                ingr = rs["ingredients"][ingr_name]
+                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+#                if ingr.Type == "Grow":
+#                    if fibers is None:
+#                        fibers = sIngredientGroup("fibers", 1)
+#                    igr = sIngredient(ingr.o_name, 1, **kwds)
+#                    fibers.addIngredient(igr)
+#                else:
+                if proteins is None:
+                    proteins = sIngredientGroup("proteins", 0)
+                igr = sIngredient(ingr["name"], 0, **kwds)
+                proteins.addIngredient(igr)
+                if result:
+                    ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                    all_pos.extend(ap)
+                    all_rot.extend(ar)
+            co.addCompartment(surface)
+            if proteins is not None:
+                surface.addIngredientGroup(proteins)
+#            if fibers is not None:
+#                surface.addIngredientGroup(fibers)
+        ri = o["interior"]
+        if ri:
+            interior = sCompartment("interior")
+            proteins = None  # sIngredientGroup("proteins", 0)
+            fibers = None  # sIngredientGroup("fibers", 1)
+            for ingr_name in ri["ingredients"]:
+                ingr = ri["ingredients"][ingr_name]
+                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+#                if ingr.Type == "Grow":
+#                    if fibers is None:
+#                        fibers = sIngredientGroup("fibers", 1)
+#                    igr = sIngredient(ingr["name"], 1, **kwds)
+#                    fibers.addIngredient(igr)
+#                else:
+                if proteins is None:
+                    proteins = sIngredientGroup("proteins", 0)
+                igr = sIngredient(ingr["name"], 0, **kwds)
+                proteins.addIngredient(igr)
+                if result:
+                    ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                    all_pos.extend(ap)
+                    all_rot.extend(ar)
+            co.addCompartment(interior)
+            if proteins is not None:
+                interior.addIngredientGroup(proteins)
+#            if fibers is not None:
+#                interior.addIngredientGroup(fibers)
+        root.addCompartment(co)
+    data_json = root.to_JSON()
+    return data_json, all_pos, all_rot
+    
+def serializedRecipe_group_dic(env, transpose, use_quaternion, lefthand=False):
+    all_pos = []
+    all_rot = []
+    root = sCompartment("root")
+    r =  env["cytoplasme"]
+    if r:
+        group = sIngredientGroup("cytoplasme")
+        for ingr_name in r["ingredients"]:
+            ingr = r["ingredients"][ingr_name]
+            kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+            #if ingr.Type == "Grow":
+            #    igr = sIngredientFiber(ingr.o_name, **kwds)
+            #    group.addIngredientFiber(igr)
+            #else:
+            igr = sIngredient(ingr["name"], **kwds)
+            group.addIngredient(igr)
+            #ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+            #all_pos.extend(ap)
+            #all_rot.extend(ar)
+            # print len(all_pos)
+        root.addIngredientGroup(group)
+    for o in env["compartments"]:
+        co = sCompartment(o.name)
+        rs = env["compartments"][o]["surface"]
+        if rs:
+            group = sIngredientGroup("surface")
+            for ingr_name in rs["ingredients"]:
+                ingr = rs["ingredients"][ingr_name]
+                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+#                if ingr.Type == "Grow":
+#                    igr = sIngredientFiber(ingr.o_name, **kwds)
+#                    group.addIngredientFiber(igr)
+#                else:
+                igr = sIngredient(ingr["name"], **kwds)
+                group.addIngredient(igr)
+                # ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                # all_pos.extend(ap)
+                # all_rot.extend(ar)
+                # print len(all_pos)
+            co.addIngredientGroup(group)
+        ri = env["compartments"][o]["interior"]
+        if ri:
+            group = sIngredientGroup("interior")
+            for ingr_name in ri["ingredients"]:
+                ingr = ri["ingredients"][ingr_name]
+                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+#                if ingr.Type == "Grow":
+#                    igr = sIngredientFiber(ingr.o_name, **kwds)
+#                    group.addIngredientFiber(igr)
+#                else:
+                igr = sIngredient(ingr["name"], **kwds)
+                group.addIngredient(igr)
+#                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+#                all_pos.extend(ap)
+#                all_rot.extend(ar)
+                # print len(all_pos)
+            co.addIngredientGroup(group)
+        root.addCompartment(co)
+    data_json = root.to_JSON()
+    return data_json#, all_pos, all_rot
+    
+    
 def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
     all_pos = []
     all_rot = []
@@ -1169,7 +1330,7 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
             else:
                 igr = sIngredient(ingr.o_name, **kwds)
                 group.addIngredient(igr)
-            ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+            ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
             all_pos.extend(ap)
             all_rot.extend(ar)
             # print len(all_pos)
@@ -1187,7 +1348,7 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
                 else:
                     igr = sIngredient(ingr.o_name, **kwds)
                     group.addIngredient(igr)
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
                 # print len(all_pos)
@@ -1203,7 +1364,7 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
                 else:
                     igr = sIngredient(ingr.o_name, **kwds)
                     group.addIngredient(igr)
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
                 # print len(all_pos)
@@ -1218,6 +1379,45 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
 #saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_tr_lh",True,True,True)
 #saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test",False,True,False)
 #saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_lh",False,True,True)
+def saveResultBinaryDic(env, filename, transpose, use_quaternion, lefthand=False):
+    # should follow the order of the serialized class order?
+    all_pos = []
+    all_rot = []
+    fptr = open(filename, "wb")
+    r =  env["cytoplasme"]
+    if r:
+        for ingr_name in r["ingredients"]:
+            ingr = r["ingredients"][ingr_name]
+            ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, lefthand=lefthand)
+            all_pos.extend(ap)
+            all_rot.extend(ar)
+    for o in env["compartments"]:
+        rs = env["compartments"][o]["surface"]
+        if rs:
+            for ingr_name in rs["ingredients"]:
+                ingr = rs["ingredients"][ingr_name]
+                ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+        ri = env["compartments"][o]["interior"]
+        if ri:
+            for ingr_name in ri["ingredients"]:
+                ingr = ri["ingredients"][ingr_name]
+                ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, lefthand=lefthand)
+                all_pos.extend(ap)
+                all_rot.extend(ar)
+    # write allpos
+    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
+    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
+    fptr.close()
+    return all_pos, all_rot
+ 
+def toBinary(all_pos, all_rot,filename)   :
+    fptr = open(filename, "wb")
+    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
+    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
+    fptr.close()
+    
 def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     # should follow the order of the serialized class order?
     all_pos = []
@@ -1226,20 +1426,20 @@ def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     r = env.exteriorRecipe
     if r:
         for ingr in r.ingredients:
-            ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+            ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
             all_pos.extend(ap)
             all_rot.extend(ar)
     for o in env.compartments:
         rs = o.surfaceRecipe
         if rs:
             for ingr in rs.ingredients:
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
         ri = o.innerRecipe
         if ri:
             for ingr in ri.ingredients:
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
     # write allpos
@@ -1254,20 +1454,20 @@ def getAllPosRot(env,transpose, use_quaternion, lefthand=False):
     r = env.exteriorRecipe
     if r:
         for ingr in r.ingredients:
-            ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+            ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
             all_pos.extend(ap)
             all_rot.extend(ar)
     for o in env.compartments:
         rs = o.surfaceRecipe
         if rs:
             for ingr in rs.ingredients:
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
         ri = o.innerRecipe
         if ri:
             for ingr in ri.ingredients:
-                ap, ar = gatherResult(ingr, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
     # write allpos
