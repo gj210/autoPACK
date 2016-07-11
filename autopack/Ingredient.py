@@ -3924,7 +3924,8 @@ class Ingredient(Agent):
         trans = histoVol.masterGridPositions[ptInd]  # drop point, surface points.
         if numpy.sum(self.offset) != 0.0:
             trans = numpy.array(trans) + ApplyMatrix([self.offset], rot_mat)[0]
-        print ("use offset ",self.offset)
+        if verbose:
+            print ("use offset ", self.offset)
         target_point = trans
         moving = None
         if histoVol.runTimeDisplay and self.mesh:
@@ -4027,7 +4028,8 @@ class Ingredient(Agent):
                 collision, insidePoints, newDistPoints = self.collision_jitter(jitter_trans, jitter_rot,
                                                                                level, histoVol.masterGridPositions,
                                                                                distance, histoVol, dpad)
-            print ("ingredient collision ", collision, test, r)
+            if verbose:
+                print ("ingredient collision ", collision, test, r)
             if histoVol.runTimeDisplay and moving is not None:
                 box = self.vi.getObject("collBox")
                 self.vi.changeObjColorMat(box, [1, 0, 0] if collision else [0, 1, 0])
@@ -6682,7 +6684,7 @@ class SingleSphereIngr(Ingredient):
                                                    radius=self.radii[0][0], color=self.color,
                                                    parent=p, res=24)[0]
             else:
-                print "OK TEST OLKKKKK"
+                # print "OK TEST OLKKKKK"
                 self.mesh = autopack.helper.unitSphere(self.name + "_basic", 5,
                                                        radius=self.radii[0][0])[0]
                 self.getData()
@@ -9617,169 +9619,169 @@ class IngredientDictionary:
         return rRec
 
 
-from autopack import IOutils as io
-from xml.dom.minidom import getDOMImplementation
-import json
-
-
+#from autopack import IOutils as io
+#from xml.dom.minidom import getDOMImplementation
+#import json
+#
+#
 class IOingredientTool:
-    # xml parser that can return an ingredient
-    def __init__(self):
-        pass
+   # xml parser that can return an ingredient
+   def __init__(self):
+       pass
 
-    def read(self, filename):
-        pass
+   def read(self, filename):
+       pass
 
-    def write(self, ingr, filename, ingr_format="xml"):
-        if ingr_format == "json":
-            ingdic = self.ingrJsonNode(ingr)
-            with open(filename + ".json", 'w') as fp:  # doesnt work with symbol link ?
-                json.dump(ingdic, fp, indent=4, separators=(',', ': '))  # ,indent=4, separators=(',', ': ')
-        elif ingr_format == "xml":
-            ingrnode, xmldoc = self.ingrXmlNode(ingr)
-            f = open(filename + ".xml", "w")
-            xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
-            f.close()
-        elif ingr_format == "python":
-            ingrnode = self.ingrPythonNode(ingr)
-            f = open(filename + ".py", "w")
-            f.write(ingrnode)
-            f.close()
-        elif ingr_format == "all":
-            ingdic = self.ingrJsonNode(ingr)
-            with open(filename + ".json", 'w') as fp:  # doesnt work with symbol link ?
-                json.dump(ingdic, fp, indent=4, separators=(',', ': '))  # ,indent=4, separators=(',', ': ')
-            ingrnode, xmldoc = self.ingrXmlNode(ingr)
-            f = open(filename + ".xml", "w")
-            xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
-            f.close()
-            ingrnode = self.ingrPythonNode(ingr)
-            f = open(filename + ".py", "w")
-            f.write(ingrnode)
-            f.close()
+   def write(self, ingr, filename, ingr_format="xml"):
+       if ingr_format == "json":
+           ingdic = self.ingrJsonNode(ingr)
+           with open(filename + ".json", 'w') as fp:  # doesnt work with symbol link ?
+               json.dump(ingdic, fp, indent=4, separators=(',', ': '))  # ,indent=4, separators=(',', ': ')
+       elif ingr_format == "xml":
+           ingrnode, xmldoc = self.ingrXmlNode(ingr)
+           f = open(filename + ".xml", "w")
+           xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
+           f.close()
+       elif ingr_format == "python":
+           ingrnode = self.ingrPythonNode(ingr)
+           f = open(filename + ".py", "w")
+           f.write(ingrnode)
+           f.close()
+       elif ingr_format == "all":
+           ingdic = self.ingrJsonNode(ingr)
+           with open(filename + ".json", 'w') as fp:  # doesnt work with symbol link ?
+               json.dump(ingdic, fp, indent=4, separators=(',', ': '))  # ,indent=4, separators=(',', ': ')
+           ingrnode, xmldoc = self.ingrXmlNode(ingr)
+           f = open(filename + ".xml", "w")
+           xmldoc.writexml(f, indent="\t", addindent="", newl="\n")
+           f.close()
+           ingrnode = self.ingrPythonNode(ingr)
+           f = open(filename + ".py", "w")
+           f.write(ingrnode)
+           f.close()
 
-    def makeIngredientFromXml(self, inode=None, filename=None, recipe="Generic"):
-        if filename is None and inode is not None:
-            f = str(inode.getAttribute("include"))
-            if f != '':
-                filename = str(f)
-        if filename is not None:
-            filename = autopack.retrieveFile(filename,
-                                             destination=recipe + os.sep + "recipe" + os.sep + "ingredients" + os.sep,
-                                             cache="recipes")
-            from xml.dom.minidom import parse
-            xmlingr = parse(filename)  # parse an XML file by name
-            ingrnode = xmlingr.documentElement
-        elif inode is not None:
-            ingrnode = inode
-        else:
-            print ("filename is None")
-            return None
-        kw = self.parseIngrXmlNode(ingrnode)
-        # check for overwritten parameter
-        overwrite_node = inode.getElementsByTagName("overwrite")
-        if overwrite_node:
-            kwo = self.parseIngrXmlNode(overwrite_node[0])
-            kw.update(kwo)
-        ingre = self.makeIngredient(**kw)
-        return ingre
+   def makeIngredientFromXml(self, inode=None, filename=None, recipe="Generic"):
+       if filename is None and inode is not None:
+           f = str(inode.getAttribute("include"))
+           if f != '':
+               filename = str(f)
+       if filename is not None:
+           filename = autopack.retrieveFile(filename,
+                                            destination=recipe + os.sep + "recipe" + os.sep + "ingredients" + os.sep,
+                                            cache="recipes")
+           from xml.dom.minidom import parse
+           xmlingr = parse(filename)  # parse an XML file by name
+           ingrnode = xmlingr.documentElement
+       elif inode is not None:
+           ingrnode = inode
+       else:
+           print ("filename is None")
+           return None
+       kw = self.parseIngrXmlNode(ingrnode)
+       # check for overwritten parameter
+       overwrite_node = inode.getElementsByTagName("overwrite")
+       if overwrite_node:
+           kwo = self.parseIngrXmlNode(overwrite_node[0])
+           kw.update(kwo)
+       ingre = self.makeIngredient(**kw)
+       return ingre
 
-    def parseIngrXmlNode(self, ingrnode):
-        name = str(ingrnode.getAttribute("name"))
-        kw = {}
-        for k in KWDS:
-            v = io.getValueToXMLNode(KWDS[k]["type"], ingrnode, k)
-            # example of debugging...
-            #            if k == "rejectionThreshold" :
-            #                print "rejectionThreshold",KWDS[k]["type"],v,v is not None
-            #                print "rejectionThreshold",ingrnode.getAttribute(k)
-            if v is not None:
-                kw[k] = v
-                # create the ingredient according the type
-                #        ingre = self1.makeIngredient(**kw)
-        return kw
+   def parseIngrXmlNode(self, ingrnode):
+       name = str(ingrnode.getAttribute("name"))
+       kw = {}
+       for k in KWDS:
+           v = io.getValueToXMLNode(KWDS[k]["type"], ingrnode, k)
+           # example of debugging...
+           #            if k == "rejectionThreshold" :
+           #                print "rejectionThreshold",KWDS[k]["type"],v,v is not None
+           #                print "rejectionThreshold",ingrnode.getAttribute(k)
+           if v is not None:
+               kw[k] = v
+               # create the ingredient according the type
+               #        ingre = self1.makeIngredient(**kw)
+       return kw
 
-    def ingrXmlNode(self, ingr, xmldoc=None):
-        rxmldoc = False
-        if xmldoc is None:
-            rxmldoc = True
-            impl = getDOMImplementation()
-            # what about afviewer
-            xmldoc = impl.createDocument(None, "ingredient", None)
-            ingrnode = xmldoc.documentElement
-            ingrnode.setAttribute("name", str(ingr.name))
-        else:
-            ingrnode = xmldoc.createElement("ingredient")
-            ingrnode.setAttribute("name", str(ingr.name))
-        for k in ingr.KWDS:
-            v = getattr(ingr, k)
-            io.setValueToXMLNode(v, ingrnode, k)
-        if rxmldoc:
-            return ingrnode, xmldoc
-        else:
-            return ingrnode
+   def ingrXmlNode(self, ingr, xmldoc=None):
+       rxmldoc = False
+       if xmldoc is None:
+           rxmldoc = True
+           impl = getDOMImplementation()
+           # what about afviewer
+           xmldoc = impl.createDocument(None, "ingredient", None)
+           ingrnode = xmldoc.documentElement
+           ingrnode.setAttribute("name", str(ingr.name))
+       else:
+           ingrnode = xmldoc.createElement("ingredient")
+           ingrnode.setAttribute("name", str(ingr.name))
+       for k in ingr.KWDS:
+           v = getattr(ingr, k)
+           io.setValueToXMLNode(v, ingrnode, k)
+       if rxmldoc:
+           return ingrnode, xmldoc
+       else:
+           return ingrnode
 
-    def ingrJsonNode(self, ingr):
-        ingdic = {}
-        for k in ingr.KWDS:
-            v = getattr(ingr, k)
-            if hasattr(v, "tolist"):
-                v = v.tolist()
-            ingdic[k] = v
-        ingdic["results"] = []
-        for r in ingr.results:
-            if hasattr(r[0], "tolist"):
-                r[0] = r[0].tolist()
-            if hasattr(r[1], "tolist"):
-                r[1] = r[1].tolist()
-            ingdic["results"].append([r[0], r[1]])
-        if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
-            ingdic["nbCurve"] = ingr.nbCurve
-            for i in range(ingr.nbCurve):
-                lp = numpy.array(ingr.listePtLinear[i])
-                ingr.listePtLinear[i] = lp.tolist()
-                ingdic["curve" + str(i)] = ingr.listePtLinear[i]
-        return ingdic
+   def ingrJsonNode(self, ingr):
+       ingdic = {}
+       for k in ingr.KWDS:
+           v = getattr(ingr, k)
+           if hasattr(v, "tolist"):
+               v = v.tolist()
+           ingdic[k] = v
+       ingdic["results"] = []
+       for r in ingr.results:
+           if hasattr(r[0], "tolist"):
+               r[0] = r[0].tolist()
+           if hasattr(r[1], "tolist"):
+               r[1] = r[1].tolist()
+           ingdic["results"].append([r[0], r[1]])
+       if isinstance(ingr, GrowIngrediant) or isinstance(ingr, ActinIngrediant):
+           ingdic["nbCurve"] = ingr.nbCurve
+           for i in range(ingr.nbCurve):
+               lp = numpy.array(ingr.listePtLinear[i])
+               ingr.listePtLinear[i] = lp.tolist()
+               ingdic["curve" + str(i)] = ingr.listePtLinear[i]
+       return ingdic
 
-    def ingrPythonNode(self, ingr, recipe="recipe"):
-        inrStr = "#include as follow : execfile('pathto/" + ingr.name + ".py',globals(),{'recipe':recipe_variable_name})\n"
-        if ingr.Type == "MultiSphere":
-            inrStr += "from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr\n"
-            inrStr += ingr.name + "= MultiSphereIngr( \n"
-        if ingr.Type == "MultiCylinder":
-            inrStr += "from autopack.Ingredient import MultiCylindersIngr\n"
-            inrStr += ingr.name + "= MultiCylindersIngr( \n"
-        for k in ingr.KWDS:
-            v = getattr(ingr, k)
-            aStr = io.setValueToPythonStr(v, k)
-            if aStr is not None:
-                inrStr += aStr + ",\n"
-        inrStr += ")\n"
-        inrStr += recipe + ".addIngredient(" + ingr.name + ")\n"
-        return inrStr
+   def ingrPythonNode(self, ingr, recipe="recipe"):
+       inrStr = "#include as follow : execfile('pathto/" + ingr.name + ".py',globals(),{'recipe':recipe_variable_name})\n"
+       if ingr.Type == "MultiSphere":
+           inrStr += "from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr\n"
+           inrStr += ingr.name + "= MultiSphereIngr( \n"
+       if ingr.Type == "MultiCylinder":
+           inrStr += "from autopack.Ingredient import MultiCylindersIngr\n"
+           inrStr += ingr.name + "= MultiCylindersIngr( \n"
+       for k in ingr.KWDS:
+           v = getattr(ingr, k)
+           aStr = io.setValueToPythonStr(v, k)
+           if aStr is not None:
+               inrStr += aStr + ",\n"
+       inrStr += ")\n"
+       inrStr += recipe + ".addIngredient(" + ingr.name + ")\n"
+       return inrStr
 
-    def makeIngredient(self, **kw):
-        #        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
-        #        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
-        ingr = None
-        if kw["Type"] == "SingleSphere":
-            kw["position"] = kw["positions"][0][0]
-            kw["radius"] = kw["radii"][0][0]
-            del kw["positions"]
-            del kw["radii"]
-            ingr = SingleSphereIngr(**kw)
-        elif kw["Type"] == "MultiSphere":
-            ingr = MultiSphereIngr(**kw)
-        elif kw["Type"] == "MultiCylinder":
-            ingr = MultiCylindersIngr(**kw)
-        elif kw["Type"] == "SingleCube":
-            kw["positions"] = [[[0, 0, 0], [0, 0, 0], [0, 0, 0], ]]
-            kw["positions2"] = None
-            ingr = SingleCubeIngr(**kw)
-        elif kw["Type"] == "Grow":
-            ingr = GrowIngrediant(**kw)
-        elif kw["Type"] == "Actine":
-            ingr = ActinIngrediant(**kw)
-        if "gradient" in kw and kw["gradient"] != "" and kw["gradient"] != "None":
-            ingr.gradient = kw["gradient"]
-        return ingr
+   def makeIngredient(self, **kw):
+       #        from autopack.Ingredient import SingleSphereIngr, MultiSphereIngr,SingleCubeIngr
+       #        from autopack.Ingredient import MultiCylindersIngr, GrowIngrediant
+       ingr = None
+       if kw["Type"] == "SingleSphere":
+           kw["position"] = kw["positions"][0][0]
+           kw["radius"] = kw["radii"][0][0]
+           del kw["positions"]
+           del kw["radii"]
+           ingr = SingleSphereIngr(**kw)
+       elif kw["Type"] == "MultiSphere":
+           ingr = MultiSphereIngr(**kw)
+       elif kw["Type"] == "MultiCylinder":
+           ingr = MultiCylindersIngr(**kw)
+       elif kw["Type"] == "SingleCube":
+           kw["positions"] = [[[0, 0, 0], [0, 0, 0], [0, 0, 0], ]]
+           kw["positions2"] = None
+           ingr = SingleCubeIngr(**kw)
+       elif kw["Type"] == "Grow":
+           ingr = GrowIngrediant(**kw)
+       elif kw["Type"] == "Actine":
+           ingr = ActinIngrediant(**kw)
+       if "gradient" in kw and kw["gradient"] != "" and kw["gradient"] != "None":
+           ingr.gradient = kw["gradient"]
+       return ingr
