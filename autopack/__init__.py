@@ -35,6 +35,7 @@ AF
 @author: Ludovic Autin with editing by Graham Johnson
 """
 packageContainsVFCommands = 1
+
 import sys
 import os
 import re

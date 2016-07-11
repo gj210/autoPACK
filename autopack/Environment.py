@@ -2645,7 +2645,7 @@ class Environment(CompartmentList):
         This function also update the available free point except when hack is on.
         """
         verbose = autopack.verbose
-
+        radius = ingr.encapsulatingRadius
         if ingr.packingMode == 'close':
             t1 = time()
             allIngrPts = []
@@ -2660,7 +2660,7 @@ class Environment(CompartmentList):
             else:
                 cut = radius# - jitter
             alld = numpy.array(distance)[freePoints]
-            mask = numpy.logical_and(numpy.less_equal(alld, cut+jitter*1.5), numpy.greater_equal(alld, cut+jitter))
+            mask = numpy.logical_and(numpy.less_equal(alld, cut), numpy.greater_equal(alld, cut*0.5))
             # mask_ind = numpy.nonzero(mask)[0]
             # mask compartments Id as well
             mask_comp = numpy.array(compId)[freePoints] == compNum
@@ -2817,9 +2817,18 @@ class Environment(CompartmentList):
                 order = numpy.argsort(allIngrDist)
                 # pick point with closest distance
                 ptInd = allIngrPts[order[0]]
-                if (ingr.rejectionCounter % 10 == 0):
-                    ptIndr = int(random() * len(allIngrPts))
+                # 5 rejection
+                if ingr.rejectionCounter < len(order):
+                    ptInd = allIngrPts[order[ingr.rejectionCounter]]
+                else:
+                    ptIndr = int(uniform(0.0, 1.0) * len(allIngrPts))
                     ptInd = allIngrPts[ptIndr]
+                # if (ingr.rejectionCounter % 5) == 0:
+                #      ptIndr = allIngrPts[order[1]]#int(random() * len(allIngrPts))
+                #      ptInd = allIngrPts[ptIndr]
+                # if ingr.rejectionCounter >= 50:
+                #     ptIndr = int(uniform(0.0, 1.0) * len(allIngrPts))
+                #     ptInd = allIngrPts[ptIndr]
             elif ingr.packingMode == 'gradient' and self.use_gradient:
                 # get the most probable point using the gradient
                 # use the gradient weighted map and get mot probabl point
