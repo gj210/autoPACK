@@ -382,16 +382,18 @@ def retrieveFile(filename, destination="", cache="geometries", force=None):
         print ("autopack return grabbed ", filename)
         # check the file is not an error
         return filename
-    print ("autopack search ", filename)
+    print ("autopack search ", filename, os.path.isfile(filename))
     # if no folder provided, use the current_recipe_folder
-    if not os.path.isfile(filename):  # use the cache system ? geom / recipes / ingredients / others ?
+    if True: #not os.path.isfile(filename):  # use the cache system ? geom / recipes / ingredients / others ?
         print ("search in cache", cache_dir[cache] + os.sep + filename)
         print ("search on server", autoPACKserver + "/" + cache + "/" + filename)
         print ("search on alternate_backup_server", autoPACKserver_alt + "/" + cache + "/" + filename)
         print ("search in curr_dir", current_recipe_path + os.sep + filename)
         if os.path.isfile(cache_dir[cache] + os.sep + filename):
             return cache_dir[cache] + os.sep + filename
-        elif checkURL(autoPACKserver + "/" + cache + "/" + filename):
+        if os.path.isfile(current_recipe_path + os.sep + filename):
+            return current_recipe_path + os.sep + filename
+        if checkURL(autoPACKserver + "/" + cache + "/" + filename):
             reporthook = None
             if helper is not None:
                 reporthook = helper.reporthook
@@ -406,7 +408,7 @@ def retrieveFile(filename, destination="", cache="geometries", force=None):
                                    reporthook=reporthook)
                 # check the file is not an error
                 return tmpFileName
-        elif checkURL(autoPACKserver_alt + "/" + cache + "/" + filename):
+        if checkURL(autoPACKserver_alt + "/" + cache + "/" + filename):
             reporthook = None
             if helper is not None:
                 reporthook = helper.reporthook
@@ -420,10 +422,7 @@ def retrieveFile(filename, destination="", cache="geometries", force=None):
                 return None
             # check the file is not an error
             return tmpFileName
-        elif os.path.isfile(current_recipe_path + os.sep + filename):
-            return current_recipe_path + os.sep + filename
-        else:
-            print (filename, " not found ")
+        print (filename, " not found ")
     return filename
 
 
