@@ -5976,7 +5976,7 @@ class Ingredient(Agent):
                     if True in r:
                         break
 
-            closeS = self.checkPointSurface(jtrans, cutoff=self.cutoff_surface)
+            closeS = False#self.checkPointSurface(jtrans, cutoff=self.cutoff_surface)
             test = closeS  # self.testPoint(jtrans)
             collisionComp = False
             if not test and not (True in r):
@@ -6036,7 +6036,7 @@ class Ingredient(Agent):
                     #        if verbose:
                     #        print("jitter loop ",time()-t1)
                     #            self.histoVol.callFunction(self.histoVol.delRB,(rbnode,))
-        if not collision2 and not r:  # and not collision2:
+        if not collision2 and not (True in r):  # and not collision2:
             insidePoints = {}
             newDistPoints = {}
             t3 = time()
