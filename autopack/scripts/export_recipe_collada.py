@@ -5,10 +5,14 @@ Created on Wed Dec  3 22:08:01 2014
 @author: ludo
 """
 MAYA=False
-SWAPZ=False
+SWAPZ=True
 import sys
 import os
 import math
+
+#windows path
+sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs")
+sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
 
 if MAYA:
     sys.path.append("/Users/ludo/Library/Preferences/Autodesk/maya/2015-x64/plug-ins/MGLToolsPckgs")
@@ -97,11 +101,11 @@ def oneMaterial(name,collada_xml,color=None):
 def colladaMesh(name,v,n,f,collada_xml,matnode=None):
     vertzyx = numpy.array(v)# * numpy.array([1,1,-1])
     z,y,x=vertzyx.transpose()
-#    if SWAPZ :
-#        vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])
-#    else :
-#        vertxyz = numpy.vstack([x,y,z]).transpose()        
-    vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])        
+    if SWAPZ :
+        vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])
+    else :
+        vertxyz = numpy.vstack([x,y,z]).transpose()        
+    # vertxyz = numpy.vstack([x,y,z]).transpose()* numpy.array([1,1,-1])        
     vert_src = source.FloatSource(name+"_verts-array", vertxyz.flatten(), ('X', 'Y', 'Z'))
     input_list = source.InputList()
     input_list.addInput(0, 'VERTEX', "#"+name+"_verts-array")
@@ -207,7 +211,7 @@ def buildRecipe(recipe,name,collada_xml,root_node,mask=None):
     root_node.children.append(n)  
     return collada_xml,root_node
 
-def buildCompartmentsGeom(comp,collada_xml,root_node,mask=None):
+def buildCompartmentsGeomRep(comp,collada_xml,root_node,mask=None):
     if comp.representation_file is None : 
         return collada_xml,root_node
     nr=scene.Node(str(comp.name)+str("rep"))
@@ -247,8 +251,29 @@ def buildCompartmentsGeom(comp,collada_xml,root_node,mask=None):
             nr.children.append(node)
     root_node.children.append(nr)  
     return collada_xml,root_node
+
+def buildCompartmentsGeom(comp,collada_xml,root_node,mask=None):
+    nr=scene.Node(str(comp.name))
+    #filename = autopack.retrieveFile(comp.representation_file,cache="geometries") #geometries    
+    #gdic=helper.read(filename)
+    matnode=oneMaterial(str(comp.name),collada_xml)
+    #v,n,f
+    master_node = colladaMesh(str(comp.name),comp.vertices*1.0/collada_xml.assetInfo.unitmeter,None,comp.faces,collada_xml,matnode=matnode)
+#    collada_xml.nodes.append(master_node)
+#    geomnode = scene.NodeNode(master_node)
+#    p=[0,0,0]#matrix[3,:3]/100.0#unit problem
+#    euler = [0,0,0]        
+#    scale = [1,1,1]
+#    tr=scene.TranslateTransform(p[0],p[1],p[2])
+#    rx=scene.RotateTransform(1,0,0,numpy.degrees(euler[0]))
+#    ry=scene.RotateTransform(0,1,0,numpy.degrees(euler[1]))
+#    rz=scene.RotateTransform(0,0,1,numpy.degrees(euler[2]))
+#    s=scene.ScaleTransform(scale[0],scale[1],scale[2])
+#    ne = scene.Node("compartments_"+str(comp.name), children=[geomnode,],transforms=[tr,rz,ry,rx,s]) #scene.MatrixTransform(matrix)                        
+    root_node.children.append(master_node)  
+    return collada_xml,root_node
                 
-def build_scene(env):
+def build_scene(env,outfilename):
     #architecture is :
     #-env.name
     #--exterior
@@ -269,18 +294,19 @@ def build_scene(env):
     collada_xml.scenes.append(myscene)
     collada_xml.scene = myscene                
 #
+    bbsurface = None
     r =  env.exteriorRecipe
     if r : collada_xml,root_env = buildRecipe(r,r.name,collada_xml,root_env)
     for o in env.compartments:
         rs = o.surfaceRecipe
         if rs : 
-            p,s,bb=up (767.0) #used for lipids
-            pp,ss,bbsurface = up (700.0)
+            #p,s,bb=up (767.0) #used for lipids
+            #pp,ss,bbsurface = up (700.0)
             collada_xml,root_env = buildRecipe(rs,str(o.name)+"_surface",collada_xml,root_env,mask=bbsurface)
         ri = o.innerRecipe
         if ri : collada_xml,root_env = buildRecipe(ri,str(o.name)+"_interior",collada_xml,root_env,mask=bbsurface)
-    collada_xml,root_env =buildCompartmentsGeom(env.compartments[1],collada_xml,root_env)
-    collada_xml.write("test.dae")
+    collada_xml,root_env = buildCompartmentsGeom(env.compartments[0],collada_xml,root_env)
+    collada_xml.write(outfilename)
     return collada_xml
     
 #        ri = o.innerRecipe
@@ -301,10 +327,10 @@ def build_scene(env):
 #    collada_xml=helper.instancesToCollada(parent_object,collada_xml=collada_xml,instance_node=True,parent_node=node,mesh=mesh)
 #    #collada_xml.scene.nodes
 #    collada_xml.write("/Users/ludo/DEV/autopack_git/autoPACK_database_1.0.0/geometries/HIV1_capside_3j3q_Rep_Med_0_2_1.dae") 
-#    
+
+resultfile=None    
 if len(sys.argv) > 1 :
     filename = sys.argv[1]
-    resultfile=None
     if filename in autopack.RECIPES :
         n=filename
         v=sys.argv[2]
@@ -314,24 +340,34 @@ if len(sys.argv) > 1 :
     print ("ok use ",setupfile,filename)
     fileName, fileExtension = os.path.splitext(setupfile)
     n=os.path.basename(fileName)
-    h = Environment(name=n)     
-    h.loadRecipe(setupfile)
-    h.setupfile=filename
-    if resultfile is not None :
-        h.resultfile=resultfile
-    fileName, fileExtension = os.path.splitext(setupfile)
-    rfile = h.resultfile
-    resultfilename = autopack.retrieveFile(rfile,cache="results")
-    if resultfilename is None :
-        print ("no result for "+n+" "+h.version+" "+rfile)
-        sys.exit()
-    print ("get the result file from ",resultfilename)
-    result,orgaresult,freePoint=h.loadResult(resultfilename=resultfilename)
+else :
+    setupfile = filename = "C:\Users\ludov\Google Drive\TSRI HIV Modeling\HIVsphere_simple_r140.json"
+#    resultfile = "C:\Users\ludov\Google Drive\TSRI HIV Modeling\cellpack_models\Sphere_140_m330_random_tr.json"
+#    resultfile = "C:\Users\ludov\Google Drive\TSRI HIV Modeling\cellpack_models\Sphere_140_10_random_tr.json"
+    resultfile = "C:\Users\ludov\Google Drive\TSRI HIV Modeling\cellpack_models\HIV_VLP_140_214_random_tr.json"
+#    resultfile = "C:\Users\ludov\OneDrive\Documents\\backupC4DHiv\sphere140_rand_49_tr.json"
+#    setupfile = filename = "C:\Users\ludov\Google Drive\TSRI HIV Modeling\HIVsphere_simple_r139.json"
+#    resultfile = "C:\Users\ludov\OneDrive\Documents\\backupC4DHiv\sphere139_random_127_tr.json"   
+    n="HIV_VLP"
+h = Environment(name=n)     
+h.loadRecipe(setupfile)
+h.setupfile=filename
+if resultfile is not None :
+    h.resultfile=resultfile
+fileName, fileExtension = os.path.splitext(setupfile)
+rfile = h.resultfile
+resultfilename = autopack.retrieveFile(rfile,cache="results")
+if resultfilename is None :
+    print ("no result for "+n+" "+h.version+" "+rfile)
+    sys.exit()
+print ("get the result file from ",resultfilename)
+h.compartments[0].name = "HIVenvelop_140"
+result,orgaresult,freePoint=h.loadResult(resultfilename=resultfilename)
 #                                             restore_grid=False,backward=True)#load text ?#this will restore the grid  
-    ingredients = h.restore(result,orgaresult,freePoint)
-    #export the complete recipe as collada. each ingredient -> meshnode. Each instance->node instance
-    env=h
-    cxml=build_scene(env)
+ingredients = h.restore(result,orgaresult,freePoint)
+#export the complete recipe as collada. each ingredient -> meshnode. Each instance->node instance
+env=h
+cxml=build_scene(env,"C:\Users\ludov\Google Drive\TSRI HIV Modeling\cellpack_models\HIV_VLP_140_214_random.dae")
 #execfile("pathto/export_recipe_collada.py") 
 #I usually run this on with pmv,anaconda or mayapy
                     
