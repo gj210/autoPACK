@@ -3098,7 +3098,7 @@ class Environment(CompartmentList):
                         if self.afviewer.renderDistance:
                             self.afviewer.vi.displayParticleVolumeDistance(distance, self)
                     else:
-                        print '\r{} {} {} {}'.format(p, ingr.name, ingr.completion, nbFreePoints),
+                        print ('\r{} {} {} {}'.format(p, ingr.name, ingr.completion, nbFreePoints),)
                         # End C4D safety check for Status bar added July 10, 2012
             compNum = ingr.compNum
             radius = ingr.minRadius

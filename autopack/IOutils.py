@@ -1032,6 +1032,15 @@ h1 = Environment()
     f.write(setupStr)
     f.close()
 
+
+def saveSphereTreeFile(h, ingr, filename):
+    wrkingdir = os.path.dirname(h.setupfile)
+    ingr.sphereFile = wrkingdir+os.sep+filename
+    nbLevels = len(ingr.positions)
+    nbLinker = 0
+    mapping = None
+    #use a graph ?
+    
 def checkRotFormat(rotation,transpose):
     if numpy.array(rotation).shape == (4,):
         if transpose:
@@ -1072,6 +1081,7 @@ def gatherResult(ingr_result, transpose, use_quaternion, type=0.0, lefthand=Fals
 
 
 def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=False):
+    #specify the  keyword ?
     all_pos = []
     all_rot = []
     root = sCompartment("root")
@@ -1081,7 +1091,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
         proteins = None  # sIngredientGroup("proteins", 0)
         fibers = None  # sIngredientGroup("fibers", 1)
         for ingr in r.ingredients:
-            kwds = {"nbMol": len(ingr.results), "source": ingr.source}
+            kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii,"sphereTree":ingr.sphereFile}
             if ingr.Type == "Grow":
                 if fibers is None:
                     fibers = sIngredientGroup("fibers", 1)
@@ -1109,7 +1119,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             proteins = None  # sIngredientGroup("proteins", 0)
             fibers = None  # sIngredientGroup("fibers", 1)
             for ingr in rs.ingredients:
-                kwds = {"nbMol": len(ingr.results), "source": ingr.source}
+                kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii}
                 if ingr.Type == "Grow":
                     if fibers is None:
                         fibers = sIngredientGroup("fibers", 1)
@@ -1135,7 +1145,7 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             proteins = None  # sIngredientGroup("proteins", 0)
             fibers = None  # sIngredientGroup("fibers", 1)
             for ingr in ri.ingredients:
-                kwds = {"nbMol": len(ingr.results), "source": ingr.source}
+                kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii}#or sphere tree file?
                 if ingr.Type == "Grow":
                     if fibers is None:
                         fibers = sIngredientGroup("fibers", 1)
@@ -1690,7 +1700,12 @@ def setupFromJsonDic(env, ):
         if len(ingrs_dic):
             rCyto = Recipe()
             # sorted(numbers, key=str.lower)
-            for ing_name in sorted(ingrs_dic, key=unicode.lower):  # ingrs_dic:
+            k = None
+            if (sys.version[0:3] < "3.0"):
+                k = unicode.lower
+            else :
+                k = str.lower
+            for ing_name in sorted(ingrs_dic, key=k):  # ingrs_dic:
                 # either xref or defined
                 ing_dic = ingrs_dic[ing_name]
                 ingr = io_ingr.makeIngredientFromJson(inode=ing_dic, recipe=env.name)

@@ -35,14 +35,18 @@ R1=[ 0, 7626.9, 10855.487, 14218.598, 17178.135,19599.575]
 R2=[35000.0, 34262.739, 33186.543, 31706.774, 29688.908,16640.038]
 H = 2000.0
 TotalH = 20000
-#from autopack.Compartment import Compartment
+from autopack.Compartment import Compartment
 ##name, vertices, faces, vnormals
-#o = Compartment("rbc", None, None, None,filename="D:\\Data\\cellPACK_data\\cellPACK_database_1.1.0\\geometries\\rbc.dae")
-#o.OGsrfPtsBht = spatial.cKDTree(tuple(o.vertices), leafsize=10)               
-#from autopack.Grid import HaltonGrid, Grid
+o = Compartment("rbc", None, None, None,filename="D:\\Data\\cellPACK_data\\cellPACK_database_1.1.0\\geometries\\rbc.dae")
+o.OGsrfPtsBht = spatial.cKDTree(tuple(o.vertices), leafsize=10)               
+from autopack.Grid import HaltonGrid, Grid
 #bb=[[-R,-35,-R],[R,35,R]]
-#hg = HaltonGrid(boundingBox=bb, space=spacing, setup=False)
-##size = hg.getNBgridPoints()
+hg = HaltonGrid(boundingBox=bb, space=spacing, setup=False)
+size = hg.getNBgridPoints()
+hg.create3DPointLookup()
+N=np.linalg.norm(hg.masterGridPositions,axis=1)
+mask = N < R
+inside_points = np.nonzero(mask)[0]
 ##print size
 ##print size1[0]*size[1]*size[2]
 #hg.create3DPointLookup()
@@ -92,7 +96,7 @@ TotalH = 20000
 #np.array(quat, 'f').flatten().tofile(fptr)  # 4flaot quaternion
 #fptr.close()
 #print N
-
+z
 from autopack.Grid import HaltonGrid, Grid
 bb=[[-850,-850,-850],[850,850,850]]
 spacing = 50
