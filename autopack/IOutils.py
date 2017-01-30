@@ -1694,18 +1694,19 @@ def setupFromJsonDic(env, ):
         if len(gridnode):
             env.grid_filename = str(gridnode["grid_storage"])
             env.grid_result_filename = str(gridnode["grid_result"])
+    sortkey = None
+    if (sys.version[0:3] < "3.0"):
+        sortkey = unicode.lower
+    else :
+        sortkey = str.lower
+ 
     if "cytoplasme" in env.jsondic:
         rnode = env.jsondic["cytoplasme"]
         ingrs_dic = env.jsondic["cytoplasme"]["ingredients"]
         if len(ingrs_dic):
             rCyto = Recipe()
             # sorted(numbers, key=str.lower)
-            k = None
-            if (sys.version[0:3] < "3.0"):
-                k = unicode.lower
-            else :
-                k = str.lower
-            for ing_name in sorted(ingrs_dic, key=k):  # ingrs_dic:
+           for ing_name in sorted(ingrs_dic, key=sortkey):  # ingrs_dic:
                 # either xref or defined
                 ing_dic = ingrs_dic[ing_name]
                 ingr = io_ingr.makeIngredientFromJson(inode=ing_dic, recipe=env.name)
@@ -1760,7 +1761,7 @@ def setupFromJsonDic(env, ):
                     if len(ingrs_dic):
                         rSurf = Recipe(name="surf_" + str(len(env.compartments) - 1))
                         #                        rSurf = Recipe(name=o.name+"_surf")
-                        for ing_name in sorted(ingrs_dic, key=unicode.lower):  # ingrs_dic:
+                        for ing_name in sorted(ingrs_dic, key=sortkey):  # ingrs_dic:
                             # either xref or defined
                             ing_dic = ingrs_dic[ing_name]
                             ingr = io_ingr.makeIngredientFromJson(inode=ing_dic, recipe=env.name)
@@ -1773,7 +1774,7 @@ def setupFromJsonDic(env, ):
                     if len(ingrs_dic):
                         #                        rMatrix = Recipe(name=o.name+"_int")
                         rMatrix = Recipe(name="int_" + str(len(env.compartments) - 1))
-                        for ing_name in sorted(ingrs_dic, key=unicode.lower):  # ingrs_dic:
+                        for ing_name in sorted(ingrs_dic, key=sortkey):  # ingrs_dic:
                             # either xref or defined
                             ing_dic = ingrs_dic[ing_name]
                             ingr = io_ingr.makeIngredientFromJson(inode=ing_dic, recipe=env.name)
