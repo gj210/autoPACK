@@ -1706,7 +1706,7 @@ def setupFromJsonDic(env, ):
         if len(ingrs_dic):
             rCyto = Recipe()
             # sorted(numbers, key=str.lower)
-           for ing_name in sorted(ingrs_dic, key=sortkey):  # ingrs_dic:
+            for ing_name in sorted(ingrs_dic, key=sortkey):  # ingrs_dic:
                 # either xref or defined
                 ing_dic = ingrs_dic[ing_name]
                 ingr = io_ingr.makeIngredientFromJson(inode=ing_dic, recipe=env.name)
