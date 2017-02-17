@@ -465,6 +465,7 @@ def addCompartments(env, compdic, i, io_ingr):
         pos = numpy.array(compdic["positions"][n])  # Vec3
         rot = numpy.array(compdic["rotations"][n])  # quaternion
         # we only extract the compartments ferom the file
+        # order issue
         for cname in jsondic["compartments"]:
             comp_dic = jsondic["compartments"][cname]
             name = str(comp_dic["name"]) + "_" + str(i) + "_" + str(n)
@@ -1728,6 +1729,9 @@ def setupFromJsonDic(env, ):
                 comp_dic = env.jsondic["compartments"][cname]
                 name = str(comp_dic["name"])
                 geom = str(comp_dic["geom"])
+                gname = name
+                if "gname" in comp_dic:
+                    gname = str(comp_dic["gname"])
                 rep = ""
                 if "rep" in comp_dic:
                     rep = str(comp_dic["rep"])
@@ -1735,7 +1739,7 @@ def setupFromJsonDic(env, ):
                 if "rep_file" in comp_dic:
                     rep_file = str(comp_dic["rep_file"])
                 print (
-                "rep ?", name, geom, rep, rep_file, (rep != "None" and len(rep) != 0 and rep != '' and rep == ""))
+                "rep ?", name, geom, gname, rep, rep_file, (rep != "None" and len(rep) != 0 and rep != '' and rep == ""))
                 #                print (len(rep),rep == '',rep=="",rep != "None",rep != "None" or len(rep) != 0)
                 if rep != "None" and len(rep) != 0 and rep != '' and rep != "":
                     rname = rep_file.split("/")[-1]
@@ -1750,8 +1754,8 @@ def setupFromJsonDic(env, ):
                     rep = None
                     rep_file = None
                     print ("NONENE")
-                print ("add compartment ", name, geom, rep, rep_file)
-                o = Compartment(name, None, None, None, filename=geom,
+                print ("add compartment ", name, geom, gname, rep, rep_file)
+                o = Compartment(name, None, None, None, gname=gname, filename=geom,
                                 object_name=rep, object_filename=rep_file)
                 print ("added compartment ", name)
                 env.addCompartment(o)
