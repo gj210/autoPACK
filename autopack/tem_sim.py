@@ -112,8 +112,8 @@ class tem_sim:
     def makePrmFile(self,):
         self.params_string="# To run the simulation, execute the command\n"
         self.params_string+="# <path to executable>/TEM-simulator "+self.params_file+"\n"        
-        self.params_string+="\n=== simulation ===\n"
-        self.params_string+="# The simulation component specifies what kind of computations should be done.\n"
+#        self.params_string+="\n=== simulation ===\n"
+#        self.params_string+="# The simulation component specifies what kind of computations should be done.\n"
         
         for i in self.order_p:
             self.params_string+="\n=== "+i+" ===\n"
@@ -121,8 +121,8 @@ class tem_sim:
                 if type(self.params[k]) == dict :
                     if self.params[k]["type"]=="bool":
                         if self.params[k]["value"] :
-                            self.params_string+=k+" yes\n"
-                        else :self.params_string+=k+" no\n"
+                            self.params_string+=k+" = yes\n"
+                        else :self.params_string+=k+" = no\n"
                     else :
                         self.params_string+=k+" = "+str(self.params[k]["value"])+"\n"
                 else :
@@ -134,18 +134,20 @@ class tem_sim:
                     if type(self.objects[obj][k]) == dict :
                         if self.objects[obj][k]["type"]=="bool":
                             if self.objects[obj][k]["value"] :
-                                self.params_string+=k+" yes\n"
-                            else :self.params_string+=k+" no\n"
+                                self.params_string+=k+" = yes\n"
+                            else :self.params_string+=k+" = no\n"
                         else :
                             self.params_string+=k+" = "+str(self.objects[obj][k]["value"])+"\n"
                     else :
                         self.params_string+=k+" = "+str(self.objects[obj][k])+"\n"
+        for obj in self.objects:   
+            self.params_string+="\n=== particleset ===\n"                        
             for k in self.objects_set_str_order:
                     if type(self.objects[obj][k]) == dict :
                         if self.objects[obj][k]["type"]=="bool":
                             if self.objects[obj][k]["value"] :
-                                self.params_string+=k+" yes\n"
-                            else :self.params_string+=k+" no\n"
+                                self.params_string+=k+" = yes\n"
+                            else :self.params_string+=k+" = no\n"
                         else :
                             self.params_string+=k+" = "+str(self.objects[obj][k]["value"])+"\n"
                     else :
@@ -224,7 +226,7 @@ image_file_out = output_tem_nonoise.mrc
                                            "mini":0.00,"maxi":1.0,
                                            "width":30}
 
-        self.objects[name]["pdb_file_in"]={"name":"pdb_file_in","value":self.base_name+".log","default":self.base_name+".log",
+        self.objects[name]["pdb_file_in"]={"name":"pdb_file_in","value":file_in,"default":self.base_name+".log",
                                            "type":"str","description":"pdb file if source is pdb",
                                            "mini":1,"maxi":1000,
                                            "width":30}
@@ -334,7 +336,7 @@ image_file_out = output_tem_nonoise.mrc
         level = ingredient.maxLevel
         if len(ingredient.results):
             #name,source,file_in,number
-            self.addObject(ingredient.name,"pdb",None,len(ingredient.results))
+            self.addObject(ingredient.name,"pdb",ingredient.pdb,len(ingredient.results))
         #add the coordinate
         for r in ingredient.results:  
             if hasattr(r[0],"tolist"):
@@ -346,6 +348,7 @@ image_file_out = output_tem_nonoise.mrc
             self.addCoordinate(ingredient.name,r[0],euler)
             
     def addCoordinate(self,name,pos,rot):
+        #position in nm, angle in degree
         self.initial_coordinates_str[name]+="%.4f %.4f %.4f %.4f %.4f %.4f\n" %(
                                 pos[0]/10.0,pos[1]/10.0,pos[2]*0.0,rot[0],rot[1],rot[2])
 
@@ -371,5 +374,26 @@ image_file_out = output_tem_nonoise.mrc
         return
 #        import os
 #        os.exec(self.bd_binary+" "+self.params_file)
-    
+
+    def setupFromEnv(self,env):
+        r =  env.exteriorRecipe
+        if r :
+            for ingr in r.ingredients:
+                self.addAutoPackIngredient(ingr)
+
+        #compartment ingr
+        for orga in env.compartments:
+            #compartment surface ingr
+            rs =  orga.surfaceRecipe
+            if rs :
+                for ingr in rs.ingredients:
+                    self.addAutoPackIngredient(ingr)
+            #compartment matrix ingr
+            ri =  orga.innerRecipe
+            if ri :
+                for ingr in ri.ingredients:
+                    self.addAutoPackIngredient(ingr)
+                   
        
+
+
