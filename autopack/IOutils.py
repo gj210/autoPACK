@@ -10,7 +10,7 @@ import pickle
 import sys
 import autopack
 from autopack.Ingredient import GrowIngrediant, ActinIngrediant, KWDS
-from autopack.Serializable import sCompartment
+from autopack.Serializable import sCompartment;
 from autopack.Serializable import sIngredientGroup
 from autopack.Serializable import sIngredient
 from autopack.Serializable import sIngredientFiber
@@ -1083,6 +1083,10 @@ def gatherResult(ingr_result, transpose, use_quaternion, type=0.0, lefthand=Fals
 
 def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=False):
     #specify the  keyword ?
+    sCompartment.static_id = 0
+    sIngredientFiber.static_id = 0
+    sIngredient.static_id = [0, 0, 0]
+    sIngredientGroup.static_id= 0
     all_pos = []
     all_rot = []
     root = sCompartment("root")
@@ -1092,7 +1096,16 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
         proteins = None  # sIngredientGroup("proteins", 0)
         fibers = None  # sIngredientGroup("fibers", 1)
         for ingr in r.ingredients:
-            kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii,"sphereTree":ingr.sphereFile}
+            nbmol = len(ingr.results)
+            if len(ingr.results)==0:
+                nbmol = ingr.nbMol
+            kwds = {"nbMol": nbmol, 
+                    "principalVector": ingr.principalVector,
+                    "molarity" : ingr.molarity,
+                    "source": ingr.source, 
+                    "positions":ingr.positions, 
+                    "radii":ingr.radii}
+                    #"sphereTree":ingr.sphereFile}
             if ingr.Type == "Grow":
                 if fibers is None:
                     fibers = sIngredientGroup("fibers", 1)
@@ -1120,7 +1133,16 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             proteins = None  # sIngredientGroup("proteins", 0)
             fibers = None  # sIngredientGroup("fibers", 1)
             for ingr in rs.ingredients:
-                kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii}
+                nbmol = len(ingr.results)
+                if len(ingr.results)==0:
+                    nbmol = ingr.nbMol
+                kwds = {"nbMol": nbmol, 
+                        "principalVector": ingr.principalVector,
+                    "molarity" : ingr.molarity,
+                    "source": ingr.source, 
+                    "positions":ingr.positions, 
+                    "radii":ingr.radii}
+                    #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
                     if fibers is None:
                         fibers = sIngredientGroup("fibers", 1)
@@ -1146,7 +1168,16 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             proteins = None  # sIngredientGroup("proteins", 0)
             fibers = None  # sIngredientGroup("fibers", 1)
             for ingr in ri.ingredients:
-                kwds = {"nbMol": len(ingr.results), "source": ingr.source, "positions":ingr.positions, "radii":ingr.radii}#or sphere tree file?
+                nbmol = len(ingr.results)
+                if len(ingr.results)==0:
+                    nbmol = ingr.nbMol
+                kwds = {"nbMol": nbmol,  
+                    "principalVector": ingr.principalVector,
+                    "molarity" : ingr.molarity,
+                    "source": ingr.source, 
+                    "positions":ingr.positions, 
+                    "radii":ingr.radii}
+                    #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
                     if fibers is None:
                         fibers = sIngredientGroup("fibers", 1)
@@ -1203,64 +1234,69 @@ def serializedFromResult(env, transpose, use_quaternion, result=False, lefthand=
             exterior.addIngredientGroup(proteins)
 #        if fibers is not None:
 #            exterior.addIngredientGroup(fibers)
-    for o_name in env["compartments"]:
-        o =  env["compartments"][o_name]
-        co = sCompartment(o_name)
-        rs = o["surface"]
-        if rs:
-            surface = sCompartment("surface")
-            proteins = None  # sIngredientGroup("proteins", 0)
-            fibers = None  # sIngredientGroup("fibers", 1)
-            for ingr_name in rs["ingredients"]:
-                ingr = rs["ingredients"][ingr_name]
-                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
-#                if ingr.Type == "Grow":
-#                    if fibers is None:
-#                        fibers = sIngredientGroup("fibers", 1)
-#                    igr = sIngredient(ingr.o_name, 1, **kwds)
-#                    fibers.addIngredient(igr)
-#                else:
-                if proteins is None:
-                    proteins = sIngredientGroup("proteins", 0)
-                igr = sIngredient(ingr["name"], 0, **kwds)
-                proteins.addIngredient(igr)
-                if result:
-                    ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
-                    all_pos.extend(ap)
-                    all_rot.extend(ar)
-            co.addCompartment(surface)
-            if proteins is not None:
-                surface.addIngredientGroup(proteins)
-#            if fibers is not None:
-#                surface.addIngredientGroup(fibers)
-        ri = o["interior"]
-        if ri:
-            interior = sCompartment("interior")
-            proteins = None  # sIngredientGroup("proteins", 0)
-            fibers = None  # sIngredientGroup("fibers", 1)
-            for ingr_name in ri["ingredients"]:
-                ingr = ri["ingredients"][ingr_name]
-                kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
-#                if ingr.Type == "Grow":
-#                    if fibers is None:
-#                        fibers = sIngredientGroup("fibers", 1)
-#                    igr = sIngredient(ingr["name"], 1, **kwds)
-#                    fibers.addIngredient(igr)
-#                else:
-                if proteins is None:
-                    proteins = sIngredientGroup("proteins", 0)
-                igr = sIngredient(ingr["name"], 0, **kwds)
-                proteins.addIngredient(igr)
-                if result:
-                    ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
-                    all_pos.extend(ap)
-                    all_rot.extend(ar)
-            co.addCompartment(interior)
-            if proteins is not None:
-                interior.addIngredientGroup(proteins)
-#            if fibers is not None:
-#                interior.addIngredientGroup(fibers)
-        root.addCompartment(co)
+    if "compartments" in env :
+        for o_name in env["compartments"]:
+            o =  env["compartments"][o_name]
+            co = sCompartment(o_name)
+            rs = None
+            if "surface" in o :
+                rs =   o["surface"]
+            if rs:
+                surface = sCompartment("surface")
+                proteins = None  # sIngredientGroup("proteins", 0)
+                fibers = None  # sIngredientGroup("fibers", 1)
+                for ingr_name in rs["ingredients"]:
+                    ingr = rs["ingredients"][ingr_name]
+                    kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+    #                if ingr.Type == "Grow":
+    #                    if fibers is None:
+    #                        fibers = sIngredientGroup("fibers", 1)
+    #                    igr = sIngredient(ingr.o_name, 1, **kwds)
+    #                    fibers.addIngredient(igr)
+    #                else:
+                    if proteins is None:
+                        proteins = sIngredientGroup("proteins", 0)
+                    igr = sIngredient(ingr["name"], 0, **kwds)
+                    proteins.addIngredient(igr)
+                    if result:
+                        ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                        all_pos.extend(ap)
+                        all_rot.extend(ar)
+                co.addCompartment(surface)
+                if proteins is not None:
+                    surface.addIngredientGroup(proteins)
+    #            if fibers is not None:
+    #                surface.addIngredientGroup(fibers)
+            ri = None
+            if "interior" in o :
+                ri = o["interior"]
+            if ri:
+                interior = sCompartment("interior")
+                proteins = None  # sIngredientGroup("proteins", 0)
+                fibers = None  # sIngredientGroup("fibers", 1)
+                for ingr_name in ri["ingredients"]:
+                    ingr = ri["ingredients"][ingr_name]
+                    kwds = {"nbMol": len(ingr["results"]), "source": ingr["source"]}
+    #                if ingr.Type == "Grow":
+    #                    if fibers is None:
+    #                        fibers = sIngredientGroup("fibers", 1)
+    #                    igr = sIngredient(ingr["name"], 1, **kwds)
+    #                    fibers.addIngredient(igr)
+    #                else:
+                    if proteins is None:
+                        proteins = sIngredientGroup("proteins", 0)
+                    igr = sIngredient(ingr["name"], 0, **kwds)
+                    proteins.addIngredient(igr)
+                    if result:
+                        ap, ar = gatherResult(ingr["results"], transpose, use_quaternion, type=igr.ingredient_id, lefthand=lefthand)
+                        all_pos.extend(ap)
+                        all_rot.extend(ar)
+                co.addCompartment(interior)
+                if proteins is not None:
+                    interior.addIngredientGroup(proteins)
+    #            if fibers is not None:
+    #                interior.addIngredientGroup(fibers)
+            root.addCompartment(co)
     data_json = root.to_JSON()
     return data_json, all_pos, all_rot
     

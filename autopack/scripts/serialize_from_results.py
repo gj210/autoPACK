@@ -11,25 +11,34 @@ sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949B
 sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
 sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs\lib-tk")
 
-
+mainPATH = "C:\\Users\\ludov\\Downloads\\"
+mainPATH = "C:\\Dev\\Brett\\"
 #fin = "D:\\Data\\HIV\\blood_hiv_immature_split.json"
-fin = "C:\\Users\\ludov\\Downloads\\MG_results_tr.json"
+#fin = "C:\\Users\\ludov\\Downloads\\MG_results_tr.json"
+fin = mainPATH+"RECIPE-syn1.0_complexes_wipdb_wholeRIB_tip_shifted_res_tr.json"
+fout = mainPATH+"RECIPE-syn1.0_complexes_wipdb_wholeRIB_tip_shifted_res_tr_S"
+fin = "C:\\Users\\ludov\\OneDrive\\Documents\\cellVIEW\\Data\\packing_results\\HIV-1_0.1.6-8_mixed_pdb.cpr"
+fout = "C:\\Users\\ludov\\OneDrive\\Documents\\cellVIEW\\Data\\packing_results\\HIVcapsid.bin"
 with open( fin ,"r") as f :
     result = json.load(f)
 
-fout = "C:\\Users\\ludov\\Downloads\\MG_1.0_serialized"
-from autopack.IOutils import serializedFromResult, toBinary
-d,p,r = serializedFromResult(result,False,True,result=True,lefthand=False)
-toBinary(p, r,fout+".bin")
-djson,p,r = serializedFromResult(result,True,True,result=True, lefthand=False)
-toBinary(p, r,fout+"_tr.bin")
-d,p,r = serializedFromResult(result,True,True,result=True, lefthand=True)
-toBinary(p, r,fout+"_tr_lh.bin")
-d,p,r = serializedFromResult(result,False,True,result=True, lefthand=True)
-toBinary(p, r,fout+"_lh.bin")
+#fout = "C:\\Users\\ludov\\Downloads\\MG_1.0_serialized"
 
-with open( fout+".json","w") as f :
-    f.write(djson)
+from autopack.IOutils import serializedFromResult, toBinary, gatherResult
+d,p,r = serializedFromResult(result,False,True,result=True,lefthand=False)
+
+ap, ar = gatherResult(posrot, True, True,  lefthand=True)
+
+#toBinary(p, r,fout+".bin")
+#djson,p,r = serializedFromResult(result,True,True,result=True, lefthand=False)
+#toBinary(p, r,fout+"_tr.bin")
+#d,p,r = serializedFromResult(result,True,True,result=True, lefthand=True)
+#toBinary(p, r,fout+"_tr_lh.bin")
+#d,p,r = serializedFromResult(result,False,True,result=True, lefthand=True)
+#toBinary(p, r,fout+"_lh.bin")
+#
+#with open( fout+".json","w") as f :
+#    f.write(djson)
 #build color palette ?
 #color_palette={}
 ##go through everything and generate color

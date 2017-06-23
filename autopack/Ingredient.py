@@ -1283,7 +1283,8 @@ class Ingredient(Agent):
                               "type": "float", "description": "proba_binding"},
             "properties": {"name": "properties", "value": {}, "default": {}, "min": 0., "max": 1.0, "type": "dic",
                            "description": "properties"},
-
+            "score":  {"type": "string"},
+            "organism":  {"type": "string"},
         }
         self.OPTIONS = {
             "molarity": {"type": "float", "name": "molarity", "default": 0, "value": 0, "min": 0, "max": 500,
@@ -1374,6 +1375,8 @@ class Ingredient(Agent):
             "partners_weight": {"name": "partners_weight", "type": "float", "value": "0.5"},
             "properties": {"name": "properties", "value": {}, "default": {}, "min": 0., "max": 1.0, "type": "dic",
                            "description": "properties"},
+            "score":  {"type": "string"},
+            "organism":  {"type": "string"},                           
         }
 
     def setTilling(self, comp):

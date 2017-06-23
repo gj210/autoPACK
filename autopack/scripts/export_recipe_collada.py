@@ -81,8 +81,7 @@ def testOnePoints(p,bbi):
          return False
      else :
          return True
-         
-         
+          
 
 def oneMaterial(name,collada_xml,color=None):
     if color == None :
