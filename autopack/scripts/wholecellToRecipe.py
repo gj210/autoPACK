@@ -460,7 +460,7 @@ djson = serializedRecipe(env)
 f=open("C:\\Users\\ludov\\Downloads\\MG_1.0_serialized.json","w")
 f.write(djson)
 f.close()
-saveResultBinary(h,"/home/ludo/hivexp/pack_hiv_from_ncfix_serialized.bin",False,True)
+saveResultBinary(env,"C:\\Users\\ludov\\Downloads\\MG_1.0_serialized.bin",False,True)
 
 #MG4 - nascent 753
 #MG4 - processed I 753

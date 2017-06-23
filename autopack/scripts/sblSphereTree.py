@@ -5,32 +5,46 @@ import math
 import numpy as np
 #append MGLTools
 #WINDOWS
-sys.path.append("C:\\Users\\ludov\\Downloads\\blender-2.77-windows64\\MGLToolsPckgs")
+#sys.path.append("C:\\Users\\ludov\\Downloads\\blender-2.77-windows64\\MGLToolsPckgs")
 #sys.path.append("C:\\Users\\ludo\\Downloads\\mgltools_win_amd64_latest")
 #sys.path.append("C:\\Users\\ludo\\AppData\\Roaming\\MAXON\\CINEMA\ 4D\ R17\ Demo_E0A949BC\\plugins\\ePMV\\mgl64\\MGLToolsPckgs")
 #LINUX
 #sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs/")
 #sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs/PIL/")
-from upy.dejavuTk.dejavuHelper import dejavuHelper as helperClass
-import autopack
+sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs/")
+sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs/PIL/")
+#windows path
+#sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs")
+#sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
 
-helper = autopack.helper
-if helper is None :
-    import upy
-    #helperClass = upy.getHelperClass()
-    helper = helperClass(vi="nogui")
+sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs")
+sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
+
+import autopack
+import upy
+#helper = upy.getHelperClass()(vi="nogui")
+helper = upy.getHelperClass()()
+#helper = autopack.helper
+#if helper is None :
+#    import upy
+#    #helperClass = upy.getHelperClass()
+#    helper = helperClass(vi="nogui")
 autopack.helper = helper
 
-from sklearn.cluster import MiniBatchKMeans, KMeans
-from sklearn.cluster import AffinityPropagation
-from sklearn import metrics
-from sklearn.datasets.samples_generator import make_blobs
 
 try :
     import prody
 except:
     prody = None
     
+from Bio.PDB.PDBParser import PDBParser
+from Bio.PDB.PDBList import PDBList
+data_folder = "D:\\Data\\cellPACK_data\\cellPACK_database_1.1.0\\other"
+
+fetch = PDBList(pdb=data_folder)
+p = PDBParser(PERMISSIVE=1)
+
+
 from autopack.Environment import Environment
 #from autopack.Graphics import AutopackViewer as AFViewer
 #
@@ -42,25 +56,29 @@ pathToCP="D:\\DATA\\cellPACK_data\\cellPACK_database_1.1.0\\"
 filename = "/opt/data/dev/cellPACK/cellPACK_data_git/cellPACK_database_1.1.0/recipes/Mycoplasma1.6.json"
 filename = "/opt/data/dev/cellPACK/cellPACK_data_git/cellPACK_database_1.1.0/recipes/DNAplectoneme.1.0.json"
 filename = pathToCP+os.sep+"recipes"+os.sep+"Mycoplasma1.6_full.json"
+filename = pathToCP+os.sep+"recipes"+os.sep+"Mycoplasma1.7.json"
+filename = "C:\\Dev\\flexpack_dev_1.1\\data\\cellpack\\recipes\\Mycoplasma1.7.json"
+
 #path = "/home/ludo/hivexp/"
 fileName, fileExtension = os.path.splitext(filename)
 n=os.path.basename(fileName)
 h = Environment(name=n)
+h.totalNBBeads = 0
 ##h.helper = helper
 #recipe=n
 h.loadRecipe(filename)
-
-#for each ingredient, PDB, make a sphere Tree using SBL
-sbl_binary_U="sbl-ballcovor-pdb-U.exe"
-sbl_binary_A="sbl-ballcovor-pdb-A.exe"
-sbl_binary_C="sbl-ballcovor-pdb-C.exe"
-sbl_binary_T="sbl-ballcovor-txt.exe"
-
-sbl_arg_file=" -f "
-sbl_arg_nballs=" --n-inner-balls "
-sbl_arg_outer=" --outer "
-sbl_arg_interpolated=" --interpolated "
-sbl_arg_verbose=" -v "
+#
+##for each ingredient, PDB, make a sphere Tree using SBL
+#sbl_binary_U="sbl-ballcovor-pdb-U.exe"
+#sbl_binary_A="sbl-ballcovor-pdb-A.exe"
+#sbl_binary_C="sbl-ballcovor-pdb-C.exe"
+#sbl_binary_T="sbl-ballcovor-txt.exe"
+#
+#sbl_arg_file=" -f "
+#sbl_arg_nballs=" --n-inner-balls "
+#sbl_arg_outer=" --outer "
+#sbl_arg_interpolated=" --interpolated "
+#sbl_arg_verbose=" -v "
 
 pdb_directory=pathToCP+os.sep+"other"+os.sep
 
@@ -203,6 +221,7 @@ def voxelize_avg(pdbname,spacing=20.0,padding=20.0):
 
 
 def doCluster(pdbname,spacing=20.0,padding=20.0, percentile=0.001,biomt=False):
+    name =   pdbname  
     if len(pdbname) == 4: #PDBID
         pdbname = pdbname.lower() + ".pdb"
     else :
@@ -211,21 +230,44 @@ def doCluster(pdbname,spacing=20.0,padding=20.0, percentile=0.001,biomt=False):
     if prody is not None :
         center_c = prodyLoad(pdbname,biomt=biomt)
     else :
-        data=np.loadtxt(pdb_directory+os.sep+pdbname+"_cl.txt")
-        center_c = data - np.average(data,0)
+        if not os.path.isfile(data_folder+os.sep+pdbname+"_cl.txt") :  
+            filename = fetch.retrieve_pdb_file(name)
+            s = p.get_structure(name, filename)
+            for m in s.get_models():
+                data = [atom.coord.tolist() for atom in m.get_atoms() if atom.parent.resname != "DUM"]
+                break
+            center_c = np.array(data) - np.average(data,axis=0)
+            np.savetxt(data_folder+os.sep+pdbname+"_cl.txt",data)
+        else :
+            data=np.loadtxt(pdb_directory+os.sep+pdbname+"_cl.txt")
+            center_c = data - np.average(data,0)
     V1=6970.17465149966
     V2=20.5795262761155
+    proxy_radius = 15
+    Vproxy = 4*math.pi*(proxy_radius*proxy_radius*proxy_radius)/3.0
+    V = len(center_c) * 10.0 * 1.21
+    nProxy = int(round(V/Vproxy))
+    #print "cluster ", nProxy, len(center_c)
     natom=V1/V2
     ncluster = int(math.ceil(len(center_c)/natom))
-    print ("name ",pdbname,ncluster,len(center_c))
-    if ncluster < 10:
-        ncluster = 10
-        doKMeans(pdbname,center_c,ncluster)
+    if (nProxy == 0) :
+        nProxy = 1
+    print ("name ",pdbname,nProxy,len(center_c),h.totalNBBeads)
+    if nProxy < 10:
+        nProxy = 10
+    h.totalNBBeads+=nProxy
+    #if not os.path.isfile(pdb_directory+os.sep+pdbname+"_kmeans15.txt") : 
+    doKMeans(pdbname,center_c,nProxy)
     #Kmean of affinity etc
     #doAffinity(pdbname,center_c)
 #    doKMeans(pdbname,center_c,ncluster)
     
 def doAffinity(pdbname,points):
+    from sklearn.cluster import MiniBatchKMeans, KMeans
+    from sklearn.cluster import AffinityPropagation
+    from sklearn import metrics
+    from sklearn.datasets.samples_generator import make_blobs
+
     # Compute Affinity Propagation
     af = AffinityPropagation(preference=-50).fit(points)
     cluster_centers_indices = af.cluster_centers_indices_
@@ -239,15 +281,22 @@ def doAffinity(pdbname,points):
                points, fmt='%f')
 
 def doKMeans(pdbname,points,ncluster):
-    
+    from sklearn.cluster import MiniBatchKMeans, KMeans
+    from sklearn.cluster import AffinityPropagation
+    from sklearn import metrics
+    from sklearn.datasets.samples_generator import make_blobs
+
     k_means = KMeans(init='k-means++', n_clusters=ncluster, n_init=10)
     k_means.fit(points)
     #k_means_labels = k_means.labels_
     #k_means_cluster_centers = k_means.cluster_centers_
     #k_means_labels_unique = np.unique(k_means_labels)
-    np.savetxt(pdb_directory+os.sep+pdbname+"_kmeans3.txt",
+    np.savetxt(pdb_directory+os.sep+pdbname+"_kmeans15.txt",
                k_means.cluster_centers_, fmt='%f')
-            
+    path="C:\\Dev\\flexpack_dev_1.1\\data\\cellpack\\beads\\"    
+    np.savetxt(path+os.sep+pdbname+"_kmeans15.txt",
+               k_means.cluster_centers_, fmt='%f')
+
 def doKmeans(pdbname,spacing=20.0,padding=20.0, percentile=0.001):
     if len(pdbname) == 4: #PDBID
         prody.fetchPDB(pdbname.lower(), compressed=False)
@@ -294,8 +343,57 @@ def doIngredientVOX(ingredient):
             if "biomt" in ingredient.source :
                 biomt= ingredient.source["biomt"]
             doCluster(ingredient.source["pdb"],biomt=biomt)
+    #coarseMS build->dae/index
 
-h.loopThroughIngr(doIngredientVOX)
+def printIngr(ingredient):
+    print str(ingredient.name)+"\t\t"+str(ingredient.source["pdb"])+"\t\t"+str(ingredient.nbMol)
+
+def dsClusterAtoms(ingredient):
+    parent = helper.getObject("root")
+    if "pdb" in ingredient.source:
+        if ingredient.source["pdb"] is not None and ingredient.source["pdb"] != "None":
+            biomt = False
+            if "biomt" in ingredient.source :
+                biomt= ingredient.source["biomt"]
+            print (ingredient.source["pdb"],biomt)
+            name = pdbname = ingredient.source["pdb"]
+            if len(pdbname) == 4: #PDBID
+                pdbname = pdbname.lower() + ".pdb"
+            else :
+                if pdbname[-4:] != ".pdb":
+                    pdbname += ".pdb"
+            center_c = None
+            if prody is not None :
+                center_c = prodyLoad(pdbname,biomt=biomt)
+            else :
+                if not os.path.isfile(data_folder+os.sep+pdbname+"_cl.txt") :  
+                    filename = fetch.retrieve_pdb_file(name)
+                    s = p.get_structure(name, filename)
+                    for m in s.get_models():
+                        data = [atom.coord.tolist() for atom in m.get_atoms() if atom.parent.resname != "DUM"]
+                        break
+                    center_c = np.array(data) - np.average(data,axis=0)
+                    np.savetxt(data_folder+os.sep+pdbname+"_cl.txt",data)
+                else :
+                    data=np.loadtxt(pdb_directory+os.sep+pdbname+"_cl.txt")
+                    center_c = data - np.average(data,0)  
+            pointscloud, mesh_pts = helper.PointCloudObject("atoms_"+name,
+                                        vertices=center_c,parent=parent)
+            if os.path.isfile(pdb_directory+os.sep+pdbname+"_kmeans15.txt") : 
+                cluster = np.loadtxt(pdb_directory+os.sep+pdbname+"_kmeans15.txt")
+                if (cluster.shape==(3,)) :
+                    cluster = [cluster,]
+                pointscloud, mesh_pts = helper.PointCloudObject("cluster_"+name,
+                                        vertices=cluster,parent=parent)
+#h.loopThroughIngr(doIngredientVOX)
+print h.totalNBBeads/22.0#avg nbbeads*total ninstance ~ 40000
+h.loopThroughIngr(dsClusterAtoms)
+
+
+#execfile("C:\\Users\\ludov\\OneDrive\\Documents\\autoPACK\\autopack\\scripts\\sblSphereTree.py")
+#DEBUG VISUAL
+#BUILD ATOMcLOUD FOR SPHERETREE AND ATOMCOORDAINTES FOR EVERY INGREDIENTS
+
 
 #from autopack.IOutils import serializedRecipe, saveResultBinary
 #djson = serializedRecipe(h, False, True, lefthand = True)

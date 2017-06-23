@@ -96,6 +96,11 @@ class sIngredientFiber(object):
         return json.dumps(self, default=lambda o: o.__dict__, 
             sort_keys=True, indent=4)
 
+#how to reset all the number
+#sCompartment.static_id = 0
+#sIngredientFiber.static_id = 0
+#sIngredient.static_id = [0, 0, 0]
+#sIngredientGroup.static_id= 0
 
 #import sys
 #import os

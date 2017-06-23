@@ -1195,7 +1195,7 @@ class Environment(CompartmentList):
                 ingr_partner = self.getIngrFromName(iname)
                 if ingr_partner is None:
                     continue
-                if len(ingr.partners_position):
+                if (i < len(ingr.partners_position)):
                     partner = ingr.addPartner(ingr_partner, weight=w,
                                               properties={"position": ingr.partners_position[i]})
                 else:
