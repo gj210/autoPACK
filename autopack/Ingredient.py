@@ -188,6 +188,8 @@ KWDS = {
                      "description": "use sphere instead of cylinder for collision"},
     "properties": {"name": "properties", "value": {}, "default": {}, "min": 0., "max": 1.0, "type": "dic",
                    "description": "properties"},
+    "score":  {"type": "string"},
+    "organism":  {"type": "string"},
 }
 
 
@@ -1201,7 +1203,8 @@ class Ingredient(Agent):
         #            self.getData()
         self.unique_id = Ingredient.static_id
         Ingredient.static_id += 1
-
+        self.score = ""
+        self.organism = ""
         # add tiling property ? as any ingredient coud tile as hexagon. It is just the packing type
         self.KWDS = {
             "overwrite_nbMol_value": {"type": "int", "name": "overwrite_nbMol_value", "default": 0, "value": 0,

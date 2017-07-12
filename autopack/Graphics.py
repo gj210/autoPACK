@@ -1786,10 +1786,19 @@ class AutopackViewer:
         return ingr
 
     def addCompartmentFromGeom(self, name, obj, **kw):
+        #note in blender everything is mesh
         from autopack.Compartment import Compartment
         o1 = None
         print ("ADD ORGA", name, obj, self.helper.getType(obj))
-        if self.helper.getType(obj) == self.helper.EMPTY:  # Compartment master parent?
+        if self.helper.host.find("blender")!=-1:
+            comp = obj
+            nname = self.helper.getName(obj)
+            print ("name blender org", name)
+            faces, vertices, vnormals = self.helper.DecomposeMesh(comp,
+                          edit=False, copy=False, tri=True, transform=True)
+            o1 = Compartment(name, vertices, faces, vnormals)
+            o1.overwriteSurfacePts = True        
+        elif self.helper.getType(obj) == self.helper.EMPTY:  # Compartment master parent?
             childs = self.helper.getChilds(obj)
             for ch in childs:
                 chname = self.helper.getName(ch)
@@ -1845,7 +1854,7 @@ class AutopackViewer:
             faces, vertices, vnormals = self.helper.DecomposeMesh(comp,
                                                                   edit=False, copy=False, tri=True, transform=True)
             o1 = Compartment(name, vertices, faces, vnormals)
-            o1.overwriteSurfacePts = True
+            o1.overwriteSurfacePts = True            
         return o1
 
     #            h1.addCompartment(o1)

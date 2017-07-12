@@ -86,9 +86,11 @@ def setValueToXMLNode(value, node, attrname):
 
 def setValueToJsonNode(value, attrname):
     vdic = OrderedDict()
+    print (attrname,type(attrname),value,type(value))
+    vdic[attrname] = None
     if value is None:
         print (attrname, " is None !")
-        return {attrname: None}
+        return vdic
     if attrname == "color":
         if type(value) != list and type(value) != tuple:
             if autopack.helper is not None:
@@ -98,14 +100,17 @@ def setValueToJsonNode(value, attrname):
     if type(value) == numpy.ndarray:
         value = value.tolist()
     elif type(value) == list or type(value) == tuple:
-        for i, v in enumerate(value):
-            if type(v) == numpy.ndarray:
-                value[i] = v.tolist()
-            elif type(v) == list or type(v) == tuple:
-                for j, va in enumerate(v):
-                    if type(va) == numpy.ndarray:
-                        v[j] = va.tolist()
-                        # node.setAttribute(attrname,str(value))
+        if len(value) == 0 :
+            return vdic
+        else :    
+            for i, v in enumerate(value):
+                if type(v) == numpy.ndarray:
+                    value[i] = v.tolist()
+                elif type(v) == list or type(v) == tuple:
+                    for j, va in enumerate(v):
+                        if type(va) == numpy.ndarray:
+                            v[j] = va.tolist()
+                            # node.setAttribute(attrname,str(value))
     vdic[attrname] = value
     return vdic
 
@@ -337,16 +342,16 @@ class IOingredientTool(object):
 
     def ingrJsonNode(self, ingr, result=False, kwds=None, transpose=False):
         # force position instead of sphereFile
-        ingdic = {}
+        ingdic = OrderedDict()
         if kwds == None:
             kwds = ingr.KWDS
         for k in kwds:
-            v = getattr(ingr, k)
+            v = getattr(ingr, str(k))
             #            if hasattr(v,"tolist"):
             #                v=v.tolist()
             #            ingdic[k] = v
             if type(v) != type(None):
-                ingdic.update(setValueToJsonNode(v, k))
+                ingdic.update(setValueToJsonNode(v, str(k)))
         # if sphereTree file present should not use the pos-radii keyword
         if ingr.sphereFile is not None and not result:
             # remove the position and radii key
@@ -528,6 +533,7 @@ def addCompartments(env, compdic, i, io_ingr):
                     # put here the export/import ?
 
 
+        
 def save_asJson(env, setupfile, useXref=True, indent=True):
     """
     Save the current environment setup as an json file.
@@ -542,48 +548,54 @@ def save_asJson(env, setupfile, useXref=True, indent=True):
         pathout = os.path.dirname(os.path.abspath(env.setupfile))
     if env.version is None:
         env.version = "1.0"
-    env.jsondic = OrderedDict({"recipe": {"name": env.name, "version": env.version}})
+    env.jsondic = OrderedDict()
+    env.jsondic["recipe"]=OrderedDict()
+    env.jsondic["recipe"]["name"]= env.name
+    env.jsondic["recipe"]["version"]= env.version
     if env.custom_paths:
         # this was the used path at loading time
         env.jsondic["recipe"]["paths"] = env.custom_paths
-    env.jsondic["options"] = {}
+    env.jsondic["options"] = OrderedDict()
     for k in env.OPTIONS:
-        v = getattr(env, k)
+        v = getattr(env, str(k))
         if k == "gradients":
             if type(env.gradients) is dict:
-                v = env.gradients.keys()
+                v = list(env.gradients.keys())
         #            elif k == "runTimeDisplay"
-        env.jsondic["options"].update(setValueToJsonNode(v, k))
+        env.jsondic["options"].update(setValueToJsonNode(v, str(k)))
     # add the boundin box
     env.jsondic["options"].update(setValueToJsonNode(env.boundingBox, "boundingBox"))
 
     # grid path information
     if env.grid is not None:
         if env.grid.filename is not None or env.grid.result_filename is not None:
-            env.jsondic["grid"] = {"grid_storage": str(env.grid.filename),
-                                   "grid_result": str(env.grid.result_filename)}
+            env.jsondic["grid"] = OrderedDict()
+            env.jsondic["grid"]["grid_storage"]=str(env.grid.filename)
+            env.jsondic["grid"]["grid_result"]= str(env.grid.result_filename)
 
     # gradient information
     if len(env.gradients):
-        env.jsondic["gradients"] = {}
+        env.jsondic["gradients"] = OrderedDict()
         for gname in env.gradients:
             g = env.gradients[gname]
-            env.jsondic["gradients"][str(g.name)] = {}
+            env.jsondic["gradients"][str(g.name)] = OrderedDict()
             for k in g.OPTIONS:
-                v = getattr(g, k)
-                env.jsondic["gradients"][str(g.name)].update(setValueToJsonNode(v, k))
+                v = getattr(g, str(k))
+                env.jsondic["gradients"][str(g.name)].update(setValueToJsonNode(v, str(k)))
 
     r = env.exteriorRecipe
     if r:
-        env.jsondic["cytoplasme"] = {}
-        env.jsondic["cytoplasme"]["ingredients"] = {}
+        env.jsondic["cytoplasme"] = OrderedDict()
+        env.jsondic["cytoplasme"]["ingredients"] = OrderedDict()
         for ingr in r.ingredients:
             if useXref:
                 # write the json file for this ingredient
                 io_ingr.write(ingr, pathout + os.sep + ingr.o_name, ingr_format="json")
                 # use reference file : str(pathout+os.sep+ingr.o_name+".json")
                 ing_filename = ingr.o_name + ".json"  # autopack.revertOnePath(pathout+os.sep+ingr.o_name+".json")
-                env.jsondic["cytoplasme"]["ingredients"][ingr.o_name] = {"name": ingr.o_name, "include": ing_filename}
+                env.jsondic["cytoplasme"]["ingredients"][ingr.o_name] = OrderedDict()
+                env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+                env.jsondic["cytoplasme"]["ingredients"][ingr.o_name]["include"]= ing_filename
             else:
                 env.jsondic["cytoplasme"]["ingredients"][ingr.o_name] = io_ingr.ingrJsonNode(
                     ingr)  # {"name":ingr.o_name}
@@ -607,15 +619,16 @@ def save_asJson(env, setupfile, useXref=True, indent=True):
         #                fileName = None
         rs = o.surfaceRecipe
         if rs:
-            env.jsondic["compartments"][str(o.name)]["surface"] = {}
-            env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"] = {}
+            env.jsondic["compartments"][str(o.name)]["surface"] =OrderedDict()
+            env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"] = OrderedDict()
             for ingr in rs.ingredients:
                 if useXref:
                     # write the json file for this ingredient
                     io_ingr.write(ingr, pathout + os.sep + ingr.o_name, ingr_format="json")
                     # use reference file
-                    env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name] = {
-                        "name": ingr.o_name, "include": str(ingr.o_name + ".json")}
+                    env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name] = OrderedDict()
+                    env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+                    env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][ingr.o_name]["include"]= str(ingr.o_name + ".json")
                 else:
                     env.jsondic["compartments"][str(o.name)]["surface"]["ingredients"][
                         ingr.o_name] = io_ingr.ingrJsonNode(ingr)  # {"name":ingr.o_name}
@@ -627,15 +640,16 @@ def save_asJson(env, setupfile, useXref=True, indent=True):
                         "name"] = ingr.o_name
         ri = o.innerRecipe
         if ri:
-            env.jsondic["compartments"][str(o.name)]["interior"] = {}
-            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"] = {}
+            env.jsondic["compartments"][str(o.name)]["interior"] = OrderedDict()
+            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"] = OrderedDict()
             for ingr in ri.ingredients:
                 if useXref:
                     # write the json file for this ingredient
                     io_ingr.write(ingr, pathout + os.sep + ingr.o_name, ingr_format="json")
                     # use reference file
-                    env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name] = {
-                        "name": ingr.o_name, "include": str(ingr.o_name + ".json")}
+                    env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name] = OrderedDict()
+                    env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]["name"]=ingr.o_name
+                    env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name]["include"]= str(ingr.o_name + ".json")
                 else:
                     env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][
                         ingr.o_name] = io_ingr.ingrJsonNode(ingr)  # {"name":ingr.o_name}
@@ -645,11 +659,17 @@ def save_asJson(env, setupfile, useXref=True, indent=True):
                     #                            env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name].update(setValueToJsonNode(v,k))
                     env.jsondic["compartments"][str(o.name)]["interior"]["ingredients"][ingr.o_name][
                         "name"] = ingr.o_name
+#    if sys.version_info[0] >= 3:
+##        convert everything to OrderedDict
+
+    def default(o):
+        raise TypeError(repr(o) + " is not JSON serializable ",o,type(o))
+        
     with open(setupfile, 'w') as fp:  # doesnt work with symbol link ?
         if indent:
-            json.dump(env.jsondic, fp, indent=1, separators=(',', ':'))  # ,indent=4, separators=(',', ': ')
+            json.dump(env.jsondic, fp, indent=1, separators=(',', ':'),default=default)  # ,indent=4, separators=(',', ': ')
         else:
-            json.dump(env.jsondic, fp, separators=(',', ':'))  # ,indent=4, separators=(',', ': ')
+            json.dump(env.jsondic, fp, separators=(',', ':'),default=default)  # ,indent=4, separators=(',', ': ')
     print ("recipe saved to ", setupfile)
 
 
@@ -681,7 +701,7 @@ def save_Mixed_asJson(env, setupfile, useXref=True, kwds=None, result=False,
         for k in env.OPTIONS:
             v = getattr(env, k)
             if k == "gradients":
-                v = env.gradients.keys()
+                v = list(env.gradients.keys())
                 #            elif k == "runTimeDisplay"
             env.jsondic["options"].update(setValueToJsonNode(v, k))
         # add the boundin box
@@ -811,7 +831,7 @@ def save_asXML(env, setupfile, useXref=True):
     for k in env.OPTIONS:
         v = getattr(env, k)
         if k == "gradients":
-            v = env.gradients.keys()
+            v = list(env.gradients.keys())
         #            elif k == "runTimeDisplay"
         setValueToXMLNode(v, options, k)
     # add the boundin box
@@ -947,7 +967,7 @@ h1 = Environment()
     for k in env.OPTIONS:
         v = getattr(env, k)
         if k == "gradients":
-            v = env.gradients.keys()
+            v = list(env.gradients.keys())
         vstr = getStringValueOptions(v, k)  # env.setValueToXMLNode(v,options,k)
         setupStr += "h1.%s=%s\n" % (k, vstr)
     # add the boundin box

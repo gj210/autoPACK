@@ -219,9 +219,9 @@ class Grid:
         space = self.gridSpacing
         # Vector for lower left broken into real of only the z coord.
         i = 0
-        for zi in xrange(nz):
-            for yi in xrange(ny):
-                for xi in xrange(nx):
+        for zi in range(nz):
+            for yi in range(ny):
+                for xi in range(nx):
                     pointArrayRaw[i] = (xl + xi * space, yl + yi * space, zl + zi * space)
                     self.ijkPtIndice[i] = (xi, yi, zi)
                     # print ("add i",i,xi,yi,zi,nx,ny,nz)
@@ -423,11 +423,11 @@ class Grid:
         if out is None:
             out = numpy.zeros([n, len(arrays)], dtype=dtype)
 
-        m = n / arrays[0].size
+        m = int(n / arrays[0].size)
         out[:, 0] = numpy.repeat(arrays[0], m)
         if arrays[1:]:
             self.cartesian(arrays[1:], out=out[0:m, 1:])
-            for j in xrange(1, arrays[0].size):
+            for j in range(1, arrays[0].size):
                 out[j * m:(j + 1) * m, 1:] = out[0:m, 1:]
         return out
 
@@ -965,7 +965,7 @@ class Grid:
         distances[nindices] = new_distances[nindices]
         self.grid_distances = distances
         # returnNullIfFail = 0
-        for ptInd in xrange(len(grdPos)):  # len(grdPos)):
+        for ptInd in range(len(grdPos)):  # len(grdPos)):
             inside = False  # inside defaults to False (meaning outside), unless evidence is found otherwise.
             # t2=time()
             coord = [grdPos.item((ptInd, 0)), grdPos.item((ptInd, 1)), grdPos.item((ptInd, 2))]  # grdPos[ptInd]

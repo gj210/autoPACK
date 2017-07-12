@@ -908,6 +908,7 @@ class SphereTreeUI(uiadaptor):
                 points = [self.helper.ToVec(self.helper.getTranslation(x)) for x in sel]
         else:
             self.object_target = self.helper.getMesh(self.object_target)
+            print ("type", self.helper.getType(self.object_target), self.helper.MESH, self.helper.POLYGON)
             if self.helper.getType(self.object_target) == self.helper.POLYGON or self.helper.getType(
                     self.object_target) == self.helper.MESH:
                 points = self.helper.getMeshVertices(self.object_target_name, transform=True)

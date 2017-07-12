@@ -177,7 +177,7 @@ class Compartment(CompartmentList):
         self.filename = None
         if "ref_obj" in kw:
             self.ref_obj = kw["ref_obj"]
-        if vertices == None:
+        if vertices is None:
             if "filename" in kw:
                 gname = self.name
                 if "gname" in kw:
