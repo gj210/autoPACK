@@ -3653,8 +3653,11 @@ class AutoPackGui(uiadaptor):
         """
         # define button and other stuff here
         # need widget for viewer, filler, builder
-        self.menuorder = ["Help", "Edit"]
-        self._menu = self.MENU_ID = {"Help":
+        self.menuorder = [ "File", "Edit","Help"]
+        self._menu = self.MENU_ID = { "File":[
+                                        self._addElemt(name="Load a recipe", action=self.loadrecipe_ui),
+                                        ],
+                                      "Help":
                                          [self._addElemt(name="Check for stable updates", action=self.stdCheckUpdate),
                                           self._addElemt(name="Check for latest development updates",
                                                          action=self.devCheckUpdate),
@@ -4261,6 +4264,13 @@ Copyright: Graham Johnson ©2010
             self.loadxml(setupfile, recipe=recipe)
             return True
 
+    def loadrecipe_ui(self, *args):
+        # first need to call the ui fileDialog
+        try:
+            self.fileDialog(label="choose a file", callback=self.loadxml)
+        except:
+            print ("error")
+            
     def loadxml(self, filename, recipe=None):
         from autopack.Environment import Environment
         fileName, fileExtension = os.path.splitext(filename)
@@ -4269,6 +4279,7 @@ Copyright: Graham Johnson ©2010
             n = os.path.basename(fileName)
         self.histoVol[n] = Environment(name=n)
         recipe = n
+        print ("load recipe ",filename)
         self.histoVol[n].loadRecipe(filename)
         afviewer = AutopackViewer(ViewerType=self.helper.host, helper=self.helper)
         self.histoVol[n].name = n
@@ -4318,7 +4329,7 @@ Copyright: Graham Johnson ©2010
         if self.host.find("blender") != -1 or self.host == "c4d" or self.host == "maya":
             self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
         if recipe == "Load":
-            self.fileDialog(label="choose a file", callback=self.loadxml)
+            #self.fileDialog(label="choose a file", callback=self.loadxml)
             self.Viewer_dialog(self.current_recipe, version=version)
             return
 
@@ -4359,10 +4370,15 @@ Copyright: Graham Johnson ©2010
         forceRecipe = self.getVal(self.WidgetViewer["forceFetchRecipe"])
         if self.host.find("blender") != -1 or self.host == "c4d" or self.host == "maya":
             self.helper.instance_dupliFace = self.getVal(self.use_dupli_vert)
-        #        print "drawSubsetFiller", recipe,version
+        print ("drawSubsetFiller", recipe,version)
         #        self.setVal(self.WidgetViewer["ShowUponLoad"])
         if recipe == "Load":
-            self.fileDialog(label="choose a xml file", callback=self.loadxml)
+#            try:
+#                self.fileDialog(label="choose a file", callback=self.loadxml)
+#            except:
+#                self.drawError()
+#            #self.fileDialog(label="load Recipe", callback=self.loadxml)
+            print ("loaded ?",self.current_recipe)
             self.Filler_dialog(self.current_recipe, version=version)
             return
 

@@ -3104,7 +3104,7 @@ class Environment(CompartmentList):
                 except:
                     #               p = ((float(t)-float(len(self.activeIngr)))/float(t))*100.
                     p = ((float(PlacedMols)) / float(
-                        totalNumMols))  # *100.    #This code shows 100% of ingredients all the time
+                        totalNumMols))*100.    #This code shows 100% of ingredients all the time
                     if self.afviewer is not None and hasattr(self.afviewer, "vi"):
                         self.afviewer.vi.progressBar(progress=int(p), label=ingr.name + " " + str(ingr.completion))
                         if self.afviewer.renderDistance:
@@ -3132,7 +3132,7 @@ class Environment(CompartmentList):
                                                               freePoints, nbFreePoints,
                                                               distance, compId, compNum, vRangeStart, vThreshStart])
             elif ingr.compNum > 0:
-                allSrfpts = self.compartments[ingr.compNum-1].surfacePointsNormals.keys()
+                allSrfpts = list(self.compartments[ingr.compNum-1].surfacePointsNormals.keys())
                 res = [True, allSrfpts[int(random() * len(allSrfpts))]]
             #  Replaced this with Sept 25, 2011 thesis version on July 5, 2012
             if verbose > 1:

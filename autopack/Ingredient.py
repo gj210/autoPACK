@@ -625,8 +625,9 @@ class Agent:
         if "partners_name" in kw:
             self.partners_name = kw["partners_name"]
             if not self.partners_position:
-                for i in self.partners_name:
-                    self.partners_position.append([numpy.identity(4)])
+                if self.partners_name is not None:
+                    for i in self.partners_name:
+                        self.partners_position.append([numpy.identity(4)])
         self.excluded_partners_name = []
         if "excluded_partners_name" in kw:
             self.excluded_partners_name = kw["excluded_partners_name"]
