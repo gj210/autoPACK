@@ -331,15 +331,15 @@ class SphereTreeUI(uiadaptor):
 
         self.grid_step = self._addElemt(name='step', width=100, height=10,
                                         action=None, type="inputFloat", icon=None,
-                                        value=20.,
-                                        variable=self.addVariable("float", 1.),
+                                        value=20.0,
+                                        variable=self.addVariable("float", 20.0),
                                         mini=0.00, maxi=1000.00, step=1.0)
         self.rt_display = self._addElemt(name='Display Real Time (debug)', width=80, height=10,
                                          action=None, type="checkbox", icon=None,
-                                         variable=self.addVariable("int", 1), value=0)
+                                         variable=self.addVariable("int",0), value=0)
         self.useFix = self._addElemt(name='Use neighbours faces normals average fix', width=80, height=10,
                                      action=None, type="checkbox", icon=None,
-                                     variable=self.addVariable("int", 1), value=0)
+                                     variable=self.addVariable("int", 0), value=0)
         self.LABELS = {}
         self.LABELS["gridtype"] = self._addElemt(label="GridType :", width=100)
         self.LABELS["algo"] = self._addElemt(label="Using :", width=100)
@@ -926,15 +926,19 @@ class SphereTreeUI(uiadaptor):
         step = self.getVal(self.grid_step)
         if self.object_target is None:
             self.object_target = self.helper.getCurrentSelection()[0]
+            self.object_target_name = self.helper.getName(self.object_target)
         mesh = self.object_target
+        mesh_name = self.object_target_name
         gridtype = self.getVal(self.grid_type)
         # canwe usethe ogranelle mesh system from autopack
         from autopack.Compartment import Compartment
         faces, vertices, vnormals, fn = self.helper.DecomposeMesh(mesh,
                                                                   edit=False, copy=False, tri=True, transform=True,
                                                                   fn=True)
-        o1 = Compartment(self.helper.getName(mesh), vertices, faces, vnormals, fnormals=fn)
-        o1.ref_obj = mesh
+        o1 = Compartment(mesh_name, vertices, faces, vnormals, fnormals=fn)
+        print (mesh_name)
+        o1.ref_obj = self.helper.getObject(mesh_name)
+        print (o1.ref_obj)
         o1.number = 1
         b = self.helper.getObject("BBOX")
         if b is None:

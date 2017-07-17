@@ -3872,7 +3872,8 @@ class Compartment(CompartmentList):
             #            helper.update()
             if closest[ptInd] == -1:
                 print("ouhoua, closest OGsurfacePoint = -1")
-                pdb.set_trace()
+                #pdb.set_trace()
+                return
             if sptInd < len(srfPts):
                 sx, sy, sz = srfPts[sptInd]
                 d = sqrt((gx - sx) * (gx - sx) + (gy - sy) * (gy - sy) +
