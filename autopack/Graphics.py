@@ -1659,7 +1659,7 @@ class AutopackViewer:
         ingrorga = self.checkCreateEmpty("Place here your interior ingredients" + organame, parent=ri)
 
     def addIngredientFromGeom(self, name, ingrobj, recipe=None, **kw):
-        # print ("######ADD",ingrobj, self.helper.getName(ingrobj),self.helper.getType(ingrobj))
+        print ("######ADD",ingrobj, self.helper.getName(ingrobj),self.helper.getType(ingrobj))
         ingr = None
         obj = ingrobj
         if self.helper.getType(ingrobj) == self.helper.INSTANCE:
@@ -1675,6 +1675,7 @@ class AutopackViewer:
                 return None
             child0 = child[0]
             ingtype = self.helper.getType(child0)
+            print ("first child is ",ingtype,nchilds,name,obj)
             if ingtype == self.helper.INSTANCE:
                 child0 = self.helper.getMasterInstance(child0)
                 ingtype = self.helper.getType(child0)
@@ -1684,12 +1685,19 @@ class AutopackViewer:
                 radius = []
                 for io in child:
                     # get the radius and the translation
+                    # should all be sphere but check anyway
+                    # also this compute the radius property of the sphere in blender.
+                    atype = self.helper.getType(io)
+                    if atype != self.helper.SPHERE and atype != self.helper.INSTANCE:
+                        continue
                     pos, s, r = self.helper.getPropertyObject(io, key=["pos", "scale", "radius"])
                     if self.helper.getType(io) == self.helper.INSTANCE:
                         r = self.helper.getPropertyObject(self.helper.getMasterInstance(io), key=["radius"])[0]
                     positions.append(pos)
                     radius.append(r * s[0])  # should be one
                 #                    self.helper.Sphere(self.helper.getName(io)+"_sp",radius=r)
+                print (len(radius),len(positions))
+                print (radius,positions)
                 ingr = MultiSphereIngr(1.0, name=name,
                                        radii=[radius], positions=[positions],
                                        meshObject=obj)
