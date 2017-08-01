@@ -1586,6 +1586,7 @@ class Compartment(CompartmentList):
         # build trimer mesh
         import trimesh
         mesh = trimesh.Trimesh(vertices = vertices,faces = faces)
+        # get the volume ? mesh.volume
         #voxelized
         from trimesh.voxel import Voxel
         trimesh_grid = Voxel(mesh, env.grid.gridSpacing/1.1547, size_max=np.inf)
@@ -2951,7 +2952,7 @@ class Compartment(CompartmentList):
         surfacePoints = srfPts = self.vertices
         print ("ok grid points")
         datap = utsdf.computeSDF(numpy.ascontiguousarray(verts, dtype=numpy.float32),
-                                 N.ascontiguousarray(tris, dtype=numpy.int32))
+                                 numpy.ascontiguousarray(tris, dtype=numpy.int32))
         print ("ok computeSDF")
         data = utsdf.createNumArr(datap, size)
         volarr = data[:]

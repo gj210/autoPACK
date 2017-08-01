@@ -1091,7 +1091,15 @@ class Environment(CompartmentList):
             "gradients": {"name": "gradients", "value": "", "values": [], "default": "", "type": "liste",
                           "description": "Gradients available", "width": 150},
             "innerGridMethod": {"name": "innerGridMethod", "value": "jordan3",
-                                "values": ["bhtree", "sdf", "jordan", "jordan3", "pyray", "floodfill", "binvox","trimesh","scanline"],
+                                "values": ["bhtree", 
+#                                           "sdf", 
+                                           "jordan", 
+                                           "jordan3", 
+                                           "pyray", 
+                                           "floodfill", 
+#                                           "binvox",
+                                           "trimesh",
+                                           "scanline"],
                                 "default": "jordan3", "type": "liste",
                                 "description": "     Method to calculate the inner grid:", "width": 30},
             "overwritePlaceMethod": {"name": "overwritePlaceMethod", "value": True, "default": True, "type": "bool",
@@ -1983,7 +1991,7 @@ class Environment(CompartmentList):
             elif self.innerGridMethod == "trimesh" and compartment.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
                 a, b = compartment.BuildGrid_trimesh(self)
             elif self.innerGridMethod == "scanline" and compartment.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
-                a, b = compartment.BuildGrid_scanline(env)    
+                a, b = compartment.BuildGrid_scanline(self)    
                 
             aInteriorGrids.append(a)
             print("I'm ruther in the loop")
