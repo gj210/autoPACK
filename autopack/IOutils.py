@@ -86,7 +86,7 @@ def setValueToXMLNode(value, node, attrname):
 
 def setValueToJsonNode(value, attrname):
     vdic = OrderedDict()
-    print (attrname,type(attrname),value,type(value))
+    #print (attrname,type(attrname),value,type(value))
     vdic[attrname] = None
     if value is None:
         print (attrname, " is None !")
