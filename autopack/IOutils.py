@@ -1474,15 +1474,19 @@ def saveResultBinaryDic(env, filename, transpose, use_quaternion, lefthand=False
                 all_pos.extend(ap)
                 all_rot.extend(ar)
     # write allpos
-    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
-    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
+    fptr.write(numpy.array(all_pos, 'f').flatten().tobytes())
+    fptr.write(numpy.array(all_rot, 'f').flatten().tobytes())
+    #numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
+    #numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
     return all_pos, all_rot
  
 def toBinary(all_pos, all_rot,filename)   :
     fptr = open(filename, "wb")
-    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
-    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
+    fptr.write(numpy.array(all_pos, 'f').flatten().tobytes())
+    fptr.write(numpy.array(all_rot, 'f').flatten().tobytes())
+#    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
+#    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
     
 def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
@@ -1490,28 +1494,34 @@ def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     all_pos = []
     all_rot = []
     fptr = open(filename, "wb")
+    uid = 0
     r = env.exteriorRecipe
     if r:
         for ingr in r.ingredients:
-            ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
+            ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand, type=uid)
             all_pos.extend(ap)
             all_rot.extend(ar)
+            uid+=1
     for o in env.compartments:
         rs = o.surfaceRecipe
         if rs:
             for ingr in rs.ingredients:
-                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand, type=uid)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
+                uid+=1
         ri = o.innerRecipe
         if ri:
             for ingr in ri.ingredients:
-                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand)
+                ap, ar = gatherResult(ingr.results, transpose, use_quaternion, lefthand=lefthand, type=uid)
                 all_pos.extend(ap)
                 all_rot.extend(ar)
+                uid+=1
     # write allpos
-    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
-    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
+    fptr.write(numpy.array(all_pos, 'f').flatten().tobytes())#?
+    fptr.write(numpy.array(all_rot, 'f').flatten().tobytes())
+#    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
+#    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
 
 def getAllPosRot(env,transpose, use_quaternion, lefthand=False):

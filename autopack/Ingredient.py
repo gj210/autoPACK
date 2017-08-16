@@ -1020,6 +1020,7 @@ class Ingredient(Agent):
                     # np.apply_along_axis(np.linalg.norm, 1, c)
                     self.encapsulatingRadius = max(
                         numpy.sqrt(numpy.einsum('ij,ij->i', positions, positions)))  # shoud be max distance
+                    self.minRadius =   self.encapsulatingRadius  
                     positions = [positions]
                     radii = [radii]
                 else:
@@ -1045,8 +1046,10 @@ class Ingredient(Agent):
                 self.encapsulatingRadius = max(radii[0])
         else:
             if radii is not None:
-                self.minRadius = min(radii[0])
-                self.encapsulatingRadius = max(radii[0])
+                delta = numpy.array(positions[0])
+                rM = sqrt(max(numpy.sum(delta * delta, 1)))
+                self.minRadius = rM
+                self.encapsulatingRadius = rM
                 #        print "sphereFile",sphereFile
                 #        print "positions",positions,len(positions)
                 #        print "rad",radii,len(radii)
@@ -1198,6 +1201,8 @@ class Ingredient(Agent):
 
         self.distances_temp = []
         self.centT = None  # transformed position
+
+        self.minRadius =   self.encapsulatingRadius  
 
         self.results = []
         #        if self.mesh is not None :
