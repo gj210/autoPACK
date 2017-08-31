@@ -92,7 +92,7 @@ class Grid:
         self.distToClosestSurf_store = []
 
         self.diag = self.getDiagonal()
-        self.gridSpacing = space * 1.1547
+        self.gridSpacing = space# * 1.1547#cubic grid with a diagonal spacing equal to that smallest packing radius 
         self.nbGridPoints = None
         self.nbSurfacePoints = 0
         self.gridVolume = 0  # will be the toatl number of grid points
@@ -124,7 +124,7 @@ class Grid:
             # what about collision ?
 
     def setup(self, boundingBox, space):
-        self.gridSpacing = space * 1.1547
+        self.gridSpacing = space# * 1.1547
         self.boundingBox = boundingBox
         # self.gridVolume,self.nbGridPoints=self.computeGridNumberOfPoint(boundingBox,self.gridSpacing)
         #        self.create3DPointLookup()
@@ -222,7 +222,7 @@ class Grid:
         for zi in range(nz):
             for yi in range(ny):
                 for xi in range(nx):
-                    pointArrayRaw[i] = (xl + xi * space, yl + yi * space, zl + zi * space)
+                    pointArrayRaw[i] = (xl + xi * space + space/2.0, yl + yi * space+ space/2.0, zl + zi * space+ space/2.0)
                     self.ijkPtIndice[i] = (xi, yi, zi)
                     # print ("add i",i,xi,yi,zi,nx,ny,nz)
                     i += 1
@@ -283,7 +283,7 @@ class Grid:
             boundingBox = self.boundingBox
         space = self.gridSpacing
         S = numpy.array(boundingBox[1]) - numpy.array(boundingBox[0])
-        NX, NY, NZ = numpy.around(S / (self.gridSpacing / 1.1547))
+        NX, NY, NZ = numpy.around(S / (self.gridSpacing))# / 1.1547))
         if NX == 0: NX = 1
         if NY == 0: NY = 1
         if NZ == 0: NZ = 1
@@ -776,7 +776,7 @@ class Grid:
         # print ("get grid points ", bb, pt, radius)
         # return self.getPointsInCubeFillBB(bb, pt, radius,addSP=addSP,info=info)
         return self.getPointsInSphere(bb, pt, radius,addSP=addSP,info=info)
-        spacing1 = 1. / (self.gridSpacing / 1.1547)
+        spacing1 = 1. / (self.gridSpacing) # / 1.1547)
 
         NX, NY, NZ = self.nbGridPoints
         OX, OY, OZ = self.boundingBox[0]  # origin of fill grid-> bottom lef corner not origin. can be or
@@ -829,6 +829,9 @@ class Grid:
         nx = int(ceil((xr - xl) / space)) + encapsulatingGrid
         ny = int(ceil((yr - yl) / space)) + encapsulatingGrid
         nz = int(ceil((zr - zl) / space)) + encapsulatingGrid
+#        nx = nx if (nx == 1) else nx-1
+#        ny = ny if (ny == 1) else ny-1
+#        nz = nz if (nz == 1) else nz-1
         return nx * ny * nz, (nx, ny, nz)
 
     def set_surfPtsBht(self, verts):
