@@ -2829,7 +2829,7 @@ class Ingredient(Agent):
     def oneJitter(self, spacing, trans, rotMat):
         #        spacing = histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
-        jitter = self.getMaxJitter(spacing)
+        jitter = spacing/2.0#self.getMaxJitter(spacing)
         jitter2 = jitter * jitter
         compNum = self.compNum
         tx, ty, tz = trans
@@ -2844,7 +2844,7 @@ class Ingredient(Agent):
                 dy = jy * jitter * uniform(-1.0, 1.0)
                 dz = jz * jitter * uniform(-1.0, 1.0)
                 d2 = dx * dx + dy * dy + dz * dz
-                if d2 < jitter2:
+                if True:#d2 < jitter2:
                     if compNum > 0:  # jitter less among normal
                         # if self.name=='2uuh C4 SYNTHASE':
                         #    import pdb
@@ -3614,6 +3614,7 @@ class Ingredient(Agent):
         tx, ty, tz = translation
         dx, dy, dz, d2 = [0.0, 0.0, 0.0, 0.0]
         jitter_trans = [0.0, 0.0, 0.0]
+        jitter = jitter / 2.0 
         if jitter2 > 0.0:
             found = False
             while not found:
@@ -3621,7 +3622,7 @@ class Ingredient(Agent):
                 dy = jy * jitter * uniform(-1.0, 1.0)
                 dz = jz * jitter * uniform(-1.0, 1.0)
                 d2 = dx * dx + dy * dy + dz * dz
-                if d2 < jitter2:
+                if True:#d2 < jitter2:
                     if self.compNum > 0:  # jitter less among normal
                         dx, dy, dz, dum = numpy.dot(rotation, (dx, dy, dz, 0))
                     jitter_trans = (tx + dx, ty + dy, tz + dz)
@@ -3682,6 +3683,7 @@ class Ingredient(Agent):
         self.histoVol = histoVol
         rejectionCount = 0
         spacing = histoVol.smallestProteinSize
+        spacing = histoVol.grid.gridSpacing
         jx, jy, jz = self.jitterMax
         jitter = self.getMaxJitter(spacing)
         jitter2 = jitter * jitter
@@ -3917,6 +3919,7 @@ class Ingredient(Agent):
         spacing = histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
         jitter = histoVol.callFunction(self.getMaxJitter, (spacing,))
+        jitter = histoVol.grid.gridSpacing
         jitter2 = jitter * jitter
 
         if self.compNum == 0:
@@ -4329,7 +4332,7 @@ class Ingredient(Agent):
         rejectionCount = 0
         spacing = histoVol.grid.gridSpacing  # /1.1547#  histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
-        jitter = spacing  # histoVol.callFunction(self.getMaxJitter,(spacing,))
+        jitter = spacing/2.0  # histoVol.callFunction(self.getMaxJitter,(spacing,))
         jitter2 = jitter * jitter
 
         if self.compNum == 0:
@@ -4472,8 +4475,7 @@ class Ingredient(Agent):
         # jitter loop
         t1 = time()
         collision2 = False
-        for jitterPos in range(
-                self.nbJitter):  # This expensive Gauusian rejection system should not be the default should it?
+        for jitterPos in range(self.nbJitter):  # This expensive Gauusian rejection system should not be the default should it?
             if histoVol.ingrLookForNeighbours and self.packingMode == "closePartner":
                 bind = True
                 # print ("look for ingredient",trans)
@@ -4512,7 +4514,7 @@ class Ingredient(Agent):
                     dy = jy * jitter * uniform(-1.0, 1.0)
                     dz = jz * jitter * uniform(-1.0, 1.0)
                     d2 = dx * dx + dy * dy + dz * dz
-                    if d2 < jitter2:
+                    if True:#d2 < jitter2:
                         if compNum > 0:  # jitter less among normal
                             # if self.name=='2uuh C4 SYNTHASE':
                             #    import pdb
@@ -4824,7 +4826,7 @@ class Ingredient(Agent):
         rejectionCount = 0
         spacing = histoVol.grid.gridSpacing  # /1.1547#  histoVol.smallestProteinSize
         jx, jy, jz = self.jitterMax
-        jitter = spacing  # histoVol.callFunction(self.getMaxJitter,(spacing,))
+        jitter = spacing/2.0  # histoVol.callFunction(self.getMaxJitter,(spacing,))
         jitter2 = jitter * jitter
 
         if self.compNum == 0:
@@ -4983,7 +4985,7 @@ class Ingredient(Agent):
                     dy = jy * jitter * uniform(-1.0, 1.0)
                     dz = jz * jitter * uniform(-1.0, 1.0)
                     d2 = dx * dx + dy * dy + dz * dz
-                    if d2 < jitter2:
+                    if True:#d2 < jitter2:
                         if compNum > 0:  # jitter less among normal
                             # if self.name=='2uuh C4 SYNTHASE':
                             #    import pdb
@@ -5263,9 +5265,9 @@ class Ingredient(Agent):
             collideFunc = OdeUtil.collide
         afvi = histoVol.afviewer
         rejectionCount = 0
-        spacing = histoVol.smallestProteinSize
+        spacing = histoVol.grid.gridSpacing#smallestProteinSize
         jx, jy, jz = self.jitterMax
-        jitter = histoVol.callFunction(self.getMaxJitter, (spacing,))
+        jitter = spacing/2.0# histoVol.callFunction(self.getMaxJitter, (spacing,))
         jitter2 = jitter * jitter
 
         if self.compNum == 0:
@@ -5393,7 +5395,7 @@ class Ingredient(Agent):
                     dy = jy * jitter * uniform(-1.0, 1.0)
                     dz = jz * jitter * uniform(-1.0, 1.0)
                     d2 = dx * dx + dy * dy + dz * dz
-                    if d2 < jitter2:
+                    if True:#d2 < jitter2:
                         if compNum > 0:  # jitter less among normal
                             # if self.name=='2uuh C4 SYNTHASE':
                             #    import pdb
@@ -5764,7 +5766,7 @@ class Ingredient(Agent):
         rejectionCount = 0
         spacing = histoVol.grid.gridSpacing  # histoVol.smallestProteinSize#or the gridSpace?
         jx, jy, jz = self.jitterMax
-        jitter = spacing  # histoVol.callFunction(self.getMaxJitter,(spacing,))
+        jitter = spacing/2.0  # histoVol.callFunction(self.getMaxJitter,(spacing,))
         jitter2 = jitter * jitter
 
         if self.compNum == 0:
@@ -5890,7 +5892,7 @@ class Ingredient(Agent):
                     dy = jy * jitter * uniform(-1.0, 1.0)
                     dz = jz * jitter * uniform(-1.0, 1.0)
                     d2 = dx * dx + dy * dy + dz * dz
-                    if d2 < jitter2:
+                    if True:#d2 < jitter2:
                         if compNum > 0:  # jitter less among normal
                             # if self.name=='2uuh C4 SYNTHASE':
                             #    import pdb

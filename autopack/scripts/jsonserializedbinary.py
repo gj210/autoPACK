@@ -87,12 +87,12 @@ if resultfile!= "" :
 
 #                           
 ##gagpol [0,0,-143.687] offset, pcpal 0,0,1
-#from autopack.IOutils import serializedRecipe, saveResultBinary, toBinary
-#djson, all_pos, all_rot = serializedRecipe(h,False,True,True,True)#transpose, use_quaternion, result=False, lefthand=False
-##with open(workingdir+fileName+"_serialized.json","w") as f:
-##    f.write(djson)
-#if resultfile!= "" :
-#    toBinary(all_pos, all_rot,"C:\\Users\\ludov\\OneDrive\\Documents\\OnlinePacking_Tobias\\cellVIEW-OP\\Data\\Mpn_1.0_serialized_L01"+tr+".bin")     
+from autopack.IOutils import serializedRecipe, saveResultBinary, toBinary
+djson, all_pos, all_rot = serializedRecipe(h,False,True,True,True)#transpose, use_quaternion, result=False, lefthand=False
+with open(workingdir+fileName+"_serialized.json","w") as f:
+    f.write(djson)
+if resultfile!= "" :
+    toBinary(all_pos, all_rot,"C:\\Users\\ludov\\OneDrive\\Documents\\OnlinePacking_Tobias\\cellVIEW-OP\\Data\\Mpn_1.0_serialized_L01"+tr+".bin")     
 #    #saveResultBinary(h,fileName+"_serialized.bin",False,True, lefthand=True)        
 #from autopack.Serializable import sCompartment,sIngredientGroup,sIngredient,sIngredientFiber
 #sCompartment.static_id = 0;sIngredientFiber.static_id = 0;sIngredient.static_id = [0, 0, 0];sIngredientGroup.static_id= 0;djson, all_pos, all_rot = serializedRecipe(h,True,True,True,True);toBinary(all_pos, all_rot,"C:\\Users\\ludov\\OneDrive\\Documents\\OnlinePacking_Tobias\\cellVIEW-OP\\Data\\Mpn_1.0_serializedTR_L"+tr+".bin")     
