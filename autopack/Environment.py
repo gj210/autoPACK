@@ -2495,7 +2495,7 @@ class Environment(CompartmentList):
         """Reset all ingredient of the given recipe"""
         if recip:
             for ingr in recip.ingredients:
-                ingr.results = []
+                #ingr.results = []
                 ingr.firstTimeUpdate = True
                 ingr.counter = 0
                 ingr.rejectionCounter = 0
@@ -3556,6 +3556,14 @@ class Environment(CompartmentList):
     #        cancel=c4d.gui.QuestionDialog('WannaCancel?') # Removed by Graham on July 10, 2012 because it may no longer be needed, but test it TODO
     #        return cancel
 
+    def restore_molecules_array(self,ingr):
+        if len(ingr.results):
+            for elem in ingr.results:
+                if ingr.compNum == 0:
+                    self.molecules.append([elem[0], numpy.array(elem[1]), ingr, 0])
+                else :
+                    ingr.recipe.compartment.molecules.append([elem[0], numpy.array(elem[1]), ingr, 0])
+                 
     def restore(self, result, orgaresult, freePoint, tree=False):
         # should we used the grid ? the freePoint can be computed
         # result is [pos,rot,ingr.name,ingr.compNum,ptInd]

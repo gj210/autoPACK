@@ -1,0 +1,2 @@
+#mklink /D link target
+mklink /D C:\Users\ludov\Tools\blender-2.79-windows64\MGLToolsPckgs\autopack C:\Users\ludov\Documents\autoPACK\autopack 
