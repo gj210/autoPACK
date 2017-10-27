@@ -430,6 +430,7 @@ class IOingredientTool(object):
             ingr.gradient = kw["gradient"]
         if "results" in kw:
             ingr.results = kw["results"]
+            #flag as previsouly loaded ?
         return ingr
 
     def set_recipe_ingredient(self, xmlnode, recipe):
@@ -1853,6 +1854,9 @@ def setupFromJsonDic(env, ):
                         o.setInnerRecipe(rMatrix)
                     # Go through all ingredient and setup the partner
     env.loopThroughIngr(env.set_partners_ingredient)
+    #restore env.molecules if any resuylt was loaded
+    env.loopThroughIngr(env.restore_molecules_array)
+    
 
 
 #        if env.placeMethod.find("panda") != -1 :

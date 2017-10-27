@@ -1136,6 +1136,16 @@ class SubdialogFiller(uiadaptor):
         self._store('env', {"envi": self.histoVol})
         self.initWidget()
         self.setupLayout_tab()
+        self.displayResult()
+    
+    def displayResult(self, *args):
+        self.afviewer.doPoints = False  # self.getVal(self.points_display)
+        self.afviewer.doSpheres = False
+        self.afviewer.quality = 1  # lowest quality for sphere and cylinder
+        self.afviewer.visibleMesh = True  # mesh default visibility
+        self.afviewer.displayFill()
+        self.afviewer.displayIngrGrows()
+        
 
     def Set(self, **kw):
         if "helper" in kw:
