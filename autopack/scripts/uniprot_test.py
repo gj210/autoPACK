@@ -178,7 +178,7 @@ def exportOBJ(name, v,face,n,filename):
         f.write("vn  %f %f %f\n"%(n[i][0],n[i][1],n[i][2]))
     for i in range(len(face)):
         #f v1//vn1 v2//vn2 v3//vn3 ...
-        f.write("f %i// %i// %i//\n"%(face[i][0]+1,face[i][1]+1,face[i][2]+1))
+        f.write("f %i %i %i\n"%(face[i][0]+1,face[i][1]+1,face[i][2]+1))
     f.close()
     
 def coarseMolSurface(coords, radii, XYZd =[16,16,16],isovalue=6.0,resolution=-0.1,padding=0.0,

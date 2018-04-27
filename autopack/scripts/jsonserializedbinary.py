@@ -8,8 +8,8 @@ sys.path.append("/home/ludo/Tools/mgltools_x86_64Linux2_latest/MGLToolsPckgs/PIL
 #sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs")
 #sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17_8DE13DAD\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
 
-sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs")
-sys.path.append("C:\Users\ludov\AppData\Roaming\MAXON\CINEMA 4D R17 Demo_E0A949BC\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
+sys.path.insert(0,"C:\Users\ludov\AppData\Roaming\MAXON\Cinema 4D R19 Demo_B31EE4CE\plugins\ePMV\mgl64\MGLToolsPckgs")
+sys.path.insert(1,"C:\Users\ludov\AppData\Roaming\MAXON\Cinema 4D R19 Demo_B31EE4CE\plugins\ePMV\mgl64\MGLToolsPckgs\PIL")
 
 import autopack
 
@@ -56,6 +56,11 @@ tr=""#"_tr"
 transpose = True
 resultfile ="D:\\Data\\cellPACK_data\\Mycoplasma\\Mpn_Results_H"+tr+".json"# or Tr
 workingdir ="D:\\Data\\cellPACK_data\\Mycoplasma\\"
+
+workingdir = "D:\\Data\\cellPACK_data_git\\influenza\Influenza\\"
+recipefile = "Influenza_3.json"
+resultfile = ""
+
 #workingdir ="C:\Users\ludov\OneDrive\Documents\cellVIEW-i\Data\\"
 #recipefile="christmas.json"
 
@@ -64,7 +69,7 @@ n=os.path.basename(fileName)
 h = Environment(name=n)
 #h.helper = helper
 recipe=n
-h.loadRecipe(recipefile)
+h.loadRecipe(workingdir+recipefile)
 
 # save a full recipe no Xref
 #"nbMol": nbmol,  

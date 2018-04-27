@@ -169,7 +169,15 @@ def getStringValueOptions(value, attrname):
         value = '"' + value + '"'
     return str(value)
 
-
+def updatePositionsRadii(ingr):
+    toupdate={"positions":[]}
+    toupdate["radii"]=[]
+    nLOD = len(ingr.positions)
+    for i in range(nLOD) :
+        toupdate["positions"].append({"coords":numpy.array(ingr.positions[i]).flatten().tolist()})
+        toupdate["radii"].append({"radii":ingr.radii[i]})
+    return toupdate
+    
 class GrabResult(object):
     """Class for callbacks
     """
@@ -340,6 +348,8 @@ class IOingredientTool(object):
         ingre = self.makeIngredient(**kw)
         return ingre
 
+
+        
     def ingrJsonNode(self, ingr, result=False, kwds=None, transpose=False):
         # force position instead of sphereFile
         ingdic = OrderedDict()
@@ -353,10 +363,13 @@ class IOingredientTool(object):
             if type(v) != type(None):
                 ingdic.update(setValueToJsonNode(v, str(k)))
         # if sphereTree file present should not use the pos-radii keyword
-        if ingr.sphereFile is not None and not result:
+        # if ingr.sphereFile is not None and not result:
             # remove the position and radii key
-            ingdic.pop("positions", None)
-            ingdic.pop("radii", None)
+        #    ingdic.pop("positions", None)
+        #    ingdic.pop("radii", None)
+        #update the positions and radii to new format
+        toupdate = updatePositionsRadii(ingr)
+        ingdic.update(toupdate)
         if numpy.sum(ingr.offset) != 0.0:
             ingr.source["transform"]["offset"] = ingr.offset
         # reslt ?s
@@ -1120,12 +1133,13 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             nbmol = len(ingr.results)
             if len(ingr.results)==0:
                 nbmol = ingr.nbMol
+            toupdate = updatePositionsRadii(ingr)
             kwds = {"nbMol": nbmol, 
                     "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
                     "source": ingr.source, 
-                    "positions":ingr.positions, 
-                    "radii":ingr.radii}
+                    "positions":toupdate["positions"], 
+                    "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
             if ingr.Type == "Grow":
                 if fibers is None:
@@ -1157,12 +1171,13 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                 nbmol = len(ingr.results)
                 if len(ingr.results)==0:
                     nbmol = ingr.nbMol
+                toupdate = updatePositionsRadii(ingr)
                 kwds = {"nbMol": nbmol, 
                         "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
                     "source": ingr.source, 
-                    "positions":ingr.positions, 
-                    "radii":ingr.radii}
+                    "positions":toupdate["positions"], 
+                    "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
                     if fibers is None:
@@ -1192,12 +1207,13 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                 nbmol = len(ingr.results)
                 if len(ingr.results)==0:
                     nbmol = ingr.nbMol
+                toupdate = updatePositionsRadii(ingr)
                 kwds = {"nbMol": nbmol,  
                     "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
                     "source": ingr.source, 
-                    "positions":ingr.positions, 
-                    "radii":ingr.radii}
+                    "positions":toupdate["positions"], 
+                    "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
                     if fibers is None:
