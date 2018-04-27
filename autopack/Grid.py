@@ -743,7 +743,7 @@ class Grid:
         elif NX == 1:
             ptIndices = [p[2] + NY * p[1] + p[0] for p in ijk]
         else:
-            ptIndices = [p[2] + NY * p[1] + NX * NY * p[0] for p in ijk]
+            0.02451198
         #        print "coordi",ptIndices[0],self.masterGridPositions[ptIndices[0]]
         # add surface points
         if addSP and self.nbSurfacePoints != 0:

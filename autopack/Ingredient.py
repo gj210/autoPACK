@@ -1023,7 +1023,7 @@ class Ingredient(Agent):
                     self.minRadius =   self.encapsulatingRadius  
                     positions = [positions]
                     radii = [radii]
-                else:
+                elif fileExtension == ".sph":
                     rm, rM, positions, radii, children = self.getSpheres(sphereFileo)
                     if not len(radii):
                         self.minRadius = 1.0
@@ -1038,31 +1038,10 @@ class Ingredient(Agent):
                         # centered at 0,0,0
                         # and encapsulate the ingredient
                         self.encapsulatingRadius = rM
-
-        if positions is None or positions[0] is None or positions[0][0] is None:  # [0][0]
-            positions = [[[0, 0, 0]]]
-            if radii is not None:
-                self.minRadius = [radii[0]]
-                self.encapsulatingRadius = max(radii[0])
-        else:
-            if radii is not None:
-                delta = numpy.array(positions[0])
-                rM = sqrt(max(numpy.sum(delta * delta, 1)))
-                self.minRadius = rM
-                self.encapsulatingRadius = rM
-                #        print "sphereFile",sphereFile
-                #        print "positions",positions,len(positions)
-                #        print "rad",radii,len(radii)
-        if radii is not None and positions is not None:
-            for r, c in zip(radii, positions):
-                assert len(r) == len(c)
-
-        if radii is not None:
-            self.maxLevel = len(radii) - 1
-        if radii is None:
-            radii = [[0]]
-        self.radii = radii
-        self.positions = positions
+                else :
+                    print ("sphere file extension not recognized "+fileExtension)
+        self.getSpheresPositions(positions,radii)
+        
         self.positions2 = positions2
         self.children = children
         self.rbnode = {}  # keep the rbnode if any
@@ -1388,6 +1367,45 @@ class Ingredient(Agent):
             "organism":  {"type": "string"},                           
         }
 
+
+    def getSpheresPositions(self,positions,radii):
+        #positions and radii are passed to the constructor
+        #check the format old nested array, new array of dictionary
+        nLOD = len(positions)
+        self.positions = []
+        self.radii = []
+        if isinstance(positions[0], dict) :
+            for i in range(nLOD):
+                c = numpy.array(positions[i]["coords"])
+                n = len(c)
+                self.positions.append( c.reshape((n/3,3)).tolist() ) 
+                self.radii.append(radii[i]["radii"])
+        else :#regular nested
+            if positions is None or positions[0] is None or positions[0][0] is None:  # [0][0]
+                positions = [[[0, 0, 0]]]
+                if radii is not None:
+                    self.minRadius = [radii[0]]
+                    self.encapsulatingRadius = max(radii[0])
+            else:
+                if radii is not None:
+                    delta = numpy.array(positions[0])
+                    rM = sqrt(max(numpy.sum(delta * delta, 1)))
+                    self.minRadius = rM
+                    self.encapsulatingRadius = rM
+                    #        print "sphereFile",sphereFile
+                    #        print "positions",positions,len(positions)
+                    #        print "rad",radii,len(radii)
+            if radii is not None and positions is not None:
+                for r, c in zip(radii, positions):
+                    assert len(r) == len(c)
+    
+            if radii is not None:
+                self.maxLevel = len(radii) - 1
+            if radii is None:
+                radii = [[0]]
+            self.radii = radii
+            self.positions = positions    
+            
     def setTilling(self, comp):
         if self.packingMode == 'hexatile':
             from autopack.hexagonTile import tileHexaIngredient
