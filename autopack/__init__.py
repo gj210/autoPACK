@@ -199,10 +199,10 @@ autopack_user_path_pref_file = preferences + os.sep + "path_user_preferences.jso
 
 # Default values
 legacy_autoPACKserver = "https://autofill.googlecode.com/git/autoPACK_database_1.0.0"  # XML
-autoPACKserver = "https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"
-autoPACKserver_default = "https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"  # XML
+autoPACKserver = "https://cdn.rawgit.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"
+autoPACKserver_default = "https://cdn.rawgit.com/mesoscope/cellPACK_data/master/cellPACK_database_1.1.0"  # XML
 autoPACKserver_alt = "http://mgldev.scripps.edu/projects/autoPACK/data/cellPACK_data/cellPACK_database_1.1.0"
-filespath = "https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/autoPACK_filePaths.json"
+filespath = "https://cdn.rawgit.com/mesoscope/cellPACK_data/master/autoPACK_filePaths.json"
 recipeslistes = autoPACKserver + "/autopack_recipe.json"
 
 autopackdir = str(afdir)  # copy
@@ -299,7 +299,7 @@ def resetDefault():
     if os.path.isfile(autopack_user_path_pref_file):
         os.remove(autopack_user_path_pref_file)
     autoPACKserver = autoPACKserver_default  # "http://autofill.googlecode.com/git/autoPACK_database_1.0.0"
-    filespath = "https://raw.githubusercontent.com/mesoscope/cellPACK_data/master/autoPACK_filePaths.json"
+    filespath = "https://cdn.rawgit.com/mesoscope/cellPACK_data/master/autoPACK_filePaths.json"
     recipeslistes = autoPACKserver + "/autopack_recipe.json"
 
 

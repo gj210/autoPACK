@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
 # autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin, Michel Sanner
-#   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010 
-#   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
+#   Based on COFFEE Script developed by Graham Johnson between 2005 and 2010
+#   with assistance from Mostafa Al-Alusi in 2009 and periodic input
 #   from Arthur Olson's Molecular Graphics Lab
 #
 # Compartment.py Authors: Graham Johnson & Michel Sanner with editing/enhancement from Ludovic Autin
@@ -30,11 +29,10 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-@author: Graham Johnson, Ludovic Autin, & Michel Sanner
+#@author: Graham Johnson, Ludovic Autin, & Michel Sanner
 
 # Hybrid version merged from Graham's Sept 6, 2011 and Ludo's April 2012
 #version on May 16, 2012, remerged on July 5, 2012 with thesis versions
-"""
 
 # Hybrid version merged from Graham's Sept 2011 and Ludo's April 2012 version on May 16, 2012
 # Updated with Sept 16, 2011 thesis versions on July 5, 2012
@@ -177,7 +175,11 @@ class Compartment(CompartmentList):
         self.filename = None
         if "ref_obj" in kw:
             self.ref_obj = kw["ref_obj"]
-        if vertices is None:
+        self.meshType = 'file'
+        if "meshType" in kw :
+            self.meshType = kw["meshType"]
+
+        if vertices is None and self.meshType == "file":
             if "filename" in kw:
                 gname = self.name
                 if "gname" in kw:
@@ -187,6 +189,21 @@ class Compartment(CompartmentList):
                 self.filename = kw["filename"]
                 self.ref_obj = name
                 # print ("mesh",self.name,self.filename)
+        if self.meshType == 'raw' :
+            #need to build the mesh from v,f,n
+            gname = self.name
+            if "gname" in kw:
+                gname = kw["gname"]
+            if "filename" in kw:
+                self.buildMesh(kw["filename"], gname)
+        if self.meshType == 'sphere' :
+            #one sphere, geom is a dictionary
+            gname = self.name
+            if "gname" in kw:
+                gname = kw["gname"]
+            if "filename" in kw:
+                aradius = float(kw["filename"]["radius"])
+                self.buildSphere(aradius,gname)
         self.encapsulatingRadius = 9999.9
         if self.vertices is not None and len(self.vertices):
             # can be dae/fbx file, object name that have to be in the scene or dejaVu indexedpolygon file
@@ -309,6 +326,44 @@ class Compartment(CompartmentList):
         numpy.savetxt(filename+".indpolface", self.faces, delimiter=" ")
         self.filename = filename
         self.ref_obj = self.name
+
+    def buildSphere(self,radius,geomname):
+        geom = None
+        if autopack.helper is not None:
+            if not autopack.helper.nogui:
+                p = autopack.helper.getObject("autopackHider")
+                if p is None:
+                    p = autopack.helper.newEmpty("autopackHider")
+                    if autopack.helper.host.find("blender") == -1:
+                        autopack.helper.toggleDisplay(p, False)
+                geom = autopack.helper.unitSphere(geomname,5,
+                                                   radius=radius)[0]
+                autopack.helper.reParent(geomname,"autopackHider")
+            else:
+                # print "OK TEST OLKKKKK"
+                geom = autopack.helper.unitSphere(geomname, 5,
+                                                       radius=radius)[0]
+            self.filename = geomname
+            self.ref_obj = geomname
+            self.faces, self.vertices, self.vnormals = helper.DecomposeMesh(geom, edit=False, copy=False,
+                                                                          tri=True)
+        #return geom
+
+    def buildMesh(self, data, geomname):
+        """
+        Create a polygon mesh object from a dictionary verts,faces,normals
+        """
+        nv = len(data["verts"])
+        nf = len(data["faces"])
+        self.vertices = numpy.array(data["verts"]).reshape((nv/3,3))
+        self.faces = numpy.array(data["faces"]).reshape((nf/3,3))
+        self.vnormals = numpy.array(data["normals"]).reshape((nv/3,3))
+        geom = autopack.helper.createsNmesh(geomname, self.vertices, None, self.faces)[0]
+        self.filename = geomname
+        self.ref_obj = geomname
+        self.meshType = "file"
+        self.saveDejaVuMesh(autopack.cache_geoms+os.sep+geomname)
+        return geom
 
     def rapid_model(self):
         rapid_model = RAPIDlib.RAPID_model()
@@ -1157,9 +1212,9 @@ class Compartment(CompartmentList):
         elif env.innerGridMethod == "binvox" and self.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
             a, b = self.BuildGrid_binvox(env)
         elif env.innerGridMethod == "trimesh" and self.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
-            a, b = self.BuildGrid_trimesh(env)    
+            a, b = self.BuildGrid_trimesh(env)
         elif env.innerGridMethod == "scanline" and self.isOrthogonalBoudingBox != 1:  # surfaces and interiors will be subtracted from it as normal!
-            a, b = self.BuildGrid_scanline(env)    
+            a, b = self.BuildGrid_scanline(env)
         return a, b
 
     def prepare_buildgrid_box(self, env):
@@ -1590,10 +1645,10 @@ class Compartment(CompartmentList):
         #voxelized
         from trimesh.voxel import Voxel
         trimesh_grid = Voxel(mesh, env.grid.gridSpacing/1.1547, size_max=np.inf)
-        
+
         helper.resetProgressBar()
         # the main loop
-        
+
         for ptInd in xrange(len(grdPos)):  # len(grdPos)):
             coord = [grdPos.item((ptInd, 0)), grdPos.item((ptInd, 1)), grdPos.item((ptInd, 2))]
             insideBB = self.checkPointInsideBB(coord, dist=new_distances.item(ptInd))
@@ -1611,7 +1666,7 @@ class Compartment(CompartmentList):
                 helper.progressBar(progress=int(p), label=str(ptInd) + "/" + str(len(grdPos)) + " inside " + str(r))
                 if autopack.verbose:
                     print (str(ptInd) + "/" + str(len(grdPos)) + " inside " + str(r))
-        if autopack.verbose:    
+        if autopack.verbose:
             print('time to update distance field and idarray', time() - t1)
 
         t1 = time()
@@ -1645,7 +1700,7 @@ class Compartment(CompartmentList):
         self.computeVolumeAndSetNbMol(env, self.surfacePoints,
                                       self.insidePoints, areas=vSurfaceArea)
         return self.insidePoints, self.surfacePoints
-        
+
 
     def BuildGrid_scanline(self, env):
         """Build the compartment grid ie surface and inside point using scanline"""
@@ -1734,7 +1789,7 @@ class Compartment(CompartmentList):
         #voxelized
         from trimesh.voxel import Voxel
         trimesh_grid = Voxel(mesh, env.grid.gridSpacing/1.1547, size_max=np.inf)
-        
+
         helper.resetProgressBar()
         # the main loop
         # check the first point
@@ -1742,7 +1797,7 @@ class Compartment(CompartmentList):
         # int(k * NX * NY + j * NX + i)
         ptInd = 0
         coord = [grdPos.item((ptInd, 0)), grdPos.item((ptInd, 1)), grdPos.item((ptInd, 2))]
-        #is this point inside 
+        #is this point inside
         inside = self.checkPointInside_rapid(coord, diag, ray=3)
         for k in range(NZ):
             for i in range(NX):
@@ -1762,7 +1817,7 @@ class Compartment(CompartmentList):
                         helper.progressBar(progress=int(p), label=str(ptInd) + "/" + str(len(grdPos)) + " inside " + str(inside))
                         if autopack.verbose:
                             print (str(ptInd) + "/" + str(len(grdPos)) + " inside " + str(r))
-        if autopack.verbose:    
+        if autopack.verbose:
             print('time to update distance field and idarray', time() - t1)
         t1 = time()
         nbGridPoints = len(env.grid.masterGridPositions)
@@ -1795,9 +1850,9 @@ class Compartment(CompartmentList):
         self.computeVolumeAndSetNbMol(env, self.surfacePoints,
                                       self.insidePoints, areas=vSurfaceArea)
         return self.insidePoints, self.surfacePoints
-        
 
-        
+
+
     def BuildGrid_pyray(self, histoVol, ray=1):
         """Build the compartment grid ie surface and inside point using bhtree"""
         # create surface points
@@ -2066,7 +2121,7 @@ class Compartment(CompartmentList):
             # update distance field
             # we should not reompute this ...
             # if ptInd < len(distances)-1:  # Oct. 20, 2012 Graham turned this if off because this dist override is necessary in
-            if distances[ptInd] > d: distances[ptInd] = d  
+            if distances[ptInd] > d: distances[ptInd] = d
             # case a diffent surface ends up being closer in the linear walk through the grid
 
             # check if ptInd in inside

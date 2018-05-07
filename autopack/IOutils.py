@@ -102,7 +102,7 @@ def setValueToJsonNode(value, attrname):
     elif type(value) == list or type(value) == tuple:
         if len(value) == 0 :
             return vdic
-        else :    
+        else :
             for i, v in enumerate(value):
                 if type(v) == numpy.ndarray:
                     value[i] = v.tolist()
@@ -177,7 +177,7 @@ def updatePositionsRadii(ingr):
         toupdate["positions"].append({"coords":numpy.array(ingr.positions[i]).flatten().tolist()})
         toupdate["radii"].append({"radii":ingr.radii[i]})
     return toupdate
-    
+
 class GrabResult(object):
     """Class for callbacks
     """
@@ -349,7 +349,7 @@ class IOingredientTool(object):
         return ingre
 
 
-        
+
     def ingrJsonNode(self, ingr, result=False, kwds=None, transpose=False):
         # force position instead of sphereFile
         ingdic = OrderedDict()
@@ -547,7 +547,7 @@ def addCompartments(env, compdic, i, io_ingr):
                     # put here the export/import ?
 
 
-        
+
 def save_asJson(env, setupfile, useXref=True, indent=True):
     """
     Save the current environment setup as an json file.
@@ -678,7 +678,7 @@ def save_asJson(env, setupfile, useXref=True, indent=True):
 
     def default(o):
         raise TypeError(repr(o) + " is not JSON serializable ",o,type(o))
-        
+
     with open(setupfile, 'w') as fp:  # doesnt work with symbol link ?
         if indent:
             json.dump(env.jsondic, fp, indent=1, separators=(',', ':'),default=default)  # ,indent=4, separators=(',', ': ')
@@ -967,13 +967,13 @@ import upy
 helperClass = upy.getHelperClass()
 helper =helperClass()
 #create the viewer
-ViewerType=autopack.helper.host    
+ViewerType=autopack.helper.host
 afviewer = AFViewer(ViewerType=helper.host,helper=helper)#long ?
-#make some option here     
+#make some option here
 afviewer.doPoints = False
 afviewer.doSpheres = False
 afviewer.quality = 1 #lowest quality for sphere and cylinder
-afviewer.visibleMesh = True #mesh default visibility 
+afviewer.visibleMesh = True #mesh default visibility
 #create the env
 h1 = Environment()
 """
@@ -1075,16 +1075,16 @@ def saveSphereTreeFile(h, ingr, filename):
     nbLinker = 0
     mapping = None
     #use a graph ?
-    
+
 def checkRotFormat(rotation,transpose):
     if numpy.array(rotation).shape == (4,):
         if transpose:
             return tr.quaternion_matrix(rotation).transpose()  # transpose ?
         else:
-            return tr.quaternion_matrix(rotation)      
+            return tr.quaternion_matrix(rotation)
     else :
         return rotation
-        
+
 def gatherResult(ingr_result, transpose, use_quaternion, type=0.0, lefthand=False):
     all_pos = []
     all_rot = []
@@ -1134,11 +1134,11 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
             if len(ingr.results)==0:
                 nbmol = ingr.nbMol
             toupdate = updatePositionsRadii(ingr)
-            kwds = {"nbMol": nbmol, 
+            kwds = {"nbMol": nbmol,
                     "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
-                    "source": ingr.source, 
-                    "positions":toupdate["positions"], 
+                    "source": ingr.source,
+                    "positions":toupdate["positions"],
                     "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
             if ingr.Type == "Grow":
@@ -1172,11 +1172,11 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                 if len(ingr.results)==0:
                     nbmol = ingr.nbMol
                 toupdate = updatePositionsRadii(ingr)
-                kwds = {"nbMol": nbmol, 
+                kwds = {"nbMol": nbmol,
                         "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
-                    "source": ingr.source, 
-                    "positions":toupdate["positions"], 
+                    "source": ingr.source,
+                    "positions":toupdate["positions"],
                     "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
@@ -1208,11 +1208,11 @@ def serializedRecipe(env, transpose, use_quaternion, result=False, lefthand=Fals
                 if len(ingr.results)==0:
                     nbmol = ingr.nbMol
                 toupdate = updatePositionsRadii(ingr)
-                kwds = {"nbMol": nbmol,  
+                kwds = {"nbMol": nbmol,
                     "principalVector": ingr.principalVector,
                     "molarity" : ingr.molarity,
-                    "source": ingr.source, 
-                    "positions":toupdate["positions"], 
+                    "source": ingr.source,
+                    "positions":toupdate["positions"],
                     "radii_lod":toupdate["radii"]}
                     #"sphereTree":ingr.sphereFile}
                 if ingr.Type == "Grow":
@@ -1336,7 +1336,7 @@ def serializedFromResult(env, transpose, use_quaternion, result=False, lefthand=
             root.addCompartment(co)
     data_json = root.to_JSON()
     return data_json, all_pos, all_rot
-    
+
 def serializedRecipe_group_dic(env, transpose, use_quaternion, lefthand=False):
     all_pos = []
     all_rot = []
@@ -1397,8 +1397,8 @@ def serializedRecipe_group_dic(env, transpose, use_quaternion, lefthand=False):
         root.addCompartment(co)
     data_json = root.to_JSON()
     return data_json#, all_pos, all_rot
-    
-    
+
+
 def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
     all_pos = []
     all_rot = []
@@ -1457,7 +1457,7 @@ def serializedRecipe_group(env, transpose, use_quaternion, lefthand=False):
     data_json = root.to_JSON()
     return data_json, all_pos, all_rot
 
-#use as 
+#use as
 #from autopack.IOutils import saveResultBinary
 #saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_tr",True,True,False)
 #saveResultBinary(env,"C:\\Users\\ludov\\OneDrive\\Documents\\myRecipes\\test_tr_lh",True,True,True)
@@ -1497,7 +1497,7 @@ def saveResultBinaryDic(env, filename, transpose, use_quaternion, lefthand=False
     #numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
     return all_pos, all_rot
- 
+
 def toBinary(all_pos, all_rot,filename)   :
     fptr = open(filename, "wb")
     fptr.write(numpy.array(all_pos, 'f').flatten().tobytes())
@@ -1505,7 +1505,7 @@ def toBinary(all_pos, all_rot,filename)   :
 #    numpy.array(all_pos, 'f').flatten().tofile(fptr)  # 4float position
 #    numpy.array(all_rot, 'f').flatten().tofile(fptr)  # 4flaot quaternion
     fptr.close()
-    
+
 def saveResultBinary(env, filename, transpose, use_quaternion, lefthand=False):
     # should follow the order of the serialized class order?
     all_pos = []
@@ -1569,7 +1569,7 @@ def getAllPosRot(env,transpose, use_quaternion, lefthand=False):
 
 def load_XML(env, setupfile):
     """
-    Setup the environment according the given xml file. 
+    Setup the environment according the given xml file.
     """
     env.setupfile = setupfile
     #    from autopack import Ingredient as ingr
@@ -1719,7 +1719,7 @@ def load_XML(env, setupfile):
 
 def load_JsonString(env, astring):
     """
-    Setup the environment according the given json file. 
+    Setup the environment according the given json file.
     """
     env.jsondic = json.loads(astring, object_pairs_hook=OrderedDict)
     setupFromJsonDic(env, )
@@ -1727,7 +1727,7 @@ def load_JsonString(env, astring):
 
 def load_Json(env, setupfile):
     """
-    Setup the environment according the given json file. 
+    Setup the environment according the given json file.
     """
 
     if setupfile == None:
@@ -1783,7 +1783,7 @@ def setupFromJsonDic(env, ):
         sortkey = unicode.lower
     else :
         sortkey = str.lower
- 
+
     if "cytoplasme" in env.jsondic:
         rnode = env.jsondic["cytoplasme"]
         ingrs_dic = env.jsondic["cytoplasme"]["ingredients"]
@@ -1811,8 +1811,13 @@ def setupFromJsonDic(env, ):
                     continue
                 comp_dic = env.jsondic["compartments"][cname]
                 name = str(comp_dic["name"])
-                geom = str(comp_dic["geom"])
+                geom = comp_dic["geom"]
                 gname = name
+                mtype = "file"
+                if "meshType" in comp_dic:
+                    mtype = comp_dic["meshType"]
+                elif "geom_type" in comp_dic:
+                    mtype = comp_dic["geom_type"]
                 if "gname" in comp_dic:
                     gname = str(comp_dic["gname"])
                 rep = ""
@@ -1839,7 +1844,7 @@ def setupFromJsonDic(env, ):
                     print ("NONENE")
                 print ("add compartment ", name, geom, gname, rep, rep_file)
                 o = Compartment(name, None, None, None, gname=gname, filename=geom,
-                                object_name=rep, object_filename=rep_file)
+                                object_name=rep, object_filename=rep_file,meshType=mtype)
                 print ("added compartment ", name)
                 env.addCompartment(o)
                 if "surface" in comp_dic:
@@ -1872,7 +1877,7 @@ def setupFromJsonDic(env, ):
     env.loopThroughIngr(env.set_partners_ingredient)
     #restore env.molecules if any resuylt was loaded
     env.loopThroughIngr(env.restore_molecules_array)
-    
+
 
 
 #        if env.placeMethod.find("panda") != -1 :
