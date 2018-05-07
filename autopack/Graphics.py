@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 12 15:04:18 2010
+#Created on Mon Jul 12 15:04:18 2010
 
 ###############################################################################
 #
@@ -29,10 +28,10 @@ Created on Mon Jul 12 15:04:18 2010
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-@author: Ludovic Autin
+#@author: Ludovic Autin
 
-Viewer/helper of autoPACK result.
-"""
+#Viewer/helper of autoPACK result.
+
 import os
 import math
 # DEJAVU COLORS
@@ -48,7 +47,7 @@ import autopack
 #      - save-restore + grid interesectnio continuation
 #          =>imply deocmpose histoVol in Grid class and HistoVol class
 #      - hierarchy
-#   
+#
 # ===============================================================================
 import numpy
 import upy
@@ -80,9 +79,9 @@ class AutopackViewer:
     def __init__(self, helper=None, ViewerType='dejavu'):
         """
         Constructor of the AFViewer. Define the needed function for constructing
-        the geometry representing the different compartment and recipe that have 
+        the geometry representing the different compartment and recipe that have
         been used for the filling.
-        
+
         @type  ViewerType: string
         @param ViewerType: name of the viewer / host application
         """
@@ -143,14 +142,14 @@ class AutopackViewer:
 
     def timeFunction(self, function, args, kw):
         """
-        Mesure the time for performing the provided function. 
-    
+        Mesure the time for performing the provided function.
+
         @type  function: function
         @param function: the function to execute
         @type  args: liste
         @param args: the liste of arguments for the function
-        
-    
+
+
         @rtype:   list/array
         @return:  the center of mass of the coordinates
         """
@@ -166,14 +165,14 @@ class AutopackViewer:
     def SetHistoVol(self, histo, pad, display=True):
         """
         Define the current histo volume.
-        
+
         @type  histo: autopack.HistoVol
         @param histo: the current histo-volume
         @type  pad: float
         @param pad: the pading value to extend the histo volume bounding box
         @type  display: boolean
         @param display: if a geometry is created to represent the histoVolume box
-        
+
         """
 
         self.histo = histo
@@ -206,9 +205,9 @@ class AutopackViewer:
     def addMasterIngr(self, ingr, parent=None):
         """
         Create a empty master/parent geometry for a ingredient
-        
+
         @type  ingr: autopack.Ingredient
-        @param ingr: the ingredient 
+        @param ingr: the ingredient
         @type  parent: hostObject
         @param parent: specifiy a parent to insert under
         """
@@ -224,8 +223,8 @@ class AutopackViewer:
 
     def prepareMaster(self):
         """
-        Create all empty master/parent geometry for the cytoplasm and 
-        all ingredient. If not in DejaVu prepare the meshs use for instanced 
+        Create all empty master/parent geometry for the cytoplasm and
+        all ingredient. If not in DejaVu prepare the meshs use for instanced
         geometry such as spheres and cylinders
         """
 
@@ -271,7 +270,7 @@ class AutopackViewer:
 
     def displayHistoVol(self):
         """
-        display histo volume bounding box 
+        display histo volume bounding box
         """
         name = 'BoundingBox'
         b = self.helper.getObject(name)
@@ -293,9 +292,9 @@ class AutopackViewer:
     def displayCompartment(self, orga):
         """
         Create and display geometry for an compartment.
-        
+
         @type  orga: autopack.Compartment
-        @param orga: the compartment 
+        @param orga: the compartment
         """
 
         # create master for compartment
@@ -393,8 +392,8 @@ class AutopackViewer:
 
     def displayPreFill(self):
         """
-        Use this function once a histoVol and his compartments are defined. 
-        displayPreFill will prepare all master, and will create the geometry for 
+        Use this function once a histoVol and his compartments are defined.
+        displayPreFill will prepare all master, and will create the geometry for
         the histovolume bounding box, and the different compartments defined.
         """
 
@@ -457,9 +456,9 @@ class AutopackViewer:
 
     def displayFill(self):
         """
-        Use this function once a Box have been filled. displayFill will display 
+        Use this function once a Box have been filled. displayFill will display
         all placed ingredients in the Box, and affilated them according if they are
-        on surface, in cytoplasme or in the compartment. displayFill also display 
+        on surface, in cytoplasme or in the compartment. displayFill also display
         optionally the differnt point grid.
         """
         if self.master is None:
@@ -513,13 +512,13 @@ class AutopackViewer:
 
     def displayPoints(self, name, points, parent, colors=[[1, 1, 0]]):
         """
-        Use this function to display a pointCloud. By default, theses points 
+        Use this function to display a pointCloud. By default, theses points
         are not visible in the viewport.
 
         @type  name: string
         @param name: the name of the point cloud object
         @type  points: list
-        @param points: list of point indice or list point array 
+        @param points: list of point indice or list point array
         @type  parent: hostObject
         @param parent: the parent of the point cloud
         @type  colors: list
@@ -557,7 +556,7 @@ class AutopackViewer:
         Use this function to display grid pointCloud for an compartment
 
         @type  orga: autopack.Compartment
-        @param orga: the compartment 
+        @param orga: the compartment
         """
         vGridPointHider = self.vi.getObject(orga.name + "GridPointHider")  # g
         if vGridPointHider is None:  # g
@@ -1805,7 +1804,7 @@ class AutopackViewer:
             faces, vertices, vnormals = self.helper.DecomposeMesh(comp,
                           edit=False, copy=False, tri=True, transform=True)
             o1 = Compartment(name, vertices, faces, vnormals)
-            o1.overwriteSurfacePts = True        
+            o1.overwriteSurfacePts = True
         elif self.helper.getType(obj) == self.helper.EMPTY:  # Compartment master parent?
             childs = self.helper.getChilds(obj)
             for ch in childs:
@@ -1862,7 +1861,7 @@ class AutopackViewer:
             faces, vertices, vnormals = self.helper.DecomposeMesh(comp,
                                                                   edit=False, copy=False, tri=True, transform=True)
             o1 = Compartment(name, vertices, faces, vnormals)
-            o1.overwriteSurfacePts = True            
+            o1.overwriteSurfacePts = True
         return o1
 
     #            h1.addCompartment(o1)

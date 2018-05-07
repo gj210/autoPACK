@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
 ############################################################################
 #
-# autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin, 
+# autoPACK Authors: Graham T. Johnson, Mostafa Al-Alusi, Ludovic Autin,
 #   and Michel Sanner
-#   Based on COFFEE Script developed by Graham Johnson 
-#    between 2005 and 2010 
-#   with assistance from Mostafa Al-Alusi in 2009 and periodic input 
+#   Based on COFFEE Script developed by Graham Johnson
+#    between 2005 and 2010
+#   with assistance from Mostafa Al-Alusi in 2009 and periodic input
 #   from Arthur Olson's Molecular Graphics Lab
 #
-# Ingredient.py Authors: Graham Johnson & Michel Sanner with 
+# Ingredient.py Authors: Graham Johnson & Michel Sanner with
 #  editing/enhancement from Ludovic Autin
 #
-# Translation to Python initiated March 1, 2010 by Michel Sanner 
+# Translation to Python initiated March 1, 2010 by Michel Sanner
 #  with Graham Johnson
 #
 # Class restructuring and organization: Michel Sanner
@@ -36,15 +35,15 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ############################################################################
-@author: Graham Johnson, Ludovic Autin, & Michel Sanner
+#@author: Graham Johnson, Ludovic Autin, & Michel Sanner
 
 
-# Hybrid version merged from Graham's Sept 2011 and Ludo's April 2012 
+# Hybrid version merged from Graham's Sept 2011 and Ludo's April 2012
 # version on May 16, 2012
 # Updated with Correct Sept 25, 2011 thesis version on July 5, 2012
 
 # TODO: Describe Ingredient class here at high level
-"""
+
 try:
     from scipy import spatial
 except:
@@ -1020,7 +1019,7 @@ class Ingredient(Agent):
                     # np.apply_along_axis(np.linalg.norm, 1, c)
                     self.encapsulatingRadius = max(
                         numpy.sqrt(numpy.einsum('ij,ij->i', positions, positions)))  # shoud be max distance
-                    self.minRadius =   self.encapsulatingRadius  
+                    self.minRadius =   self.encapsulatingRadius
                     positions = [positions]
                     radii = [radii]
                 elif fileExtension == ".sph":
@@ -1041,11 +1040,11 @@ class Ingredient(Agent):
                 else :
                     print ("sphere file extension not recognized "+fileExtension)
         self.getSpheresPositions(positions,radii)
-        
+
         self.positions2 = positions2
         self.children = children
         self.rbnode = {}  # keep the rbnode if any
-        self.collisionLevel = self.maxLevel
+        self.collisionLevel = 0#self.maxLevel
         # first level used for collision detection
         self.jitterMax = jitterMax
         # (1,1,1) means 1/2 grid spacing in all directions
@@ -1100,18 +1099,25 @@ class Ingredient(Agent):
         self.meshName = meshName
         self.mesh = None
         self.meshObject = None
+        self.meshType = 'file'
+        if "meshType" in kw:
+            self.meshType = kw["meshType"]
         if meshFile is not None:
             print ("OK, meshFile is not none, it is = ", meshFile, self.name, self.coordsystem)
             gname = self.name
             if self.meshName is not None:
                 gname = self.meshName
-            self.mesh = self.getMesh(meshFile, gname)  # self.name)
-            print ("OK got", self.mesh)
-            if self.mesh is None:
-                # display a message ?
-                print ("no geometrie for ingredient " + self.name)
-            # should we reparent it ?
-            self.meshFile = meshFile
+            if self.meshType == 'file' :
+                self.mesh = self.getMesh(meshFile, gname)  # self.name)
+                print ("OK got", self.mesh)
+                if self.mesh is None:
+                    # display a message ?
+                    print ("no geometrie for ingredient " + self.name)
+                # should we reparent it ?
+                self.meshFile = meshFile
+            elif self.meshType == 'raw' :
+                #need to build the mesh from v,f,n
+                self.buildMesh(meshFile, gname)
         elif meshObject is not None:
             self.mesh = meshObject
 
@@ -1181,7 +1187,7 @@ class Ingredient(Agent):
         self.distances_temp = []
         self.centT = None  # transformed position
 
-        self.minRadius =   self.encapsulatingRadius  
+        self.minRadius =   self.encapsulatingRadius
 
         self.results = []
         #        if self.mesh is not None :
@@ -1364,7 +1370,7 @@ class Ingredient(Agent):
             "properties": {"name": "properties", "value": {}, "default": {}, "min": 0., "max": 1.0, "type": "dic",
                            "description": "properties"},
             "score":  {"type": "string"},
-            "organism":  {"type": "string"},                           
+            "organism":  {"type": "string"},
         }
 
 
@@ -1378,7 +1384,7 @@ class Ingredient(Agent):
             for i in range(nLOD):
                 c = numpy.array(positions[i]["coords"])
                 n = len(c)
-                self.positions.append( c.reshape((n/3,3)).tolist() ) 
+                self.positions.append( c.reshape((n/3,3)).tolist() )
                 self.radii.append(radii[i]["radii"])
         else :#regular nested
             if positions is None or positions[0] is None or positions[0][0] is None:  # [0][0]
@@ -1398,14 +1404,14 @@ class Ingredient(Agent):
             if radii is not None and positions is not None:
                 for r, c in zip(radii, positions):
                     assert len(r) == len(c)
-    
+
             if radii is not None:
                 self.maxLevel = len(radii) - 1
             if radii is None:
                 radii = [[0]]
             self.radii = radii
-            self.positions = positions    
-            
+            self.positions = positions
+
     def setTilling(self, comp):
         if self.packingMode == 'hexatile':
             from autopack.hexagonTile import tileHexaIngredient
@@ -1720,7 +1726,16 @@ class Ingredient(Agent):
                 helper.read(filename)
                 #                helper.update()
                 geom = helper.getObject(geomname)
-                print ("should have read...", geomname, geom)
+                print ("should have read...", geomname, geom,self.pdb)
+                #if geom is None, the name was probably wring lets try to use the default name which is
+                #pdbNAme+_cms
+                if geom is None :
+                    geom = helper.getObject(self.pdb.split(".")[0])
+                    print ("fix read...", geomname, geom,self.pdb.split(".")[0])
+                    #rename it
+                    if geom is None :
+                        print ("whats the problem")
+                        return None
                 # rotate ?
                 if helper.host == "3dsmax":  # or helper.host.find("blender") != -1:
                     helper.resetTransformation(geom)  # remove rotation and scale from importing??maybe not?
@@ -1774,6 +1789,23 @@ class Ingredient(Agent):
                 return geom
             return None
 
+    def buildMesh(self, data, geomname):
+        """
+        Create a polygon mesh object from a dictionary verts,faces,normals
+        """
+        nv = len(data["verts"])
+        nf = len(data["faces"])
+        self.vertices = numpy.array(data["verts"]).reshape((nv/3,3))
+        self.faces = numpy.array(data["faces"]).reshape((nf/3,3))
+        #self.normals = data.normals
+        geom = autopack.helper.createsNmesh(geomname, self.vertices, None, self.faces)[0]
+        self.meshFile = geomname
+        self.meshName = geomname
+        self.meshType = "file"
+        self.mesh = geom
+        self.saveDejaVuMesh(autopack.cache_geoms+os.sep+geomname,decompose=False)
+        return geom
+
     def getDejaVuMesh(self, filename, geomname):
         """
         Create a DejaVu polygon mesh object from a filename
@@ -1803,12 +1835,13 @@ class Ingredient(Agent):
         #                helper.rotateObj(geom,[0.0,-math.pi/2.0,0.0])
         return geom
 
-    def saveDejaVuMesh(self, filename):
+    def saveDejaVuMesh(self, filename,decompose=True):
         # from DejaVu.IndexedPolygons import IndexedPolygons
         # geometry = IndexedPolygons(self.name, vertices=self.vertices,
         #                  faces=self.faces, vnormals=self.vnormals, shading='smooth')
         # geometry.writeToFile(filename)
-        self.faces, self.vertices, self.vnormals = self.DecomposeMesh(self.mesh, edit=True, copy=False, tri=True)
+        if decompose :
+            self.faces, self.vertices, self.vnormals = self.DecomposeMesh(self.mesh, edit=True, copy=False, tri=True)
         numpy.savetxt(filename + ".indpolvert", self.vertices,
                       delimiter=" ")  # numpy.hstack([self.vertices, self.vnormals])
         numpy.savetxt(filename + ".indpolface", self.faces, delimiter=" ")
@@ -2525,7 +2558,7 @@ class Ingredient(Agent):
                 pt = pointsInCube[pti]
                 dist = distA[pti]
                 if dist <= radc and distance[pt] < -0.0001:
-                    if level < self.maxLevel:
+                    if level < self.maxLevel and (level + 1) < len(self.positions):
                         nxtLevelSpheres = self.positions[level + 1]
                         nxtLevelRadii = self.radii[level + 1]
                         # get sphere that are children of this one
@@ -3632,7 +3665,7 @@ class Ingredient(Agent):
         tx, ty, tz = translation
         dx, dy, dz, d2 = [0.0, 0.0, 0.0, 0.0]
         jitter_trans = [0.0, 0.0, 0.0]
-        jitter = jitter / 2.0 
+        jitter = jitter / 2.0
         if jitter2 > 0.0:
             found = False
             while not found:
@@ -5995,7 +6028,7 @@ class Ingredient(Agent):
                     rbnode = self.get_rapid_model()
                     RAPIDlib.RAPID_Collide_scaled(numpy.array(rotMatj[:3, :3], 'f'),
                                                   numpy.array(p, 'f'), 1.0,
-                                                  rbnode, numpy.array(rotMatj[:3, :3],'f'), 
+                                                  rbnode, numpy.array(rotMatj[:3, :3],'f'),
                                                   numpy.array(jtrans, 'f'), 1.0, rbnode,
                                                   RAPIDlib.cvar.RAPID_FIRST_CONTACT)
                     col = RAPIDlib.cvar.RAPID_num_contacts != 0
