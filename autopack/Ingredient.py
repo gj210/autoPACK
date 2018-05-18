@@ -1386,6 +1386,9 @@ class Ingredient(Agent):
                 n = len(c)
                 self.positions.append( c.reshape((n/3,3)).tolist() )
                 self.radii.append(radii[i]["radii"])
+            if (len(self.radii) == 0):
+                self.radii = [[10]]#some default value ?
+                self.positions = [[[0, 0, 0]]]
         else :#regular nested
             if positions is None or positions[0] is None or positions[0][0] is None:  # [0][0]
                 positions = [[[0, 0, 0]]]
@@ -1795,10 +1798,17 @@ class Ingredient(Agent):
         """
         nv = len(data["verts"])
         nf = len(data["faces"])
+        print (nv,nf)
         self.vertices = numpy.array(data["verts"]).reshape((nv/3,3))
         self.faces = numpy.array(data["faces"]).reshape((nf/3,3))
         #self.normals = data.normals
         geom = autopack.helper.createsNmesh(geomname, self.vertices, None, self.faces)[0]
+        p = autopack.helper.getObject("autopackHider")
+        if p is None:
+            p = autopack.helper.newEmpty("autopackHider")
+            if autopack.helper.host.find("blender") == -1:
+                autopack.helper.toggleDisplay(p, False)
+        autopack.helper.reParent(geom, p)
         self.meshFile = geomname
         self.meshName = geomname
         self.meshType = "file"
@@ -6872,11 +6882,11 @@ class MultiCylindersIngr(Ingredient):
         self.singleSphere = False
         self.modelType = "Cylinders"
         self.collisionLevel = 0
-        self.minRadius = radii[0][0]
+        self.minRadius = self.radii[0][0]
         #        self.encapsulatingRadius = radii[0][0]  #Graham worry: 9/8/11 This is incorrect... shoudl be max(radii[0]) or radii[0][1]
         #        self.encapsulatingRadius = radii[0][0]#nope should be  half length ?
         self.length = 1.0
-
+        positions = self.positions
         #        print('encapsulating Radius is probably wrong- fix the array')
         self.useLength = False
         if "useLength" in kw:
@@ -6955,11 +6965,15 @@ class GrowIngrediant(MultiCylindersIngr):
                  placeType="jitter", marge=20.0, meshObject=None, orientation=(1, 0, 0),
                  nbMol=0, Type="Grow", walkingMode="sphere", **kw):
 
-        MultiCylindersIngr.__init__(self, molarity=molarity, radii=radii, positions=positions, positions2=positions2,
-                                    sphereFile=sphereFile, packingPriority=packingPriority, name=name, pdb=pdb,
+        MultiCylindersIngr.__init__(self, molarity=molarity, radii=radii,
+                                    positions=positions, positions2=positions2,
+                                    sphereFile=sphereFile, packingPriority=packingPriority,
+                                    name=name, pdb=pdb,
                                     color=color, nbJitter=nbJitter, jitterMax=jitterMax,
-                                    perturbAxisAmplitude=perturbAxisAmplitude, principalVector=principalVector,
-                                    meshFile=meshFile, packingMode=packingMode, placeType=placeType,
+                                    perturbAxisAmplitude=perturbAxisAmplitude,
+                                    principalVector=principalVector,
+                                    meshFile=meshFile, packingMode=packingMode,
+                                    placeType=placeType,
                                     meshObject=meshObject, nbMol=nbMol, Type=Type, **kw)
         if name == None:
             name = "%s_%f" % (str(radii), molarity)
@@ -6967,9 +6981,9 @@ class GrowIngrediant(MultiCylindersIngr):
         self.singleSphere = False
         self.modelType = modelType
         self.collisionLevel = 0
-        self.minRadius = radii[0][0]
+        self.minRadius = self.radii[0][0]
         #        self.encapsulatingRadius = radii[0][0] #Graham worry: 9/8/11 This is incorrect... shoudl be max(radii[0]) or radii[0][1]
-        self.encapsulatingRadius = radii[0][0]
+        self.encapsulatingRadius = self.radii[0][0]
         #        print('encapsulating Radius is probably wrong- fix the array')
         self.marge = marge
         self.length = length

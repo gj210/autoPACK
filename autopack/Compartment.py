@@ -602,6 +602,11 @@ class Compartment(CompartmentList):
                 if geom is None:
                     helper.read(filename)
                     geom = helper.getObject(gname)
+                    #what if wrong name ?
+                    if geom == None :
+                        geom = helper.getCurrentSelection()[0]
+                        gname = helper.getName(geom)
+                        #rename
                     helper.reParent(geom, parent)
                 print ("should have read...", gname, geom, parent)
                 # helper.update()
@@ -1174,10 +1179,11 @@ class Compartment(CompartmentList):
             helper = autopack.helper
             if helper.host == "dejavu":
                 return insideBB
-            geom = helper.getObject(self.gname)
-            if geom is None:
+            #geom = helper.getObject(self.gname)
+            geom = self.mesh
+            if self.mesh is None:
                 self.gname = '%s_Mesh' % self.name
-                geom = helper.getObject(self.gname)
+                self.mesh = geom = helper.getObject(self.gname)
             center = helper.getTranslation(geom)
             intersect, count = helper.raycast(geom, point, center, diag, count=True)
             r = ((count % 2) == 1)
