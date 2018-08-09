@@ -336,13 +336,13 @@ class Compartment(CompartmentList):
                     p = autopack.helper.newEmpty("autopackHider")
                     if autopack.helper.host.find("blender") == -1:
                         autopack.helper.toggleDisplay(p, False)
-                geom = autopack.helper.unitSphere(geomname,5,
-                                                   radius=radius)[0]
+                geom = autopack.helper.unitSphere(geomname,24,
+                                                   radius=radius*2)[0]
                 autopack.helper.reParent(geomname,"autopackHider")
             else:
                 # print "OK TEST OLKKKKK"
-                geom = autopack.helper.unitSphere(geomname, 5,
-                                                       radius=radius)[0]
+                geom = autopack.helper.unitSphere(geomname, 24,
+                                                       radius=radius*2)[0]
             self.filename = geomname
             self.ref_obj = geomname
             self.faces, self.vertices, self.vnormals = helper.DecomposeMesh(geom, edit=False, copy=False,
