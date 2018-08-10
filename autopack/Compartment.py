@@ -201,9 +201,19 @@ class Compartment(CompartmentList):
             gname = self.name
             if "gname" in kw:
                 gname = kw["gname"]
+            aradius = 200
             if "filename" in kw:
                 aradius = float(kw["filename"]["radius"])
-                self.buildSphere(aradius,gname)
+            self.buildSphere(aradius,gname)
+        if self.meshType == 'mb' :
+            #one sphere, geom is a dictionary
+            gname = self.name
+            if "gname" in kw:
+                gname = kw["gname"]
+            aradius = 200
+            #if "filename" in kw :
+            #        aradius = float(kw["filename"]["radii"][0])
+            self.buildSphere(aradius,gname)
         self.encapsulatingRadius = 9999.9
         if self.vertices is not None and len(self.vertices):
             # can be dae/fbx file, object name that have to be in the scene or dejaVu indexedpolygon file
@@ -336,13 +346,17 @@ class Compartment(CompartmentList):
                     p = autopack.helper.newEmpty("autopackHider")
                     if autopack.helper.host.find("blender") == -1:
                         autopack.helper.toggleDisplay(p, False)
-                geom = autopack.helper.unitSphere(geomname,24,
+                #geom = autopack.helper.unitSphere(geomname,24,
+                #                                   radius=radius*2)[0]
+                geom = autopack.helper.Sphere(geomname,res=5,
                                                    radius=radius*2)[0]
                 autopack.helper.reParent(geomname,"autopackHider")
             else:
                 # print "OK TEST OLKKKKK"
-                geom = autopack.helper.unitSphere(geomname, 24,
-                                                       radius=radius*2)[0]
+                geom = autopack.helper.Sphere(geomname,res=5,
+                                                   radius=radius*2)[0]
+                #geom = autopack.helper.unitSphere(geomname, 24,
+                #                                       radius=radius*2)[0]
             self.filename = geomname
             self.ref_obj = geomname
             self.faces, self.vertices, self.vnormals = helper.DecomposeMesh(geom, edit=False, copy=False,

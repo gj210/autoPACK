@@ -30,7 +30,7 @@ Created on Fri Jul 20 23:53:00 2012
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-    
+
 Name: 'autoPACK/cellPACK GUI'
 @author: Ludovic Autin with design/editing/enhancement by Graham Johnson
 """
@@ -1137,7 +1137,7 @@ class SubdialogFiller(uiadaptor):
         self.initWidget()
         self.setupLayout_tab()
         self.displayResult()
-    
+
     def displayResult(self, *args):
         self.afviewer.doPoints = False  # self.getVal(self.points_display)
         self.afviewer.doSpheres = False
@@ -1145,7 +1145,7 @@ class SubdialogFiller(uiadaptor):
         self.afviewer.visibleMesh = True  # mesh default visibility
         self.afviewer.displayFill()
         self.afviewer.displayIngrGrows()
-        
+
 
     def Set(self, **kw):
         if "helper" in kw:
@@ -1181,7 +1181,7 @@ class SubdialogFiller(uiadaptor):
                 self._addElemt(name="Export to BD_BOX flex", action=self.export_bd_flex),
                 self._addElemt(name="Load Result from BD_BOX", action=self.import_BDBOX),
                 self._addElemt(name="Simulate Fluorescence", action=self.generaeFluorescence),
-                self._addElemt(name="Export to TEM-Simulator rigid", action=self.export_tem_sim),                
+                self._addElemt(name="Export to TEM-Simulator rigid", action=self.export_tem_sim),
             ]
             self.menuorder.append("Tools")
         self.menu = self.MENU_ID
@@ -1726,7 +1726,7 @@ class SubdialogFiller(uiadaptor):
             #                        collapse=False)
             #elemFrame.append(frame)
             elemFrame.extend(subelem)
-            
+
         subelem = []
         # subelem.append([self.LABELS["cytoplasm"]])  # ,self.ingr_include["cytoplasm"]])
         r = self.histoVol.exteriorRecipe
@@ -1740,7 +1740,7 @@ class SubdialogFiller(uiadaptor):
         #frame = self._addLayout(id=196, name="Setup EXTERIOR ingredients", elems=subelem, collapse=False)
         #elemFrame.append(frame)
         elemFrame.extend(subelem)
-            
+
         elemFrame.append([self.LABELS["RecipeColumnsEmptySpace100"], self.LABELS["RecipeColumnsEmptySpace100"],
                           self.LABELS["RecipeColumnsEmptySpace100"], self.LABELS["totalNbMol"],
                           self.BTN["updateNMol"],  # self.BTN["updateNMolingr"],
@@ -1959,7 +1959,7 @@ class SubdialogFiller(uiadaptor):
                     point = self.helper.getChilds(parent)
                     [self.helper.deleteObject(o) for o in point]
         self.updateFinalNBMOLwidget()
-        
+
     def togleRecipeIngrInc(self, recipe, includeTog):
         if recipe:
             # should befor all ingredient available not only previously active
@@ -2011,7 +2011,7 @@ class SubdialogFiller(uiadaptor):
             for o in self.histoVol.compartments:
                 if wkey == o.name + "surface" or wkey == o.name + "matrix":
                     c = True
-            if c: 
+            if c:
                 continue
             include = self.getVal(self.ingr_include[wkey])
             ingr = self.histoVol.getIngrFromName(wkey)
@@ -2200,9 +2200,9 @@ class SubdialogFiller(uiadaptor):
             if ingr is not None:
                 self.setVal(self.ingr_nMol[wkey], "%d" % (ingr.overwrite_nbMol_value))
                 self.setVal(self.ingr_molarity[wkey], "%d" % (ingr.molarity))
-                
+
     def updateFinalNBMOLwidget(self, *args):
-        self.histoVol.collectResultPerIngredient()       
+        self.histoVol.collectResultPerIngredient()
         total = 0
         totalF = 0
         for wkey in self.ingr_vol_nbmol:
@@ -2371,7 +2371,7 @@ class SubdialogFiller(uiadaptor):
                     [self.helper.deleteObject(o) for o in static]
         print ('time to display', time() - t2)
         self.helper.resetProgressBar()
-        
+
         self.updateFinalNBMOLwidget()
         return True
 
@@ -2413,7 +2413,7 @@ class SubdialogFiller(uiadaptor):
 
     def saveNewRecipe(self,filename):
         self.histoVol.saveNewRecipe(filename)
-        
+
     def savexml(self, filename):
         self.histoVol.save_asXML(filename)
         self.setupfile = filename
@@ -2430,7 +2430,7 @@ class SubdialogFiller(uiadaptor):
 
     def save_new_recipe(self,*args):
         self.saveDialog(label="choose a filename",callback=self.saveNewRecipe)
-        
+
     def append2recipe(self, name, version="1.0"):
         n, v = name.split(" ")
         name = n
@@ -4280,19 +4280,22 @@ Copyright: Graham Johnson ©2010
             self.fileDialog(label="choose a file", callback=self.loadxml)
         except:
             print ("error")
-            
+
     def loadxml(self, filename, recipe=None):
         from autopack.Environment import Environment
         fileName, fileExtension = os.path.splitext(filename)
-        n = recipe  # os.path.basename(fileName)#version with it ...
+        env = Environment()
+        env.loadRecipe(filename)
+        n = env.name  # os.path.basename(fileName)#version with it ...
         if n is None:
             n = os.path.basename(fileName)
-        self.histoVol[n] = Environment(name=n)
+        self.histoVol[n] = env#Environment(name=n)
         recipe = n
-        print ("load recipe ",filename)
-        self.histoVol[n].loadRecipe(filename)
+        print ("load recipe "+filename+" "+env.name)
+        #self.histoVol[n].loadRecipe(filename)
+
         afviewer = AutopackViewer(ViewerType=self.helper.host, helper=self.helper)
-        self.histoVol[n].name = n
+        #self.histoVol[n].name = n
         afviewer.SetHistoVol(self.histoVol[n], 0.0, display=False)  # padding !
         self.histoVol[n].host = self.helper.host
         #        afviewer.doSpheres = True
