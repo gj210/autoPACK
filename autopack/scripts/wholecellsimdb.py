@@ -14,7 +14,7 @@ import numpy as np
 def getRawData(frame=0, ignore_null=False):
     #name,count,PDBid,id in alldata
     data={}
-    if os.path.isfile("C:\\Users\\ludov\\Downloads\\rawrecipe_frame_%i.json" % frame):    
+    if not os.path.isfile("C:\\Users\\ludov\\Downloads\\rawrecipe_frame_%i.json" % frame):    
         f = h5py.File("C:\\Users\\ludov\\Downloads\\simulation-1.h5")
         dataMono = f.get("states/ProteinMonomer/counts/data")
         labelMono = f.get("states/ProteinMonomer/counts/labels/0")
@@ -28,7 +28,7 @@ def getRawData(frame=0, ignore_null=False):
             else :
                 names = labelMono
                 counts = dataMono[frame,i,:]#[dataMono[frame,i,:] > 0]
-            mono = np.column_stack([names,counts])           
+            mono = np.column_stack([names,counts])
             if ignore_null:
                 names = labelComplex[dataComplex[:,i,frame] > 0]
                 counts = dataComplex[:,i,frame][dataComplex[:,i,frame] > 0]
@@ -42,7 +42,7 @@ def getRawData(frame=0, ignore_null=False):
             json.dump(data,fp)
     else :
         with open("C:\\Users\\ludov\\Downloads\\rawrecipe_frame_%i.json" % frame, 'r') as fp:  # doesnt work with symbol link ?
-            data = json.load(fp)        
+            data = json.load(fp)
     return data
 
 data=getRawData(frame=0,ignore_null=True)#ignore_null means if the count is 0 we ignore the entry
@@ -54,7 +54,7 @@ data=getRawData(frame=0,ignore_null=True)#ignore_null means if the count is 0 we
 #m Membrane  3
 #tc Terminal Organelle Cytosol  4
 #tm Terminal Organelle Membrane  5
-localisation={"c":0,"d":1,"e":2,"m":3,"tc":4,"tm":5}    
+localisation={"c":0,"d":1,"e":2,"m":3,"tc":4,"tm":5}
 #this should be cross with the wholecellKB data that can be download as json file
 #you could filter per localisation, pathway etc.
 with open("C:\\Users\\ludov\\Downloads\\wholecellmyco.json", 'r') as fp:  # doesnt work with symbol link ?
@@ -85,14 +85,14 @@ def getGenePosIn(GenId,Data):
         if Data[i]["wid"] == GenId :
             return i
     return -1
-    
+
 verbose = 0
 gen_data = celldic["data"][mapping["Gene"][0]:mapping["Gene"][0]+mapping["Gene"][1]]
 N=mapping["ProteinMonomer"][1]
 for i in range(N):
     elem = celldic["data"][mapping["ProteinMonomer"][0]+i]
     gen = elem["gene"]
-#    print elem['wid'] 
+#    print elem['wid']
     uni_id = ''
     gid = getGenePosIn(gen, gen_data)
     if len(gen_data[gid]["cross_references"]) >=4 :
@@ -102,4 +102,3 @@ for i in range(N):
 N=mapping["ProteinComplex"][1]
 for i in range(N):
     elem = celldic["data"][mapping["ProteinComplex"][0]+i]
-    

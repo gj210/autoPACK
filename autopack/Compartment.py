@@ -214,6 +214,7 @@ class Compartment(CompartmentList):
             #if "filename" in kw :
             #        aradius = float(kw["filename"]["radii"][0])
             self.buildSphere(aradius,gname)
+        print ("after buildSphere")
         self.encapsulatingRadius = 9999.9
         if self.vertices is not None and len(self.vertices):
             # can be dae/fbx file, object name that have to be in the scene or dejaVu indexedpolygon file
@@ -221,7 +222,7 @@ class Compartment(CompartmentList):
             v = numpy.array(self.vertices, 'f')
             l = numpy.sqrt((v * v).sum(axis=1))
             self.encapsulatingRadius = max(l)
-
+        print ("after getboudningbox")
         self.checkinside = True
         self.representation = None
         self.representation_file = None
@@ -273,6 +274,7 @@ class Compartment(CompartmentList):
             self.axis = kw["axis"]
         self.grid_type = "regular"
         self.grid_distances = None  # signed closest distance for each point
+        print ("finished")
         # TODO Add openVDB
         if self.filename is None:
             self.saveDejaVuMesh(autopack.cache_geoms+os.sep+self.name)
@@ -339,6 +341,8 @@ class Compartment(CompartmentList):
 
     def buildSphere(self,radius,geomname):
         geom = None
+        print ("in buildSphere")
+        print (radius)
         if autopack.helper is not None:
             if not autopack.helper.nogui:
                 p = autopack.helper.getObject("autopackHider")
@@ -346,21 +350,20 @@ class Compartment(CompartmentList):
                     p = autopack.helper.newEmpty("autopackHider")
                     if autopack.helper.host.find("blender") == -1:
                         autopack.helper.toggleDisplay(p, False)
-                #geom = autopack.helper.unitSphere(geomname,24,
-                #                                   radius=radius*2)[0]
-                geom = autopack.helper.Sphere(geomname,res=5,
-                                                   radius=radius*2)[0]
+                geom = autopack.helper.unitSphere(geomname,4,radius)[0]
+                #geom = autopack.helper.Sphere(geomname,res=4,
+                #                                   radius=radius)[0]
                 autopack.helper.reParent(geomname,"autopackHider")
             else:
                 # print "OK TEST OLKKKKK"
-                geom = autopack.helper.Sphere(geomname,res=5,
-                                                   radius=radius*2)[0]
-                #geom = autopack.helper.unitSphere(geomname, 24,
-                #                                       radius=radius*2)[0]
+                #geom = autopack.helper.Sphere(geomname,res=4,
+                #                                   radius=radius)[0]
+                geom = autopack.helper.unitSphere(geomname, 4,radius=radius)[0]
+            print ("in after helper.Sphere")
             self.filename = geomname
             self.ref_obj = geomname
-            self.faces, self.vertices, self.vnormals = helper.DecomposeMesh(geom, edit=False, copy=False,
-                                                                          tri=True)
+            self.faces, self.vertices, self.vnormals = helper.DecomposeMesh(geom, edit=False, copy=False,tri=True)
+            print ("in after helper.DecomposeMesh")
         #return geom
 
     def buildMesh(self, data, geomname):

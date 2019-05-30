@@ -89,7 +89,7 @@ class MyHTMLParser(HTMLParser):
                     #print self.tag_attr 
                     self.stored.append(self.tag_attr)
                 
-                
+
 columns_name=["id","entry name","reviewed","protein names","genes","genes(OLN)","organism","3d",
          "database(ProteinModelPortal)","database(PDB)","database(DisProt)","database(SMR)",
          "database(ExpressionAtlas)","database(Bgee)","database(CleanEx)","database(CollecTF)",
