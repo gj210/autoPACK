@@ -30,7 +30,7 @@ except :
     
 import autopack
 from autopack.GeometryTools import GeometriTools,Rectangle
-import Image
+from PIL import Image
 
 def angle_between_vectors(v0, v1, directed=True, axis=0):
     """Return angle between vectors.
